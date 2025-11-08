@@ -1,0 +1,51 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+*.log
+.env*
+
+# Build artifacts
+dist/
+build/
+bin/
+*.a
+*.o
+*.rlib
+*.prof*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+
+# Coverage
+coverage/
+*.coverprofile
+*.cover
+
+# Go modules
+go.sum
+
+# Test binaries
+*.test
+
+# Environment files
+.env
+.env.local
+.env.*.local
+

@@ -1,0 +1,11 @@
+# GoCyclo Configuration
+# Maximum cyclomatic complexity allowed per function
+# Constitution requirement: max 10
+
+# This file configures gocyclo linter via golangci-lint
+# The actual configuration is in .golangci.yml under linters-settings.gocyclo.min-complexity
+
+# To run gocyclo manually:
+# go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+# gocyclo -over 10 ./...
+
