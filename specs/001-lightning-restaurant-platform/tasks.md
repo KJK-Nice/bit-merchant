@@ -76,10 +76,10 @@ Single project with Go:
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD. Write tests → Get approval → Tests fail → Implement → Tests pass. Minimum 95% coverage required (critical path: payment processing, order management).**
 
-- [ ] T026 [P] [US1] Unit test for MenuItem display logic in `tests/unit/domain/menu_test.go` (80% coverage)
-- [ ] T027 [P] [US1] Unit test for Cart operations in `tests/unit/application/cart_test.go` (80% coverage)
-- [ ] T028 [P] [US1] Unit test for Payment domain entity in `tests/unit/domain/payment_test.go` (95% coverage - critical path)
-- [ ] T029 [P] [US1] Unit test for Order creation use case in `tests/unit/application/order_create_test.go` (95% coverage - critical path)
+- [x] T026 [P] [US1] Unit test for MenuItem display logic in `tests/unit/domain/menu_test.go` (80% coverage)
+- [x] T027 [P] [US1] Unit test for Cart operations in `tests/unit/application/cart_test.go` (80% coverage)
+- [x] T028 [P] [US1] Unit test for Payment domain entity in `tests/unit/domain/payment_test.go` (95% coverage - critical path)
+- [x] T029 [P] [US1] Unit test for Order creation use case in `tests/unit/application/order_create_test.go` (95% coverage - critical path)
 - [ ] T030 [P] [US1] Contract test for GET /menu endpoint in `tests/contract/menu_test.go`
 - [ ] T031 [P] [US1] Contract test for POST /cart/add endpoint in `tests/contract/cart_test.go`
 - [ ] T032 [P] [US1] Contract test for POST /payment/create-invoice endpoint in `tests/contract/payment_test.go`
@@ -94,28 +94,28 @@ Single project with Go:
 
 ### Implementation for User Story 1
 
-- [ ] T041 [P] [US1] Create Strike API client struct in `internal/infrastructure/strike/client.go`
-- [ ] T042 [P] [US1] Implement CreateInvoice method in Strike client in `internal/infrastructure/strike/invoice.go`
-- [ ] T043 [P] [US1] Implement GetInvoiceStatus method in Strike client in `internal/infrastructure/strike/invoice.go`
-- [ ] T044 [P] [US1] Implement GetExchangeRate method in Strike client in `internal/infrastructure/strike/exchange.go`
-- [ ] T045 [US1] Create GetMenu use case in `internal/application/menu/get_menu.go`
-- [ ] T046 [US1] Create AddToCart use case (session-based) in `internal/application/cart/add_to_cart.go`
-- [ ] T047 [US1] Create RemoveFromCart use case in `internal/application/cart/remove_from_cart.go`
-- [ ] T048 [US1] Create GetCart use case in `internal/application/cart/get_cart.go`
-- [ ] T049 [US1] Create CreatePaymentInvoice use case in `internal/application/payment/create_invoice.go`
-- [ ] T050 [US1] Create CheckPaymentStatus use case in `internal/application/payment/check_status.go`
-- [ ] T051 [US1] Create CreateOrder use case (triggered by OrderPaid event) in `internal/application/order/create_order.go`
-- [ ] T052 [US1] Create GetOrderByNumber use case in `internal/application/order/get_order.go`
-- [ ] T053 [US1] Implement GET /menu HTTP handler in `internal/interfaces/http/menu.go`
-- [ ] T054 [P] [US1] Implement POST /cart/add HTTP handler in `internal/interfaces/http/cart.go`
-- [ ] T055 [P] [US1] Implement POST /cart/remove HTTP handler in `internal/interfaces/http/cart.go`
-- [ ] T056 [P] [US1] Implement GET /cart HTTP handler in `internal/interfaces/http/cart.go`
-- [ ] T057 [US1] Implement POST /payment/create-invoice HTTP handler in `internal/interfaces/http/payment.go`
-- [ ] T058 [US1] Implement GET /payment/status/{invoiceId} HTTP handler in `internal/interfaces/http/payment.go`
-- [ ] T059 [US1] Implement GET /order/{orderNumber} HTTP handler in `internal/interfaces/http/order.go`
-- [ ] T060 [US1] Implement SSE handler for order status updates in `internal/interfaces/http/sse.go`
-- [ ] T061 [US1] Setup Watermill handler for OrderPaid event to create Order in `internal/infrastructure/events/handlers.go`
-- [ ] T062 [US1] Setup Watermill handler for OrderStatusChanged to stream SSE in `internal/infrastructure/events/handlers.go`
+- [x] T041 [P] [US1] Create Strike API client struct in `internal/infrastructure/strike/client.go`
+- [x] T042 [P] [US1] Implement CreateInvoice method in Strike client in `internal/infrastructure/strike/invoice.go`
+- [x] T043 [P] [US1] Implement GetInvoiceStatus method in Strike client in `internal/infrastructure/strike/invoice.go`
+- [x] T044 [P] [US1] Implement GetExchangeRate method in Strike client in `internal/infrastructure/strike/exchange.go`
+- [x] T045 [US1] Create GetMenu use case in `internal/application/menu/get_menu.go`
+- [x] T046 [US1] Create AddToCart use case (session-based) in `internal/application/cart/add_to_cart.go`
+- [x] T047 [US1] Create RemoveFromCart use case in `internal/application/cart/remove_from_cart.go`
+- [x] T048 [US1] Create GetCart use case in `internal/application/cart/get_cart.go`
+- [x] T049 [US1] Create CreatePaymentInvoice use case in `internal/application/payment/create_invoice.go`
+- [x] T050 [US1] Create CheckPaymentStatus use case in `internal/application/payment/check_status.go`
+- [x] T051 [US1] Create CreateOrder use case (triggered by OrderPaid event) in `internal/application/order/create_order.go`
+- [x] T052 [US1] Create GetOrderByNumber use case in `internal/application/order/get_order.go`
+- [x] T053 [US1] Implement GET /menu HTTP handler in `internal/interfaces/http/menu.go`
+- [x] T054 [P] [US1] Implement POST /cart/add HTTP handler in `internal/interfaces/http/cart.go`
+- [x] T055 [P] [US1] Implement POST /cart/remove HTTP handler in `internal/interfaces/http/cart.go`
+- [x] T056 [P] [US1] Implement GET /cart HTTP handler in `internal/interfaces/http/cart.go`
+- [x] T057 [US1] Implement POST /payment/create-invoice HTTP handler in `internal/interfaces/http/payment.go`
+- [x] T058 [US1] Implement GET /payment/status/{invoiceId} HTTP handler in `internal/interfaces/http/payment.go`
+- [x] T059 [US1] Implement GET /order/{orderNumber} HTTP handler in `internal/interfaces/http/order.go`
+- [x] T060 [US1] Implement SSE handler for order status updates in `internal/interfaces/http/sse.go`
+- [x] T061 [US1] Setup Watermill handler for OrderPaid event to create Order in `internal/infrastructure/events/handlers.go`
+- [x] T062 [US1] Setup Watermill handler for OrderStatusChanged to stream SSE in `internal/infrastructure/events/handlers.go`
 - [ ] T063 [P] [US1] Create menu display Templ template in `internal/interfaces/templates/menu.templ`
 - [ ] T064 [P] [US1] Create cart display Templ template in `internal/interfaces/templates/cart.templ`
 - [ ] T065 [P] [US1] Create payment invoice QR code Templ template in `internal/interfaces/templates/payment.templ`

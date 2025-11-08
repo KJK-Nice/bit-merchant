@@ -37,7 +37,7 @@ type Payment struct {
 }
 
 // NewPayment creates a new Payment with validation
-func NewPayment(id PaymentID, restaurantID RestaurantID, invoiceID, invoice string, amountSatoshis int64, amountFiat, exchangeRate float64) (*Payment, error) {
+func NewPayment(id PaymentID, restaurantID RestaurantID, orderID *OrderID, invoiceID, invoice string, amountSatoshis int64, amountFiat, exchangeRate float64) (*Payment, error) {
 	if invoiceID == "" {
 		return nil, errors.New("invoice ID is required")
 	}
@@ -58,6 +58,7 @@ func NewPayment(id PaymentID, restaurantID RestaurantID, invoiceID, invoice stri
 	return &Payment{
 		ID:               id,
 		RestaurantID:     restaurantID,
+		OrderID:          orderID,
 		InvoiceID:        invoiceID,
 		Invoice:          invoice,
 		AmountSatoshis:   amountSatoshis,
@@ -69,7 +70,14 @@ func NewPayment(id PaymentID, restaurantID RestaurantID, invoiceID, invoice stri
 	}, nil
 }
 
-// MarkPaid marks payment as paid
+// MarkAsPaid marks payment as paid
+func (p *Payment) MarkAsPaid() {
+	p.Status = PaymentStatusPaid
+	now := time.Now()
+	p.PaidAt = &now
+}
+
+// MarkPaid marks payment as paid with order ID
 func (p *Payment) MarkPaid(orderID OrderID) error {
 	if p.Status != PaymentStatusPending {
 		return errors.New("payment is not in pending status")
@@ -93,6 +101,14 @@ func (p *Payment) MarkFailed(reason string) error {
 	now := time.Now()
 	p.FailedAt = &now
 	return nil
+}
+
+// MarkAsExpired marks payment as expired
+func (p *Payment) MarkAsExpired(reason string) {
+	p.Status = PaymentStatusExpired
+	p.FailureReason = reason
+	now := time.Now()
+	p.FailedAt = &now
 }
 
 // MarkExpired marks payment as expired
