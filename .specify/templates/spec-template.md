@@ -105,6 +105,12 @@
 <!--
   ACTION REQUIRED: Define measurable success criteria.
   These must be technology-agnostic and measurable.
+  
+  NOTE: Per Constitution Principle IV (Performance Requirements):
+  - API endpoints MUST respond within 200ms for p95 latency
+  - Critical user flows MUST complete within 2 seconds end-to-end
+  - Page load times MUST be under 3 seconds on 3G connections
+  Include performance metrics in success criteria where applicable.
 -->
 
 ### Measurable Outcomes
@@ -113,3 +119,5 @@
 - **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-005**: [Performance metric, e.g., "API endpoint responds within 200ms p95 latency"]
+- **SC-006**: [Performance metric, e.g., "Critical user flow completes within 2 seconds end-to-end"]

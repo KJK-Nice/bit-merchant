@@ -31,7 +31,13 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify compliance with all constitution principles:
+
+- **Code Quality**: Does this feature introduce functions >50 lines or classes >300 lines? What refactoring is needed?
+- **Testing Standards**: What test coverage is required? (Minimum 80%, 95% for critical paths). Are integration/contract tests needed?
+- **User Experience Consistency**: Does this feature follow existing design patterns? Are error messages user-friendly? Is accessibility considered?
+- **Performance Requirements**: What are the performance targets? (API <200ms p95, critical flows <2s). Are performance tests included?
+- **Quality Gates**: Will all gates (linting, tests, build, performance, security, documentation) pass?
 
 ## Project Structure
 
