@@ -1,0 +1,29 @@
+# bit-merchant Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-11-08
+
+## Active Technologies
+
+- Go 1.25+ (Go 1.21+ minimum for required features) (001-lightning-restaurant-platform)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+# Add commands for Go 1.25+ (Go 1.21+ minimum for required features)
+
+## Code Style
+
+Go 1.25+ (Go 1.21+ minimum for required features): Follow standard conventions
+
+## Recent Changes
+
+- 001-lightning-restaurant-platform: Added Go 1.25+ (Go 1.21+ minimum for required features)
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
