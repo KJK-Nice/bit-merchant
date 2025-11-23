@@ -57,7 +57,7 @@ Single project with Go:
 - [x] T019 [P] Implement in-memory OrderRepository in `internal/infrastructure/repositories/memory/order.go`
 - [x] T020 [P] Implement in-memory PaymentRepository in `internal/infrastructure/repositories/memory/payment.go`
 - [x] T021 Setup Watermill in-memory event bus in `internal/infrastructure/events/bus.go`
-- [x] T022 [P] Create base Templ layout template in `internal/interfaces/templates/layout.go`
+- [x] T022 [P] Create base Templ layout template in `internal/interfaces/templates/layout.go` including Datastar script tag (`<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js"></script>`)
 - [x] T023 [P] Create Echo server setup with HTTP/2 in `cmd/server/main.go`
 - [x] T024 [P] Configure error handling middleware in `internal/interfaces/http/middleware/error.go`
 - [x] T025 [P] Configure logging middleware in `internal/interfaces/http/middleware/logging.go`

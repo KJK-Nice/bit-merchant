@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewOrder(t *testing.T) {
-	item, _ := domain.NewOrderItem("oi_1", "o_1", "mi_1", 2, 10.0)
+	item, _ := domain.NewOrderItem("oi_1", "o_1", "mi_1", "Burger", 2, 10.0)
 	items := []domain.OrderItem{*item}
 
 	t.Run("should create valid order", func(t *testing.T) {
@@ -42,18 +42,24 @@ func TestNewOrder(t *testing.T) {
 
 func TestNewOrderItem(t *testing.T) {
 	t.Run("should create valid order item", func(t *testing.T) {
-		item, err := domain.NewOrderItem("oi_1", "o_1", "mi_1", 2, 10.50)
+		item, err := domain.NewOrderItem("oi_1", "o_1", "mi_1", "Burger", 2, 10.50)
 		assert.NoError(t, err)
 		assert.Equal(t, 21.0, item.Subtotal)
+		assert.Equal(t, "Burger", item.Name)
 	})
 
 	t.Run("should fail with invalid quantity", func(t *testing.T) {
-		_, err := domain.NewOrderItem("oi_1", "o_1", "mi_1", 0, 10.0)
+		_, err := domain.NewOrderItem("oi_1", "o_1", "mi_1", "Burger", 0, 10.0)
 		assert.Error(t, err)
 	})
 
 	t.Run("should fail with invalid price", func(t *testing.T) {
-		_, err := domain.NewOrderItem("oi_1", "o_1", "mi_1", 1, 0)
+		_, err := domain.NewOrderItem("oi_1", "o_1", "mi_1", "Burger", 1, 0)
+		assert.Error(t, err)
+	})
+	
+	t.Run("should fail with empty name", func(t *testing.T) {
+		_, err := domain.NewOrderItem("oi_1", "o_1", "mi_1", "", 1, 10.0)
 		assert.Error(t, err)
 	})
 }
@@ -89,4 +95,3 @@ func TestOrder_UpdateFulfillmentStatus(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
-

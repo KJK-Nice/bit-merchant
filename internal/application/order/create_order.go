@@ -72,6 +72,7 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, req CreateOrderReques
 			orderItemID,
 			orderID,
 			item.ItemID,
+			item.Name,
 			item.Quantity,
 			item.UnitPrice,
 		)

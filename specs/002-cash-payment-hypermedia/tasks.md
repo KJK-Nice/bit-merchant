@@ -24,14 +24,14 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure per implementation plan in `internal/domain/`, `internal/application/`, `internal/infrastructure/`, `internal/interfaces/`
-- [ ] T002 Initialize Go module with dependencies: `github.com/labstack/echo/v4`, `github.com/a-h/templ`, `github.com/starfederation/datastar`, `github.com/ThreeDotsLabs/watermill`, `github.com/stretchr/testify`, `github.com/aws/aws-sdk-go-v2` (and related S3 modules)
-- [ ] T003 [P] Configure `golangci-lint` with strict rules in `.golangci.yml`
-- [ ] T004 [P] Configure `gocyclo` for complexity checking (<10 per function)
-- [ ] T005 [P] Setup Go test coverage reporting with minimum thresholds (80% standard, 95% critical paths)
-- [ ] T006 [P] Create `.env.example` with configuration template (PORT, RESTAURANT_ID, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME, etc.)
-- [ ] T007 [P] Setup `cmd/server/main.go` skeleton with Echo server initialization
-- [ ] T008 [P] Create `static/pwa/` directory structure for PWA manifest and service worker
+- [x] T001 Create project structure per implementation plan in `internal/domain/`, `internal/application/`, `internal/infrastructure/`, `internal/interfaces/`
+- [x] T002 Initialize Go module with dependencies: `github.com/labstack/echo/v4`, `github.com/a-h/templ`, `github.com/starfederation/datastar`, `github.com/ThreeDotsLabs/watermill`, `github.com/stretchr/testify`, `github.com/aws/aws-sdk-go-v2` (and related S3 modules)
+- [x] T003 [P] Configure `golangci-lint` with strict rules in `.golangci.yml`
+- [x] T004 [P] Configure `gocyclo` for complexity checking (<10 per function)
+- [x] T005 [P] Setup Go test coverage reporting with minimum thresholds (80% standard, 95% critical paths)
+- [x] T006 [P] Create `.env.example` with configuration template (PORT, RESTAURANT_ID, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME, etc.)
+- [x] T007 [P] Setup `cmd/server/main.go` skeleton with Echo server initialization
+- [x] T008 [P] Create `static/pwa/` directory structure for PWA manifest and service worker
 
 ---
 
@@ -43,60 +43,60 @@
 
 ### Domain Entities (Zero Dependencies)
 
-- [ ] T009 [P] Create `Restaurant` entity in `internal/domain/restaurant.go` with ID, Name, IsOpen, ClosedMessage, ReopeningHours, CreatedAt, UpdatedAt
-- [ ] T010 [P] Create `MenuCategory` entity in `internal/domain/menu.go` with ID, RestaurantID, Name, DisplayOrder, IsActive, CreatedAt, UpdatedAt
-- [ ] T011 [P] Create `MenuItem` entity in `internal/domain/menu.go` with ID, CategoryID, RestaurantID, Name, Description, Price, PhotoURL, PhotoOriginalURL, IsAvailable, CreatedAt, UpdatedAt
-- [ ] T012 [P] Create `Order` entity in `internal/domain/order.go` with ID, OrderNumber, RestaurantID, PaymentMethodType, PaymentStatus, FulfillmentStatus, TotalAmount, Items, CreatedAt, PaidAt, PreparingAt, ReadyAt, CompletedAt
-- [ ] T013 [P] Create `OrderItem` entity in `internal/domain/order.go` with ID, OrderID, MenuItemID, Name, Price, Quantity, Subtotal
-- [ ] T014 [P] Create `Payment` entity in `internal/domain/payment.go` with ID, OrderID, RestaurantID, PaymentMethodType, Amount, Status, CreatedAt, PaidAt, FailedAt, FailureReason
-- [ ] T015 [P] Create value objects: `PaymentStatus`, `FulfillmentStatus`, `PaymentMethodType` enums in `internal/domain/order.go` and `internal/domain/payment.go`
-- [ ] T016 [P] Create domain events: `OrderCreated`, `OrderPaid`, `OrderPreparing`, `OrderReady`, `OrderCompleted` in `internal/domain/events.go`
+- [x] T009 [P] Create `Restaurant` entity in `internal/domain/restaurant.go` with ID, Name, IsOpen, ClosedMessage, ReopeningHours, CreatedAt, UpdatedAt
+- [x] T010 [P] Create `MenuCategory` entity in `internal/domain/menu.go` with ID, RestaurantID, Name, DisplayOrder, IsActive, CreatedAt, UpdatedAt
+- [x] T011 [P] Create `MenuItem` entity in `internal/domain/menu.go` with ID, CategoryID, RestaurantID, Name, Description, Price, PhotoURL, PhotoOriginalURL, IsAvailable, CreatedAt, UpdatedAt
+- [x] T012 [P] Create `Order` entity in `internal/domain/order.go` with ID, OrderNumber, RestaurantID, PaymentMethodType, PaymentStatus, FulfillmentStatus, TotalAmount, Items, CreatedAt, PaidAt, PreparingAt, ReadyAt, CompletedAt
+- [x] T013 [P] Create `OrderItem` entity in `internal/domain/order.go` with ID, OrderID, MenuItemID, Name, Price, Quantity, Subtotal
+- [x] T014 [P] Create `Payment` entity in `internal/domain/payment.go` with ID, OrderID, RestaurantID, PaymentMethodType, Amount, Status, CreatedAt, PaidAt, FailedAt, FailureReason
+- [x] T015 [P] Create value objects: `PaymentStatus`, `FulfillmentStatus`, `PaymentMethodType` enums in `internal/domain/order.go` and `internal/domain/payment.go`
+- [x] T016 [P] Create domain events: `OrderCreated`, `OrderPaid`, `OrderPreparing`, `OrderReady`, `OrderCompleted` in `internal/domain/events.go`
 
 ### Repository Interfaces (Domain Layer)
 
-- [ ] T017 [P] Create `RestaurantRepository` interface in `internal/domain/restaurant.go` with GetByID, Create, Update methods
-- [ ] T018 [P] Create `MenuCategoryRepository` interface in `internal/domain/menu.go` with GetByRestaurantID, GetByID, Create, Update methods
-- [ ] T019 [P] Create `MenuItemRepository` interface in `internal/domain/menu.go` with GetByCategoryID, GetByRestaurantID, GetByID, Create, Update methods
-- [ ] T020 [P] Create `OrderRepository` interface in `internal/domain/order.go` with GetByID, GetByOrderNumber, GetByRestaurantID, GetPendingByRestaurantID, Create, Update methods
-- [ ] T021 [P] Create `PaymentRepository` interface in `internal/domain/payment.go` with GetByID, GetByOrderID, Create, Update methods
+- [x] T017 [P] Create `RestaurantRepository` interface in `internal/domain/restaurant.go` with GetByID, Create, Update methods
+- [x] T018 [P] Create `MenuCategoryRepository` interface in `internal/domain/menu.go` with GetByRestaurantID, GetByID, Create, Update methods
+- [x] T019 [P] Create `MenuItemRepository` interface in `internal/domain/menu.go` with GetByCategoryID, GetByRestaurantID, GetByID, Create, Update methods
+- [x] T020 [P] Create `OrderRepository` interface in `internal/domain/order.go` with GetByID, GetByOrderNumber, GetByRestaurantID, GetPendingByRestaurantID, Create, Update methods
+- [x] T021 [P] Create `PaymentRepository` interface in `internal/domain/payment.go` with GetByID, GetByOrderID, Create, Update methods
 
 ### Payment Method Abstraction (Domain Layer)
 
-- [ ] T022 [P] Create `PaymentMethod` interface in `internal/domain/payment.go` with ProcessPayment, ValidatePayment, GetPaymentMethodType methods
-- [ ] T023 [P] Create `CashPaymentMethod` implementation in `internal/infrastructure/payment/cash/payment.go` implementing PaymentMethod interface
+- [x] T022 [P] Create `PaymentMethod` interface in `internal/domain/payment.go` with ProcessPayment, ValidatePayment, GetPaymentMethodType methods
+- [x] T023 [P] Create `CashPaymentMethod` implementation in `internal/infrastructure/payment/cash/payment.go` implementing PaymentMethod interface
 
 ### In-Memory Repository Implementations (Infrastructure Layer)
 
-- [ ] T024 [P] Implement `RestaurantRepository` in-memory in `internal/infrastructure/repositories/memory/restaurant.go` with sync.RWMutex
-- [ ] T025 [P] Implement `MenuCategoryRepository` in-memory in `internal/infrastructure/repositories/memory/menu.go` with sync.RWMutex
-- [ ] T026 [P] Implement `MenuItemRepository` in-memory in `internal/infrastructure/repositories/memory/menu.go` with sync.RWMutex
-- [ ] T027 [P] Implement `OrderRepository` in-memory in `internal/infrastructure/repositories/memory/order.go` with sync.RWMutex
-- [ ] T028 [P] Implement `PaymentRepository` in-memory in `internal/infrastructure/repositories/memory/payment.go` with sync.RWMutex
+- [x] T024 [P] Implement `RestaurantRepository` in-memory in `internal/infrastructure/repositories/memory/restaurant.go` with sync.RWMutex
+- [x] T025 [P] Implement `MenuCategoryRepository` in-memory in `internal/infrastructure/repositories/memory/menu.go` with sync.RWMutex
+- [x] T026 [P] Implement `MenuItemRepository` in-memory in `internal/infrastructure/repositories/memory/menu.go` with sync.RWMutex
+- [x] T027 [P] Implement `OrderRepository` in-memory in `internal/infrastructure/repositories/memory/order.go` with sync.RWMutex
+- [x] T028 [P] Implement `PaymentRepository` in-memory in `internal/infrastructure/repositories/memory/payment.go` with sync.RWMutex
 
 ### Event Bus (Infrastructure Layer)
 
-- [ ] T029 [P] Setup Watermill in-memory event bus in `internal/infrastructure/events/bus.go` with pub/sub configuration
-- [ ] T030 [P] Create event publisher wrapper in `internal/infrastructure/events/publisher.go` for domain events
-- [ ] T031 [P] Create event subscriber wrapper in `internal/infrastructure/events/subscriber.go` for SSE handlers
+- [x] T029 [P] Setup Watermill in-memory event bus in `internal/infrastructure/events/bus.go` with pub/sub configuration
+- [x] T030 [P] Create event publisher wrapper in `internal/infrastructure/events/publisher.go` for domain events
+- [x] T031 [P] Create event subscriber wrapper in `internal/infrastructure/events/subscriber.go` for SSE handlers
 
 ### Cart Management (Session-Based)
 
-- [ ] T032 [P] Create ephemeral cart service in `internal/application/cart/cart.go` with AddItem, RemoveItem, GetCart, ClearCart methods (session-based, not persisted)
+- [x] T032 [P] Create ephemeral cart service in `internal/application/cart/cart.go` with AddItem, RemoveItem, GetCart, ClearCart methods (session-based, not persisted)
 
 ### Base HTTP Handlers & Middleware
 
-- [ ] T033 [P] Create session middleware in `internal/interfaces/http/middleware/session.go` for session ID management
-- [ ] T034 [P] Create error handling middleware in `internal/interfaces/http/middleware/error.go` for HTML error pages
-- [ ] T035 [P] Create logging middleware in `internal/interfaces/http/middleware/logging.go` for request logging
-- [ ] T036 [P] Create structured logging service in `internal/infrastructure/logging/logger.go` (JSON format, log levels, rotation policy) for FR-046
-- [ ] T037 [P] Integrate logging service in CreateOrderUseCase to log order creation events (FR-046)
-- [ ] T038 [P] Integrate logging service in MarkOrderPaidUseCase and MarkOrderPreparingUseCase to log payment/fulfillment status changes (FR-046)
-- [ ] T039 Setup Echo routes structure in `cmd/server/main.go` with customer, kitchen, and owner route groups
+- [x] T033 [P] Create session middleware in `internal/interfaces/http/middleware/session.go` for session ID management
+- [x] T034 [P] Create error handling middleware in `internal/interfaces/http/middleware/error.go` for HTML error pages
+- [x] T035 [P] Create logging middleware in `internal/interfaces/http/middleware/logging.go` for request logging
+- [x] T036 [P] Create structured logging service in `internal/infrastructure/logging/logger.go` (JSON format, log levels, rotation policy) for FR-046
+- [x] T037 [P] Integrate logging service in CreateOrderUseCase to log order creation events (FR-046)
+- [x] T038 [P] Integrate logging service in MarkOrderPaidUseCase and MarkOrderPreparingUseCase to log payment/fulfillment status changes (FR-046)
+- [x] T039 Setup Echo routes structure in `cmd/server/main.go` with customer, kitchen, and owner route groups
 
 ### PWA Infrastructure
 
-- [ ] T040 [P] Create PWA manifest in `static/pwa/manifest.json` with app name, icons, display mode
-- [ ] T041 [P] Create service worker in `static/pwa/sw.js` for offline menu browsing (cache menu HTML and images)
+- [x] T040 [P] Create PWA manifest in `static/pwa/manifest.json` with app name, icons, display mode
+- [x] T041 [P] Create service worker in `static/pwa/sw.js` for offline menu browsing (cache menu HTML and images)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -112,72 +112,72 @@
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD. Write tests → Get approval → Tests fail → Implement → Tests pass. Minimum 95% coverage required (critical path).**
 
-- [ ] T042 [P] [US1] Unit tests for Restaurant entity validation in `tests/unit/domain/restaurant_test.go` (95% coverage)
-- [ ] T043 [P] [US1] Unit tests for MenuCategory entity validation in `tests/unit/domain/menu_test.go` (95% coverage)
-- [ ] T044 [P] [US1] Unit tests for MenuItem entity validation in `tests/unit/domain/menu_test.go` (95% coverage)
-- [ ] T045 [P] [US1] Unit tests for Order entity and state transitions in `tests/unit/domain/order_test.go` (95% coverage)
-- [ ] T046 [P] [US1] Unit tests for Payment entity and state transitions in `tests/unit/domain/payment_test.go` (95% coverage)
-- [ ] T047 [P] [US1] Unit tests for Cart service (AddItem, RemoveItem, GetCart) in `tests/unit/application/cart/cart_test.go` (95% coverage)
-- [ ] T048 [P] [US1] Unit tests for CashPaymentMethod in `tests/unit/infrastructure/payment/cash/payment_test.go` (95% coverage)
-- [ ] T049 [P] [US1] Unit tests for in-memory RestaurantRepository in `tests/unit/infrastructure/repositories/memory/restaurant_test.go` (95% coverage)
-- [ ] T050 [P] [US1] Unit tests for in-memory MenuCategoryRepository in `tests/unit/infrastructure/repositories/memory/menu_test.go` (95% coverage)
-- [ ] T051 [P] [US1] Unit tests for in-memory MenuItemRepository in `tests/unit/infrastructure/repositories/memory/menu_test.go` (95% coverage)
-- [ ] T052 [P] [US1] Unit tests for in-memory OrderRepository in `tests/unit/infrastructure/repositories/memory/order_test.go` (95% coverage)
-- [ ] T053 [P] [US1] Unit tests for in-memory PaymentRepository in `tests/unit/infrastructure/repositories/memory/payment_test.go` (95% coverage)
-- [ ] T054 [P] [US1] Contract test for GET /menu endpoint in `tests/contract/http/menu_test.go` (validates HTML structure, performance <2s)
-- [ ] T055 [P] [US1] Contract test for POST /cart/add endpoint in `tests/contract/http/cart_test.go` (validates HTML fragment response, Datastar attributes)
-- [ ] T056 [P] [US1] Contract test for POST /cart/remove endpoint in `tests/contract/http/cart_test.go` (validates HTML fragment response)
-- [ ] T057 [P] [US1] Contract test for GET /order/confirm endpoint in `tests/contract/http/order_test.go` (validates HTML structure)
-- [ ] T058 [P] [US1] Contract test for POST /order/create endpoint in `tests/contract/http/order_test.go` (validates HTML response, order creation)
-- [ ] T059 [P] [US1] Contract test for GET /order/:orderNumber endpoint in `tests/contract/http/order_test.go` (validates order lookup)
-- [ ] T060 [P] [US1] Integration test for complete ordering flow in `tests/integration/order/order_flow_test.go` (browse → cart → confirm → order)
-- [ ] T061 [P] [US1] Integration test for SSE order status stream in `tests/integration/sse/order_stream_test.go` (validates SSE events, <5s propagation)
-- [ ] T062 [P] [US1] Performance test for menu page load in `tests/performance/menu_load_test.go` (<2s on 3G simulation)
-- [ ] T063 [P] [US1] Performance test for complete ordering flow in `tests/performance/order_flow_test.go` (<2min total)
+- [x] T042 [P] [US1] Unit tests for Restaurant entity validation in `tests/unit/domain/restaurant_test.go` (95% coverage)
+- [x] T043 [P] [US1] Unit tests for MenuCategory entity validation in `tests/unit/domain/menu_test.go` (95% coverage)
+- [x] T044 [P] [US1] Unit tests for MenuItem entity validation in `tests/unit/domain/menu_test.go` (95% coverage)
+- [x] T045 [P] [US1] Unit tests for Order entity and state transitions in `tests/unit/domain/order_test.go` (95% coverage)
+- [x] T046 [P] [US1] Unit tests for Payment entity and state transitions in `tests/unit/domain/payment_test.go` (95% coverage)
+- [x] T047 [P] [US1] Unit tests for Cart service (AddItem, RemoveItem, GetCart) in `tests/unit/application/cart/cart_test.go` (95% coverage)
+- [x] T048 [P] [US1] Unit tests for CashPaymentMethod in `tests/unit/infrastructure/payment/cash/payment_test.go` (95% coverage)
+- [x] T049 [P] [US1] Unit tests for in-memory RestaurantRepository in `tests/unit/infrastructure/repositories/memory/restaurant_test.go` (95% coverage)
+- [x] T050 [P] [US1] Unit tests for in-memory MenuCategoryRepository in `tests/unit/infrastructure/repositories/memory/menu_test.go` (95% coverage)
+- [x] T051 [P] [US1] Unit tests for in-memory MenuItemRepository in `tests/unit/infrastructure/repositories/memory/menu_test.go` (95% coverage)
+- [x] T052 [P] [US1] Unit tests for in-memory OrderRepository in `tests/unit/infrastructure/repositories/memory/order_test.go` (95% coverage)
+- [x] T053 [P] [US1] Unit tests for in-memory PaymentRepository in `tests/unit/infrastructure/repositories/memory/payment_test.go` (95% coverage)
+- [x] T054 [P] [US1] Contract test for GET /menu endpoint in `tests/contract/http/menu_test.go` (validates HTML structure, performance <2s)
+- [x] T055 [P] [US1] Contract test for POST /cart/add endpoint in `tests/contract/http/cart_test.go` (validates HTML fragment response, Datastar attributes)
+- [x] T056 [P] [US1] Contract test for POST /cart/remove endpoint in `tests/contract/http/cart_test.go` (validates HTML fragment response)
+- [x] T057 [P] [US1] Contract test for GET /order/confirm endpoint in `tests/contract/http/order_test.go` (validates HTML structure)
+- [x] T058 [P] [US1] Contract test for POST /order/create endpoint in `tests/contract/http/order_test.go` (validates HTML response, order creation)
+- [x] T059 [P] [US1] Contract test for GET /order/:orderNumber endpoint in `tests/contract/http/order_test.go` (validates order lookup)
+- [x] T060 [P] [US1] Integration test for complete ordering flow in `tests/integration/order/order_flow_test.go` (browse → cart → confirm → order)
+- [x] T061 [P] [US1] Integration test for SSE order status stream in `tests/integration/sse/order_stream_test.go` (validates SSE events, <5s propagation)
+- [x] T062 [P] [US1] Performance test for menu page load in `tests/performance/menu_load_test.go` (<2s on 3G simulation)
+- [x] T063 [P] [US1] Performance test for complete ordering flow in `tests/performance/order_flow_test.go` (<2min total)
 
 ### Implementation for User Story 1
 
 #### Application Layer (Use Cases)
 
-- [ ] T064 [P] [US1] Create GetMenuUseCase in `internal/application/menu/get_menu.go` (returns restaurant menu with categories and items)
-- [ ] T065 [US1] Create CreateOrderUseCase in `internal/application/order/create_order.go` (creates order with cash payment, publishes OrderCreated event, logs order creation)
-- [ ] T066 [US1] Create GetOrderByNumberUseCase in `internal/application/order/get_order.go` (looks up order by order number)
+- [x] T064 [P] [US1] Create GetMenuUseCase in `internal/application/menu/get_menu.go` (returns restaurant menu with categories and items)
+- [x] T065 [US1] Create CreateOrderUseCase in `internal/application/order/create_order.go` (creates order with cash payment, publishes OrderCreated event, logs order creation)
+- [x] T066 [US1] Create GetOrderByNumberUseCase in `internal/application/order/get_order.go` (looks up order by order number)
 
 #### HTTP Handlers (Return HTML, Not JSON)
 
-- [ ] T067 [P] [US1] Create MenuHandler with GET /menu endpoint in `internal/interfaces/http/menu.go` (returns HTML page via Templ template)
-- [ ] T068 [P] [US1] Create CartHandler with POST /cart/add, POST /cart/remove, GET /cart endpoints in `internal/interfaces/http/cart.go` (returns HTML fragments for Datastar updates)
-- [ ] T069 [P] [US1] Create OrderHandler with GET /order/confirm, POST /order/create, GET /order/:orderNumber endpoints in `internal/interfaces/http/order.go` (returns HTML pages)
-- [ ] T070 [US1] Create SSE handler for GET /order/:orderNumber/stream endpoint in `internal/interfaces/http/sse.go` (streams order status updates via Datastar)
+- [x] T067 [P] [US1] Create MenuHandler with GET /menu endpoint in `internal/interfaces/http/menu.go` (returns HTML page via Templ template)
+- [x] T068 [P] [US1] Create CartHandler with POST /cart/add, POST /cart/remove, GET /cart endpoints in `internal/interfaces/http/cart.go` (returns HTML fragments for Datastar updates)
+- [x] T069 [P] [US1] Create OrderHandler with GET /order/confirm, POST /order/create, GET /order/:orderNumber endpoints in `internal/interfaces/http/order.go` (returns HTML pages)
+- [x] T070 [US1] Create SSE handler for GET /order/:orderNumber/stream endpoint in `internal/interfaces/http/sse.go` (streams order status updates via Datastar)
 
 #### Templ Templates (Server-Rendered HTML)
 
-- [ ] T071 [P] [US1] Create menu page template in `internal/interfaces/templates/menu.templ` (displays categories, items, prices, photos, cart summary, uses templui.io components)
-- [ ] T072 [P] [US1] Create cart summary fragment template in `internal/interfaces/templates/components/cart_summary.templ` (for Datastar partial updates)
-- [ ] T073 [P] [US1] Create order confirmation page template in `internal/interfaces/templates/order_confirm.templ` (shows order summary, cash payment confirmation form)
-- [ ] T074 [P] [US1] Create order status page template in `internal/interfaces/templates/order_status.templ` (shows order number, status, SSE connection via Datastar ds-sse-connect)
-- [ ] T075 [P] [US1] Create reusable UI components using templui.io patterns in `internal/interfaces/templates/components/` (buttons, forms, cards)
+- [x] T071 [P] [US1] Create menu page template in `internal/interfaces/templates/menu.templ` (displays categories, items, prices, photos, cart summary, uses templui.io components)
+- [x] T072 [P] [US1] Create cart summary fragment template in `internal/interfaces/templates/components/cart_summary.templ` (for Datastar partial updates)
+- [x] T073 [P] [US1] Create order confirmation page template in `internal/interfaces/templates/order_confirm.templ` (shows order summary, cash payment confirmation form)
+- [x] T074 [P] [US1] Create order status page template in `internal/interfaces/templates/order_status.templ` (shows order number, status, SSE connection via Datastar ds-sse-connect)
+- [x] T075 [P] [US1] Create reusable UI components using templui.io patterns in `internal/interfaces/templates/components/` (buttons, forms, cards)
 
 #### Datastar Integration
 
-- [ ] T076 [US1] Integrate Datastar library in `internal/interfaces/http/middleware/datastar.go` (setup Datastar middleware for Echo)
-- [ ] T077 [US1] Add Datastar attributes (ds-post, ds-target) to cart forms in `internal/interfaces/templates/menu.templ`
-- [ ] T078 [US1] Add Datastar SSE connection (ds-sse-connect) to order status page in `internal/interfaces/templates/order_status.templ`
+- [x] T076 [US1] Integrate Datastar library in `internal/interfaces/http/middleware/datastar.go` (setup Datastar middleware for Echo)
+- [x] T077 [US1] Add Datastar attributes (ds-post, ds-target) to cart forms in `internal/interfaces/templates/menu.templ`
+- [x] T078 [US1] Add Datastar SSE connection (ds-sse-connect) to order status page in `internal/interfaces/templates/order_status.templ`
 
 #### Event Handling
 
-- [ ] T079 [US1] Create OrderCreated event handler in `internal/infrastructure/events/handlers/order_created.go` (publishes to SSE stream for kitchen display)
-- [ ] T080 [US1] Create OrderPaid event handler in `internal/infrastructure/events/handlers/order_paid.go` (publishes to customer SSE stream, logs payment status change)
-- [ ] T081 [US1] Create OrderPreparing event handler in `internal/infrastructure/events/handlers/order_preparing.go` (publishes to customer SSE stream, logs fulfillment status change)
-- [ ] T082 [US1] Create OrderReady event handler in `internal/infrastructure/events/handlers/order_ready.go` (publishes to customer SSE stream, logs fulfillment status change)
+- [x] T079 [US1] Create OrderCreated event handler in `internal/infrastructure/events/handlers/order_created.go` (publishes to SSE stream for kitchen display)
+- [x] T080 [US1] Create OrderPaid event handler in `internal/infrastructure/events/handlers/order_paid.go` (publishes to customer SSE stream, logs payment status change)
+- [x] T081 [US1] Create OrderPreparing event handler in `internal/infrastructure/events/handlers/order_preparing.go` (publishes to customer SSE stream, logs fulfillment status change)
+- [x] T082 [US1] Create OrderReady event handler in `internal/infrastructure/events/handlers/order_ready.go` (publishes to customer SSE stream, logs fulfillment status change)
 
 #### Route Registration
 
-- [ ] T083 [US1] Register customer routes (GET /menu, POST /cart/add, POST /cart/remove, GET /cart, GET /order/confirm, POST /order/create, GET /order/:orderNumber, GET /order/:orderNumber/stream) in `cmd/server/main.go`
+- [x] T083 [US1] Register customer routes (GET /menu, POST /cart/add, POST /cart/remove, GET /cart, GET /order/confirm, POST /order/create, GET /order/:orderNumber, GET /order/:orderNumber/stream) in `cmd/server/main.go`
 
 #### Code Quality Verification
 
-- [ ] T084 [US1] Verify code quality: functions <50 lines, classes <300 lines, cyclomatic complexity <10 using gocyclo
+- [ ] T084 [US1] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10 using gocyclo
 - [ ] T085 [US1] Verify test coverage: 95% for all US1 components (critical path)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently. Customer can complete full ordering flow with real-time status updates.
@@ -194,64 +194,64 @@
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD. Minimum 95% coverage required (critical path).**
 
-- [ ] T086 [P] [US2] Unit tests for MarkOrderPaidUseCase in `tests/unit/application/kitchen/mark_paid_test.go` (95% coverage, validates state transitions)
-- [ ] T087 [P] [US2] Unit tests for MarkOrderPreparingUseCase in `tests/unit/application/kitchen/mark_preparing_test.go` (95% coverage, validates payment requirement)
-- [ ] T088 [P] [US2] Unit tests for MarkOrderReadyUseCase in `tests/unit/application/kitchen/mark_ready_test.go` (95% coverage, validates state transitions)
-- [ ] T089 [P] [US2] Unit tests for GetKitchenOrdersUseCase in `tests/unit/application/kitchen/get_orders_test.go` (95% coverage, validates chronological ordering)
-- [ ] T090 [P] [US2] Contract test for GET /kitchen endpoint in `tests/contract/http/kitchen_test.go` (validates HTML structure, order display)
-- [ ] T091 [P] [US2] Contract test for GET /kitchen/stream endpoint in `tests/contract/http/kitchen_test.go` (validates SSE events for new orders)
-- [ ] T092 [P] [US2] Contract test for POST /kitchen/order/:id/mark-paid endpoint in `tests/contract/http/kitchen_test.go` (validates HTML fragment response, state transition)
-- [ ] T093 [P] [US2] Contract test for POST /kitchen/order/:id/mark-preparing endpoint in `tests/contract/http/kitchen_test.go` (validates HTML fragment response, state transition)
-- [ ] T094 [P] [US2] Contract test for POST /kitchen/order/:id/mark-ready endpoint in `tests/contract/http/kitchen_test.go` (validates HTML fragment response, state transition)
-- [ ] T095 [P] [US2] Integration test for kitchen workflow in `tests/integration/kitchen/kitchen_workflow_test.go` (order appears → mark paid → mark preparing → mark ready → customer receives updates)
-- [ ] T096 [P] [US2] Integration test for kitchen SSE stream in `tests/integration/sse/kitchen_stream_test.go` (validates new-order and order-updated events, <5s propagation)
-- [ ] T097 [P] [US2] Performance test for kitchen display updates in `tests/performance/kitchen_updates_test.go` (<5s for new orders to appear)
-- [ ] T098 [P] [US2] Integration test for kitchen offline sync in `tests/integration/kitchen/offline_sync_test.go` (validates status changes queued when offline, synced when reconnected) for FR-017
+- [x] T086 [P] [US2] Unit tests for MarkOrderPaidUseCase in `tests/unit/application/kitchen/mark_paid_test.go` (95% coverage, validates state transitions)
+- [x] T087 [P] [US2] Unit tests for MarkOrderPreparingUseCase in `tests/unit/application/kitchen/mark_preparing_test.go` (95% coverage, validates payment requirement)
+- [x] T088 [P] [US2] Unit tests for MarkOrderReadyUseCase in `tests/unit/application/kitchen/mark_ready_test.go` (95% coverage, validates state transitions)
+- [x] T089 [P] [US2] Unit tests for GetKitchenOrdersUseCase in `tests/unit/application/kitchen/get_orders_test.go` (95% coverage, validates chronological ordering)
+- [x] T090 [P] [US2] Contract test for GET /kitchen endpoint in `tests/contract/http/kitchen_test.go` (validates HTML structure, order display)
+- [x] T091 [P] [US2] Contract test for GET /kitchen/stream endpoint in `tests/contract/http/kitchen_test.go` (validates SSE events for new orders)
+- [x] T092 [P] [US2] Contract test for POST /kitchen/order/:id/mark-paid endpoint in `tests/contract/http/kitchen_test.go` (validates HTML fragment response, state transition)
+- [x] T093 [P] [US2] Contract test for POST /kitchen/order/:id/mark-preparing endpoint in `tests/contract/http/kitchen_test.go` (validates HTML fragment response, state transition)
+- [x] T094 [P] [US2] Contract test for POST /kitchen/order/:id/mark-ready endpoint in `tests/contract/http/kitchen_test.go` (validates HTML fragment response, state transition)
+- [x] T095 [P] [US2] Integration test for kitchen workflow in `tests/integration/kitchen/kitchen_workflow_test.go` (order appears → mark paid → mark preparing → mark ready → customer receives updates)
+- [x] T096 [P] [US2] Integration test for kitchen SSE stream in `tests/integration/sse/kitchen_stream_test.go` (validates new-order and order-updated events, <5s propagation)
+- [x] T097 [P] [US2] Performance test for kitchen display updates in `tests/performance/kitchen_updates_test.go` (<5s for new orders to appear)
+- [x] T098 [P] [US2] Integration test for kitchen offline sync in `tests/integration/kitchen/offline_sync_test.go` (validates status changes queued when offline, synced when reconnected) for FR-017
 
 ### Implementation for User Story 2
 
 #### Application Layer (Use Cases)
 
-- [ ] T099 [P] [US2] Create GetKitchenOrdersUseCase in `internal/application/kitchen/get_orders.go` (returns orders in chronological order, filters by restaurant)
-- [ ] T100 [US2] Create MarkOrderPaidUseCase in `internal/application/kitchen/mark_paid.go` (updates payment status, publishes OrderPaid event, logs payment status change)
-- [ ] T101 [US2] Create MarkOrderPreparingUseCase in `internal/application/kitchen/mark_preparing.go` (validates payment confirmed, updates fulfillment status, publishes OrderPreparing event, logs fulfillment status change)
-- [ ] T102 [US2] Create MarkOrderReadyUseCase in `internal/application/kitchen/mark_ready.go` (updates fulfillment status, publishes OrderReady event, logs fulfillment status change)
+- [x] T099 [P] [US2] Create GetKitchenOrdersUseCase in `internal/application/kitchen/get_orders.go` (returns orders in chronological order, filters by restaurant)
+- [x] T100 [US2] Create MarkOrderPaidUseCase in `internal/application/kitchen/mark_paid.go` (updates payment status, publishes OrderPaid event, logs payment status change)
+- [x] T101 [US2] Create MarkOrderPreparingUseCase in `internal/application/kitchen/mark_preparing.go` (validates payment confirmed, updates fulfillment status, publishes OrderPreparing event, logs fulfillment status change)
+- [x] T102 [US2] Create MarkOrderReadyUseCase in `internal/application/kitchen/mark_ready.go` (updates fulfillment status, publishes OrderReady event, logs fulfillment status change)
 
 #### HTTP Handlers (Return HTML, Not JSON)
 
-- [ ] T103 [P] [US2] Create KitchenHandler with GET /kitchen endpoint in `internal/interfaces/http/kitchen.go` (returns HTML page with orders)
-- [ ] T104 [US2] Add POST /kitchen/order/:id/mark-paid endpoint to KitchenHandler in `internal/interfaces/http/kitchen.go` (returns HTML fragment for Datastar update)
-- [ ] T105 [US2] Add POST /kitchen/order/:id/mark-preparing endpoint to KitchenHandler in `internal/interfaces/http/kitchen.go` (returns HTML fragment)
-- [ ] T106 [US2] Add POST /kitchen/order/:id/mark-ready endpoint to KitchenHandler in `internal/interfaces/http/kitchen.go` (returns HTML fragment)
-- [ ] T107 [US2] Add GET /kitchen/stream SSE endpoint to SSE handler in `internal/interfaces/http/sse.go` (streams kitchen order updates)
-- [ ] T108 [US2] Create offline queue service in `internal/infrastructure/kitchen/offline_queue.go` (queues status changes when connection lost, syncs when restored) for FR-017
-- [ ] T109 [US2] Add offline status indicator to kitchen template in `internal/interfaces/templates/kitchen.templ` (shows visual indicator when offline, syncs when reconnected) for FR-017
+- [x] T103 [P] [US2] Create KitchenHandler with GET /kitchen endpoint in `internal/interfaces/http/kitchen.go` (returns HTML page with orders)
+- [x] T104 [US2] Add POST /kitchen/order/:id/mark-paid endpoint to KitchenHandler in `internal/interfaces/http/kitchen.go` (returns HTML fragment for Datastar update)
+- [x] T105 [US2] Add POST /kitchen/order/:id/mark-preparing endpoint to KitchenHandler in `internal/interfaces/http/kitchen.go` (returns HTML fragment)
+- [x] T106 [US2] Add POST /kitchen/order/:id/mark-ready endpoint to KitchenHandler in `internal/interfaces/http/kitchen.go` (returns HTML fragment)
+- [x] T107 [US2] Add GET /kitchen/stream SSE endpoint to SSE handler in `internal/interfaces/http/sse.go` (streams kitchen order updates)
+- [x] T108 [US2] Create offline queue service in `internal/infrastructure/kitchen/offline_queue.go` (queues status changes when connection lost, syncs when restored) for FR-017
+- [x] T109 [US2] Add offline status indicator to kitchen template in `internal/interfaces/templates/kitchen.templ` (shows visual indicator when offline, syncs when reconnected) for FR-017
 
 #### Templ Templates (Server-Rendered HTML)
 
-- [ ] T110 [P] [US2] Create kitchen display page template in `internal/interfaces/templates/kitchen.templ` (shows orders in chronological order, uses Datastar ds-sse-connect for updates)
-- [ ] T111 [P] [US2] Create order card fragment template in `internal/interfaces/templates/components/order_card.templ` (for Datastar partial updates, shows payment/fulfillment status, action buttons)
-- [ ] T112 [US2] Add audible/visual alert logic to kitchen template when new order arrives (JavaScript-free, CSS-based, HTML5 audio for audible alert) for FR-012
+- [x] T110 [P] [US2] Create kitchen display page template in `internal/interfaces/templates/kitchen.templ` (shows orders in chronological order, uses Datastar ds-sse-connect for updates)
+- [x] T111 [P] [US2] Create order card fragment template in `internal/interfaces/templates/components/order_card.templ` (for Datastar partial updates, shows payment/fulfillment status, action buttons)
+- [x] T112 [US2] Add audible/visual alert logic to kitchen template when new order arrives (JavaScript-free, CSS-based, HTML5 audio for audible alert) for FR-012
 
 #### Datastar Integration
 
-- [ ] T113 [US2] Add Datastar attributes (ds-post, ds-target="closest article") to kitchen action forms in `internal/interfaces/templates/kitchen.templ`
-- [ ] T114 [US2] Add Datastar SSE connection (ds-sse-connect="/kitchen/stream") to kitchen display page in `internal/interfaces/templates/kitchen.templ`
+- [x] T113 [US2] Add Datastar attributes (ds-post, ds-target="closest article") to kitchen action forms in `internal/interfaces/templates/kitchen.templ`
+- [x] T114 [US2] Add Datastar SSE connection (ds-sse-connect="/kitchen/stream") to kitchen display page in `internal/interfaces/templates/kitchen.templ`
 
 #### Event Handling
 
-- [ ] T115 [US2] Update OrderCreated event handler to publish to kitchen SSE stream in `internal/infrastructure/events/handlers/order_created.go`
-- [ ] T116 [US2] Update OrderPaid event handler to publish to kitchen SSE stream in `internal/infrastructure/events/handlers/order_paid.go`
-- [ ] T117 [US2] Update OrderPreparing event handler to publish to kitchen SSE stream in `internal/infrastructure/events/handlers/order_preparing.go`
-- [ ] T118 [US2] Update OrderReady event handler to publish to kitchen SSE stream in `internal/infrastructure/events/handlers/order_ready.go`
+- [x] T115 [US2] Update OrderCreated event handler to publish to kitchen SSE stream in `internal/infrastructure/events/handlers/order_created.go`
+- [x] T116 [US2] Update OrderPaid event handler to publish to kitchen SSE stream in `internal/infrastructure/events/handlers/order_paid.go`
+- [x] T117 [US2] Update OrderPreparing event handler to publish to kitchen SSE stream in `internal/infrastructure/events/handlers/order_preparing.go`
+- [x] T118 [US2] Update OrderReady event handler to publish to kitchen SSE stream in `internal/infrastructure/events/handlers/order_ready.go`
 
 #### Route Registration
 
-- [ ] T119 [US2] Register kitchen routes (GET /kitchen, GET /kitchen/stream, POST /kitchen/order/:id/mark-paid, POST /kitchen/order/:id/mark-preparing, POST /kitchen/order/:id/mark-ready) in `cmd/server/main.go`
+- [x] T119 [US2] Register kitchen routes (GET /kitchen, GET /kitchen/stream, POST /kitchen/order/:id/mark-paid, POST /kitchen/order/:id/mark-preparing, POST /kitchen/order/:id/mark-ready) in `cmd/server/main.go`
 
 #### Code Quality Verification
 
-- [ ] T120 [US2] Verify code quality: functions <50 lines, classes <300 lines, cyclomatic complexity <10
+- [ ] T120 [US2] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10
 - [ ] T121 [US2] Verify test coverage: 95% for all US2 components (critical path)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently. Kitchen staff can fulfill orders and customers receive real-time updates.
@@ -268,68 +268,68 @@
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD. Minimum 80% coverage required.**
 
-- [ ] T122 [P] [US3] Unit tests for CreateRestaurantUseCase in `tests/unit/application/restaurant/create_test.go` (80% coverage)
-- [ ] T123 [P] [US3] Unit tests for CreateMenuCategoryUseCase in `tests/unit/application/menu/create_category_test.go` (80% coverage)
-- [ ] T124 [P] [US3] Unit tests for CreateMenuItemUseCase in `tests/unit/application/menu/create_item_test.go` (80% coverage)
-- [ ] T125 [P] [US3] Unit tests for UpdateMenuItemUseCase in `tests/unit/application/menu/update_item_test.go` (80% coverage)
-- [ ] T126 [P] [US3] Unit tests for photo upload/optimization service in `tests/unit/infrastructure/storage/photo_test.go` (80% coverage, validates 2MB limit, 300KB optimization, 100 photo limit)
-- [ ] T127 [P] [US3] Contract test for GET /owner/signup endpoint in `tests/contract/http/owner_test.go` (validates HTML structure)
-- [ ] T128 [P] [US3] Contract test for POST /owner/signup endpoint in `tests/contract/http/owner_test.go` (validates account creation)
-- [ ] T129 [P] [US3] Contract test for GET /dashboard/menu endpoint in `tests/contract/http/owner_test.go` (validates menu management interface)
-- [ ] T130 [P] [US3] Contract test for POST /dashboard/menu/category endpoint in `tests/contract/http/owner_test.go` (validates category creation, HTML fragment response)
-- [ ] T131 [P] [US3] Contract test for POST /dashboard/menu/item endpoint in `tests/contract/http/owner_test.go` (validates item creation with photo upload, HTML fragment response, <30s for item, <10s for photo)
-- [ ] T132 [P] [US3] Contract test for POST /dashboard/menu/item/:id/photo endpoint in `tests/contract/http/owner_test.go` (validates photo upload, optimization, 2MB limit, 100 photo limit enforcement)
-- [ ] T133 [P] [US3] Contract test for GET /dashboard/qr-code endpoint in `tests/contract/http/owner_test.go` (validates QR code generation)
-- [ ] T134 [P] [US3] Integration test for complete menu setup flow in `tests/integration/menu/setup_test.go` (signup → create category → add items → upload photos → generate QR)
-- [ ] T135 [P] [US3] Integration test for photo storage and optimization in `tests/integration/storage/photo_test.go` (validates upload, compression to 300KB, URL generation, 100 photo limit)
-- [ ] T136 [P] [US3] Integration test for menu cache invalidation in `tests/integration/menu/cache_test.go` (validates menu changes reflect in customer view within 5 seconds) for FR-024
+- [x] T122 [P] [US3] Unit tests for CreateRestaurantUseCase in `tests/unit/application/restaurant/create_test.go` (80% coverage)
+- [x] T123 [P] [US3] Unit tests for CreateMenuCategoryUseCase in `tests/unit/application/menu/create_category_test.go` (80% coverage)
+- [x] T124 [P] [US3] Unit tests for CreateMenuItemUseCase in `tests/unit/application/menu/create_item_test.go` (80% coverage)
+- [x] T125 [P] [US3] Unit tests for UpdateMenuItemUseCase in `tests/unit/application/menu/update_item_test.go` (80% coverage)
+- [x] T126 [P] [US3] Unit tests for photo upload/optimization service in `tests/unit/infrastructure/storage/photo_test.go` (80% coverage, validates 2MB limit, 300KB optimization, 100 photo limit)
+- [x] T127 [P] [US3] Contract test for GET /owner/signup endpoint in `tests/contract/http/owner_test.go` (validates HTML structure)
+- [x] T128 [P] [US3] Contract test for POST /owner/signup endpoint in `tests/contract/http/owner_test.go` (validates account creation)
+- [x] T129 [P] [US3] Contract test for GET /dashboard/menu endpoint in `tests/contract/http/owner_test.go` (validates menu management interface)
+- [x] T130 [P] [US3] Contract test for POST /dashboard/menu/category endpoint in `tests/contract/http/owner_test.go` (validates category creation, HTML fragment response)
+- [x] T131 [P] [US3] Contract test for POST /dashboard/menu/item endpoint in `tests/contract/http/owner_test.go` (validates item creation with photo upload, HTML fragment response, <30s for item, <10s for photo)
+- [x] T132 [P] [US3] Contract test for POST /dashboard/menu/item/:id/photo endpoint in `tests/contract/http/owner_test.go` (validates photo upload, optimization, 2MB limit, 100 photo limit enforcement)
+- [x] T133 [P] [US3] Contract test for GET /dashboard/qr-code endpoint in `tests/contract/http/owner_test.go` (validates QR code generation)
+- [x] T134 [P] [US3] Integration test for complete menu setup flow in `tests/integration/menu/setup_test.go` (signup → create category → add items → upload photos → generate QR)
+- [x] T135 [P] [US3] Integration test for photo storage and optimization in `tests/integration/storage/photo_test.go` (validates upload, compression to 300KB, URL generation, 100 photo limit)
+- [x] T136 [P] [US3] Integration test for menu cache invalidation in `tests/integration/menu/cache_test.go` (validates menu changes reflect in customer view within 5 seconds) for FR-024
 
 ### Implementation for User Story 3
 
 #### Application Layer (Use Cases)
 
-- [ ] T137 [P] [US3] Create CreateRestaurantUseCase in `internal/application/restaurant/create.go` (creates restaurant account with name)
-- [ ] T138 [P] [US3] Create CreateMenuCategoryUseCase in `internal/application/menu/create_category.go` (creates category with name and display order, invalidates menu cache)
-- [ ] T139 [P] [US3] Create CreateMenuItemUseCase in `internal/application/menu/create_item.go` (creates item with name, description, price, category, invalidates menu cache)
-- [ ] T140 [P] [US3] Create UpdateMenuItemUseCase in `internal/application/menu/update_item.go` (updates item details, marks out of stock, invalidates menu cache)
-- [ ] T141 [P] [US3] Create UploadMenuItemPhotoUseCase in `internal/application/menu/upload_photo.go` (handles photo upload, optimization, storage, validates 2MB limit, enforces 100 photo limit per restaurant, invalidates menu cache) for FR-049
+- [x] T137 [P] [US3] Create CreateRestaurantUseCase in `internal/application/restaurant/create.go` (creates restaurant account with name)
+- [x] T138 [P] [US3] Create CreateMenuCategoryUseCase in `internal/application/menu/create_category.go` (creates category with name and display order, invalidates menu cache)
+- [x] T139 [P] [US3] Create CreateMenuItemUseCase in `internal/application/menu/create_item.go` (creates item with name, description, price, category, invalidates menu cache)
+- [x] T140 [P] [US3] Create UpdateMenuItemUseCase in `internal/application/menu/update_item.go` (updates item details, marks out of stock, invalidates menu cache)
+- [x] T141 [P] [US3] Create UploadMenuItemPhotoUseCase in `internal/application/menu/upload_photo.go` (handles photo upload, optimization, storage, validates 2MB limit, enforces 100 photo limit per restaurant, invalidates menu cache) for FR-049
 
 #### Photo Storage Infrastructure
 
-- [ ] T142 [P] [US3] Create photo storage interface in `internal/infrastructure/storage/photo.go` (abstracts S3 operations)
-- [ ] T143 [P] [US3] Implement photo optimization service in `internal/infrastructure/storage/photo_optimizer.go` (compresses to 300KB, validates 2MB upload limit)
-- [ ] T144 [US3] Implement photo storage service using AWS S3 SDK in `internal/infrastructure/storage/s3_storage.go` (stores original and optimized versions in S3 bucket)
-- [ ] T145 [P] [US3] Create photo count service in `internal/infrastructure/storage/photo_count.go` (counts photos per restaurant, validates 100 photo limit before upload) for FR-049
+- [x] T142 [P] [US3] Create photo storage interface in `internal/infrastructure/storage/photo.go` (abstracts S3 operations)
+- [x] T143 [P] [US3] Implement photo optimization service in `internal/infrastructure/storage/photo_optimizer.go` (compresses to 300KB, validates 2MB upload limit)
+- [x] T144 [US3] Implement photo storage service using AWS S3 SDK in `internal/infrastructure/storage/s3_storage.go` (stores original and optimized versions in S3 bucket)
+- [x] T145 [P] [US3] Create photo count service in `internal/infrastructure/storage/photo_count.go` (counts photos per restaurant, validates 100 photo limit before upload) for FR-049
 
 #### HTTP Handlers (Return HTML, Not JSON)
 
-- [ ] T146 [P] [US3] Create OwnerHandler with GET /owner/signup, POST /owner/signup endpoints in `internal/interfaces/http/owner.go` (returns HTML pages)
-- [ ] T147 [P] [US3] Add GET /dashboard/menu endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (returns menu management HTML page)
-- [ ] T148 [P] [US3] Add POST /dashboard/menu/category endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (returns HTML fragment for Datastar update)
-- [ ] T149 [P] [US3] Add POST /dashboard/menu/item endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (handles multipart form data, returns HTML fragment)
-- [ ] T150 [P] [US3] Add POST /dashboard/menu/item/:id/photo endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (handles photo upload, validates 100 photo limit, returns HTML fragment)
-- [ ] T151 [P] [US3] Add GET /dashboard/qr-code endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (generates QR code image, returns HTML page)
+- [x] T146 [P] [US3] Create OwnerHandler with GET /owner/signup, POST /owner/signup endpoints in `internal/interfaces/http/owner.go` (returns HTML pages)
+- [x] T147 [P] [US3] Add GET /dashboard/menu endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (returns menu management HTML page)
+- [x] T148 [P] [US3] Add POST /dashboard/menu/category endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (returns HTML fragment for Datastar update)
+- [x] T149 [P] [US3] Add POST /dashboard/menu/item endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (handles multipart form data, returns HTML fragment)
+- [x] T150 [P] [US3] Add POST /dashboard/menu/item/:id/photo endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (handles photo upload, validates 100 photo limit, returns HTML fragment)
+- [x] T151 [P] [US3] Add GET /dashboard/qr-code endpoint to OwnerHandler in `internal/interfaces/http/owner.go` (generates QR code image, returns HTML page)
 
 #### QR Code Generation
 
-- [ ] T152 [P] [US3] Create QR code generation service in `internal/infrastructure/qr/qr.go` (generates QR code linking to restaurant menu URL)
+- [x] T152 [P] [US3] Create QR code generation service in `internal/infrastructure/qr/qr.go` (generates QR code linking to restaurant menu URL)
 
 #### Menu Cache Management
 
-- [ ] T153 [P] [US3] Create menu cache service in `internal/infrastructure/cache/menu_cache.go` (in-memory cache for menu data, invalidates on menu changes) for FR-024
-- [ ] T154 [US3] Integrate menu cache in GetMenuUseCase to serve cached menu data and invalidate on updates for FR-024
+- [x] T153 [P] [US3] Create menu cache service in `internal/infrastructure/cache/menu_cache.go` (in-memory cache for menu data, invalidates on menu changes) for FR-024
+- [x] T154 [US3] Integrate menu cache in GetMenuUseCase to serve cached menu data and invalidate on updates for FR-024
 
 #### Templ Templates (Server-Rendered HTML)
 
-- [ ] T155 [P] [US3] Create owner signup page template in `internal/interfaces/templates/owner_signup.templ` (simple form for restaurant name)
-- [ ] T156 [P] [US3] Create menu management page template in `internal/interfaces/templates/menu_manage.templ` (shows categories, items, add/edit forms, uses templui.io components) for FR-022
-- [ ] T157 [P] [US3] Create category form fragment template in `internal/interfaces/templates/components/category_form.templ` (for Datastar partial updates)
-- [ ] T158 [P] [US3] Create item form fragment template in `internal/interfaces/templates/components/item_form.templ` (for Datastar partial updates, includes photo upload, edit mode)
-- [ ] T159 [P] [US3] Create QR code display page template in `internal/interfaces/templates/qr_code.templ` (shows QR code image, printable format, shareable link)
+- [x] T155 [P] [US3] Create owner signup page template in `internal/interfaces/templates/owner_signup.templ` (simple form for restaurant name)
+- [x] T156 [P] [US3] Create menu management page template in `internal/interfaces/templates/menu_manage.templ` (shows categories, items, add/edit forms, uses templui.io components) for FR-022
+- [x] T157 [P] [US3] Create category form fragment template in `internal/interfaces/templates/components/category_form.templ` (for Datastar partial updates)
+- [x] T158 [P] [US3] Create item form fragment template in `internal/interfaces/templates/components/item_form.templ` (for Datastar partial updates, includes photo upload, edit mode)
+- [x] T159 [P] [US3] Create QR code display page template in `internal/interfaces/templates/qr_code.templ` (shows QR code image, printable format, shareable link)
 
 #### Datastar Integration
 
-- [ ] T160 [US3] Add Datastar attributes (ds-post, ds-target) to menu management forms in `internal/interfaces/templates/menu_manage.templ`
+- [x] T160 [US3] Add Datastar attributes (ds-post, ds-target) to menu management forms in `internal/interfaces/templates/menu_manage.templ`
 
 #### Route Registration
 
@@ -337,7 +337,7 @@
 
 #### Code Quality Verification
 
-- [ ] T162 [US3] Verify code quality: functions <50 lines, classes <300 lines, cyclomatic complexity <10
+- [ ] T162 [US3] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10
 - [ ] T163 [US3] Verify test coverage: 80% for all US3 components
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should all work independently. Owners can set up menus and customers can order from them.
@@ -386,7 +386,7 @@
 
 #### Code Quality Verification
 
-- [ ] T179 [US4] Verify code quality: functions <50 lines, classes <300 lines, cyclomatic complexity <10
+- [ ] T179 [US4] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10
 - [ ] T180 [US4] Verify test coverage: 80% for all US4 components
 
 **Checkpoint**: All user stories should now be independently functional. Complete system supports customer ordering, kitchen fulfillment, menu management, and analytics.
@@ -454,7 +454,7 @@
 - [ ] T206 [P] Run full test suite and verify coverage: 80% overall, 95% for critical paths (payment, orders, kitchen)
 - [ ] T207 [P] Run gocyclo to verify all functions have complexity <10
 - [ ] T208 [P] Run golangci-lint and fix all issues
-- [ ] T209 [P] Verify all functions <50 lines, all classes <300 lines (refactor if needed)
+- [ ] T209 [P] Verify all functions <50 lines, all types/structs <300 lines (refactor if needed)
 
 ### Integration & End-to-End Testing
 
@@ -578,7 +578,7 @@ With multiple developers:
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
 - **CRITICAL**: Tests are MANDATORY per Constitution - write tests FIRST, then implement
-- **CRITICAL**: Code quality must be verified: functions <50 lines, classes <300 lines, complexity <10
+- **CRITICAL**: Code quality must be verified: functions <50 lines, types/structs <300 lines, complexity <10
 - **CRITICAL**: Test coverage must meet minimums: 80% standard, 95% critical paths
 
 ---

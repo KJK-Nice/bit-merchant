@@ -17,7 +17,7 @@ BitMerchant v1.0 enables restaurants to accept cash payments with a zero-frictio
 **Primary Dependencies**: 
   - `github.com/labstack/echo/v4` - Web framework with HTTP/2 SSE support
   - `github.com/a-h/templ` - Type-safe Go templates for server-rendered HTML
-  - `github.com/delaneyj/datastar` - Hypermedia-driven UI with SSE for partial page updates and real-time DOM updates (REQUIRED - not optional)
+  - `github.com/starfederation/datastar` - Hypermedia-driven UI with SSE for partial page updates and real-time DOM updates (REQUIRED - not optional)
   - `github.com/ThreeDotsLabs/watermill` - Event streaming and pub/sub for domain events
   - Templ UI components from `templui.io` - Pre-built UI components for Templ templates
 **Storage**: In-memory repositories (v1.0) with PostgreSQL-ready interface design. Future: PostgreSQL with hand-written SQL (no ORM).  
@@ -31,7 +31,7 @@ BitMerchant v1.0 enables restaurants to accept cash payments with a zero-frictio
   - Order status updates: <5 seconds propagation (SC-004, SC-005)
   - Critical user flow (order → confirm cash payment): <2 minutes total (SC-001)  
 **Constraints**: 
-  - Functions max 50 lines, classes max 300 lines (Constitution)
+  - Functions max 50 lines, types/structs max 300 lines (Constitution)
   - Cyclomatic complexity max 10 per function (Constitution)
   - Minimum 80% test coverage, 95% for payment/critical paths (Constitution)
   - Frontend bundle <200KB gzipped (Constitution)
@@ -52,7 +52,7 @@ BitMerchant v1.0 enables restaurants to accept cash payments with a zero-frictio
 
 **Code Quality**: 
 - ✅ Architecture supports small functions: Clean Architecture with DDD enforces separation of concerns, domain logic isolated in small functions
-- ⚠️ **Action Required**: Implement code review checklist to verify functions <50 lines, classes <300 lines. Use `gocyclo` linter to enforce complexity <10.
+- ⚠️ **Action Required**: Implement code review checklist to verify functions <50 lines, types/structs <300 lines. Use `gocyclo` linter to enforce complexity <10.
 - ✅ Standard library first approach aligns with code quality principles
 - ✅ Payment method abstraction pattern keeps payment logic isolated and testable
 
@@ -103,7 +103,7 @@ BitMerchant v1.0 enables restaurants to accept cash payments with a zero-frictio
 - ✅ Payment method abstraction keeps payment logic isolated and extensible
 - ✅ Repository interfaces support clean separation (domain defines interfaces, infrastructure implements)
 - ✅ Domain events keep handlers small and focused
-- ✅ Architecture supports functions <50 lines, classes <300 lines
+- ✅ Architecture supports functions <50 lines, types/structs <300 lines
 
 **Testing Standards**: 
 - ✅ Data model provides clear test boundaries (entities, repositories, use cases, payment methods)

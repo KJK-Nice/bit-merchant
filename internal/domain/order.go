@@ -82,18 +82,22 @@ type OrderItem struct {
 	ID         OrderItemID
 	OrderID    OrderID
 	MenuItemID ItemID
+	Name       string
 	Quantity   int
 	UnitPrice  float64
 	Subtotal   float64
 }
 
 // NewOrderItem creates a new OrderItem
-func NewOrderItem(id OrderItemID, orderID OrderID, menuItemID ItemID, quantity int, unitPrice float64) (*OrderItem, error) {
+func NewOrderItem(id OrderItemID, orderID OrderID, menuItemID ItemID, name string, quantity int, unitPrice float64) (*OrderItem, error) {
 	if quantity <= 0 {
 		return nil, errors.New("quantity must be greater than 0")
 	}
 	if unitPrice <= 0 {
 		return nil, errors.New("unit price must be greater than 0")
+	}
+	if name == "" {
+		return nil, errors.New("name must not be empty")
 	}
 
 	subtotal := float64(quantity) * unitPrice
@@ -101,6 +105,7 @@ func NewOrderItem(id OrderItemID, orderID OrderID, menuItemID ItemID, quantity i
 		ID:         id,
 		OrderID:    orderID,
 		MenuItemID: menuItemID,
+		Name:       name,
 		Quantity:   quantity,
 		UnitPrice:  unitPrice,
 		Subtotal:   subtotal,

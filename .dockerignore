@@ -1,0 +1,8 @@
+bin/
+.git/
+.DS_Store
+tmp/
+coverage.out
+test-results/
+.env
+

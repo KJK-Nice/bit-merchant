@@ -17,7 +17,7 @@ func TestGetOrderByNumberUseCase(t *testing.T) {
 
 	t.Run("Execute Success", func(t *testing.T) {
 		// Setup order
-		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", 1, 10.0)
+		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
 		existingOrder, _ := domain.NewOrder(
 			"o1", 
 			"1234", 

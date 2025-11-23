@@ -35,7 +35,7 @@ templ OrderStatus(order *domain.Order) {
 					<ul class="space-y-2">
 						for _, item := range order.Items {
 							<li class="flex justify-between">
-								<span>Item { string(item.MenuItemID) } <span class="text-muted-foreground">x{ fmt.Sprintf("%d", item.Quantity) }</span></span>
+								<span>{ item.Name } <span class="text-muted-foreground">x{ fmt.Sprintf("%d", item.Quantity) }</span></span>
 							</li>
 						}
 					</ul>

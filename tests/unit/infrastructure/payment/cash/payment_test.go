@@ -23,7 +23,7 @@ func TestCashPaymentMethod(t *testing.T) {
 	})
 
 	t.Run("ProcessPayment", func(t *testing.T) {
-		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", 1, 10.0)
+		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
 		order, _ := domain.NewOrder("o1", "101", "r1", []domain.OrderItem{*item}, 1000, domain.PaymentMethodTypeCash)
 		order.FiatAmount = 10.0
 

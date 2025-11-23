@@ -19,7 +19,7 @@ templ OrderCard(order *domain.Order) {
 		@card.Content() {
 			<ul class="space-y-1 list-disc list-inside text-sm text-muted-foreground">
 				for _, item := range order.Items {
-					<li>{ fmt.Sprintf("%dx", item.Quantity) } Item { string(item.MenuItemID) }</li>
+					<li>{ fmt.Sprintf("%dx", item.Quantity) } { item.Name }</li>
 				}
 			</ul>
 		}
