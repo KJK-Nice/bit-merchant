@@ -3,9 +3,11 @@ package admin
 import (
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/interfaces/templates"
+	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/table"
 	"fmt"
 )
 
@@ -49,20 +51,36 @@ templ Dashboard(menuData *menu.MenuResponse) {
 								@card.Content() {
 									<!-- Items in Category -->
 									if len(catData.Items) > 0 {
-										<div class="space-y-2 mb-6">
-											for _, item := range catData.Items {
-												<div class="flex justify-between items-center border-b pb-2 last:border-0">
-													<span class="font-medium">{ item.Name }</span>
-													<span class="text-muted-foreground">{ fmt.Sprintf("$%.2f", item.Price) }</span>
-												</div>
+										@table.Table() {
+											@table.Header() {
+												@table.Row() {
+													@table.Head() { Name }
+													@table.Head() { Price }
+													@table.Head() { Status }
+												}
 											}
-										</div>
+											@table.Body() {
+												for _, item := range catData.Items {
+													@table.Row() {
+														@table.Cell(table.CellProps{Class: "font-medium"}) { { item.Name } }
+														@table.Cell() { { fmt.Sprintf("$%.2f", item.Price) } }
+														@table.Cell() {
+															if item.IsAvailable {
+																@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Available }
+															} else {
+																@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { Out of Stock }
+															}
+														}
+													}
+												}
+											}
+										}
 									} else {
 										<p class="text-muted-foreground italic mb-6">No items</p>
 									}
 
 									<!-- Add Item to Category Form -->
-									<div class="border-t pt-4">
+									<div class="border-t pt-4 mt-4">
 										<h5 class="font-semibold mb-4">Add Item</h5>
 										<form action="/admin/item" method="post" class="space-y-4">
 											<input type="hidden" name="categoryID" value={ string(catData.Category.ID) }/>

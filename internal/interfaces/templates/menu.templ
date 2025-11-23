@@ -4,6 +4,7 @@ import (
 	"bitmerchant/internal/application/cart"
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/interfaces/templates/components"
+	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"fmt"
@@ -47,7 +48,7 @@ templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 												Add to Cart
 											}
 										} else {
-											<span class="text-destructive font-medium">Out of Stock</span>
+											@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { Out of Stock }
 										}
 									}
 								}
