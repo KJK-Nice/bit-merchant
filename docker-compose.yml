@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - BASE_URL=http://localhost:8080
+      # Uncomment and set these if using S3
+      # - S3_BUCKET_NAME=your-bucket
+      # - AWS_REGION=your-region
+      # - AWS_ACCESS_KEY_ID=your-key
+      # - AWS_SECRET_ACCESS_KEY=your-secret
+
