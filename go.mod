@@ -1,6 +1,6 @@
 module bitmerchant
 
-go 1.23
+go 1.25.4
 
 require (
 	github.com/Oudwins/tailwind-merge-go v0.2.1
