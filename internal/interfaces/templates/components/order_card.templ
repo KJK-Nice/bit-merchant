@@ -2,64 +2,66 @@ package components
 
 import (
 	"bitmerchant/internal/domain"
+	"bitmerchant/internal/interfaces/templates/components/ui/badge"
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"fmt"
 )
 
 templ OrderCard(order *domain.Order) {
-	<article 
-		id={ fmt.Sprintf("order-%s", order.ID) }
-		class="border p-4 rounded shadow-sm mb-4"
-	>
-		<header class="flex justify-between items-center mb-2">
-			<h3 class="text-lg font-bold">Order #{ string(order.OrderNumber) }</h3>
-			<span class="px-2 py-1 rounded bg-gray-200 text-sm">
+	@card.Card(card.Props{ID: fmt.Sprintf("order-%s", order.ID), Class: "mb-4"}) {
+		@card.Header(card.HeaderProps{Class: "flex-row justify-between items-center space-y-0 pb-2"}) {
+			@card.Title() { Order #{ string(order.OrderNumber) } }
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
 				{ string(order.FulfillmentStatus) }
-			</span>
-		</header>
-		
-		<div class="mb-4">
-			<ul class="list-disc pl-5">
+			}
+		}
+		@card.Content() {
+			<ul class="space-y-1 list-disc list-inside text-sm text-muted-foreground">
 				for _, item := range order.Items {
 					<li>{ fmt.Sprintf("%dx", item.Quantity) } Item { string(item.MenuItemID) }</li>
 				}
 			</ul>
-		</div>
-
-		<div class="flex justify-between items-center">
-			<div class="text-sm text-gray-600">
-				Total: { fmt.Sprintf("$%.2f", order.FiatAmount) }
+		}
+		@card.Footer(card.FooterProps{Class: "flex-col items-start gap-4 pt-4"}) {
+			<div class="flex justify-between w-full items-center">
+				<div class="text-sm font-medium">
+					Total: { fmt.Sprintf("$%.2f", order.FiatAmount) }
+				</div>
 				if order.PaymentStatus == domain.PaymentStatusPaid {
-					<span class="ml-2 text-green-600 font-bold">PAID</span>
+					@badge.Badge(badge.Props{Variant: badge.VariantDefault, Class: "bg-green-600 hover:bg-green-700"}) { PAID }
 				} else {
-					<span class="ml-2 text-red-600 font-bold">UNPAID</span>
+					@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { UNPAID }
 				}
 			</div>
-
-			<div class="actions">
+			<div class="w-full flex justify-end">
 				if order.PaymentStatus == domain.PaymentStatusPending {
-					<button
-						class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-						data-on:click={ fmt.Sprintf("@post('/kitchen/order/%s/mark-paid')", order.ID) }
-					>
+					@button.Button(button.Props{
+						Variant: button.VariantDefault,
+						Class: "bg-green-600 hover:bg-green-700",
+						Attributes: templ.Attributes{"data-on:click": fmt.Sprintf("@post('/kitchen/order/%s/mark-paid')", order.ID)},
+					}) {
 						Mark Paid
-					</button>
+					}
 				} else if order.FulfillmentStatus == domain.FulfillmentStatusPaid {
-					<button
-						class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-						data-on:click={ fmt.Sprintf("@post('/kitchen/order/%s/mark-preparing')", order.ID) }
-					>
+					@button.Button(button.Props{
+						Variant: button.VariantDefault,
+						Class: "bg-blue-600 hover:bg-blue-700",
+						Attributes: templ.Attributes{"data-on:click": fmt.Sprintf("@post('/kitchen/order/%s/mark-preparing')", order.ID)},
+					}) {
 						Start Preparing
-					</button>
+					}
 				} else if order.FulfillmentStatus == domain.FulfillmentStatusPreparing {
-					<button
-						class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
-						data-on:click={ fmt.Sprintf("@post('/kitchen/order/%s/mark-ready')", order.ID) }
-					>
+					@button.Button(button.Props{
+						Variant: button.VariantDefault,
+						Class: "bg-purple-600 hover:bg-purple-700",
+						Attributes: templ.Attributes{"data-on:click": fmt.Sprintf("@post('/kitchen/order/%s/mark-ready')", order.ID)},
+					}) {
 						Mark Ready
-					</button>
+					}
 				}
 			</div>
-		</div>
-	</article>
+		}
+	}
 }
 

@@ -168,6 +168,7 @@ func main() {
 
 	// Static files
 	e.Static("/static", "static")
+	e.Static("/assets", "assets")
 
 	// 6. Routes
 

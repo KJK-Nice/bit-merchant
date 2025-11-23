@@ -1,0 +1,7 @@
+{
+  "componentsDir": "internal/interfaces/templates/components/ui",
+  "utilsDir": "internal/interfaces/templates/utils",
+  "moduleName": "bitmerchant",
+  "jsDir": "assets/js",
+  "jsPublicPath": "/assets/js"
+}

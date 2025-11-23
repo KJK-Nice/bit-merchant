@@ -70,7 +70,7 @@ func (h *CartHandler) AddToCart(c echo.Context) error {
 
 	// Return updated CartSummary fragment
 	updatedCart := h.cartService.GetCart(sessionID)
-	return components.CartSummary(updatedCart).Render(c.Request().Context(), c.Response())
+	return components.CartSummary(updatedCart, true).Render(c.Request().Context(), c.Response())
 }
 
 // RemoveFromCart handles POST /cart/remove
@@ -96,7 +96,7 @@ func (h *CartHandler) RemoveFromCart(c echo.Context) error {
 
 	// Return updated CartSummary fragment
 	updatedCart := h.cartService.GetCart(sessionID)
-	return components.CartSummary(updatedCart).Render(c.Request().Context(), c.Response())
+	return components.CartSummary(updatedCart, true).Render(c.Request().Context(), c.Response())
 }
 
 // GetCart handles GET /cart
@@ -104,5 +104,5 @@ func (h *CartHandler) GetCart(c echo.Context) error {
 	sessionID := c.Get("sessionID").(string)
 	cart := h.cartService.GetCart(sessionID)
 
-	return components.CartSummary(cart).Render(c.Request().Context(), c.Response())
+	return components.CartSummary(cart, true).Render(c.Request().Context(), c.Response())
 }
