@@ -40,7 +40,8 @@ coverage/
 *.cover
 
 # Go modules
-go.sum
+# go.sum
+
 
 # Test binaries
 *.test
