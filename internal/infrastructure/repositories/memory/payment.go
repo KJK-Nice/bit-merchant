@@ -39,12 +39,12 @@ func (r *MemoryPaymentRepository) FindByID(id domain.PaymentID) (*domain.Payment
 	return payment, nil
 }
 
-// FindByInvoiceID finds a payment by invoice ID
-func (r *MemoryPaymentRepository) FindByInvoiceID(invoiceID string) (*domain.Payment, error) {
+// FindByOrderID finds a payment by order ID
+func (r *MemoryPaymentRepository) FindByOrderID(orderID domain.OrderID) (*domain.Payment, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	for _, payment := range r.payments {
-		if payment.InvoiceID == invoiceID {
+		if payment.OrderID == orderID {
 			return payment, nil
 		}
 	}
@@ -58,21 +58,6 @@ func (r *MemoryPaymentRepository) FindByRestaurantID(restaurantID domain.Restaur
 	var result []*domain.Payment
 	for _, payment := range r.payments {
 		if payment.RestaurantID == restaurantID {
-			result = append(result, payment)
-		}
-	}
-	return result, nil
-}
-
-// FindPendingSettlements finds pending settlement payments for a restaurant
-func (r *MemoryPaymentRepository) FindPendingSettlements(restaurantID domain.RestaurantID) ([]*domain.Payment, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	var result []*domain.Payment
-	for _, payment := range r.payments {
-		if payment.RestaurantID == restaurantID &&
-			payment.Status == domain.PaymentStatusPaid &&
-			payment.SettlementStatus == domain.SettlementStatusPending {
 			result = append(result, payment)
 		}
 	}

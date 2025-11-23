@@ -36,82 +36,74 @@ const (
 
 // Order represents a customer purchase record
 type Order struct {
-	ID                 OrderID
-	OrderNumber        OrderNumber
-	RestaurantID       RestaurantID
-	Items              []OrderItem
-	TotalAmount        int64
-	FiatAmount         float64
-	PaymentStatus      PaymentStatus
-	FulfillmentStatus  FulfillmentStatus
-	LightningInvoiceID string
-	LightningInvoice   string
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
-	CompletedAt        *time.Time
-}
-
-// OrderItem represents an individual item within an order
-type OrderItem struct {
-	ID                OrderItemID
-	OrderID           OrderID
-	MenuItemID        ItemID
-	Quantity          int
-	UnitPrice         float64
-	UnitPriceSatoshis int64
-	Subtotal          int64
+	ID                OrderID
+	OrderNumber       OrderNumber
+	RestaurantID      RestaurantID
+	Items             []OrderItem
+	TotalAmount       int64
+	FiatAmount        float64
+	PaymentMethod     PaymentMethodType
+	PaymentStatus     PaymentStatus
+	FulfillmentStatus FulfillmentStatus
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	PaidAt            *time.Time
+	PreparingAt       *time.Time
+	ReadyAt           *time.Time
+	CompletedAt       *time.Time
 }
 
 // NewOrder creates a new Order with validation
-func NewOrder(id OrderID, orderNumber OrderNumber, restaurantID RestaurantID, items []OrderItem, totalAmount int64, fiatAmount float64, invoiceID, invoice string) (*Order, error) {
+func NewOrder(id OrderID, orderNumber OrderNumber, restaurantID RestaurantID, items []OrderItem, totalAmount int64, paymentMethod PaymentMethodType) (*Order, error) {
 	if len(items) == 0 {
 		return nil, errors.New("order must have at least one item")
 	}
 	if totalAmount <= 0 {
 		return nil, errors.New("total amount must be greater than 0")
 	}
-	if invoiceID == "" {
-		return nil, errors.New("lightning invoice ID is required")
-	}
 
 	now := time.Now()
 	return &Order{
-		ID:                 id,
-		OrderNumber:        orderNumber,
-		RestaurantID:       restaurantID,
-		Items:              items,
-		TotalAmount:        totalAmount,
-		FiatAmount:         fiatAmount,
-		PaymentStatus:      PaymentStatusPaid,
-		FulfillmentStatus:  FulfillmentStatusPaid,
-		LightningInvoiceID: invoiceID,
-		LightningInvoice:   invoice,
-		CreatedAt:          now,
-		UpdatedAt:          now,
+		ID:                id,
+		OrderNumber:       orderNumber,
+		RestaurantID:      restaurantID,
+		Items:             items,
+		TotalAmount:       totalAmount,
+		PaymentMethod:     paymentMethod,
+		PaymentStatus:     PaymentStatusPending,
+		FulfillmentStatus: FulfillmentStatusPaid, // This seems wrong in original code too, should probably be derived
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}, nil
 }
 
+// OrderItem represents an individual item within an order
+type OrderItem struct {
+	ID         OrderItemID
+	OrderID    OrderID
+	MenuItemID ItemID
+	Quantity   int
+	UnitPrice  float64
+	Subtotal   float64
+}
+
 // NewOrderItem creates a new OrderItem
-func NewOrderItem(id OrderItemID, orderID OrderID, menuItemID ItemID, quantity int, unitPrice float64, unitPriceSatoshis int64) (*OrderItem, error) {
+func NewOrderItem(id OrderItemID, orderID OrderID, menuItemID ItemID, quantity int, unitPrice float64) (*OrderItem, error) {
 	if quantity <= 0 {
 		return nil, errors.New("quantity must be greater than 0")
 	}
 	if unitPrice <= 0 {
 		return nil, errors.New("unit price must be greater than 0")
 	}
-	if unitPriceSatoshis <= 0 {
-		return nil, errors.New("unit price in satoshis must be greater than 0")
-	}
 
-	subtotal := int64(quantity) * unitPriceSatoshis
+	subtotal := float64(quantity) * unitPrice
 	return &OrderItem{
-		ID:                id,
-		OrderID:           orderID,
-		MenuItemID:        menuItemID,
-		Quantity:          quantity,
-		UnitPrice:         unitPrice,
-		UnitPriceSatoshis: unitPriceSatoshis,
-		Subtotal:          subtotal,
+		ID:         id,
+		OrderID:    orderID,
+		MenuItemID: menuItemID,
+		Quantity:   quantity,
+		UnitPrice:  unitPrice,
+		Subtotal:   subtotal,
 	}, nil
 }
 

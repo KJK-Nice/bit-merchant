@@ -3,40 +3,41 @@ package http
 import (
 	"net/http"
 
+	"bitmerchant/internal/application/cart"
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/domain"
+	"bitmerchant/internal/interfaces/templates"
 
 	"github.com/labstack/echo/v4"
 )
 
-// MenuHandler handles menu-related HTTP requests
 type MenuHandler struct {
 	getMenuUseCase *menu.GetMenuUseCase
+	cartService    *cart.CartService
 }
 
-// NewMenuHandler creates a new MenuHandler
-func NewMenuHandler(getMenuUseCase *menu.GetMenuUseCase) *MenuHandler {
+func NewMenuHandler(getMenuUseCase *menu.GetMenuUseCase, cartService *cart.CartService) *MenuHandler {
 	return &MenuHandler{
 		getMenuUseCase: getMenuUseCase,
+		cartService:    cartService,
 	}
 }
 
-// GetMenu handles GET /menu
 func (h *MenuHandler) GetMenu(c echo.Context) error {
-	// Get restaurant ID from context or query param
-	// For v1.0, single tenant - get from env or default
-	restaurantID := domain.RestaurantID("rest_001") // TODO: Get from config
-
-	result, err := h.getMenuUseCase.Execute(restaurantID)
-	if err != nil {
-		if err.Error() == "restaurant not found" {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "restaurant not found"})
-		}
-		if err.Error() == "restaurant is closed" {
-			return c.JSON(http.StatusServiceUnavailable, map[string]string{"error": "restaurant is closed"})
-		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	restaurantID := c.QueryParam("restaurantID")
+	if restaurantID == "" {
+		restaurantID = "restaurant_1" // Default for MVP
 	}
 
-	return c.JSON(http.StatusOK, result)
+	// Get Menu Data
+	menuData, err := h.getMenuUseCase.Execute(c.Request().Context(), domain.RestaurantID(restaurantID))
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	// Get Cart Data
+	sessionID := c.Get("sessionID").(string)
+	cart := h.cartService.GetCart(sessionID)
+
+	return templates.MenuPage(menuData, cart).Render(c.Request().Context(), c.Response())
 }

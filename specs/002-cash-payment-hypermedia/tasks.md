@@ -25,11 +25,11 @@
 **Purpose**: Project initialization and basic structure
 
 - [ ] T001 Create project structure per implementation plan in `internal/domain/`, `internal/application/`, `internal/infrastructure/`, `internal/interfaces/`
-- [ ] T002 Initialize Go module with dependencies: `github.com/labstack/echo/v4`, `github.com/a-h/templ`, `github.com/delaneyj/datastar`, `github.com/ThreeDotsLabs/watermill`, `github.com/stretchr/testify`
+- [ ] T002 Initialize Go module with dependencies: `github.com/labstack/echo/v4`, `github.com/a-h/templ`, `github.com/starfederation/datastar`, `github.com/ThreeDotsLabs/watermill`, `github.com/stretchr/testify`, `github.com/aws/aws-sdk-go-v2` (and related S3 modules)
 - [ ] T003 [P] Configure `golangci-lint` with strict rules in `.golangci.yml`
 - [ ] T004 [P] Configure `gocyclo` for complexity checking (<10 per function)
 - [ ] T005 [P] Setup Go test coverage reporting with minimum thresholds (80% standard, 95% critical paths)
-- [ ] T006 [P] Create `.env.example` with configuration template (PORT, RESTAURANT_ID, etc.)
+- [ ] T006 [P] Create `.env.example` with configuration template (PORT, RESTAURANT_ID, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME, etc.)
 - [ ] T007 [P] Setup `cmd/server/main.go` skeleton with Echo server initialization
 - [ ] T008 [P] Create `static/pwa/` directory structure for PWA manifest and service worker
 
@@ -296,9 +296,9 @@
 
 #### Photo Storage Infrastructure
 
-- [ ] T142 [P] [US3] Create photo storage interface in `internal/infrastructure/storage/photo.go` (abstracts S3 or local storage)
+- [ ] T142 [P] [US3] Create photo storage interface in `internal/infrastructure/storage/photo.go` (abstracts S3 operations)
 - [ ] T143 [P] [US3] Implement photo optimization service in `internal/infrastructure/storage/photo_optimizer.go` (compresses to 300KB, validates 2MB upload limit)
-- [ ] T144 [US3] Implement photo storage service (local filesystem for v1.0) in `internal/infrastructure/storage/local_storage.go` (stores original and optimized versions)
+- [ ] T144 [US3] Implement photo storage service using AWS S3 SDK in `internal/infrastructure/storage/s3_storage.go` (stores original and optimized versions in S3 bucket)
 - [ ] T145 [P] [US3] Create photo count service in `internal/infrastructure/storage/photo_count.go` (counts photos per restaurant, validates 100 photo limit before upload) for FR-049
 
 #### HTTP Handlers (Return HTML, Not JSON)

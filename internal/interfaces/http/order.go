@@ -3,41 +3,103 @@ package http
 import (
 	"net/http"
 
+	"bitmerchant/internal/application/cart"
 	"bitmerchant/internal/application/order"
 	"bitmerchant/internal/domain"
+	"bitmerchant/internal/interfaces/templates"
 
 	"github.com/labstack/echo/v4"
 )
 
 // OrderHandler handles order-related HTTP requests
 type OrderHandler struct {
-	getOrderUseCase *order.GetOrderByNumberUseCase
+	createOrderUseCase      *order.CreateOrderUseCase
+	getOrderByNumberUseCase *order.GetOrderByNumberUseCase
+	cartService             *cart.CartService
 }
 
 // NewOrderHandler creates a new OrderHandler
-func NewOrderHandler(getOrderUseCase *order.GetOrderByNumberUseCase) *OrderHandler {
+func NewOrderHandler(
+	createOrderUseCase *order.CreateOrderUseCase,
+	getOrderByNumberUseCase *order.GetOrderByNumberUseCase,
+	cartService *cart.CartService,
+) *OrderHandler {
 	return &OrderHandler{
-		getOrderUseCase: getOrderUseCase,
+		createOrderUseCase:      createOrderUseCase,
+		getOrderByNumberUseCase: getOrderByNumberUseCase,
+		cartService:             cartService,
 	}
+}
+
+// GetConfirmOrder handles GET /order/confirm
+func (h *OrderHandler) GetConfirmOrder(c echo.Context) error {
+	sessionID := c.Get("sessionID").(string)
+	cart := h.cartService.GetCart(sessionID)
+	
+	// Validate cart not empty
+	if len(cart.Items) == 0 {
+		return c.Redirect(http.StatusFound, "/menu")
+	}
+
+	return templates.OrderConfirmationPage(cart).Render(c.Request().Context(), c.Response())
+}
+
+// CreateOrder handles POST /order/create
+func (h *OrderHandler) CreateOrder(c echo.Context) error {
+	sessionID := c.Get("sessionID").(string)
+	cart := h.cartService.GetCart(sessionID)
+
+	if len(cart.Items) == 0 {
+		return c.Redirect(http.StatusFound, "/menu")
+	}
+
+	restaurantID := domain.RestaurantID("restaurant_1") // Default for MVP
+	
+	// Get payment method from form
+	paymentMethodVal := c.FormValue("paymentMethod")
+	var paymentMethod domain.PaymentMethodType
+	if paymentMethodVal == "cash" {
+		paymentMethod = domain.PaymentMethodTypeCash
+	} else {
+		// Default or Error
+		paymentMethod = domain.PaymentMethodTypeCash
+	}
+
+	req := order.CreateOrderRequest{
+		RestaurantID:  restaurantID,
+		SessionID:     sessionID,
+		Cart:          cart,
+		PaymentMethod: paymentMethod,
+	}
+
+	resp, err := h.createOrderUseCase.Execute(c.Request().Context(), req)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to create order: "+err.Error())
+	}
+
+	// Clear cart
+	h.cartService.ClearCart(sessionID)
+
+	// Redirect to status page
+	return c.Redirect(http.StatusFound, "/order/"+string(resp.OrderNumber))
 }
 
 // GetOrder handles GET /order/:orderNumber
 func (h *OrderHandler) GetOrder(c echo.Context) error {
 	orderNumber := c.Param("orderNumber")
 	if orderNumber == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "order number is required"})
+		return c.String(http.StatusBadRequest, "Order number required")
 	}
 
-	// Get restaurant ID (v1.0 single tenant)
-	restaurantID := domain.RestaurantID("rest_001") // TODO: Get from config
+	restaurantID := domain.RestaurantID("restaurant_1") // Default for MVP
 
-	result, err := h.getOrderUseCase.Execute(restaurantID, domain.OrderNumber(orderNumber))
+	result, err := h.getOrderByNumberUseCase.Execute(c.Request().Context(), restaurantID, orderNumber)
 	if err != nil {
 		if err.Error() == "order not found" {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+			return c.String(http.StatusNotFound, "Order not found")
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, result)
+	return templates.OrderStatusPage(result).Render(c.Request().Context(), c.Response())
 }

@@ -9,6 +9,7 @@
 vendor/
 *.log
 .env*
+main
 
 # Build artifacts
 dist/
@@ -48,4 +49,3 @@ go.sum
 .env
 .env.local
 .env.*.local
-

@@ -1,0 +1,22 @@
+package templates
+
+import "bitmerchant/internal/application/cart"
+import "bitmerchant/internal/interfaces/templates/components"
+
+templ OrderConfirmationPage(cart *cart.Cart) {
+	@Layout("Confirm Order") {
+		<h1>Confirm Order</h1>
+		@components.CartSummary(cart)
+		
+		<form action="/order/create" method="POST">
+			<p>Please confirm your payment method:</p>
+			<label>
+				<input type="radio" name="paymentMethod" value="cash" checked/>
+				Pay with Cash
+			</label>
+			
+			<button type="submit">Place Order</button>
+		</form>
+	}
+}
+

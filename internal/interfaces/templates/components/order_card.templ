@@ -1,0 +1,65 @@
+package components
+
+import (
+	"bitmerchant/internal/domain"
+	"fmt"
+)
+
+templ OrderCard(order *domain.Order) {
+	<article 
+		id={ fmt.Sprintf("order-%s", order.ID) }
+		class="border p-4 rounded shadow-sm mb-4"
+	>
+		<header class="flex justify-between items-center mb-2">
+			<h3 class="text-lg font-bold">Order #{ string(order.OrderNumber) }</h3>
+			<span class="px-2 py-1 rounded bg-gray-200 text-sm">
+				{ string(order.FulfillmentStatus) }
+			</span>
+		</header>
+		
+		<div class="mb-4">
+			<ul class="list-disc pl-5">
+				for _, item := range order.Items {
+					<li>{ fmt.Sprintf("%dx", item.Quantity) } Item { string(item.MenuItemID) }</li>
+				}
+			</ul>
+		</div>
+
+		<div class="flex justify-between items-center">
+			<div class="text-sm text-gray-600">
+				Total: { fmt.Sprintf("$%.2f", order.FiatAmount) }
+				if order.PaymentStatus == domain.PaymentStatusPaid {
+					<span class="ml-2 text-green-600 font-bold">PAID</span>
+				} else {
+					<span class="ml-2 text-red-600 font-bold">UNPAID</span>
+				}
+			</div>
+
+			<div class="actions">
+				if order.PaymentStatus == domain.PaymentStatusPending {
+					<button
+						class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+						data-on:click={ fmt.Sprintf("@post('/kitchen/order/%s/mark-paid')", order.ID) }
+					>
+						Mark Paid
+					</button>
+				} else if order.FulfillmentStatus == domain.FulfillmentStatusPaid {
+					<button
+						class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+						data-on:click={ fmt.Sprintf("@post('/kitchen/order/%s/mark-preparing')", order.ID) }
+					>
+						Start Preparing
+					</button>
+				} else if order.FulfillmentStatus == domain.FulfillmentStatusPreparing {
+					<button
+						class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+						data-on:click={ fmt.Sprintf("@post('/kitchen/order/%s/mark-ready')", order.ID) }
+					>
+						Mark Ready
+					</button>
+				}
+			</div>
+		</div>
+	</article>
+}
+

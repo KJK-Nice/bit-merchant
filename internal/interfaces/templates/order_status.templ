@@ -1,0 +1,36 @@
+package templates
+
+import (
+	"bitmerchant/internal/domain"
+	"fmt"
+)
+
+templ OrderStatus(order *domain.Order) {
+	<div 
+		id="order-status"
+		data-init={ fmt.Sprintf("@get('/order/%s/stream')", order.OrderNumber) }
+	>
+		<h1>Order #{ string(order.OrderNumber) }</h1>
+		
+		<div id="status-display">
+			<p>Status: <strong>{ string(order.FulfillmentStatus) }</strong></p>
+			<p>Payment: { string(order.PaymentStatus) }</p>
+		</div>
+
+		<div>
+			<h3>Items</h3>
+			<ul>
+				for _, item := range order.Items {
+					<li>Item ID: { string(item.MenuItemID) } x { fmt.Sprintf("%d", item.Quantity) }</li>
+				}
+			</ul>
+			<p>Total: { fmt.Sprintf("$%.2f", order.FiatAmount) }</p>
+		</div>
+	</div>
+}
+
+templ OrderStatusPage(order *domain.Order) {
+	@Layout("Order Status") {
+		@OrderStatus(order)
+	}
+}

@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -30,9 +31,12 @@ func NewEventBus() *EventBus {
 // Publish publishes a domain event
 func (b *EventBus) Publish(ctx context.Context, topic string, event interface{}) error {
 	// Convert domain event to Watermill message
-	// This is a simplified implementation
-	// In production, you'd serialize the event properly
-	msg := message.NewMessage(watermill.NewUUID(), []byte(topic))
+	payload, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	msg := message.NewMessage(watermill.NewUUID(), payload)
 	return b.publisher.Publish(topic, msg)
 }
 

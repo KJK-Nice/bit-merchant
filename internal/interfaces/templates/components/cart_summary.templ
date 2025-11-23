@@ -1,0 +1,30 @@
+package components
+
+import "bitmerchant/internal/application/cart"
+import "fmt"
+
+templ CartSummary(cart *cart.Cart) {
+	<div id="cart-summary">
+		<h3>Your Cart</h3>
+		if len(cart.Items) == 0 {
+			<p>Cart is empty</p>
+		} else {
+			<ul>
+				for _, item := range cart.Items {
+					<li>
+						<span>{ item.Name } x { fmt.Sprintf("%d", item.Quantity) }</span>
+						<span>{ fmt.Sprintf("$%.2f", item.Subtotal) }</span>
+						<button 
+							data-on:click={ fmt.Sprintf("@post('/cart/remove?itemID=%s')", item.ItemID) }
+						>Remove</button>
+					</li>
+				}
+			</ul>
+			<div>
+				<strong>Total: { fmt.Sprintf("$%.2f", cart.Total) }</strong>
+			</div>
+			<a href="/order/confirm">Checkout</a>
+		}
+	</div>
+}
+

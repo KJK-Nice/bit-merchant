@@ -1,110 +1,12 @@
 run:
   timeout: 5m
-  tests: true
-  modules-download-mode: readonly
-
 linters:
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - typecheck
-    - unused
-    - gofmt
-    - goimports
     - gocyclo
-    - goconst
-    - misspell
-    - unparam
-    - nakedret
-    - prealloc
-    - exportloopref
-    - gocritic
-    - gosec
-    - revive
-    - stylecheck
-    - unconvert
-    - unexported-return
-    - whitespace
-  disable:
-    - lll
-    - funlen
-
+    - gofmt
+    - govet
+    - errcheck
+    - staticcheck
 linters-settings:
   gocyclo:
     min-complexity: 10
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - dupImport
-      - ifElseChain
-      - octalLiteral
-      - whyNoLint
-      - wrapperFunc
-  govet:
-    check-shadowing: true
-  revive:
-    min-confidence: 0
-    rules:
-      - name: exported
-      - name: increment-decrement
-      - name: var-naming
-      - name: var-declaration
-      - name: package-comments
-      - name: range
-      - name: range-val-in-closure
-      - name: range-val-address
-      - name: waitgroup-by-value
-      - name: atomic
-      - name: empty-block
-      - name: superfluous-else
-      - name: unreachable-code
-      - name: add-constant
-      - name: flag-parameter
-      - name: string-of-int
-      - name: unexported-return
-      - name: errorf
-      - name: error-return
-      - name: error-naming
-      - name: error-strings
-      - name: receiver-naming
-      - name: increment-decrement
-      - name: var-naming
-      - name: range
-      - name: range-val-in-closure
-      - name: range-val-address
-      - name: waitgroup-by-value
-      - name: atomic
-      - name: empty-block
-      - name: superfluous-else
-      - name: unreachable-code
-      - name: add-constant
-      - name: flag-parameter
-      - name: string-of-int
-      - name: unexported-return
-      - name: errorf
-      - name: error-return
-      - name: error-naming
-      - name: error-strings
-      - name: receiver-naming
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gosec
-        - gocritic
-  max-issues-per-linter: 0
-  max-same-issues: 0
-

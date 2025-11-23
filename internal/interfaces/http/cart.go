@@ -2,106 +2,107 @@ package http
 
 import (
 	"net/http"
+	"strconv"
 
 	"bitmerchant/internal/application/cart"
 	"bitmerchant/internal/domain"
+	"bitmerchant/internal/interfaces/templates/components"
 
 	"github.com/labstack/echo/v4"
 )
 
 // CartHandler handles cart-related HTTP requests
 type CartHandler struct {
-	addToCartUseCase      *cart.AddToCartUseCase
-	removeFromCartUseCase *cart.RemoveFromCartUseCase
-	getCartUseCase        *cart.GetCartUseCase
+	cartService *cart.CartService
+	itemRepo    domain.MenuItemRepository // Need item repo to get item details for AddItem
 }
 
 // NewCartHandler creates a new CartHandler
-func NewCartHandler(
-	addToCartUseCase *cart.AddToCartUseCase,
-	removeFromCartUseCase *cart.RemoveFromCartUseCase,
-	getCartUseCase *cart.GetCartUseCase,
-) *CartHandler {
+func NewCartHandler(cartService *cart.CartService, itemRepo domain.MenuItemRepository) *CartHandler {
 	return &CartHandler{
-		addToCartUseCase:      addToCartUseCase,
-		removeFromCartUseCase: removeFromCartUseCase,
-		getCartUseCase:        getCartUseCase,
+		cartService: cartService,
+		itemRepo:    itemRepo,
 	}
-}
-
-// AddToCartRequest represents add to cart request
-type AddToCartRequest struct {
-	ItemID   string `json:"itemId"`
-	Quantity int    `json:"quantity"`
-}
-
-// RemoveFromCartRequest represents remove from cart request
-type RemoveFromCartRequest struct {
-	ItemID   string `json:"itemId"`
-	Quantity int    `json:"quantity"`
 }
 
 // AddToCart handles POST /cart/add
 func (h *CartHandler) AddToCart(c echo.Context) error {
-	var req AddToCartRequest
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request"})
+	// Datastar sends JSON by default or form encoded?
+	// If using @post('/cart/add', { ... }), it sends JSON payload if header not set.
+	// However, c.FormValue works for both if Echo binder is used or content type is form.
+	// Datastar fetch defaults to JSON.
+	// Echo's c.FormValue does NOT parse JSON body automatically without Bind.
+	// But we can use a struct to bind.
+
+	type AddToCartRequest struct {
+		ItemID   string `json:"itemID" form:"itemID"`
+		Quantity string `json:"quantity" form:"quantity"` // Datastar sends strings usually in params object
 	}
 
-	sessionID := getSessionID(c)
-	cartResult, err := h.addToCartUseCase.Execute(sessionID, domain.ItemID(req.ItemID), req.Quantity)
+	req := new(AddToCartRequest)
+	if err := c.Bind(req); err != nil {
+		return c.String(http.StatusBadRequest, "Invalid request")
+	}
+
+	// Fallback to query params if body is empty (e.g. Datastar @post without signals)
+	if req.ItemID == "" {
+		req.ItemID = c.QueryParam("itemID")
+	}
+	if req.Quantity == "" {
+		req.Quantity = c.QueryParam("quantity")
+	}
+
+	quantity, _ := strconv.Atoi(req.Quantity)
+	if quantity <= 0 {
+		quantity = 1
+	}
+
+	sessionID := c.Get("sessionID").(string)
+
+	item, err := h.itemRepo.FindByID(domain.ItemID(req.ItemID))
 	if err != nil {
-		if err.Error() == "item not found" || err.Error() == "item is not available" {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
-		}
-		if err.Error() == "restaurant is closed" {
-			return c.JSON(http.StatusServiceUnavailable, map[string]string{"error": err.Error()})
-		}
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.String(http.StatusBadRequest, "Item not found")
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"cart": cartResult})
+	if err := h.cartService.AddItem(sessionID, item, quantity); err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	// Return updated CartSummary fragment
+	updatedCart := h.cartService.GetCart(sessionID)
+	return components.CartSummary(updatedCart).Render(c.Request().Context(), c.Response())
 }
 
 // RemoveFromCart handles POST /cart/remove
 func (h *CartHandler) RemoveFromCart(c echo.Context) error {
-	var req RemoveFromCartRequest
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request"})
+	type RemoveFromCartRequest struct {
+		ItemID string `json:"itemID" form:"itemID"`
+	}
+	req := new(RemoveFromCartRequest)
+	if err := c.Bind(req); err != nil {
+		return c.String(http.StatusBadRequest, "Invalid request")
 	}
 
-	sessionID := getSessionID(c)
-	cartResult, err := h.removeFromCartUseCase.Execute(sessionID, domain.ItemID(req.ItemID), req.Quantity)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	// Fallback to query params
+	if req.ItemID == "" {
+		req.ItemID = c.QueryParam("itemID")
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"cart": cartResult})
+	sessionID := c.Get("sessionID").(string)
+
+	if err := h.cartService.RemoveItem(sessionID, domain.ItemID(req.ItemID)); err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	// Return updated CartSummary fragment
+	updatedCart := h.cartService.GetCart(sessionID)
+	return components.CartSummary(updatedCart).Render(c.Request().Context(), c.Response())
 }
 
 // GetCart handles GET /cart
 func (h *CartHandler) GetCart(c echo.Context) error {
-	sessionID := getSessionID(c)
-	cartResult := h.getCartUseCase.Execute(sessionID)
+	sessionID := c.Get("sessionID").(string)
+	cart := h.cartService.GetCart(sessionID)
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"cart": cartResult})
-}
-
-// getSessionID extracts session ID from request (cookie or header)
-func getSessionID(c echo.Context) string {
-	// Try cookie first
-	cookie, err := c.Cookie("session_id")
-	if err == nil && cookie != nil {
-		return cookie.Value
-	}
-
-	// Try header
-	sessionID := c.Request().Header.Get("X-Session-ID")
-	if sessionID != "" {
-		return sessionID
-	}
-
-	// Generate new session ID if none exists
-	// In production, this would be handled by session middleware
-	return c.RealIP() + "_" + c.Request().UserAgent()
+	return components.CartSummary(cart).Render(c.Request().Context(), c.Response())
 }

@@ -148,7 +148,6 @@ Linda needs to see daily sales, order count, top-selling items, and payment stat
 **Payment Processing:**
 - **FR-031**: System MUST support payment method abstraction architecture - designed to support multiple payment types (cash initially, Lightning Network in future) without requiring refactoring
 - **FR-032**: System MUST support cash payment confirmation flow - customer confirms intent to pay cash, order created with "Pending Payment" status and payment method type "cash"
-- **FR-033**: System MUST allow kitchen staff to mark orders as "Paid" when cash is received from customer
 - **FR-034**: System MUST validate that orders marked as "Paid" can proceed to "Preparing" status
 - **FR-035**: System MUST display prices in local currency for customer clarity
 - **FR-036**: System MUST track payment status for each order: Pending Payment, Paid, Not Paid (if cancelled)
@@ -167,7 +166,7 @@ Linda needs to see daily sales, order count, top-selling items, and payment stat
 - **FR-045**: System MUST maintain order sequence integrity based on order creation timestamp
 - **FR-046**: System MUST log all order creation, payment status changes, and fulfillment status changes for troubleshooting
 - **FR-047**: System MUST provide order lookup by order number for customers who lost connection (no account needed)
-- **FR-048**: System MUST continue functioning if external services (photos, analytics) temporarily fail
+- **FR-048**: System MUST continue functioning if external services (photos, analytics) temporarily fail, displaying placeholder images for missing photos and disabling analytics views gracefully
 - **FR-049**: System MUST prevent new photo uploads when restaurant reaches 100 photo limit, requiring owner to delete existing photos first
 
 ### Key Entities

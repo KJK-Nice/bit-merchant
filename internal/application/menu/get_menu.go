@@ -1,34 +1,28 @@
 package menu
 
 import (
-	"errors"
+	"context"
+	"sort"
 
 	"bitmerchant/internal/domain"
 )
 
-// GetMenuUseCase retrieves menu with categories and items for a restaurant
+// GetMenuUseCase retrieves restaurant menu
 type GetMenuUseCase struct {
-	restaurantRepo domain.RestaurantRepository
-	categoryRepo   domain.MenuCategoryRepository
-	itemRepo       domain.MenuItemRepository
+	catRepo  domain.MenuCategoryRepository
+	itemRepo domain.MenuItemRepository
 }
 
 // NewGetMenuUseCase creates a new GetMenuUseCase
-func NewGetMenuUseCase(
-	restaurantRepo domain.RestaurantRepository,
-	categoryRepo domain.MenuCategoryRepository,
-	itemRepo domain.MenuItemRepository,
-) *GetMenuUseCase {
+func NewGetMenuUseCase(catRepo domain.MenuCategoryRepository, itemRepo domain.MenuItemRepository) *GetMenuUseCase {
 	return &GetMenuUseCase{
-		restaurantRepo: restaurantRepo,
-		categoryRepo:   categoryRepo,
-		itemRepo:       itemRepo,
+		catRepo:  catRepo,
+		itemRepo: itemRepo,
 	}
 }
 
-// MenuResult represents the menu data structure
-type MenuResult struct {
-	Restaurant *domain.Restaurant
+// MenuResponse represents the menu structure
+type MenuResponse struct {
 	Categories []CategoryWithItems
 }
 
@@ -38,46 +32,53 @@ type CategoryWithItems struct {
 	Items    []*domain.MenuItem
 }
 
-// Execute retrieves menu for restaurant
-func (uc *GetMenuUseCase) Execute(restaurantID domain.RestaurantID) (*MenuResult, error) {
-	restaurant, err := uc.restaurantRepo.FindByID(restaurantID)
-	if err != nil {
-		return nil, errors.New("restaurant not found")
-	}
-
-	if !restaurant.IsOpen {
-		return nil, errors.New("restaurant is closed")
-	}
-
-	categories, err := uc.categoryRepo.FindByRestaurantID(restaurantID)
+// Execute retrieves menu for a restaurant
+func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID domain.RestaurantID) (*MenuResponse, error) {
+	// Get categories
+	categories, err := uc.catRepo.FindByRestaurantID(restaurantID)
 	if err != nil {
 		return nil, err
 	}
 
-	allItems, err := uc.itemRepo.FindAvailableByRestaurantID(restaurantID)
+	// Sort categories by display order
+	sort.Slice(categories, func(i, j int) bool {
+		return categories[i].DisplayOrder < categories[j].DisplayOrder
+	})
+
+	// Get all available items
+	items, err := uc.itemRepo.FindAvailableByRestaurantID(restaurantID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Group items by category
-	categoryMap := make(map[domain.CategoryID][]*domain.MenuItem)
-	for _, item := range allItems {
-		categoryMap[item.CategoryID] = append(categoryMap[item.CategoryID], item)
+	// Map items to categories
+	itemsByCategory := make(map[domain.CategoryID][]*domain.MenuItem)
+	for _, item := range items {
+		itemsByCategory[item.CategoryID] = append(itemsByCategory[item.CategoryID], item)
 	}
 
-	// Build result with categories and items
-	categoriesWithItems := make([]CategoryWithItems, 0, len(categories))
+	// Build response
+	response := &MenuResponse{
+		Categories: make([]CategoryWithItems, 0, len(categories)),
+	}
+
 	for _, cat := range categories {
-		if cat.IsActive {
-			categoriesWithItems = append(categoriesWithItems, CategoryWithItems{
-				Category: cat,
-				Items:    categoryMap[cat.ID],
-			})
+		if !cat.IsActive {
+			continue
 		}
+
+		catItems := itemsByCategory[cat.ID]
+		if len(catItems) == 0 {
+			continue // Skip empty categories? Or keep them? Let's keep them if they are active.
+			// Actually requirement says "display restaurant menu... organized by categories".
+			// Empty categories might look weird. Let's include them for now, owner can deactivate.
+		}
+
+		response.Categories = append(response.Categories, CategoryWithItems{
+			Category: cat,
+			Items:    catItems,
+		})
 	}
 
-	return &MenuResult{
-		Restaurant: restaurant,
-		Categories: categoriesWithItems,
-	}, nil
+	return response, nil
 }

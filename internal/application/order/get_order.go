@@ -1,12 +1,12 @@
 package order
 
 import (
-	"errors"
+	"context"
 
 	"bitmerchant/internal/domain"
 )
 
-// GetOrderByNumberUseCase retrieves order by order number
+// GetOrderByNumberUseCase retrieves order by number
 type GetOrderByNumberUseCase struct {
 	orderRepo domain.OrderRepository
 }
@@ -18,12 +18,7 @@ func NewGetOrderByNumberUseCase(orderRepo domain.OrderRepository) *GetOrderByNum
 	}
 }
 
-// Execute retrieves order by order number
-func (uc *GetOrderByNumberUseCase) Execute(restaurantID domain.RestaurantID, orderNumber domain.OrderNumber) (*domain.Order, error) {
-	order, err := uc.orderRepo.FindByOrderNumber(restaurantID, string(orderNumber))
-	if err != nil {
-		return nil, errors.New("order not found")
-	}
-
-	return order, nil
+// Execute retrieves order by number
+func (uc *GetOrderByNumberUseCase) Execute(ctx context.Context, restaurantID domain.RestaurantID, orderNumber string) (*domain.Order, error) {
+	return uc.orderRepo.FindByOrderNumber(restaurantID, orderNumber)
 }

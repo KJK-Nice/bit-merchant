@@ -42,8 +42,7 @@ type OrderRepository interface {
 type PaymentRepository interface {
 	Save(payment *Payment) error
 	FindByID(id PaymentID) (*Payment, error)
-	FindByInvoiceID(invoiceID string) (*Payment, error)
+	FindByOrderID(orderID OrderID) (*Payment, error)
 	FindByRestaurantID(restaurantID RestaurantID) ([]*Payment, error)
-	FindPendingSettlements(restaurantID RestaurantID) ([]*Payment, error)
 	Update(payment *Payment) error
 }

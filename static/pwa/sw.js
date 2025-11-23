@@ -1,77 +1,43 @@
-// Service Worker for BitMerchant PWA
-// Provides offline support for menu browsing
-
 const CACHE_NAME = 'bitmerchant-v1';
-const CACHE_URLS = [
+const URLS_TO_CACHE = [
   '/',
-  '/static/pwa/manifest.json',
-  '/static/css/main.css',
-  '/static/js/datastar.js'
+  '/menu',
+  '/static/pwa/manifest.json'
 ];
 
-// Install event - cache static assets
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(CACHE_URLS))
-      .then(() => self.skipWaiting())
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(URLS_TO_CACHE);
+      })
   );
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// Fetch event - serve from cache, fallback to network
-self.addEventListener('fetch', (event) => {
-  // Only cache GET requests for menu browsing
-  if (event.request.method !== 'GET') {
-    return;
-  }
-
-  // Don't cache API endpoints or SSE streams
-  if (event.request.url.includes('/api/') || 
-      event.request.url.includes('/stream') ||
-      event.request.url.includes('/payment/')) {
-    return;
-  }
-
+self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        return fetch(event.request).then((response) => {
-          // Don't cache non-successful responses
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
+      .then(response => {
+        if (response) {
           return response;
-        });
-      })
-      .catch(() => {
-        // Offline fallback - return cached menu page if available
-        if (event.request.destination === 'document') {
-          return caches.match('/');
         }
+        return fetch(event.request);
       })
   );
 });
 
+self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});

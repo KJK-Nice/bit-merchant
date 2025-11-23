@@ -2,122 +2,106 @@ package domain_test
 
 import (
 	"testing"
+	"time"
 
 	"bitmerchant/internal/domain"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestMenuItem_DisplayLogic(t *testing.T) {
-	tests := []struct {
-		name          string
-		item          *domain.MenuItem
-		wantAvailable bool
-		wantDisplay   bool
-	}{
-		{
-			name: "available item should display",
-			item: &domain.MenuItem{
-				ID:          "item_001",
-				IsAvailable: true,
-			},
-			wantAvailable: true,
-			wantDisplay:   true,
-		},
-		{
-			name: "unavailable item should not display",
-			item: &domain.MenuItem{
-				ID:          "item_002",
-				IsAvailable: false,
-			},
-			wantAvailable: false,
-			wantDisplay:   false,
-		},
-	}
+func TestNewMenuCategory(t *testing.T) {
+	t.Run("should create valid category", func(t *testing.T) {
+		id := domain.CategoryID("cat_1")
+		restID := domain.RestaurantID("rest_1")
+		name := "Appetizers"
+		order := 1
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.item.IsAvailable != tt.wantAvailable {
-				t.Errorf("IsAvailable = %v, want %v", tt.item.IsAvailable, tt.wantAvailable)
-			}
-			// Item should display if available
-			if (tt.item.IsAvailable) != tt.wantDisplay {
-				t.Errorf("Display logic failed: available=%v, want display=%v", tt.item.IsAvailable, tt.wantDisplay)
-			}
-		})
-	}
+		cat, err := domain.NewMenuCategory(id, restID, name, order)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, cat)
+		assert.Equal(t, id, cat.ID)
+		assert.Equal(t, restID, cat.RestaurantID)
+		assert.Equal(t, name, cat.Name)
+		assert.Equal(t, order, cat.DisplayOrder)
+		assert.True(t, cat.IsActive)
+		assert.WithinDuration(t, time.Now(), cat.CreatedAt, time.Second)
+	})
+
+	t.Run("should fail with empty name", func(t *testing.T) {
+		_, err := domain.NewMenuCategory("id", "rid", "", 1)
+		assert.Error(t, err)
+	})
+
+	t.Run("should fail with negative order", func(t *testing.T) {
+		_, err := domain.NewMenuCategory("id", "rid", "name", -1)
+		assert.Error(t, err)
+	})
 }
 
-func TestNewMenuItem_Validation(t *testing.T) {
-	tests := []struct {
-		name         string
-		id           domain.ItemID
-		categoryID   domain.CategoryID
-		restaurantID domain.RestaurantID
-		itemName     string
-		price        float64
-		wantError    bool
-	}{
-		{
-			name:         "valid item",
-			id:           "item_001",
-			categoryID:   "cat_001",
-			restaurantID: "rest_001",
-			itemName:     "Test Item",
-			price:        10.99,
-			wantError:    false,
-		},
-		{
-			name:         "empty name should fail",
-			id:           "item_002",
-			categoryID:   "cat_001",
-			restaurantID: "rest_001",
-			itemName:     "",
-			price:        10.99,
-			wantError:    true,
-		},
-		{
-			name:         "zero price should fail",
-			id:           "item_003",
-			categoryID:   "cat_001",
-			restaurantID: "rest_001",
-			itemName:     "Test Item",
-			price:        0,
-			wantError:    true,
-		},
-		{
-			name:         "negative price should fail",
-			id:           "item_004",
-			categoryID:   "cat_001",
-			restaurantID: "rest_001",
-			itemName:     "Test Item",
-			price:        -5.99,
-			wantError:    true,
-		},
-	}
+func TestMenuCategory_SetActive(t *testing.T) {
+	cat, _ := domain.NewMenuCategory("id", "rid", "name", 1)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			item, err := domain.NewMenuItem(tt.id, tt.categoryID, tt.restaurantID, tt.itemName, tt.price)
-			if (err != nil) != tt.wantError {
-				t.Errorf("NewMenuItem() error = %v, wantError %v", err, tt.wantError)
-				return
-			}
-			if !tt.wantError && item == nil {
-				t.Error("NewMenuItem() returned nil item without error")
-			}
-		})
-	}
+	cat.SetActive(false)
+	assert.False(t, cat.IsActive)
+
+	cat.SetActive(true)
+	assert.True(t, cat.IsActive)
 }
 
-func TestMenuItem_SetAvailable(t *testing.T) {
-	item, _ := domain.NewMenuItem("item_001", "cat_001", "rest_001", "Test Item", 10.99)
+func TestNewMenuItem(t *testing.T) {
+	t.Run("should create valid item", func(t *testing.T) {
+		id := domain.ItemID("item_1")
+		catID := domain.CategoryID("cat_1")
+		restID := domain.RestaurantID("rest_1")
+		name := "Burger"
+		price := 12.50
 
+		item, err := domain.NewMenuItem(id, catID, restID, name, price)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, item)
+		assert.Equal(t, id, item.ID)
+		assert.Equal(t, name, item.Name)
+		assert.Equal(t, price, item.Price)
+		assert.True(t, item.IsAvailable)
+	})
+
+	t.Run("should fail with invalid price", func(t *testing.T) {
+		_, err := domain.NewMenuItem("id", "cid", "rid", "name", 0)
+		assert.Error(t, err)
+		_, err = domain.NewMenuItem("id", "cid", "rid", "name", -10)
+		assert.Error(t, err)
+	})
+
+	t.Run("should fail with invalid name", func(t *testing.T) {
+		_, err := domain.NewMenuItem("id", "cid", "rid", "", 10)
+		assert.Error(t, err)
+	})
+}
+
+func TestMenuItem_Setters(t *testing.T) {
+	item, _ := domain.NewMenuItem("id", "cid", "rid", "name", 10)
+
+	// Description
+	err := item.SetDescription("Tasty burger")
+	assert.NoError(t, err)
+	assert.Equal(t, "Tasty burger", item.Description)
+
+	// Description too long
+	longDesc := ""
+	for i := 0; i < 501; i++ {
+		longDesc += "a"
+	}
+	err = item.SetDescription(longDesc)
+	assert.Error(t, err)
+
+	// Photos
+	item.SetPhotoURLs("http://thumb.jpg", "http://orig.jpg")
+	assert.Equal(t, "http://thumb.jpg", item.PhotoURL)
+	assert.Equal(t, "http://orig.jpg", item.PhotoOriginalURL)
+
+	// Availability
 	item.SetAvailable(false)
-	if item.IsAvailable {
-		t.Error("SetAvailable(false) did not set IsAvailable to false")
-	}
-
-	item.SetAvailable(true)
-	if !item.IsAvailable {
-		t.Error("SetAvailable(true) did not set IsAvailable to true")
-	}
+	assert.False(t, item.IsAvailable)
 }

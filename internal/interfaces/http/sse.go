@@ -4,116 +4,126 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-
-	"bitmerchant/internal/domain"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
-// SSEConnection represents a Server-Sent Events connection
-type SSEConnection struct {
-	orderNumber domain.OrderNumber
-	ch          chan []byte
+const (
+	// Datastar event names
+	EventDatastarPatchElements = "datastar-patch-elements"
+
+	// Topic names for internal broadcasting
+	TopicKitchen = "kitchen"
+	TopicOrder   = "order:%s"
+)
+
+// SSEHandler handles Server-Sent Events
+type SSEHandler struct {
+	mu      sync.RWMutex
+	clients map[string]map[chan []byte]bool
 }
 
-// SSEHub manages SSE connections for order status updates
-type SSEHub struct {
-	mu          sync.RWMutex
-	connections map[domain.OrderNumber][]*SSEConnection
-}
-
-// NewSSEHub creates a new SSE hub
-func NewSSEHub() *SSEHub {
-	return &SSEHub{
-		connections: make(map[domain.OrderNumber][]*SSEConnection),
+// NewSSEHandler creates a new SSEHandler
+func NewSSEHandler() *SSEHandler {
+	return &SSEHandler{
+		clients: make(map[string]map[chan []byte]bool),
 	}
 }
 
-// Subscribe adds a new SSE connection
-func (h *SSEHub) Subscribe(orderNumber domain.OrderNumber) *SSEConnection {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	conn := &SSEConnection{
-		orderNumber: orderNumber,
-		ch:          make(chan []byte, 10),
-	}
-
-	h.connections[orderNumber] = append(h.connections[orderNumber], conn)
-	return conn
-}
-
-// Unsubscribe removes an SSE connection
-func (h *SSEHub) Unsubscribe(orderNumber domain.OrderNumber, conn *SSEConnection) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	conns := h.connections[orderNumber]
-	for i, c := range conns {
-		if c == conn {
-			h.connections[orderNumber] = append(conns[:i], conns[i+1:]...)
-			break
-		}
-	}
-	close(conn.ch)
-}
-
-// Broadcast sends message to all connections for an order
-func (h *SSEHub) Broadcast(orderNumber domain.OrderNumber, message []byte) {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-
-	conns := h.connections[orderNumber]
-	for _, conn := range conns {
-		select {
-		case conn.ch <- message:
-		default:
-			// Channel full, skip
-		}
-	}
-}
-
-// OrderSSEHandler handles SSE for order status updates
-type OrderSSEHandler struct {
-	hub *SSEHub
-}
-
-// NewOrderSSEHandler creates a new OrderSSEHandler
-func NewOrderSSEHandler(hub *SSEHub) *OrderSSEHandler {
-	return &OrderSSEHandler{
-		hub: hub,
-	}
-}
-
-// StreamOrderStatus handles GET /order/:orderNumber/stream
-func (h *OrderSSEHandler) StreamOrderStatus(c echo.Context) error {
-	orderNumber := domain.OrderNumber(c.Param("orderNumber"))
+// OrderStatusStream handles GET /order/:orderNumber/stream
+func (h *SSEHandler) OrderStatusStream(c echo.Context) error {
+	orderNumber := c.Param("orderNumber")
 	if orderNumber == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "order number is required"})
+		return c.String(http.StatusBadRequest, "Order number required")
 	}
 
-	// Set SSE headers
-	c.Response().Header().Set("Content-Type", "text/event-stream")
-	c.Response().Header().Set("Cache-Control", "no-cache")
-	c.Response().Header().Set("Connection", "keep-alive")
-	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	return h.handleStream(c, fmt.Sprintf(TopicOrder, orderNumber))
+}
 
-	// Subscribe to updates
-	conn := h.hub.Subscribe(orderNumber)
-	defer h.hub.Unsubscribe(orderNumber, conn)
+// KitchenStream handles GET /kitchen/stream
+func (h *SSEHandler) KitchenStream(c echo.Context) error {
+	return h.handleStream(c, TopicKitchen)
+}
 
-	// Send initial connection message
-	fmt.Fprintf(c.Response(), "data: {\"type\":\"connected\"}\n\n")
-	c.Response().Flush()
+func (h *SSEHandler) handleStream(c echo.Context, topic string) error {
+	c.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
+	c.Response().Header().Set(echo.HeaderCacheControl, "no-cache")
+	c.Response().Header().Set(echo.HeaderConnection, "keep-alive")
 
-	// Stream updates
+	clientChan := make(chan []byte)
+	h.addClient(topic, clientChan)
+	defer h.removeClient(topic, clientChan)
+
+	// Send connection established message (optional, helpful for debugging)
+	// c.Response().Write([]byte(": connected\n\n"))
+	// c.Response().Flush()
+
+	ticker := time.NewTicker(15 * time.Second) // Keep-alive
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-c.Request().Context().Done():
 			return nil
-		case message := <-conn.ch:
-			fmt.Fprintf(c.Response(), "data: %s\n\n", message)
+		case msg := <-clientChan:
+			// Message is expected to be fully formatted SSE event
+			if _, err := c.Response().Write(msg); err != nil {
+				return err
+			}
+			c.Response().Flush()
+		case <-ticker.C:
+			if _, err := c.Response().Write([]byte(": keepalive\n\n")); err != nil {
+				return err
+			}
 			c.Response().Flush()
 		}
 	}
+}
+
+func (h *SSEHandler) addClient(id string, client chan []byte) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if _, ok := h.clients[id]; !ok {
+		h.clients[id] = make(map[chan []byte]bool)
+	}
+	h.clients[id][client] = true
+}
+
+func (h *SSEHandler) removeClient(id string, client chan []byte) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if clients, ok := h.clients[id]; ok {
+		delete(clients, client)
+		close(client)
+		if len(clients) == 0 {
+			delete(h.clients, id)
+		}
+	}
+}
+
+// Broadcast sends message to all clients listening to id
+func (h *SSEHandler) Broadcast(id string, message []byte) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	if clients, ok := h.clients[id]; ok {
+		for client := range clients {
+			select {
+			case client <- message:
+			default:
+				// Drop message if client is blocked
+			}
+		}
+	}
+}
+
+// FormatDatastarEvent formats the message as a Datastar SSE event
+func FormatDatastarEvent(fragment string) []byte {
+	return []byte(fmt.Sprintf("event: %s\ndata: elements %s\n\n", EventDatastarPatchElements, fragment))
+}
+
+// FormatDatastarPatch formats the message as a Datastar patch event with selector and mode
+func FormatDatastarPatch(fragment, selector, mode string) []byte {
+	return []byte(fmt.Sprintf("event: %s\ndata: selector %s\ndata: mode %s\ndata: elements %s\n\n",
+		EventDatastarPatchElements, selector, mode, fragment))
 }

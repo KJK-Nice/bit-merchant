@@ -1,0 +1,52 @@
+package templates
+
+import (
+	"bitmerchant/internal/application/cart"
+	"bitmerchant/internal/application/menu"
+	"bitmerchant/internal/interfaces/templates/components"
+	"fmt"
+)
+
+templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
+	@Layout("Menu") {
+		<div class="container mx-auto p-4">
+			<h1 class="text-3xl font-bold mb-4">Menu</h1>
+			
+			<!-- Cart Summary Component -->
+			<div class="mb-6 p-4 border rounded bg-gray-50 sticky top-0 z-10 shadow-sm">
+				@components.CartSummary(cart)
+			</div>
+
+			<div class="space-y-8">
+				for _, cat := range data.Categories {
+					<section>
+						<h2 class="text-2xl font-semibold mb-3 border-b pb-1">{ cat.Category.Name }</h2>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							for _, item := range cat.Items {
+								<article class="border p-4 rounded shadow-sm flex flex-col justify-between">
+									<div>
+										<h3 class="text-xl font-bold">{ item.Name }</h3>
+										<p class="text-gray-600 mb-2">{ item.Description }</p>
+									</div>
+									
+									<div class="mt-4 flex justify-between items-end">
+										<span class="text-lg font-semibold">{ fmt.Sprintf("$%.2f", item.Price) }</span>
+										
+										if item.IsAvailable {
+											<button
+												class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+												data-on:click={ fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID) }
+											>Add to Cart</button>
+										} else {
+											<span class="text-red-500 font-semibold">Out of Stock</span>
+										}
+									</div>
+								</article>
+							}
+						</div>
+					</section>
+				}
+			</div>
+		</div>
+	}
+}
