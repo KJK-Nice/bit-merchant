@@ -11,6 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates/components"
+	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
 func KitchenPage(orders []*domain.Order) templ.Component {
@@ -46,7 +47,7 @@ func KitchenPage(orders []*domain.Order) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"kitchen-display\" data-init=\"@get('/kitchen/stream')\" class=\"container mx-auto p-4\"><h1 class=\"text-2xl font-bold mb-6\">Kitchen Display System</h1><div id=\"orders-list\" class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"kitchen-display\" data-init=\"@get('/kitchen/stream')\" class=\"space-y-6 mt-4\"><h1 class=\"text-2xl font-bold mb-6 sr-only\">Kitchen Display System</h1><div id=\"orders-list\" class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -62,7 +63,7 @@ func KitchenPage(orders []*domain.Order) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Layout("Kitchen Display").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.Dashboard("Kitchen Display", "/kitchen").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
