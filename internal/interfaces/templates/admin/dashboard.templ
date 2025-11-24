@@ -2,8 +2,8 @@ package admin
 
 import (
 	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
+	"bitmerchant/internal/interfaces/templates/layouts"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
@@ -12,10 +12,8 @@ import (
 )
 
 templ Dashboard(menuData *menu.MenuResponse) {
-	@templates.Layout("Admin Dashboard") {
-		<div class="container mx-auto p-4 space-y-8">
-			<h1 class="text-3xl font-bold">Admin Dashboard</h1>
-
+	@layouts.Dashboard("Menu Management", "/admin/dashboard") {
+		<div class="space-y-8 mt-4">
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 				<!-- Menu Management -->
 				<div class="space-y-6">
