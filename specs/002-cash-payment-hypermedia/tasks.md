@@ -354,40 +354,40 @@
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD. Minimum 80% coverage required.**
 
-- [ ] T164 [P] [US4] Unit tests for GetDashboardStatsUseCase in `tests/unit/application/dashboard/get_stats_test.go` (80% coverage, validates calculations)
-- [ ] T165 [P] [US4] Unit tests for GetOrderHistoryUseCase in `tests/unit/application/dashboard/get_history_test.go` (80% coverage)
-- [ ] T166 [P] [US4] Unit tests for GetTopSellingItemsUseCase in `tests/unit/application/dashboard/get_top_items_test.go` (80% coverage, validates ranking)
-- [ ] T167 [P] [US4] Unit tests for ToggleRestaurantOpenUseCase in `tests/unit/application/restaurant/toggle_open_test.go` (80% coverage)
-- [ ] T168 [P] [US4] Contract test for GET /dashboard endpoint in `tests/contract/http/dashboard_test.go` (validates HTML structure, stats display, weekly summary)
-- [ ] T169 [P] [US4] Contract test for POST /dashboard/toggle-open endpoint in `tests/contract/http/dashboard_test.go` (validates restaurant status toggle)
-- [ ] T170 [P] [US4] Integration test for dashboard data accuracy in `tests/integration/dashboard/stats_test.go` (validates calculations match actual orders)
+- [x] T164 [P] [US4] Unit tests for GetDashboardStatsUseCase in `tests/unit/application/dashboard/get_stats_test.go` (80% coverage, validates calculations)
+- [x] T165 [P] [US4] Unit tests for GetOrderHistoryUseCase in `tests/unit/application/dashboard/get_history_test.go` (80% coverage)
+- [x] T166 [P] [US4] Unit tests for GetTopSellingItemsUseCase in `tests/unit/application/dashboard/get_top_items_test.go` (80% coverage, validates ranking)
+- [x] T167 [P] [US4] Unit tests for ToggleRestaurantOpenUseCase in `tests/unit/application/restaurant/toggle_open_test.go` (80% coverage)
+- [x] T168 [P] [US4] Contract test for GET /dashboard endpoint in `tests/contract/http/dashboard_test.go` (validates HTML structure, stats display, weekly summary)
+- [x] T169 [P] [US4] Contract test for POST /dashboard/toggle-open endpoint in `tests/contract/http/dashboard_test.go` (validates restaurant status toggle)
+- [x] T170 [P] [US4] Integration test for dashboard data accuracy in `tests/integration/dashboard/stats_test.go` (validates calculations match actual orders)
 
 ### Implementation for User Story 4
 
 #### Application Layer (Use Cases)
 
-- [ ] T171 [P] [US4] Create GetDashboardStatsUseCase in `internal/application/dashboard/get_stats.go` (calculates orders today, total sales, average order value, supports date range for weekly summary)
-- [ ] T172 [P] [US4] Create GetOrderHistoryUseCase in `internal/application/dashboard/get_history.go` (returns orders with timestamps, items, amounts, statuses, supports date range filtering)
-- [ ] T173 [P] [US4] Create GetTopSellingItemsUseCase in `internal/application/dashboard/get_top_items.go` (ranks items by quantity sold, calculates revenue per item)
-- [ ] T174 [P] [US4] Create ToggleRestaurantOpenUseCase in `internal/application/restaurant/toggle_open.go` (toggles IsOpen status, updates ClosedMessage/ReopeningHours)
+- [x] T171 [P] [US4] Create GetDashboardStatsUseCase in `internal/application/dashboard/get_stats.go` (calculates orders today, total sales, average order value, supports date range for weekly summary)
+- [x] T172 [P] [US4] Create GetOrderHistoryUseCase in `internal/application/dashboard/get_history.go` (returns orders with timestamps, items, amounts, statuses, supports date range filtering)
+- [x] T173 [P] [US4] Create GetTopSellingItemsUseCase in `internal/application/dashboard/get_top_items.go` (ranks items by quantity sold, calculates revenue per item)
+- [x] T174 [P] [US4] Create ToggleRestaurantOpenUseCase in `internal/application/restaurant/toggle_open.go` (toggles IsOpen status, updates ClosedMessage/ReopeningHours)
 
 #### HTTP Handlers (Return HTML, Not JSON)
 
-- [ ] T175 [P] [US4] Create DashboardHandler with GET /dashboard endpoint in `internal/interfaces/http/dashboard.go` (returns HTML page with stats, supports date range query parameter for weekly summary)
-- [ ] T176 [P] [US4] Add POST /dashboard/toggle-open endpoint to DashboardHandler in `internal/interfaces/http/dashboard.go` (returns updated dashboard HTML)
+- [x] T175 [P] [US4] Create DashboardHandler with GET /dashboard endpoint in `internal/interfaces/http/dashboard.go` (returns HTML page with stats, supports date range query parameter for weekly summary)
+- [x] T176 [P] [US4] Add POST /dashboard/toggle-open endpoint to DashboardHandler in `internal/interfaces/http/dashboard.go` (returns updated dashboard HTML)
 
 #### Templ Templates (Server-Rendered HTML)
 
-- [ ] T177 [P] [US4] Create dashboard page template in `internal/interfaces/templates/dashboard.templ` (shows stats, order history table, top items list, toggle open/closed button, date range selector for weekly summary, uses templui.io components)
+- [x] T177 [P] [US4] Create dashboard page template in `internal/interfaces/templates/dashboard.templ` (shows stats, order history table, top items list, toggle open/closed button, date range selector for weekly summary, uses templui.io components)
 
 #### Route Registration
 
-- [ ] T178 [US4] Register dashboard routes (GET /dashboard, POST /dashboard/toggle-open) in `cmd/server/main.go`
+- [x] T178 [US4] Register dashboard routes (GET /dashboard, POST /dashboard/toggle-open) in `cmd/server/main.go`
 
 #### Code Quality Verification
 
-- [ ] T179 [US4] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10
-- [ ] T180 [US4] Verify test coverage: 80% for all US4 components
+- [x] T179 [US4] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10
+- [x] T180 [US4] Verify test coverage: 80% for all US4 components
 
 **Checkpoint**: All user stories should now be independently functional. Complete system supports customer ordering, kitchen fulfillment, menu management, and analytics.
 

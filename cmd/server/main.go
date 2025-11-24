@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"bitmerchant/internal/application/cart"
+	"bitmerchant/internal/application/dashboard"
 	"bitmerchant/internal/application/kitchen"
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/application/order"
@@ -103,11 +104,17 @@ func main() {
 	markPreparingUC := kitchen.NewMarkOrderPreparingUseCase(orderRepo, eventBus)
 	markReadyUC := kitchen.NewMarkOrderReadyUseCase(orderRepo, eventBus)
 
-	// Owner Use Cases
+	// Owner/Admin Use Cases
 	createRestUC := restaurant.NewCreateRestaurantUseCase(restRepo)
 	createCatUC := menu.NewCreateMenuCategoryUseCase(menuCatRepo)
 	createItemUC := menu.NewCreateMenuItemUseCase(menuItemRepo)
 	uploadPhotoUC := menu.NewUploadPhotoUseCase(menuItemRepo, photoStorage)
+
+	// Dashboard/Analytics Use Cases
+	getStatsUC := dashboard.NewGetDashboardStatsUseCase(orderRepo)
+	getHistoryUC := dashboard.NewGetOrderHistoryUseCase(orderRepo)
+	getTopItemsUC := dashboard.NewGetTopSellingItemsUseCase(orderRepo)
+	toggleOpenUC := restaurant.NewToggleRestaurantOpenUseCase(restRepo)
 
 	// For QR generation, we need base URL. For dev it's localhost.
 	baseURL := os.Getenv("BASE_URL")
@@ -122,6 +129,7 @@ func main() {
 	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, cartService)
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC)
 	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuUC, uploadPhotoUC, generateQRUC)
+	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC)
 
 	// 4. Event Handlers
 	orderCreatedHandler := eventHandlers.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
@@ -198,12 +206,16 @@ func main() {
 	e.POST("/kitchen/order/:id/mark-preparing", kitchenHandler.MarkPreparing)
 	e.POST("/kitchen/order/:id/mark-ready", kitchenHandler.MarkReady)
 
-	// Admin/Owner
+	// Admin/Owner Menu Management
 	e.GET("/admin/dashboard", adminHandler.Dashboard)
 	e.POST("/admin/category", adminHandler.CreateCategory)
 	e.POST("/admin/item", adminHandler.CreateItem)
 	e.POST("/admin/item/:id/photo", adminHandler.UploadPhoto)
 	e.GET("/admin/qr", adminHandler.GenerateQR)
+
+	// Dashboard/Analytics
+	e.GET("/dashboard", dashboardHandler.Dashboard)
+	e.POST("/dashboard/toggle-open", dashboardHandler.ToggleOpen)
 
 	// Start server
 	port := os.Getenv("PORT")
