@@ -6,101 +6,130 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/table"
+	"bitmerchant/internal/interfaces/templates/components/ui/badge"
+	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
+	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"fmt"
 )
 
 templ Dashboard(menuData *menu.MenuResponse) {
 	@layouts.Dashboard("Menu Management", "/admin/dashboard") {
 		<div class="space-y-8 mt-4">
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-				<!-- Menu Management -->
-				<div class="space-y-6">
-					<h2 class="text-2xl font-semibold">Menu Categories</h2>
-					
-					<!-- Create Category Form -->
-					@card.Card() {
-						@card.Header() {
-							@card.Title() { Add Category }
-						}
-						@card.Content() {
-							<form action="/admin/category" method="post" class="space-y-4">
-								<div class="space-y-2">
-									<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Name</label>
-									@input.Input(input.Props{Type: "text", Name: "name", Required: true, Placeholder: "e.g. Appetizers"})
-								</div>
-								<div class="space-y-2">
-									<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Display Order</label>
-									@input.Input(input.Props{Type: "number", Name: "displayOrder", Value: "1"})
-								</div>
-								@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Add Category }
-							</form>
+			<div class="flex justify-between items-center">
+				<h2 class="text-3xl font-bold tracking-tight">Menu Management</h2>
+				@dialog.Dialog() {
+					@dialog.Trigger(dialog.TriggerProps{}) {
+						@button.Button(button.Props{}) {
+							@icon.Plus(icon.Props{Class: "mr-2 h-4 w-4"})
+							Add Category
 						}
 					}
+					@dialog.Content(dialog.ContentProps{Title: "Add Category"}) {
+						<form action="/admin/category" method="post" class="space-y-4">
+							<div class="space-y-2">
+								<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Name</label>
+								@input.Input(input.Props{Type: "text", Name: "name", Required: true, Placeholder: "e.g. Appetizers"})
+							</div>
+							<div class="space-y-2">
+								<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Display Order</label>
+								@input.Input(input.Props{Type: "number", Name: "displayOrder", Value: "1"})
+							</div>
+							@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Add Category }
+						</form>
+					}
+				}
+			}
 
-					<!-- Categories List -->
-					<div class="space-y-6">
-						for _, catData := range menuData.Categories {
-							@card.Card() {
-								@card.Header(card.HeaderProps{Class: "pb-2"}) {
-									@card.Title() { { catData.Category.Name } }
-								}
-								@card.Content() {
-									<!-- Items in Category -->
-									if len(catData.Items) > 0 {
-										<div class="space-y-2 mb-6">
-											for _, item := range catData.Items {
-												<div class="flex justify-between items-center border-b pb-2 last:border-0">
-													<span class="font-medium">{ item.Name }</span>
-													<span class="text-muted-foreground">{ fmt.Sprintf("$%.2f", item.Price) }</span>
-												</div>
-											}
-										</div>
-									} else {
-										<p class="text-muted-foreground italic mb-6">No items</p>
+			<!-- Categories List -->
+			<div class="space-y-6">
+				for _, catData := range menuData.Categories {
+					@card.Card() {
+						@card.Header(card.HeaderProps{Class: "flex flex-row items-center justify-between space-y-0 pb-2"}) {
+							@card.Title() { { catData.Category.Name } }
+							@dialog.Dialog() {
+								@dialog.Trigger(dialog.TriggerProps{}) {
+									@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
+										@icon.Plus(icon.Props{Class: "mr-2 h-4 w-4"})
+										Add Item
 									}
-
-									<!-- Add Item to Category Form -->
-									<div class="border-t pt-4">
-										<h5 class="font-semibold mb-4">Add Item</h5>
-										<form action="/admin/item" method="post" class="space-y-4">
-											<input type="hidden" name="categoryID" value={ string(catData.Category.ID) }/>
-											<div class="grid grid-cols-2 gap-4">
-												<div class="space-y-2">
-													@input.Input(input.Props{Type: "text", Name: "name", Placeholder: "Item Name", Required: true})
-												</div>
-												<div class="space-y-2">
-													@input.Input(input.Props{Type: "number", Step: "0.01", Name: "price", Placeholder: "Price", Required: true})
-												</div>
+								}
+								@dialog.Content(dialog.ContentProps{Title: "Add Item to " + catData.Category.Name}) {
+									<form action="/admin/item" method="post" class="space-y-4">
+										<input type="hidden" name="categoryID" value={ string(catData.Category.ID) }/>
+										<div class="grid grid-cols-2 gap-4">
+											<div class="space-y-2">
+												<label class="text-sm font-medium">Name</label>
+												@input.Input(input.Props{Type: "text", Name: "name", Placeholder: "Item Name", Required: true})
 											</div>
 											<div class="space-y-2">
-												<textarea 
-													name="description" 
-													placeholder="Description" 
-													class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-												></textarea>
+												<label class="text-sm font-medium">Price</label>
+												@input.Input(input.Props{Type: "number", Step: "0.01", Name: "price", Placeholder: "Price", Required: true})
 											</div>
-											<div class="flex items-center space-x-2">
-												<input type="checkbox" name="available" checked class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"/>
-												<label class="text-sm font-medium leading-none">Available</label>
-											</div>
-											@button.Button(button.Props{Type: "submit", Variant: button.VariantSecondary, Class: "w-full"}) { Add Item }
-										</form>
-									</div>
+										</div>
+										<div class="space-y-2">
+											<label class="text-sm font-medium">Description</label>
+											<textarea 
+												name="description" 
+												placeholder="Description" 
+												class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+											></textarea>
+										</div>
+										<div class="flex items-center space-x-2">
+											<input type="checkbox" name="available" checked class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"/>
+											<label class="text-sm font-medium leading-none">Available</label>
+										</div>
+										@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Add Item }
+									</form>
 								}
 							}
 						}
-					</div>
-				</div>
-
-				<!-- Restaurant Settings & QR -->
-				<div>
-					<h2 class="text-2xl font-semibold mb-4">Restaurant Settings</h2>
-					@card.Card() {
 						@card.Content() {
-							<p class="text-muted-foreground">Restaurant settings and QR code generation (Coming Soon)</p>
+							if len(catData.Items) > 0 {
+								@table.Table() {
+									@table.Header() {
+										@table.Row() {
+											@table.Head() { Name }
+											@table.Head() { Price }
+											@table.Head() { Status }
+											@table.Head(table.HeadProps{Class: "text-right"}) { Actions }
+										}
+									}
+									@table.Body() {
+										for _, item := range catData.Items {
+											@table.Row() {
+												@table.Cell(table.CellProps{Class: "font-medium"}) { { item.Name } }
+												@table.Cell() { { fmt.Sprintf("$%.2f", item.Price) } }
+												@table.Cell() {
+													@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Available }
+												}
+												@table.Cell(table.CellProps{Class: "text-right"}) {
+													@button.Button(button.Props{Variant: button.VariantGhost, Size: button.SizeIcon}) {
+														@icon.Pencil(icon.Props{Class: "h-4 w-4"})
+													}
+												}
+											}
+										}
+									}
+								}
+							} else {
+								<div class="text-center py-6 text-muted-foreground">
+									No items in this category
+								</div>
+							}
 						}
 					}
-				</div>
+				}
+			</div>
+
+			<!-- Restaurant Settings & QR -->
+			<div>
+				<h2 class="text-2xl font-semibold mb-4">Restaurant Settings</h2>
+				@card.Card() {
+					@card.Content() {
+						<p class="text-muted-foreground">Restaurant settings and QR code generation (Coming Soon)</p>
+					}
+				}
 			</div>
 		</div>
 	}

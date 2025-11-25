@@ -1,0 +1,21 @@
+version: "3"
+
+vars:
+  TAILWIND_CMD:
+    sh: command -v tailwindcss >/dev/null 2>&1 && echo "tailwindcss" || echo "npx tailwindcss@latest"
+
+tasks:
+  templ:
+    desc: Run templ with integrated server and hot reload
+    cmds:
+      - templ generate --watch --proxy="http://localhost:8080" --cmd="go run ./cmd/server/main.go" --open-browser=false
+
+  tailwind:
+    desc: Watch Tailwind CSS changes
+    cmds:
+      - "{{.TAILWIND_CMD}} -i ./assets/css/input.css -o ./assets/css/output.css --watch"
+
+  dev:
+    desc: Start development server with hot reload
+    cmds:
+      - task --parallel tailwind templ

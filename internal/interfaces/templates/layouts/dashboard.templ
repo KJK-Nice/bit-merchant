@@ -3,9 +3,10 @@ package layouts
 import (
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
-	"bitmerchant/internal/interfaces/templates/components/ui/separator"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
-	"bitmerchant/internal/interfaces/templates/components/ui/popover"
+	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
+	"bitmerchant/internal/interfaces/templates/components/ui/collapsible"
+	"bitmerchant/internal/interfaces/templates/components/ui/avatar"
 )
 
 templ Dashboard(title string, currentPath string) {
@@ -16,187 +17,154 @@ templ Dashboard(title string, currentPath string) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title } | BitMerchant</title>
 			<link rel="manifest" href="/static/pwa/manifest.json"/>
-			<script src="https://cdn.tailwindcss.com"></script>
-			<script>
-				tailwind.config = {
-					theme: {
-						container: {
-							center: true,
-							padding: "2rem",
-							screens: {
-								"2xl": "1400px",
-							},
-						},
-						extend: {
-							colors: {
-								border: "hsl(var(--border))",
-								input: "hsl(var(--input))",
-								ring: "hsl(var(--ring))",
-								background: "hsl(var(--background))",
-								foreground: "hsl(var(--foreground))",
-								primary: {
-									DEFAULT: "hsl(var(--primary))",
-									foreground: "hsl(var(--primary-foreground))",
-								},
-								secondary: {
-									DEFAULT: "hsl(var(--secondary))",
-									foreground: "hsl(var(--secondary-foreground))",
-								},
-								destructive: {
-									DEFAULT: "hsl(var(--destructive))",
-									foreground: "hsl(var(--destructive-foreground))",
-								},
-								muted: {
-									DEFAULT: "hsl(var(--muted))",
-									foreground: "hsl(var(--muted-foreground))",
-								},
-								accent: {
-									DEFAULT: "hsl(var(--accent))",
-									foreground: "hsl(var(--accent-foreground))",
-								},
-								popover: {
-									DEFAULT: "hsl(var(--popover))",
-									foreground: "hsl(var(--popover-foreground))",
-								},
-								card: {
-									DEFAULT: "hsl(var(--card))",
-									foreground: "hsl(var(--card-foreground))",
-								},
-                                sidebar: {
-                                    DEFAULT: "hsl(var(--sidebar-background))",
-                                    foreground: "hsl(var(--sidebar-foreground))",
-                                    primary: "hsl(var(--sidebar-primary))",
-                                    "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-                                    accent: "hsl(var(--sidebar-accent))",
-                                    "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-                                    border: "hsl(var(--sidebar-border))",
-                                    ring: "hsl(var(--sidebar-ring))",
-                                },
-							},
-							borderRadius: {
-								lg: "var(--radius)",
-								md: "calc(var(--radius) - 2px)",
-								sm: "calc(var(--radius) - 4px)",
-							},
-						},
-					},
-				}
-			</script>
-			<style type="text/tailwindcss">
-				@layer base {
-					:root {
-						--background: 0 0% 100%;
-						--foreground: 240 10% 3.9%;
-						--card: 0 0% 100%;
-						--card-foreground: 240 10% 3.9%;
-						--popover: 0 0% 100%;
-						--popover-foreground: 240 10% 3.9%;
-						--primary: 240 5.9% 10%;
-						--primary-foreground: 0 0% 98%;
-						--secondary: 240 4.8% 95.9%;
-						--secondary-foreground: 240 5.9% 10%;
-						--muted: 240 4.8% 95.9%;
-						--muted-foreground: 240 3.8% 46.1%;
-						--accent: 240 4.8% 95.9%;
-						--accent-foreground: 240 5.9% 10%;
-						--destructive: 0 84.2% 60.2%;
-						--destructive-foreground: 0 0% 98%;
-						--border: 240 5.9% 90%;
-						--input: 240 5.9% 90%;
-						--ring: 240 10% 3.9%;
-						--radius: 0.5rem;
-                        /* Sidebar colors */
-                        --sidebar-background: 0 0% 98%;
-                        --sidebar-foreground: 240 5.3% 26.1%;
-                        --sidebar-primary: 240 5.9% 10%;
-                        --sidebar-primary-foreground: 0 0% 98%;
-                        --sidebar-accent: 240 4.8% 95.9%;
-                        --sidebar-accent-foreground: 240 5.9% 10%;
-                        --sidebar-border: 220 13% 91%;
-                        --sidebar-ring: 217.2 91.2% 59.8%;
-					}
-				}
-			</style>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
 			<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js"></script>
 			<script src="/assets/js/input.min.js"></script>
             @sidebar.Script()
             @dialog.Script()
-            @popover.Script()
+            @dropdown.Script()
 		</head>
 		<body class="bg-background text-foreground antialiased min-h-screen">
-             @sidebar.Layout(sidebar.LayoutProps{
-                Class: "bg-background",
-            }) {
-                @sidebar.Sidebar() {
-                     @sidebar.Header(sidebar.HeaderProps{Class: "border-b p-4"}) {
-                         <div class="flex items-center gap-2 font-bold text-xl">
-                             @icon.WalletCards(icon.Props{Class: "size-6"})
-                             <span>BitMerchant</span>
-                         </div>
-                     }
-                     @sidebar.Content() {
-                         @sidebar.Group() {
-                             @sidebar.Menu() {
-                                 @sidebar.MenuItem() {
-                                     @sidebar.MenuButton(sidebar.MenuButtonProps{
-                                         Href: "/dashboard",
-                                         IsActive: currentPath == "/dashboard",
-                                     }) {
-                                         @icon.LayoutDashboard(icon.Props{Class: "size-4"})
-                                         <span>Dashboard</span>
-                                     }
-                                 }
-                                 @sidebar.MenuItem() {
-                                      @sidebar.MenuButton(sidebar.MenuButtonProps{
-                                         Href: "/kitchen",
-                                         IsActive: currentPath == "/kitchen",
-                                     }) {
-                                         @icon.Utensils(icon.Props{Class: "size-4"})
-                                         <span>Kitchen Display</span>
-                                     }
-                                 }
-                                 @sidebar.MenuItem() {
-                                      @sidebar.MenuButton(sidebar.MenuButtonProps{
-                                         Href: "/admin/dashboard",
-                                         IsActive: currentPath == "/admin/dashboard",
-                                     }) {
-                                         @icon.Menu(icon.Props{Class: "size-4"})
-                                         <span>Menu Management</span>
-                                     }
-                                 }
-                                  @sidebar.MenuItem() {
-                                      @sidebar.MenuButton(sidebar.MenuButtonProps{
-                                         Href: "/admin/qr",
-                                         IsActive: currentPath == "/admin/qr",
-                                     }) {
-                                         @icon.QrCode(icon.Props{Class: "size-4"})
-                                         <span>QR Code</span>
-                                     }
-                                 }
-                             }
-                         }
-                     }
-                     @sidebar.Footer(sidebar.FooterProps{Class: "border-t p-4"}) {
-                        <div class="text-xs text-muted-foreground">
-                            <p>BitMerchant v1.0</p>
-                            <p>© 2025</p>
-                        </div>
-                     }
-                }
-                @sidebar.Inset() {
-                     <header class="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-                         @sidebar.Trigger(sidebar.TriggerProps{Class: "-ml-1"})
-                         @separator.Separator(separator.Props{
-                             Attributes: templ.Attributes{"orientation": "vertical"},
-                             Class: "mr-2 h-4",
-                         })
-                         <div class="font-medium">{ title }</div>
-                     </header>
-                     <div class="flex-1 flex flex-col p-4 pt-0">
-                         { children... }
-                     </div>
-                }
-            }
+			@sidebar.Layout(sidebar.LayoutProps{
+				Class: "bg-background",
+			}) {
+				@sidebar.Sidebar(sidebar.Props{
+					Collapsible: sidebar.CollapsibleIcon,
+					Variant:     sidebar.VariantFloating,
+				}) {
+					@sidebar.Header() {
+						@sidebar.Menu() {
+							@sidebar.MenuItem() {
+								@sidebar.MenuButton(sidebar.MenuButtonProps{
+									Href: "/dashboard",
+								}) {
+									@icon.WalletCards(icon.Props{Class: "size-6"})
+									<span class="font-semibold">BitMerchant</span>
+								}
+							}
+						}
+					}
+					@sidebar.Content() {
+						@sidebar.Group() {
+							@sidebar.GroupLabel() {
+								Platform
+							}
+							@sidebar.Menu() {
+								@sidebar.MenuItem() {
+									@sidebar.MenuButton(sidebar.MenuButtonProps{
+										Href:     "/dashboard",
+										IsActive: currentPath == "/dashboard",
+										Tooltip:  "Dashboard",
+									}) {
+										@icon.LayoutDashboard(icon.Props{Class: "size-4"})
+										<span>Dashboard</span>
+									}
+								}
+								@sidebar.MenuItem() {
+									@sidebar.MenuButton(sidebar.MenuButtonProps{
+										Href:     "/kitchen",
+										IsActive: currentPath == "/kitchen",
+										Tooltip:  "Kitchen Display",
+									}) {
+										@icon.Utensils(icon.Props{Class: "size-4"})
+										<span>Kitchen Display</span>
+									}
+								}
+							}
+						}
+						@sidebar.Separator()
+						@sidebar.Group() {
+							@sidebar.GroupLabel() {
+								Admin
+							}
+							@sidebar.Menu() {
+								@sidebar.MenuItem() {
+									@sidebar.MenuButton(sidebar.MenuButtonProps{
+										Href:     "/admin/dashboard",
+										IsActive: currentPath == "/admin/dashboard",
+										Tooltip:  "Menu Management",
+									}) {
+										@icon.Menu(icon.Props{Class: "size-4"})
+										<span>Menu Management</span>
+									}
+								}
+								@sidebar.MenuItem() {
+									@sidebar.MenuButton(sidebar.MenuButtonProps{
+										Href:     "/admin/qr",
+										IsActive: currentPath == "/admin/qr",
+										Tooltip:  "QR Code",
+									}) {
+										@icon.QrCode(icon.Props{Class: "size-4"})
+										<span>QR Code</span>
+									}
+								}
+							}
+						}
+					}
+					@sidebar.Footer() {
+						@sidebar.Menu() {
+							@sidebar.MenuItem() {
+								@dropdown.Dropdown() {
+									@dropdown.Trigger() {
+										@sidebar.MenuButton(sidebar.MenuButtonProps{
+											Size: sidebar.MenuButtonSizeLg,
+										}) {
+											@avatar.Avatar(avatar.Props{Class: "size-8 rounded-lg"}) {
+												@avatar.Image(avatar.ImageProps{
+													Src: "https://avatars.githubusercontent.com/u/26936893?v=4",
+												})
+												@avatar.Fallback() { BM }
+											}
+											<div class="grid flex-1 text-left text-sm leading-tight">
+												<span class="truncate font-medium">Admin User</span>
+												<span class="truncate text-xs">admin@bitmerchant.com</span>
+											</div>
+											@icon.ChevronsUpDown(icon.Props{Class: "ml-auto size-4"})
+										}
+									}
+									@dropdown.Content(dropdown.ContentProps{
+										Class:     "w-56",
+										Placement: dropdown.PlacementTopStart,
+									}) {
+										@dropdown.Label() {
+											Admin User
+										}
+										@dropdown.Separator()
+										@dropdown.Item() {
+											<span class="flex items-center">
+												@icon.User(icon.Props{Size: 16, Class: "mr-2"})
+												Profile
+											</span>
+										}
+										@dropdown.Item() {
+											<span class="flex items-center">
+												@icon.Settings(icon.Props{Size: 16, Class: "mr-2"})
+												Settings
+											</span>
+										}
+										@dropdown.Separator()
+										@dropdown.Item() {
+											<span class="flex items-center">
+												@icon.LogOut(icon.Props{Size: 16, Class: "mr-2"})
+												Log out
+											</span>
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				@sidebar.Inset() {
+					<header class="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+						@sidebar.Trigger(sidebar.TriggerProps{Class: "-ml-1"})
+						<div class="font-medium">{ title }</div>
+					</header>
+					<div class="flex-1 flex flex-col p-4 pt-0">
+						{ children... }
+					</div>
+				}
+			}
 		</body>
 	</html>
 }
