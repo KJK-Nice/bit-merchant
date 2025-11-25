@@ -12,7 +12,6 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
-	"bitmerchant/internal/interfaces/templates/components/ui/separator"
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
 )
 
@@ -44,13 +43,13 @@ func Dashboard(title string, currentPath string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 17, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 16, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " | BitMerchant</title><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><script src=\"https://cdn.tailwindcss.com\"></script><script>\n\t\t\t\ttailwind.config = {\n\t\t\t\t\ttheme: {\n\t\t\t\t\t\tcontainer: {\n\t\t\t\t\t\t\tcenter: true,\n\t\t\t\t\t\t\tpadding: \"2rem\",\n\t\t\t\t\t\t\tscreens: {\n\t\t\t\t\t\t\t\t\"2xl\": \"1400px\",\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t},\n\t\t\t\t\t\textend: {\n\t\t\t\t\t\t\tcolors: {\n\t\t\t\t\t\t\t\tborder: \"hsl(var(--border))\",\n\t\t\t\t\t\t\t\tinput: \"hsl(var(--input))\",\n\t\t\t\t\t\t\t\tring: \"hsl(var(--ring))\",\n\t\t\t\t\t\t\t\tbackground: \"hsl(var(--background))\",\n\t\t\t\t\t\t\t\tforeground: \"hsl(var(--foreground))\",\n\t\t\t\t\t\t\t\tprimary: {\n\t\t\t\t\t\t\t\t\tDEFAULT: \"hsl(var(--primary))\",\n\t\t\t\t\t\t\t\t\tforeground: \"hsl(var(--primary-foreground))\",\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tsecondary: {\n\t\t\t\t\t\t\t\t\tDEFAULT: \"hsl(var(--secondary))\",\n\t\t\t\t\t\t\t\t\tforeground: \"hsl(var(--secondary-foreground))\",\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tdestructive: {\n\t\t\t\t\t\t\t\t\tDEFAULT: \"hsl(var(--destructive))\",\n\t\t\t\t\t\t\t\t\tforeground: \"hsl(var(--destructive-foreground))\",\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tmuted: {\n\t\t\t\t\t\t\t\t\tDEFAULT: \"hsl(var(--muted))\",\n\t\t\t\t\t\t\t\t\tforeground: \"hsl(var(--muted-foreground))\",\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\taccent: {\n\t\t\t\t\t\t\t\t\tDEFAULT: \"hsl(var(--accent))\",\n\t\t\t\t\t\t\t\t\tforeground: \"hsl(var(--accent-foreground))\",\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tpopover: {\n\t\t\t\t\t\t\t\t\tDEFAULT: \"hsl(var(--popover))\",\n\t\t\t\t\t\t\t\t\tforeground: \"hsl(var(--popover-foreground))\",\n\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\tcard: {\n\t\t\t\t\t\t\t\t\tDEFAULT: \"hsl(var(--card))\",\n\t\t\t\t\t\t\t\t\tforeground: \"hsl(var(--card-foreground))\",\n\t\t\t\t\t\t\t\t},\n                                sidebar: {\n                                    DEFAULT: \"hsl(var(--sidebar-background))\",\n                                    foreground: \"hsl(var(--sidebar-foreground))\",\n                                    primary: \"hsl(var(--sidebar-primary))\",\n                                    \"primary-foreground\": \"hsl(var(--sidebar-primary-foreground))\",\n                                    accent: \"hsl(var(--sidebar-accent))\",\n                                    \"accent-foreground\": \"hsl(var(--sidebar-accent-foreground))\",\n                                    border: \"hsl(var(--sidebar-border))\",\n                                    ring: \"hsl(var(--sidebar-ring))\",\n                                },\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\tborderRadius: {\n\t\t\t\t\t\t\t\tlg: \"var(--radius)\",\n\t\t\t\t\t\t\t\tmd: \"calc(var(--radius) - 2px)\",\n\t\t\t\t\t\t\t\tsm: \"calc(var(--radius) - 4px)\",\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t},\n\t\t\t\t\t},\n\t\t\t\t}\n\t\t\t</script><style type=\"text/tailwindcss\">\n\t\t\t\t@layer base {\n\t\t\t\t\t:root {\n\t\t\t\t\t\t--background: 0 0% 100%;\n\t\t\t\t\t\t--foreground: 240 10% 3.9%;\n\t\t\t\t\t\t--card: 0 0% 100%;\n\t\t\t\t\t\t--card-foreground: 240 10% 3.9%;\n\t\t\t\t\t\t--popover: 0 0% 100%;\n\t\t\t\t\t\t--popover-foreground: 240 10% 3.9%;\n\t\t\t\t\t\t--primary: 240 5.9% 10%;\n\t\t\t\t\t\t--primary-foreground: 0 0% 98%;\n\t\t\t\t\t\t--secondary: 240 4.8% 95.9%;\n\t\t\t\t\t\t--secondary-foreground: 240 5.9% 10%;\n\t\t\t\t\t\t--muted: 240 4.8% 95.9%;\n\t\t\t\t\t\t--muted-foreground: 240 3.8% 46.1%;\n\t\t\t\t\t\t--accent: 240 4.8% 95.9%;\n\t\t\t\t\t\t--accent-foreground: 240 5.9% 10%;\n\t\t\t\t\t\t--destructive: 0 84.2% 60.2%;\n\t\t\t\t\t\t--destructive-foreground: 0 0% 98%;\n\t\t\t\t\t\t--border: 240 5.9% 90%;\n\t\t\t\t\t\t--input: 240 5.9% 90%;\n\t\t\t\t\t\t--ring: 240 10% 3.9%;\n\t\t\t\t\t\t--radius: 0.5rem;\n                        /* Sidebar colors */\n                        --sidebar-background: 0 0% 98%;\n                        --sidebar-foreground: 240 5.3% 26.1%;\n                        --sidebar-primary: 240 5.9% 10%;\n                        --sidebar-primary-foreground: 0 0% 98%;\n                        --sidebar-accent: 240 4.8% 95.9%;\n                        --sidebar-accent-foreground: 240 5.9% 10%;\n                        --sidebar-border: 220 13% 91%;\n                        --sidebar-ring: 217.2 91.2% 59.8%;\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t</style><script type=\"module\" src=\"https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js\"></script><script src=\"/assets/js/input.min.js\"></script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " | BitMerchant</title><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><link href=\"/assets/css/output.css\" rel=\"stylesheet\"><script type=\"module\" src=\"https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js\"></script><script src=\"/assets/js/input.min.js\"></script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -438,13 +437,6 @@ func Dashboard(title string, currentPath string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = separator.Separator(separator.Props{
-					Attributes: templ.Attributes{"orientation": "vertical"},
-					Class:      "mr-2 h-4",
-				}).Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"font-medium\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -452,7 +444,7 @@ func Dashboard(title string, currentPath string) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 193, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 88, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
