@@ -1,12 +1,12 @@
 package layouts
 
 import (
-	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
-	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/avatar"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
-	"bitmerchant/internal/interfaces/templates/components/ui/collapsible"
-	"bitmerchant/internal/interfaces/templates/components/ui/avatar"
+	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/popover"
+	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
 )
 
 templ Dashboard(title string, currentPath string) {
@@ -20,14 +20,14 @@ templ Dashboard(title string, currentPath string) {
 			<link href="/assets/css/output.css" rel="stylesheet"/>
 			<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js"></script>
 			<script src="/assets/js/input.min.js"></script>
-            @sidebar.Script()
-            @dialog.Script()
-            @dropdown.Script()
+			@sidebar.Script()
+			@dialog.Script()
+			@dropdown.Script()
+			@avatar.Script()
+			@popover.Script()
 		</head>
 		<body class="bg-background text-foreground antialiased min-h-screen">
-			@sidebar.Layout(sidebar.LayoutProps{
-				Class: "bg-background",
-			}) {
+			@sidebar.Layout() {
 				@sidebar.Sidebar(sidebar.Props{
 					Collapsible: sidebar.CollapsibleIcon,
 					Variant:     sidebar.VariantFloating,
@@ -38,7 +38,7 @@ templ Dashboard(title string, currentPath string) {
 								@sidebar.MenuButton(sidebar.MenuButtonProps{
 									Href: "/dashboard",
 								}) {
-									@icon.WalletCards(icon.Props{Class: "size-6"})
+									@icon.Store(icon.Props{Class: "size-6"})
 									<span class="font-semibold">BitMerchant</span>
 								}
 							}
@@ -111,13 +111,17 @@ templ Dashboard(title string, currentPath string) {
 										}) {
 											@avatar.Avatar(avatar.Props{Class: "size-8 rounded-lg"}) {
 												@avatar.Image(avatar.ImageProps{
-													Src: "https://avatars.githubusercontent.com/u/26936893?v=4",
+													// simulate a broken image
+													Src: "broken-image.jpg",
+													Alt: "John Doe avatar",
 												})
-												@avatar.Fallback() { BM }
+												@avatar.Fallback() {
+													JD
+												}
 											}
 											<div class="grid flex-1 text-left text-sm leading-tight">
-												<span class="truncate font-medium">Admin User</span>
-												<span class="truncate text-xs">admin@bitmerchant.com</span>
+												<span class="truncate font-medium">John Doe</span>
+												<span class="truncate text-xs">john@example.com</span>
 											</div>
 											@icon.ChevronsUpDown(icon.Props{Class: "ml-auto size-4"})
 										}
@@ -127,7 +131,7 @@ templ Dashboard(title string, currentPath string) {
 										Placement: dropdown.PlacementTopStart,
 									}) {
 										@dropdown.Label() {
-											Admin User
+											John Doe
 										}
 										@dropdown.Separator()
 										@dropdown.Item() {
@@ -168,4 +172,3 @@ templ Dashboard(title string, currentPath string) {
 		</body>
 	</html>
 }
-
