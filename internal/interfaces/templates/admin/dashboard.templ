@@ -25,7 +25,10 @@ templ Dashboard(menuData *menu.MenuResponse) {
 							Add Category
 						}
 					}
-					@dialog.Content(dialog.ContentProps{Title: "Add Category"}) {
+					@dialog.Content(dialog.ContentProps{}) {
+						@dialog.Header() {
+							@dialog.Title() { Add Category }
+						}
 						<form action="/admin/category" method="post" class="space-y-4">
 							<div class="space-y-2">
 								<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Name</label>
@@ -39,7 +42,7 @@ templ Dashboard(menuData *menu.MenuResponse) {
 						</form>
 					}
 				}
-			}
+			</div>
 
 			<!-- Categories List -->
 			<div class="space-y-6">
@@ -54,7 +57,10 @@ templ Dashboard(menuData *menu.MenuResponse) {
 										Add Item
 									}
 								}
-								@dialog.Content(dialog.ContentProps{Title: "Add Item to " + catData.Category.Name}) {
+								@dialog.Content(dialog.ContentProps{}) {
+									@dialog.Header() {
+										@dialog.Title() { { "Add Item to " + catData.Category.Name } }
+									}
 									<form action="/admin/item" method="post" class="space-y-4">
 										<input type="hidden" name="categoryID" value={ string(catData.Category.ID) }/>
 										<div class="grid grid-cols-2 gap-4">
