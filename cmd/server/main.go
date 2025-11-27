@@ -129,6 +129,7 @@ func main() {
 	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, cartService)
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC)
 	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuUC, uploadPhotoUC, generateQRUC)
+	ownerHandler := handler.NewOwnerHandler(createRestUC)
 	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC)
 
 	// 4. Event Handlers
@@ -212,6 +213,17 @@ func main() {
 	e.POST("/admin/item", adminHandler.CreateItem)
 	e.POST("/admin/item/:id/photo", adminHandler.UploadPhoto)
 	e.GET("/admin/qr", adminHandler.GenerateQR)
+
+	// Owner Signup
+	e.GET("/owner/signup", ownerHandler.GetSignup)
+	e.POST("/owner/signup", ownerHandler.PostSignup)
+
+	// Dashboard Menu Management (US3)
+	e.GET("/dashboard/menu", adminHandler.GetMenu)
+	e.POST("/dashboard/menu/category", adminHandler.CreateMenuCategory)
+	e.POST("/dashboard/menu/item", adminHandler.CreateMenuItem)
+	e.POST("/dashboard/menu/item/:id/photo", adminHandler.UploadMenuItemPhoto)
+	e.GET("/dashboard/qr-code", adminHandler.GetQRCode)
 
 	// Dashboard/Analytics
 	e.GET("/dashboard", dashboardHandler.Dashboard)

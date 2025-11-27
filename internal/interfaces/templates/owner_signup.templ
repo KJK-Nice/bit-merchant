@@ -1,0 +1,44 @@
+package templates
+
+import (
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
+)
+
+templ OwnerSignup() {
+	@Layout("Restaurant Signup - BitMerchant") {
+		<div class="max-w-md mx-auto mt-8">
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Create Restaurant Account
+					}
+					@card.Description() {
+						Enter your restaurant name to get started
+					}
+				}
+				@card.Content() {
+					<form method="POST" action="/owner/signup" class="space-y-4">
+						<div>
+							<label for="name" class="block text-sm font-medium mb-2">
+								Restaurant Name
+							</label>
+							@input.Input(input.Props{
+								ID: "name",
+								Name: "name",
+								Type: "text",
+								Placeholder: "Enter restaurant name",
+								Required: true,
+							})
+						</div>
+						@button.Button(button.Props{Type: "submit"}) {
+							Create Account
+						}
+					</form>
+				}
+			}
+		</div>
+	}
+}
+

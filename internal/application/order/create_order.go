@@ -54,20 +54,51 @@ func NewCreateOrderUseCase(
 
 // Execute creates an order
 func (uc *CreateOrderUseCase) Execute(ctx context.Context, req CreateOrderRequest) (*CreateOrderResponse, error) {
-	// 1. Create Order Items from Cart
+	orderID := uc.generateOrderID()
+	orderNumber := uc.generateOrderNumber()
+
+	orderItems, err := uc.createOrderItems(req.Cart.Items, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	fiatAmount := req.Cart.Total
+	totalAmount := int64(fiatAmount * 100) // Simple cents conversion
+
+	order, err := uc.createOrder(orderID, orderNumber, req.RestaurantID, orderItems, totalAmount, fiatAmount, req.PaymentMethod)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := uc.orderRepo.Save(order); err != nil {
+		return nil, err
+	}
+
+	if err := uc.processPayment(ctx, order, req.PaymentMethod); err != nil {
+		return nil, err
+	}
+
+	uc.publishOrderCreatedEvent(ctx, order)
+	uc.logger.Info("Order created", "orderID", order.ID, "amount", order.FiatAmount)
+
+	return &CreateOrderResponse{
+		OrderID:     order.ID,
+		OrderNumber: order.OrderNumber,
+	}, nil
+}
+
+func (uc *CreateOrderUseCase) generateOrderID() domain.OrderID {
+	return domain.OrderID(fmt.Sprintf("ord_%d", time.Now().UnixNano()))
+}
+
+func (uc *CreateOrderUseCase) generateOrderNumber() domain.OrderNumber {
+	return domain.OrderNumber(fmt.Sprintf("%04d", rand.Intn(10000)))
+}
+
+func (uc *CreateOrderUseCase) createOrderItems(cartItems []cart.CartItem, orderID domain.OrderID) ([]domain.OrderItem, error) {
 	var orderItems []domain.OrderItem
-	var totalAmount int64 // assuming cents/satoshis
-
-	// Generate IDs
-	orderID := domain.OrderID(fmt.Sprintf("ord_%d", time.Now().UnixNano()))
-	// Simple random order number for MVP
-	orderNumber := domain.OrderNumber(fmt.Sprintf("%04d", rand.Intn(10000)))
-
-	for _, item := range req.Cart.Items {
+	for _, item := range cartItems {
 		orderItemID := domain.OrderItemID(fmt.Sprintf("oi_%d_%s", time.Now().UnixNano(), item.ItemID))
-
-		// Create OrderItem
-		// Note: domain.NewOrderItem now takes unit price as float64 and calculates subtotal
 		orderItem, err := domain.NewOrderItem(
 			orderItemID,
 			orderID,
@@ -80,51 +111,38 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, req CreateOrderReques
 			return nil, err
 		}
 		orderItems = append(orderItems, *orderItem)
-		// For total amount in int64 (e.g. cents), we need a conversion strategy.
-		// Assuming float64 Price is in Dollars/Euros etc.
-		// int64 totalAmount is typically for smallest unit.
-		// For now, let's assume simple x100 conversion for MVP if currency is USD/EUR.
-		// Or if we just store float64 total in Order struct?
-		// Order struct has: TotalAmount int64, FiatAmount float64.
-		// Let's populate FiatAmount from Cart Total.
-		// And TotalAmount.. maybe keep 0 for cash if not using crypto?
-		// Or use it for cents.
 	}
+	return orderItems, nil
+}
 
-	fiatAmount := req.Cart.Total
-	totalAmount = int64(fiatAmount * 100) // Simple cents conversion
-
-	// 2. Create Order
+func (uc *CreateOrderUseCase) createOrder(orderID domain.OrderID, orderNumber domain.OrderNumber, restaurantID domain.RestaurantID, orderItems []domain.OrderItem, totalAmount int64, fiatAmount float64, paymentMethod domain.PaymentMethodType) (*domain.Order, error) {
 	order, err := domain.NewOrder(
 		orderID,
 		orderNumber,
-		req.RestaurantID,
+		restaurantID,
 		orderItems,
 		totalAmount,
-		req.PaymentMethod,
+		paymentMethod,
 	)
 	if err != nil {
 		return nil, err
 	}
 	order.FiatAmount = fiatAmount
+	return order, nil
+}
 
-	// 3. Save Order
-	if err := uc.orderRepo.Save(order); err != nil {
-		return nil, err
+func (uc *CreateOrderUseCase) processPayment(ctx context.Context, order *domain.Order, paymentMethod domain.PaymentMethodType) error {
+	if uc.paymentMethod.GetPaymentMethodType() != paymentMethod {
+		return nil
 	}
-
-	// 4. Process Payment (Initial Pending State)
-	if uc.paymentMethod.GetPaymentMethodType() == req.PaymentMethod {
-		payment, err := uc.paymentMethod.ProcessPayment(ctx, order)
-		if err != nil {
-			return nil, err
-		}
-		if err := uc.paymentRepo.Save(payment); err != nil {
-			return nil, err
-		}
+	payment, err := uc.paymentMethod.ProcessPayment(ctx, order)
+	if err != nil {
+		return err
 	}
+	return uc.paymentRepo.Save(payment)
+}
 
-	// 5. Publish Event
+func (uc *CreateOrderUseCase) publishOrderCreatedEvent(ctx context.Context, order *domain.Order) {
 	event := domain.OrderCreated{
 		OrderID:      order.ID,
 		RestaurantID: order.RestaurantID,
@@ -134,13 +152,5 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, req CreateOrderReques
 	}
 	if err := uc.eventBus.Publish(ctx, "OrderCreated", event); err != nil {
 		uc.logger.Error("Failed to publish OrderCreated event", "error", err)
-		// Don't fail request, just log
 	}
-
-	uc.logger.Info("Order created", "orderID", order.ID, "amount", order.FiatAmount)
-
-	return &CreateOrderResponse{
-		OrderID:     order.ID,
-		OrderNumber: order.OrderNumber,
-	}, nil
 }

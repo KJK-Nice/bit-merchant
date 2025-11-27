@@ -177,8 +177,8 @@
 
 #### Code Quality Verification
 
-- [ ] T084 [US1] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10 using gocyclo
-- [ ] T085 [US1] Verify test coverage: 95% for all US1 components (critical path)
+- [x] T084 [US1] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10 using gocyclo
+- [x] T085 [US1] Verify test coverage: 95% for all US1 components (critical path)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently. Customer can complete full ordering flow with real-time status updates.
 
@@ -251,8 +251,8 @@
 
 #### Code Quality Verification
 
-- [ ] T120 [US2] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10
-- [ ] T121 [US2] Verify test coverage: 95% for all US2 components (critical path)
+- [x] T120 [US2] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10
+- [x] T121 [US2] Verify test coverage: 95% for all US2 components (critical path)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently. Kitchen staff can fulfill orders and customers receive real-time updates.
 
@@ -333,12 +333,12 @@
 
 #### Route Registration
 
-- [ ] T161 [US3] Register owner routes (GET /owner/signup, POST /owner/signup, GET /dashboard/menu, POST /dashboard/menu/category, POST /dashboard/menu/item, POST /dashboard/menu/item/:id/photo, GET /dashboard/qr-code) in `cmd/server/main.go`
+- [x] T161 [US3] Register owner routes (GET /owner/signup, POST /owner/signup, GET /dashboard/menu, POST /dashboard/menu/category, POST /dashboard/menu/item, POST /dashboard/menu/item/:id/photo, GET /dashboard/qr-code) in `cmd/server/main.go`
 
 #### Code Quality Verification
 
-- [ ] T162 [US3] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10
-- [ ] T163 [US3] Verify test coverage: 80% for all US3 components
+- [x] T162 [US3] Verify code quality: functions <50 lines, types/structs <300 lines, cyclomatic complexity <10
+- [x] T163 [US3] Verify test coverage: 80% for all US3 components
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should all work independently. Owners can set up menus and customers can order from them.
 
