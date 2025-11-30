@@ -12,22 +12,22 @@ templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, to
 		<div class="space-y-8 mt-4">
 			<!-- Stats Cards -->
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<div class="bg-white p-6 rounded-lg shadow">
-					<h3 class="text-gray-500 text-sm font-medium">Total Sales (Today)</h3>
+				<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
+					<h3 class="text-muted-foreground text-sm font-medium">Total Sales (Today)</h3>
 					<p class="text-3xl font-bold">${ fmt.Sprintf("%.2f", stats.TotalSales) }</p>
 				</div>
-				<div class="bg-white p-6 rounded-lg shadow">
-					<h3 class="text-gray-500 text-sm font-medium">Orders (Today)</h3>
+				<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
+					<h3 class="text-muted-foreground text-sm font-medium">Orders (Today)</h3>
 					<p class="text-3xl font-bold">{ fmt.Sprintf("%d", stats.OrderCount) }</p>
 				</div>
-				<div class="bg-white p-6 rounded-lg shadow">
-					<h3 class="text-gray-500 text-sm font-medium">Avg Order Value</h3>
+				<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
+					<h3 class="text-muted-foreground text-sm font-medium">Avg Order Value</h3>
 					<p class="text-3xl font-bold">${ fmt.Sprintf("%.2f", stats.AverageOrderValue) }</p>
 				</div>
 			</div>
 
 			<!-- Restaurant Status -->
-			<div class="bg-white p-6 rounded-lg shadow">
+			<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
 				<h2 class="text-xl font-bold mb-4">Restaurant Status</h2>
 				<form action="/dashboard/toggle-open" method="POST">
 					<button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
@@ -37,7 +37,7 @@ templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, to
 			</div>
 
 			<!-- Top Items -->
-			<div class="bg-white p-6 rounded-lg shadow">
+			<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
 				<h2 class="text-xl font-bold mb-4">Top Selling Items</h2>
 				<table class="min-w-full">
 					<thead>
@@ -60,7 +60,7 @@ templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, to
 			</div>
 
 			<!-- Recent Orders -->
-			<div class="bg-white p-6 rounded-lg shadow">
+			<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
 				<h2 class="text-xl font-bold mb-4">Recent Orders</h2>
 				<div class="overflow-x-auto">
 					<table class="min-w-full">

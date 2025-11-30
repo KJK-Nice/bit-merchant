@@ -48,7 +48,7 @@ func DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, top
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-8 mt-4\"><!-- Stats Cards --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\"><div class=\"bg-white p-6 rounded-lg shadow\"><h3 class=\"text-gray-500 text-sm font-medium\">Total Sales (Today)</h3><p class=\"text-3xl font-bold\">$")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-8 mt-4\"><!-- Stats Cards --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\"><div class=\"bg-card text-card-foreground p-6 rounded-lg shadow border\"><h3 class=\"text-muted-foreground text-sm font-medium\">Total Sales (Today)</h3><p class=\"text-3xl font-bold\">$")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -61,7 +61,7 @@ func DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, top
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</p></div><div class=\"bg-white p-6 rounded-lg shadow\"><h3 class=\"text-gray-500 text-sm font-medium\">Orders (Today)</h3><p class=\"text-3xl font-bold\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</p></div><div class=\"bg-card text-card-foreground p-6 rounded-lg shadow border\"><h3 class=\"text-muted-foreground text-sm font-medium\">Orders (Today)</h3><p class=\"text-3xl font-bold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -74,7 +74,7 @@ func DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, top
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p></div><div class=\"bg-white p-6 rounded-lg shadow\"><h3 class=\"text-gray-500 text-sm font-medium\">Avg Order Value</h3><p class=\"text-3xl font-bold\">$")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p></div><div class=\"bg-card text-card-foreground p-6 rounded-lg shadow border\"><h3 class=\"text-muted-foreground text-sm font-medium\">Avg Order Value</h3><p class=\"text-3xl font-bold\">$")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -87,7 +87,7 @@ func DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, top
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</p></div></div><!-- Restaurant Status --><div class=\"bg-white p-6 rounded-lg shadow\"><h2 class=\"text-xl font-bold mb-4\">Restaurant Status</h2><form action=\"/dashboard/toggle-open\" method=\"POST\"><button type=\"submit\" class=\"bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700\">Toggle Open/Closed</button></form></div><!-- Top Items --><div class=\"bg-white p-6 rounded-lg shadow\"><h2 class=\"text-xl font-bold mb-4\">Top Selling Items</h2><table class=\"min-w-full\"><thead><tr class=\"text-left border-b\"><th class=\"pb-2\">Item</th><th class=\"pb-2\">Quantity</th><th class=\"pb-2\">Revenue</th></tr></thead> <tbody>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</p></div></div><!-- Restaurant Status --><div class=\"bg-card text-card-foreground p-6 rounded-lg shadow border\"><h2 class=\"text-xl font-bold mb-4\">Restaurant Status</h2><form action=\"/dashboard/toggle-open\" method=\"POST\"><button type=\"submit\" class=\"bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700\">Toggle Open/Closed</button></form></div><!-- Top Items --><div class=\"bg-card text-card-foreground p-6 rounded-lg shadow border\"><h2 class=\"text-xl font-bold mb-4\">Top Selling Items</h2><table class=\"min-w-full\"><thead><tr class=\"text-left border-b\"><th class=\"pb-2\">Item</th><th class=\"pb-2\">Quantity</th><th class=\"pb-2\">Revenue</th></tr></thead> <tbody>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -136,7 +136,7 @@ func DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, top
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</tbody></table></div><!-- Recent Orders --><div class=\"bg-white p-6 rounded-lg shadow\"><h2 class=\"text-xl font-bold mb-4\">Recent Orders</h2><div class=\"overflow-x-auto\"><table class=\"min-w-full\"><thead><tr class=\"text-left border-b\"><th class=\"pb-2\">Order #</th><th class=\"pb-2\">Date</th><th class=\"pb-2\">Total</th><th class=\"pb-2\">Status</th></tr></thead> <tbody>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</tbody></table></div><!-- Recent Orders --><div class=\"bg-card text-card-foreground p-6 rounded-lg shadow border\"><h2 class=\"text-xl font-bold mb-4\">Recent Orders</h2><div class=\"overflow-x-auto\"><table class=\"min-w-full\"><thead><tr class=\"text-left border-b\"><th class=\"pb-2\">Order #</th><th class=\"pb-2\">Date</th><th class=\"pb-2\">Total</th><th class=\"pb-2\">Status</th></tr></thead> <tbody>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
