@@ -28,7 +28,7 @@ func TestDashboardHandler(t *testing.T) {
 
 	// Seed orders for stats
 	items := []domain.OrderItem{{MenuItemID: "i1", Name: "Item 1", Quantity: 1, UnitPrice: 10.0, Subtotal: 10.0}}
-	o1, _ := domain.NewOrder("o1", "1001", "restaurant_1", items, 1000, domain.PaymentMethodTypeCash)
+	o1, _ := domain.NewOrder("o1", "1001", "restaurant_1", "session_1", items, 1000, domain.PaymentMethodTypeCash)
 	o1.PaymentStatus = domain.PaymentStatusPaid
 	o1.FiatAmount = 10.0
 	_ = orderRepo.Save(o1)

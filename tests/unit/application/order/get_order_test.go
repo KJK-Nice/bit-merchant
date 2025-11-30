@@ -21,7 +21,8 @@ func TestGetOrderByNumberUseCase(t *testing.T) {
 		existingOrder, _ := domain.NewOrder(
 			"o1", 
 			"1234", 
-			"r1", 
+			"r1",
+			"session_1",
 			[]domain.OrderItem{*item}, 
 			1000, 
 			domain.PaymentMethodTypeCash,

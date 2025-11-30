@@ -33,9 +33,10 @@ func TestOrderEndpoints(t *testing.T) {
 	
 	createUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
 	getUC := order.NewGetOrderByNumberUseCase(orderRepo)
+	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
 	cartService := cart.NewCartService()
 	
-	h := handler.NewOrderHandler(createUC, getUC, cartService)
+	h := handler.NewOrderHandler(createUC, getUC, getCustomerOrdersUC, cartService)
 	
 	e := echo.New()
 
@@ -45,7 +46,8 @@ func TestOrderEndpoints(t *testing.T) {
 		existingOrder, _ := domain.NewOrder(
 			"o1", 
 			"1234", 
-			"restaurant_1", 
+			"restaurant_1",
+			"session_1",
 			[]domain.OrderItem{*item}, 
 			1000, 
 			domain.PaymentMethodTypeCash,

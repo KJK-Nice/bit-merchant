@@ -14,8 +14,8 @@ func TestMemoryOrderRepository(t *testing.T) {
 
 	t.Run("Save and FindByID", func(t *testing.T) {
 		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
-		order, _ := domain.NewOrder("o1", "101", "r1", []domain.OrderItem{*item}, 100, domain.PaymentMethodTypeCash)
-		
+		order, _ := domain.NewOrder("o1", "101", "r1", "session_1", []domain.OrderItem{*item}, 100, domain.PaymentMethodTypeCash)
+
 		err := repo.Save(order)
 		assert.NoError(t, err)
 
@@ -26,7 +26,7 @@ func TestMemoryOrderRepository(t *testing.T) {
 
 	t.Run("FindByOrderNumber", func(t *testing.T) {
 		item, _ := domain.NewOrderItem("oi2", "o2", "mi1", "Burger", 1, 10.0)
-		order, _ := domain.NewOrder("o2", "102", "r1", []domain.OrderItem{*item}, 100, domain.PaymentMethodTypeCash)
+		order, _ := domain.NewOrder("o2", "102", "r1", "session_1", []domain.OrderItem{*item}, 100, domain.PaymentMethodTypeCash)
 		repo.Save(order)
 
 		found, err := repo.FindByOrderNumber("r1", "102")
@@ -40,11 +40,11 @@ func TestMemoryOrderRepository(t *testing.T) {
 	t.Run("FindActiveByRestaurantID", func(t *testing.T) {
 		// Active
 		item1, _ := domain.NewOrderItem("oi3", "o3", "mi1", "Burger", 1, 10.0)
-		order1, _ := domain.NewOrder("o3", "103", "r2", []domain.OrderItem{*item1}, 100, domain.PaymentMethodTypeCash)
-		
+		order1, _ := domain.NewOrder("o3", "103", "r2", "session_1", []domain.OrderItem{*item1}, 100, domain.PaymentMethodTypeCash)
+
 		// Completed (not active)
 		item2, _ := domain.NewOrderItem("oi4", "o4", "mi1", "Burger", 1, 10.0)
-		order2, _ := domain.NewOrder("o4", "104", "r2", []domain.OrderItem{*item2}, 100, domain.PaymentMethodTypeCash)
+		order2, _ := domain.NewOrder("o4", "104", "r2", "session_1", []domain.OrderItem{*item2}, 100, domain.PaymentMethodTypeCash)
 		order2.UpdateFulfillmentStatus(domain.FulfillmentStatusPreparing)
 		order2.UpdateFulfillmentStatus(domain.FulfillmentStatusReady)
 		order2.UpdateFulfillmentStatus(domain.FulfillmentStatusCompleted)
@@ -58,4 +58,3 @@ func TestMemoryOrderRepository(t *testing.T) {
 		assert.Equal(t, "o3", string(active[0].ID))
 	})
 }
-

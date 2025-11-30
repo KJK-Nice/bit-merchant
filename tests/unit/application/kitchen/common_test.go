@@ -12,6 +12,7 @@ type mockOrderRepo struct {
 	findByOrderNumberFn        func(restaurantID domain.RestaurantID, orderNumber string) (*domain.Order, error)
 	findByRestaurantIDFn       func(restaurantID domain.RestaurantID) ([]*domain.Order, error)
 	findActiveByRestaurantIDFn func(restaurantID domain.RestaurantID) ([]*domain.Order, error)
+	findBySessionIDFn          func(sessionID string) ([]*domain.Order, error)
 	updateFn                   func(order *domain.Order) error
 }
 
@@ -46,6 +47,13 @@ func (m *mockOrderRepo) FindByRestaurantID(restaurantID domain.RestaurantID) ([]
 func (m *mockOrderRepo) FindActiveByRestaurantID(restaurantID domain.RestaurantID) ([]*domain.Order, error) {
 	if m.findActiveByRestaurantIDFn != nil {
 		return m.findActiveByRestaurantIDFn(restaurantID)
+	}
+	return nil, nil
+}
+
+func (m *mockOrderRepo) FindBySessionID(sessionID string) ([]*domain.Order, error) {
+	if m.findBySessionIDFn != nil {
+		return m.findBySessionIDFn(sessionID)
 	}
 	return nil, nil
 }

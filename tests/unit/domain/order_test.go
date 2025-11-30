@@ -17,6 +17,7 @@ func TestNewOrder(t *testing.T) {
 			"o_1",
 			"101",
 			"rest_1",
+			"session_1",
 			items,
 			2000, // 20.00 in cents/satoshis abstract unit
 			domain.PaymentMethodTypeCash,
@@ -30,12 +31,12 @@ func TestNewOrder(t *testing.T) {
 	})
 
 	t.Run("should fail with no items", func(t *testing.T) {
-		_, err := domain.NewOrder("o_1", "101", "rest_1", []domain.OrderItem{}, 100, domain.PaymentMethodTypeCash)
+		_, err := domain.NewOrder("o_1", "101", "rest_1", "session_1", []domain.OrderItem{}, 100, domain.PaymentMethodTypeCash)
 		assert.Error(t, err)
 	})
 
 	t.Run("should fail with invalid total", func(t *testing.T) {
-		_, err := domain.NewOrder("o_1", "101", "rest_1", items, 0, domain.PaymentMethodTypeCash)
+		_, err := domain.NewOrder("o_1", "101", "rest_1", "session_1", items, 0, domain.PaymentMethodTypeCash)
 		assert.Error(t, err)
 	})
 }
@@ -65,7 +66,7 @@ func TestNewOrderItem(t *testing.T) {
 }
 
 func TestOrder_UpdateFulfillmentStatus(t *testing.T) {
-	order, _ := domain.NewOrder("o_1", "101", "r_1", []domain.OrderItem{{}}, 100, domain.PaymentMethodTypeCash)
+	order, _ := domain.NewOrder("o_1", "101", "r_1", "session_1", []domain.OrderItem{{}}, 100, domain.PaymentMethodTypeCash)
 	// Initial status is FulfillmentStatusPaid (from NewOrder)
 
 	t.Run("valid transitions", func(t *testing.T) {
@@ -88,7 +89,7 @@ func TestOrder_UpdateFulfillmentStatus(t *testing.T) {
 
 	t.Run("invalid transition", func(t *testing.T) {
 		// Reset order to Paid
-		order, _ := domain.NewOrder("o_1", "101", "r_1", []domain.OrderItem{{}}, 100, domain.PaymentMethodTypeCash)
+		order, _ := domain.NewOrder("o_1", "101", "r_1", "session_1", []domain.OrderItem{{}}, 100, domain.PaymentMethodTypeCash)
 		
 		// Paid -> Ready (skipping Preparing)
 		err := order.UpdateFulfillmentStatus(domain.FulfillmentStatusReady)

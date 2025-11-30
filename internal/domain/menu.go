@@ -107,6 +107,9 @@ func ValidatePrice(price float64) error {
 	if price <= 0 {
 		return errors.New("price must be greater than 0")
 	}
+	if price > 100_000_000 {
+		return errors.New("price must be less than 100,000,000")
+	}
 	return nil
 }
 

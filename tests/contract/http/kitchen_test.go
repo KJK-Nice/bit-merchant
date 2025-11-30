@@ -47,6 +47,8 @@ func (m *mockKitchenOrderRepo) Update(order *domain.Order) error {
 func (m *mockKitchenOrderRepo) Save(order *domain.Order) error { return nil }
 func (m *mockKitchenOrderRepo) FindByOrderNumber(rid domain.RestaurantID, on string) (*domain.Order, error) { return nil, nil }
 func (m *mockKitchenOrderRepo) FindByRestaurantID(rid domain.RestaurantID) ([]*domain.Order, error) { return nil, nil }
+func (m *mockKitchenOrderRepo) FindBySessionID(sessionID string) ([]*domain.Order, error) { return nil, nil }
+
 
 
 // Mock EventBus

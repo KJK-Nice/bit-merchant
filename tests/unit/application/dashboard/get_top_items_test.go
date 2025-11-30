@@ -21,7 +21,7 @@ func TestGetTopSellingItemsUseCase(t *testing.T) {
 		{MenuItemID: "burger", Name: "Burger", Quantity: 2, UnitPrice: 10.0, Subtotal: 20.0},
 		{MenuItemID: "soda", Name: "Soda", Quantity: 1, UnitPrice: 3.0, Subtotal: 3.0},
 	}
-	o1, _ := domain.NewOrder("o1", "1001", restaurantID, items1, 2300, domain.PaymentMethodTypeCash)
+	o1, _ := domain.NewOrder("o1", "1001", restaurantID, "session_1", items1, 2300, domain.PaymentMethodTypeCash)
 	o1.PaymentStatus = domain.PaymentStatusPaid
 	_ = orderRepo.Save(o1)
 
@@ -29,7 +29,7 @@ func TestGetTopSellingItemsUseCase(t *testing.T) {
 	items2 := []domain.OrderItem{
 		{MenuItemID: "burger", Name: "Burger", Quantity: 1, UnitPrice: 10.0, Subtotal: 10.0},
 	}
-	o2, _ := domain.NewOrder("o2", "1002", restaurantID, items2, 1000, domain.PaymentMethodTypeCash)
+	o2, _ := domain.NewOrder("o2", "1002", restaurantID, "session_1", items2, 1000, domain.PaymentMethodTypeCash)
 	o2.PaymentStatus = domain.PaymentStatusPaid
 	_ = orderRepo.Save(o2)
 
@@ -37,7 +37,7 @@ func TestGetTopSellingItemsUseCase(t *testing.T) {
 	items3 := []domain.OrderItem{
 		{MenuItemID: "steak", Name: "Steak", Quantity: 10, UnitPrice: 50.0, Subtotal: 500.0},
 	}
-	o3, _ := domain.NewOrder("o3", "1003", restaurantID, items3, 50000, domain.PaymentMethodTypeCash)
+	o3, _ := domain.NewOrder("o3", "1003", restaurantID, "session_1", items3, 50000, domain.PaymentMethodTypeCash)
 	o3.PaymentStatus = domain.PaymentStatusPending
 	_ = orderRepo.Save(o3)
 

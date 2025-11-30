@@ -58,6 +58,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Use Cases
 	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
 	getOrderUC := order.NewGetOrderByNumberUseCase(orderRepo)
+	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
 	getKitchenOrdersUC := kitchen.NewGetKitchenOrdersUseCase(orderRepo)
 	markPaidUC := kitchen.NewMarkOrderPaidUseCase(orderRepo, eventBus)
 	markPreparingUC := kitchen.NewMarkOrderPreparingUseCase(orderRepo, eventBus)
@@ -66,7 +67,7 @@ func TestKitchenWorkflow(t *testing.T) {
 
 	// Handlers
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC)
-	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, cartService)
+	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, getCustomerOrdersUC, cartService)
 	_ = handler.NewMenuHandler(getMenuUC, cartService)
 
 	// Event Handlers
