@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"time"
 
 	"bitmerchant/internal/application/cart"
 	"bitmerchant/internal/application/dashboard"
@@ -94,8 +95,8 @@ func main() {
 	// --------------------------
 
 	// 2. Use Cases
-	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo)
-	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, eventBus, paymentMethod, logger)
+	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo)
+	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
 	getOrderUC := order.NewGetOrderByNumberUseCase(orderRepo)
 
 	// Kitchen Use Cases
@@ -173,11 +174,15 @@ func main() {
 	// Middleware
 	e.Use(echoMiddleware.Recover())
 	e.Use(middleware.SessionMiddleware())
+	e.Use(middleware.PerformanceMiddleware(logger, 200*time.Millisecond))
+	e.Use(middleware.RateLimitMiddleware())
+	// e.Use(middleware.CSRFMiddleware()) // TODO: Enable after updating templates with CSRF token
 	// e.Use(middleware.LoggingMiddleware())
 
 	// Static files
 	e.Static("/static", "static")
 	e.Static("/assets", "assets")
+	e.File("/sw.js", "static/pwa/sw.js")
 
 	// 6. Routes
 
@@ -195,6 +200,8 @@ func main() {
 	e.POST("/cart/remove", cartHandler.RemoveFromCart)
 
 	// Order
+	e.GET("/order/lookup", orderHandler.GetLookup)
+	e.POST("/order/lookup", orderHandler.PostLookup)
 	e.GET("/order/confirm", orderHandler.GetConfirmOrder)
 	e.POST("/order/create", orderHandler.CreateOrder)
 	e.GET("/order/:orderNumber", orderHandler.GetOrder)

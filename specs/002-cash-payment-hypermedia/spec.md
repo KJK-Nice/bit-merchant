@@ -124,10 +124,14 @@ Linda needs to see daily sales, order count, top-selling items, and payment stat
 - **FR-010**: System MUST display all orders on kitchen display HTML page in chronological order (oldest first)
 - **FR-011**: System MUST show order details: order number, items with quantities, total amount, timestamp, payment status
 - **FR-012**: System MUST provide audible/visual alert when new order arrives
+  - **Audible alert**: HTML5 audio element plays notification sound (short, pleasant tone, ~0.5 seconds) when new order event received via SSE
+  - **Visual alert**: New order card appears with CSS animation (fade-in + slide-in effect) and distinct visual styling (e.g., border highlight, background color change) for 3 seconds before returning to normal state
+  - **Implementation note**: Alerts must work without JavaScript - CSS animations and HTML5 audio triggered by SSE DOM updates via Datastar
 - **FR-013**: System MUST allow kitchen staff to mark orders as "Paid" when cash is received
 - **FR-014**: System MUST allow kitchen staff to mark orders as "Preparing" or "Ready" with single action
 - **FR-015**: System MUST automatically update customer's order status in real-time when kitchen changes order state
 - **FR-016**: System MUST move completed orders (marked Ready and picked up) to archived queue after 1 hour
+  - **Note**: This requirement is post-MVP. Initial implementation may keep completed orders in active view. Archiving can be added in Phase 7 polish or future iteration.
 - **FR-017**: System MUST handle kitchen display HTML page offline - queue status changes and sync when connection restored
 
 **Restaurant Management:**
@@ -148,6 +152,7 @@ Linda needs to see daily sales, order count, top-selling items, and payment stat
 **Payment Processing:**
 - **FR-031**: System MUST support payment method abstraction architecture - designed to support multiple payment types (cash initially, Lightning Network in future) without requiring refactoring
 - **FR-032**: System MUST support cash payment confirmation flow - customer confirms intent to pay cash, order created with "Pending Payment" status and payment method type "cash"
+- **FR-033**: *(Reserved - removed during spec refinement from previous Lightning payment version)*
 - **FR-034**: System MUST validate that orders marked as "Paid" can proceed to "Preparing" status
 - **FR-035**: System MUST display prices in local currency for customer clarity
 - **FR-036**: System MUST track payment status for each order: Pending Payment, Paid, Not Paid (if cancelled)
@@ -167,6 +172,7 @@ Linda needs to see daily sales, order count, top-selling items, and payment stat
 - **FR-046**: System MUST log all order creation, payment status changes, and fulfillment status changes for troubleshooting
 - **FR-047**: System MUST provide order lookup by order number for customers who lost connection (no account needed)
 - **FR-048**: System MUST continue functioning if external services (photos, analytics) temporarily fail, displaying placeholder images for missing photos and disabling analytics views gracefully
+  - **Note**: This requirement is post-MVP. Initial implementation may have basic error handling. Full graceful degradation can be added in Phase 7 polish or future iteration.
 - **FR-049**: System MUST prevent new photo uploads when restaurant reaches 100 photo limit, requiring owner to delete existing photos first
 
 ### Key Entities
@@ -187,6 +193,7 @@ Linda needs to see daily sales, order count, top-selling items, and payment stat
 - Kitchen display remains always-on during business hours
 - Menu item modifications (extra cheese, no onions) will be added in future version - v1.0 is fixed items only
 - System timezone set to restaurant's local timezone for all timestamps
+- Currency handling: Restaurant owner sets currency during account creation (single currency per restaurant). All prices displayed in that currency. No currency conversion or multi-currency support in v1.0. Currency symbol/format follows restaurant's locale (e.g., USD: $, EUR: €, THB: ฿)
 - Photo storage limits: 2MB max upload, 100 photos max per restaurant, 300KB optimized display version
 - Cash payment confirmation relies on customer honesty and staff verification - system does not validate actual cash receipt
 - Staff can mark orders as paid immediately when cash is received - no separate payment verification step required
@@ -223,10 +230,15 @@ Linda needs to see daily sales, order count, top-selling items, and payment stat
 
 **User Satisfaction:**
 - **SC-016**: After first successful order, customers ask "How do I install this on my phone?" (PWA adoption indicator)
+  - **Measurement**: Track PWA install events via service worker registration. Target: 20%+ of customers who complete order install PWA within first week
 - **SC-017**: Restaurant owners demonstrate system to other business owners within first week (word-of-mouth indicator)
+  - **Measurement**: Track referral signups (restaurant owner mentions "referred by [restaurant name]" during signup). Target: 30%+ of new restaurant signups are referrals within first month
 - **SC-018**: Kitchen staff prefer BitMerchant over previous POS system for order management (qualitative survey)
+  - **Measurement**: Post-implementation survey (3-5 questions) sent to kitchen staff after 1 week of use. Target: 80%+ rate system as "easier" or "much easier" than previous system
 - **SC-019**: Customers describe ordering experience as "faster than traditional ordering" (qualitative feedback)
+  - **Measurement**: Optional feedback form after order completion ("How was your ordering experience?"). Target: 70%+ of feedback mentions "fast" or "quick" in responses
 - **SC-020**: Restaurant owners report simplified order management compared to previous systems (qualitative feedback)
+  - **Measurement**: Owner dashboard feedback form or post-setup survey. Target: 80%+ rate order management as "simpler" or "much simpler" than previous system
 
 **Business Impact:**
 - **SC-021**: Restaurant operates full business day (breakfast through dinner) using only BitMerchant with no additional tools needed

@@ -11,18 +11,21 @@ import (
 type GetMenuUseCase struct {
 	catRepo  domain.MenuCategoryRepository
 	itemRepo domain.MenuItemRepository
+	restRepo domain.RestaurantRepository
 }
 
 // NewGetMenuUseCase creates a new GetMenuUseCase
-func NewGetMenuUseCase(catRepo domain.MenuCategoryRepository, itemRepo domain.MenuItemRepository) *GetMenuUseCase {
+func NewGetMenuUseCase(catRepo domain.MenuCategoryRepository, itemRepo domain.MenuItemRepository, restRepo domain.RestaurantRepository) *GetMenuUseCase {
 	return &GetMenuUseCase{
 		catRepo:  catRepo,
 		itemRepo: itemRepo,
+		restRepo: restRepo,
 	}
 }
 
 // MenuResponse represents the menu structure
 type MenuResponse struct {
+	Restaurant *domain.Restaurant
 	Categories []CategoryWithItems
 }
 
@@ -34,6 +37,12 @@ type CategoryWithItems struct {
 
 // Execute retrieves menu for a restaurant
 func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID domain.RestaurantID) (*MenuResponse, error) {
+	// Get restaurant
+	restaurant, err := uc.restRepo.FindByID(restaurantID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Get categories
 	categories, err := uc.catRepo.FindByRestaurantID(restaurantID)
 	if err != nil {
@@ -59,6 +68,7 @@ func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID domain.Resta
 
 	// Build response
 	response := &MenuResponse{
+		Restaurant: restaurant,
 		Categories: make([]CategoryWithItems, 0, len(categories)),
 	}
 

@@ -19,13 +19,16 @@ func TestGetMenu(t *testing.T) {
 	// Setup Dependencies
 	catRepo := memory.NewMemoryMenuCategoryRepository()
 	itemRepo := memory.NewMemoryMenuItemRepository()
+	restRepo := memory.NewMemoryRestaurantRepository()
 	cartService := cart.NewCartService()
 
 	// Add some data
+	rest, _ := domain.NewRestaurant("r1", "Test Restaurant")
+	restRepo.Save(rest)
 	cat, _ := domain.NewMenuCategory("c1", "r1", "Starters", 1)
 	catRepo.Save(cat)
 
-	uc := menu.NewGetMenuUseCase(catRepo, itemRepo)
+	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo)
 	h := handler.NewMenuHandler(uc, cartService)
 
 	// Setup Echo

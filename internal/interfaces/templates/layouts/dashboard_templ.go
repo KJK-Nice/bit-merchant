@@ -633,8 +633,7 @@ func Dashboard(title string, currentPath string) templ.Component {
 											}
 											ctx = templ.InitializeContext(ctx)
 											templ_7745c5c3_Err = avatar.Image(avatar.ImageProps{
-												// simulate a broken image
-												Src: "broken-image.jpg",
+												Src: "",
 												Alt: "John Doe avatar",
 											}).Render(ctx, templ_7745c5c3_Buffer)
 											if templ_7745c5c3_Err != nil {
@@ -923,7 +922,7 @@ func Dashboard(title string, currentPath string) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 168, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 167, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {

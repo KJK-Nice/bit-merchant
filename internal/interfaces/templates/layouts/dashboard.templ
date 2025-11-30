@@ -112,8 +112,7 @@ templ Dashboard(title string, currentPath string) {
 										}) {
 											@avatar.Avatar(avatar.Props{Class: "size-8 rounded-lg"}) {
 												@avatar.Image(avatar.ImageProps{
-													// simulate a broken image
-													Src: "broken-image.jpg",
+													Src: "",
 													Alt: "John Doe avatar",
 												})
 												@avatar.Fallback() {

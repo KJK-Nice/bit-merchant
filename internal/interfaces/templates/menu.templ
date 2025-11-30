@@ -7,6 +7,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"fmt"
 )
 
@@ -16,6 +17,21 @@ templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 			<div class="flex justify-between items-center">
 				<h1 class="text-3xl font-bold">Menu</h1>
 			</div>
+
+			if !data.Restaurant.IsOpen {
+				<div class="bg-destructive text-destructive-foreground p-4 rounded-md shadow-sm">
+					<div class="flex items-center gap-2">
+						@icon.Icon("alert-circle")(icon.Props{Class: "h-5 w-5"})
+						<h3 class="font-bold text-lg">Currently Closed</h3>
+					</div>
+					if data.Restaurant.ClosedMessage != "" {
+						<p class="mt-1">{ data.Restaurant.ClosedMessage }</p>
+					}
+					if data.Restaurant.ReopeningHours != "" {
+						<p class="text-sm mt-1 opacity-90">Reopening: { data.Restaurant.ReopeningHours }</p>
+					}
+				</div>
+			}
 			
 			<!-- Cart Summary Component -->
 			<div class="sticky top-4 z-10">
@@ -30,6 +46,11 @@ templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 							for _, item := range cat.Items {
 								@card.Card(card.Props{Class: "h-full flex flex-col"}) {
 									@card.Header() {
+										if item.PhotoURL != "" {
+											<div class="aspect-video w-full overflow-hidden rounded-md mb-3">
+												<img src={ item.PhotoURL } alt={ item.Name } class="h-full w-full object-cover" loading="lazy" width="400" height="300" />
+											</div>
+										}
 										@card.Title() { { item.Name } }
 									}
 									@card.Content(card.ContentProps{Class: "flex-grow"}) {
@@ -38,7 +59,7 @@ templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 									@card.Footer(card.FooterProps{Class: "justify-between items-center pt-4"}) {
 										<span class="text-lg font-semibold">{ fmt.Sprintf("$%.2f", item.Price) }</span>
 										
-										if item.IsAvailable {
+										if item.IsAvailable && data.Restaurant.IsOpen {
 											@button.Button(button.Props{
 												Variant: button.VariantDefault,
 												Attributes: templ.Attributes{
@@ -47,8 +68,10 @@ templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 											}) {
 												Add to Cart
 											}
-										} else {
+										} else if !item.IsAvailable {
 											@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { Out of Stock }
+										} else {
+											@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Closed }
 										}
 									}
 								}
@@ -58,5 +81,35 @@ templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 				}
 			</div>
 		</div>
+		
+		<div id="pwa-install-btn" class="hidden fixed bottom-20 right-4 z-50">
+			<button onclick="installPWA()" class="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full p-4 shadow-lg flex items-center gap-2 transition-all">
+				@icon.Icon("download")(icon.Props{Class: "h-6 w-6"})
+				<span class="font-medium">Install App</span>
+			</button>
+		</div>
+
+		<script>
+			let deferredPrompt;
+			window.addEventListener('beforeinstallprompt', (e) => {
+				e.preventDefault();
+				deferredPrompt = e;
+				const installBtn = document.getElementById('pwa-install-btn');
+				if (installBtn) {
+					installBtn.classList.remove('hidden');
+				}
+			});
+
+			async function installPWA() {
+				if (!deferredPrompt) return;
+				deferredPrompt.prompt();
+				const { outcome } = await deferredPrompt.userChoice;
+				deferredPrompt = null;
+				const installBtn = document.getElementById('pwa-install-btn');
+				if (installBtn) {
+					installBtn.classList.add('hidden');
+				}
+			}
+		</script>
 	}
 }

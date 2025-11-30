@@ -399,22 +399,24 @@
 
 ### Error Handling & Error Pages
 
-- [ ] T181 [P] Create 404 Not Found HTML page template in `internal/interfaces/templates/errors/404.templ`
-- [ ] T182 [P] Create 400 Bad Request HTML page template in `internal/interfaces/templates/errors/400.templ`
-- [ ] T183 [P] Create 503 Service Unavailable HTML page template in `internal/interfaces/templates/errors/503.templ`
-- [ ] T184 [P] Update error handling middleware to render appropriate error pages in `internal/interfaces/http/middleware/error.go`
+- [x] T181 [P] Create 404 Not Found HTML page template in `internal/interfaces/templates/errors/404.templ`
+- [x] T182 [P] Create 400 Bad Request HTML page template in `internal/interfaces/templates/errors/400.templ`
+- [x] T183 [P] Create 503 Service Unavailable HTML page template in `internal/interfaces/templates/errors/503.templ`
+- [x] T184 [P] Update error handling middleware to render appropriate error pages in `internal/interfaces/http/middleware/error.go`
 
 ### Restaurant Closed State
 
-- [ ] T185 [P] Add "Currently Closed" banner to menu page when restaurant is closed in `internal/interfaces/templates/menu.templ` (shows ClosedMessage and ReopeningHours)
-- [ ] T186 [P] Disable ordering functionality when restaurant is closed (validate in CreateOrderUseCase, return 503 error)
+- [x] T185 [P] Add "Currently Closed" banner to menu page when restaurant is closed in `internal/interfaces/templates/menu.templ` (shows ClosedMessage and ReopeningHours)
+- [x] T186 [P] Disable ordering functionality when restaurant is closed (validate in CreateOrderUseCase, return 503 error)
 
 ### Order Lookup & Recovery
 
-- [ ] T187 [P] Add order lookup by order number functionality (already implemented in US1, verify edge cases)
-- [ ] T188 [P] Add order recovery page template in `internal/interfaces/templates/order_lookup.templ` (allows customers to enter order number)
+- [x] T187 [P] Add order lookup by order number functionality (already implemented in US1, verify edge cases)
+- [x] T188 [P] Add order recovery page template in `internal/interfaces/templates/order_lookup.templ` (allows customers to enter order number)
 
-### Order Archiving (FR-016)
+### Order Archiving (FR-016) - POST-MVP
+
+**Note**: FR-016 is marked as post-MVP in spec. These tasks can be deferred to post-launch polish or future iteration.
 
 - [ ] T189 [P] Create order archiving service in `internal/application/order/archive.go` (moves completed orders to archived state after 1 hour) for FR-016
 - [ ] T190 [P] Create scheduled job for order archiving in `internal/infrastructure/jobs/order_archiver.go` (runs periodically, archives orders marked Ready after 1 hour) for FR-016
@@ -423,35 +425,35 @@
 
 ### PWA Enhancements
 
-- [ ] T193 [P] Enhance service worker for offline menu browsing in `static/pwa/sw.js` (cache menu HTML, images, CSS)
-- [ ] T194 [P] Add PWA install prompt and instructions in menu template
+- [x] T193 [P] Enhance service worker for offline menu browsing in `static/pwa/sw.js` (cache menu HTML, images, CSS)
+- [x] T194 [P] Add PWA install prompt and instructions in menu template
 
 ### Performance Optimization
 
-- [ ] T195 [P] Optimize menu page load performance (verify <2s on 3G) - image lazy loading, template caching
+- [x] T195 [P] Optimize menu page load performance (verify <2s on 3G) - image lazy loading, template caching
 - [ ] T196 [P] Optimize SSE event propagation (verify <5s) - efficient event bus, connection management
-- [ ] T197 [P] Add performance monitoring middleware in `internal/interfaces/http/middleware/performance.go` (logs slow requests >200ms)
+- [x] T197 [P] Add performance monitoring middleware in `internal/interfaces/http/middleware/performance.go` (logs slow requests >200ms)
 
 ### Security
 
-- [ ] T198 [P] Add input validation and sanitization for all form inputs (prevent XSS, injection attacks)
-- [ ] T199 [P] Add CSRF protection for form submissions in `internal/interfaces/http/middleware/csrf.go`
-- [ ] T200 [P] Add rate limiting middleware in `internal/interfaces/http/middleware/ratelimit.go` (prevent abuse)
-- [ ] T201 [P] Add graceful degradation for external service failures in `internal/infrastructure/storage/photo.go` (returns error but doesn't crash, allows menu to function without photos) for FR-048
+- [x] T198 [P] Add input validation and sanitization for all form inputs (prevent XSS, injection attacks)
+- [x] T199 [P] Add CSRF protection for form submissions in `internal/interfaces/http/middleware/csrf.go`
+- [x] T200 [P] Add rate limiting middleware in `internal/interfaces/http/middleware/ratelimit.go` (prevent abuse)
+- [ ] T201 [P] Add graceful degradation for external service failures in `internal/infrastructure/storage/photo.go` (returns error but doesn't crash, allows menu to function without photos) for FR-048 - **POST-MVP**: FR-048 marked as post-MVP in spec
 
 ### Accessibility
 
-- [ ] T202 [P] Verify WCAG 2.1 AA compliance across all templates (semantic HTML, alt text, keyboard navigation)
-- [ ] T203 [P] Add ARIA labels and roles to interactive elements in all templates
+- [x] T202 [P] Verify WCAG 2.1 AA compliance across all templates (semantic HTML, alt text, keyboard navigation)
+- [x] T203 [P] Add ARIA labels and roles to interactive elements in all templates
 
 ### Documentation
 
 - [ ] T204 [P] Add Go doc comments to all public APIs in `internal/application/` and `internal/interfaces/http/`
-- [ ] T205 [P] Update README.md with setup instructions, architecture overview, API documentation
+- [x] T205 [P] Update README.md with setup instructions, architecture overview, API documentation
 
 ### Code Quality & Testing
 
-- [ ] T206 [P] Run full test suite and verify coverage: 80% overall, 95% for critical paths (payment, orders, kitchen)
+- [x] T206 [P] Run full test suite and verify coverage: 80% overall, 95% for critical paths (payment, orders, kitchen)
 - [ ] T207 [P] Run gocyclo to verify all functions have complexity <10
 - [ ] T208 [P] Run golangci-lint and fix all issues
 - [ ] T209 [P] Verify all functions <50 lines, all types/structs <300 lines (refactor if needed)
@@ -464,8 +466,8 @@
 
 ### Quickstart Validation
 
-- [ ] T213 [P] Run quickstart.md validation - verify all setup steps work correctly
-- [ ] T214 [P] Verify development workflow from quickstart.md (templ generate, go run, etc.)
+- [x] T213 [P] Run quickstart.md validation - verify all setup steps work correctly
+- [x] T214 [P] Verify development workflow from quickstart.md (templ generate, go run, etc.)
 
 ---
 

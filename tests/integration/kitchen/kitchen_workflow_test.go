@@ -47,7 +47,7 @@ func TestKitchenWorkflow(t *testing.T) {
 
 	// Seed Data
 	restaurantID := domain.RestaurantID("restaurant_1")
-	_ = restRepo.Save(&domain.Restaurant{ID: restaurantID, Name: "Test Cafe"})
+	_ = restRepo.Save(&domain.Restaurant{ID: restaurantID, Name: "Test Cafe", IsOpen: true})
 
 	cat1, _ := domain.NewMenuCategory("cat_1", restaurantID, "Mains", 1)
 	_ = menuCatRepo.Save(cat1)
@@ -56,13 +56,13 @@ func TestKitchenWorkflow(t *testing.T) {
 	_ = menuItemRepo.Save(item1)
 
 	// Use Cases
-	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, eventBus, paymentMethod, logger)
+	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
 	getOrderUC := order.NewGetOrderByNumberUseCase(orderRepo)
 	getKitchenOrdersUC := kitchen.NewGetKitchenOrdersUseCase(orderRepo)
 	markPaidUC := kitchen.NewMarkOrderPaidUseCase(orderRepo, eventBus)
 	markPreparingUC := kitchen.NewMarkOrderPreparingUseCase(orderRepo, eventBus)
 	markReadyUC := kitchen.NewMarkOrderReadyUseCase(orderRepo, eventBus)
-	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo)
+	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo)
 
 	// Handlers
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC)

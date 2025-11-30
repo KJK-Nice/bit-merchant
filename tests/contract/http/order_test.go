@@ -22,11 +22,16 @@ func TestOrderEndpoints(t *testing.T) {
 	// Setup Dependencies
 	orderRepo := memory.NewMemoryOrderRepository()
 	paymentRepo := memory.NewMemoryPaymentRepository()
+	restRepo := memory.NewMemoryRestaurantRepository()
 	eventBus := events.NewEventBus()
 	paymentMethod := cash.NewCashPaymentMethod()
 	logger := logging.NewLogger()
+
+	// Seed restaurant
+	rest, _ := domain.NewRestaurant("restaurant_1", "Test Restaurant")
+	restRepo.Save(rest)
 	
-	createUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, eventBus, paymentMethod, logger)
+	createUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
 	getUC := order.NewGetOrderByNumberUseCase(orderRepo)
 	cartService := cart.NewCartService()
 	

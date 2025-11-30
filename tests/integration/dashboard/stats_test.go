@@ -21,12 +21,17 @@ func TestDashboardIntegration(t *testing.T) {
 	// Infrastructure
 	orderRepo := memory.NewMemoryOrderRepository()
 	paymentRepo := memory.NewMemoryPaymentRepository()
+	restRepo := memory.NewMemoryRestaurantRepository()
 	eventBus := events.NewEventBus()
 	paymentMethod := cash.NewCashPaymentMethod()
 	logger := logging.NewLogger()
 
+	// Setup restaurant for order creation check
+	restaurant, _ := domain.NewRestaurant("restaurant_1", "Integration Cafe")
+	restRepo.Save(restaurant)
+
 	// Use Cases
-	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, eventBus, paymentMethod, logger)
+	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
 	getStatsUC := dashboard.NewGetDashboardStatsUseCase(orderRepo)
 
 	t.Run("Order Creation Reflected in Stats", func(t *testing.T) {

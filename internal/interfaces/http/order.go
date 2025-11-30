@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	"bitmerchant/internal/application/cart"
@@ -102,4 +103,19 @@ func (h *OrderHandler) GetOrder(c echo.Context) error {
 	}
 
 	return templates.OrderStatusPage(result).Render(c.Request().Context(), c.Response())
+}
+
+// GetLookup renders the lookup page
+func (h *OrderHandler) GetLookup(c echo.Context) error {
+	return templates.OrderLookupPage().Render(c.Request().Context(), c.Response())
+}
+
+// PostLookup handles the lookup form submission
+func (h *OrderHandler) PostLookup(c echo.Context) error {
+	orderNumber := c.FormValue("orderNumber")
+	if orderNumber == "" {
+		return c.Redirect(http.StatusSeeOther, "/order/lookup")
+	}
+	// Redirect to status page
+	return c.Redirect(http.StatusSeeOther, fmt.Sprintf("/order/%s", orderNumber))
 }

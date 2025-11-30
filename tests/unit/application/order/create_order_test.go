@@ -18,13 +18,20 @@ import (
 func TestCreateOrderUseCase(t *testing.T) {
 	orderRepo := memory.NewMemoryOrderRepository()
 	paymentRepo := memory.NewMemoryPaymentRepository()
+	restRepo := memory.NewMemoryRestaurantRepository()
 	eventBus := events.NewEventBus()
 	paymentMethod := cash.NewCashPaymentMethod()
 	logger := logging.NewLogger()
+
+	// Setup restaurant
+	restID := domain.RestaurantID("r1")
+	restaurant, _ := domain.NewRestaurant(restID, "Test Rest")
+	restRepo.Save(restaurant)
 	
 	uc := order.NewCreateOrderUseCase(
 		orderRepo,
 		paymentRepo,
+		restRepo,
 		eventBus,
 		paymentMethod,
 		logger,

@@ -72,7 +72,7 @@ func TestAdminEndpoints(t *testing.T) {
 	createItemUC := menu.NewCreateMenuItemUseCase(repoItem)
 
 	// We also need GetMenuUseCase to render the dashboard
-	getMenuUC := menu.NewGetMenuUseCase(repoCat, repoItem)
+	getMenuUC := menu.NewGetMenuUseCase(repoCat, repoItem, repoRest)
 
 	// Initialize Handler (Does not exist yet)
 	adminHandler := handler.NewAdminHandler(
@@ -86,7 +86,8 @@ func TestAdminEndpoints(t *testing.T) {
 
 	// Seed a restaurant for the dashboard context
 	restID := domain.RestaurantID("restaurant_1")
-	_, _ = createRestUC.Execute(context.Background(), restaurant.CreateRestaurantRequest{Name: "Test Rest"})
+	rest, _ := domain.NewRestaurant(restID, "Test Rest")
+	repoRest.Save(rest)
 
 	t.Run("GET /admin/dashboard returns dashboard", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/admin/dashboard", nil)

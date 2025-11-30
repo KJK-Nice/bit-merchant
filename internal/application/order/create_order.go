@@ -30,6 +30,7 @@ type CreateOrderResponse struct {
 type CreateOrderUseCase struct {
 	orderRepo     domain.OrderRepository
 	paymentRepo   domain.PaymentRepository
+	restRepo      domain.RestaurantRepository
 	eventBus      *events.EventBus
 	paymentMethod domain.PaymentMethod
 	logger        *logging.Logger
@@ -39,6 +40,7 @@ type CreateOrderUseCase struct {
 func NewCreateOrderUseCase(
 	orderRepo domain.OrderRepository,
 	paymentRepo domain.PaymentRepository,
+	restRepo domain.RestaurantRepository,
 	eventBus *events.EventBus,
 	paymentMethod domain.PaymentMethod,
 	logger *logging.Logger,
@@ -46,6 +48,7 @@ func NewCreateOrderUseCase(
 	return &CreateOrderUseCase{
 		orderRepo:     orderRepo,
 		paymentRepo:   paymentRepo,
+		restRepo:      restRepo,
 		eventBus:      eventBus,
 		paymentMethod: paymentMethod,
 		logger:        logger,
@@ -54,6 +57,15 @@ func NewCreateOrderUseCase(
 
 // Execute creates an order
 func (uc *CreateOrderUseCase) Execute(ctx context.Context, req CreateOrderRequest) (*CreateOrderResponse, error) {
+	// Check if restaurant is open
+	restaurant, err := uc.restRepo.FindByID(req.RestaurantID)
+	if err != nil {
+		return nil, err
+	}
+	if !restaurant.IsOpen {
+		return nil, fmt.Errorf("restaurant is currently closed")
+	}
+
 	orderID := uc.generateOrderID()
 	orderNumber := uc.generateOrderNumber()
 

@@ -14,9 +14,12 @@ import (
 func TestGetMenuUseCase(t *testing.T) {
 	catRepo := memory.NewMemoryMenuCategoryRepository()
 	itemRepo := memory.NewMemoryMenuItemRepository()
-	uc := menu.NewGetMenuUseCase(catRepo, itemRepo)
+	restRepo := memory.NewMemoryRestaurantRepository()
+	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo)
 
 	restID := domain.RestaurantID("r1")
+	restaurant, _ := domain.NewRestaurant(restID, "Test Restaurant")
+	restRepo.Save(restaurant)
 
 	// Setup data
 	cat1, _ := domain.NewMenuCategory("c1", restID, "Starters", 1)
@@ -33,6 +36,7 @@ func TestGetMenuUseCase(t *testing.T) {
 		result, err := uc.Execute(context.Background(), restID)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
+		assert.Equal(t, "Test Restaurant", result.Restaurant.Name)
 		assert.Len(t, result.Categories, 2)
 
 		// Check structure
