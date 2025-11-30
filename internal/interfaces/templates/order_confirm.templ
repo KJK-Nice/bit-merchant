@@ -5,12 +5,25 @@ import (
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
+	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 )
 
 templ OrderConfirmationPage(cart *cart.Cart) {
 	@Layout("Confirm Order") {
-		<div class="container mx-auto p-4 space-y-8 max-w-2xl">
-			<h1 class="text-3xl font-bold">Confirm Order</h1>
+		<div class="container mx-auto p-4 space-y-8 max-w-2xl pb-24 md:pb-8">
+			<div class="flex items-center gap-4">
+				@button.Button(button.Props{
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Href:    "/menu",
+					Class:   "-ml-2",
+				}) {
+					@icon.Icon("chevron-left")(icon.Props{Class: "h-6 w-6"})
+				}
+				<h1 class="text-3xl font-bold">Confirm Order</h1>
+			</div>
+
 			@components.CartSummary(cart, false)
 			
 			@card.Card() {
@@ -34,6 +47,7 @@ templ OrderConfirmationPage(cart *cart.Cart) {
 				}
 			}
 		</div>
+
+		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/confirm"})
 	}
 }
-

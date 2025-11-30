@@ -68,9 +68,14 @@ func (h *CartHandler) AddToCart(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	// Return updated CartSummary fragment
+	// Return updated CartSummary and CartFloatingButton fragments
 	updatedCart := h.cartService.GetCart(sessionID)
-	return components.CartSummary(updatedCart, true).Render(c.Request().Context(), c.Response())
+	ctx := c.Request().Context()
+	resp := c.Response()
+	if err := components.CartSummary(updatedCart, true).Render(ctx, resp); err != nil {
+		return err
+	}
+	return components.CartFloatingButton(updatedCart).Render(ctx, resp)
 }
 
 // RemoveFromCart handles POST /cart/remove
@@ -94,9 +99,14 @@ func (h *CartHandler) RemoveFromCart(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	// Return updated CartSummary fragment
+	// Return updated CartSummary and CartFloatingButton fragments
 	updatedCart := h.cartService.GetCart(sessionID)
-	return components.CartSummary(updatedCart, true).Render(c.Request().Context(), c.Response())
+	ctx := c.Request().Context()
+	resp := c.Response()
+	if err := components.CartSummary(updatedCart, true).Render(ctx, resp); err != nil {
+		return err
+	}
+	return components.CartFloatingButton(updatedCart).Render(ctx, resp)
 }
 
 // GetCart handles GET /cart

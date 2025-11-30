@@ -5,7 +5,7 @@ templ Layout(title string) {
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 			<title>{ title }</title>
 			<link rel="manifest" href="/static/pwa/manifest.json"/>
 			<link href="/assets/css/output.css" rel="stylesheet"/>
@@ -23,8 +23,8 @@ templ Layout(title string) {
 				}
 			</script>
 		</head>
-		<body class="bg-background text-foreground antialiased min-h-screen">
-			<main class="container mx-auto py-6">
+		<body class="bg-background text-foreground antialiased min-h-screen flex flex-col">
+			<main class="container mx-auto py-6 flex-grow">
 				{ children... }
 			</main>
 		</body>

@@ -35,6 +35,7 @@ type OrderRepository interface {
 	FindByOrderNumber(restaurantID RestaurantID, orderNumber string) (*Order, error)
 	FindByRestaurantID(restaurantID RestaurantID) ([]*Order, error)
 	FindActiveByRestaurantID(restaurantID RestaurantID) ([]*Order, error)
+	FindBySessionID(sessionID string) ([]*Order, error)
 	Update(order *Order) error
 }
 

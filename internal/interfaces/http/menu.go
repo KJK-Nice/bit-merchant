@@ -39,5 +39,8 @@ func (h *MenuHandler) GetMenu(c echo.Context) error {
 	sessionID := c.Get("sessionID").(string)
 	cart := h.cartService.GetCart(sessionID)
 
+	// Prevent caching so back button always fetches fresh state (updated cart)
+	c.Response().Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+
 	return templates.MenuPage(menuData, cart).Render(c.Request().Context(), c.Response())
 }

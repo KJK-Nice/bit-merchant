@@ -82,6 +82,19 @@ func (r *MemoryOrderRepository) FindActiveByRestaurantID(restaurantID domain.Res
 	return result, nil
 }
 
+// FindBySessionID finds all orders for a session
+func (r *MemoryOrderRepository) FindBySessionID(sessionID string) ([]*domain.Order, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var result []*domain.Order
+	for _, order := range r.orders {
+		if order.SessionID == sessionID {
+			result = append(result, order)
+		}
+	}
+	return result, nil
+}
+
 // Update updates an order
 func (r *MemoryOrderRepository) Update(order *domain.Order) error {
 	r.mu.Lock()

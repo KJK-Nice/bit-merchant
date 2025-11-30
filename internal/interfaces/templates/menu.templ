@@ -7,13 +7,14 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"fmt"
 )
 
 templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 	@Layout("Menu") {
-		<div class="container mx-auto p-4 space-y-6">
+		<div class="container mx-auto p-4 space-y-6 pb-40 md:pb-6">
 			<div class="flex justify-between items-center">
 				<h1 class="text-3xl font-bold">Menu</h1>
 			</div>
@@ -33,8 +34,8 @@ templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 				</div>
 			}
 			
-			<!-- Cart Summary Component -->
-			<div class="sticky top-4 z-10">
+			<!-- Cart Summary Component (Desktop) -->
+			<div class="hidden md:block sticky top-4 z-10">
 				@components.CartSummary(cart, true)
 			</div>
 
@@ -81,8 +82,14 @@ templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 				}
 			</div>
 		</div>
+
+		@components.CartFloatingButton(cart)
+		<!-- Auto-refresh cart on load to ensure state is synced when navigating back -->
+		<div data-init="@get('/cart')"></div>
+
+		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/menu"})
 		
-		<div id="pwa-install-btn" class="hidden fixed bottom-20 right-4 z-50">
+		<div id="pwa-install-btn" class="hidden fixed bottom-32 right-4 z-50 md:bottom-20">
 			<button onclick="installPWA()" class="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full p-4 shadow-lg flex items-center gap-2 transition-all">
 				@icon.Icon("download")(icon.Props{Class: "h-6 w-6"})
 				<span class="font-medium">Install App</span>

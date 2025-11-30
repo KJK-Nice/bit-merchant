@@ -14,21 +14,24 @@ import (
 
 // OrderHandler handles order-related HTTP requests
 type OrderHandler struct {
-	createOrderUseCase      *order.CreateOrderUseCase
-	getOrderByNumberUseCase *order.GetOrderByNumberUseCase
-	cartService             *cart.CartService
+	createOrderUseCase       *order.CreateOrderUseCase
+	getOrderByNumberUseCase  *order.GetOrderByNumberUseCase
+	getCustomerOrdersUseCase *order.GetCustomerOrdersUseCase // Added for history
+	cartService              *cart.CartService
 }
 
 // NewOrderHandler creates a new OrderHandler
 func NewOrderHandler(
 	createOrderUseCase *order.CreateOrderUseCase,
 	getOrderByNumberUseCase *order.GetOrderByNumberUseCase,
+	getCustomerOrdersUseCase *order.GetCustomerOrdersUseCase,
 	cartService *cart.CartService,
 ) *OrderHandler {
 	return &OrderHandler{
-		createOrderUseCase:      createOrderUseCase,
-		getOrderByNumberUseCase: getOrderByNumberUseCase,
-		cartService:             cartService,
+		createOrderUseCase:       createOrderUseCase,
+		getOrderByNumberUseCase:  getOrderByNumberUseCase,
+		getCustomerOrdersUseCase: getCustomerOrdersUseCase,
+		cartService:              cartService,
 	}
 }
 
@@ -36,7 +39,7 @@ func NewOrderHandler(
 func (h *OrderHandler) GetConfirmOrder(c echo.Context) error {
 	sessionID := c.Get("sessionID").(string)
 	cart := h.cartService.GetCart(sessionID)
-	
+
 	// Validate cart not empty
 	if len(cart.Items) == 0 {
 		return c.Redirect(http.StatusFound, "/menu")
@@ -55,7 +58,7 @@ func (h *OrderHandler) CreateOrder(c echo.Context) error {
 	}
 
 	restaurantID := domain.RestaurantID("restaurant_1") // Default for MVP
-	
+
 	// Get payment method from form
 	paymentMethodVal := c.FormValue("paymentMethod")
 	var paymentMethod domain.PaymentMethodType
@@ -105,9 +108,15 @@ func (h *OrderHandler) GetOrder(c echo.Context) error {
 	return templates.OrderStatusPage(result).Render(c.Request().Context(), c.Response())
 }
 
-// GetLookup renders the lookup page
+// GetLookup renders the lookup/history page (REPLACED functionality)
 func (h *OrderHandler) GetLookup(c echo.Context) error {
-	return templates.OrderLookupPage().Render(c.Request().Context(), c.Response())
+	sessionID := c.Get("sessionID").(string)
+	orders, err := h.getCustomerOrdersUseCase.Execute(c.Request().Context(), sessionID)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to retrieve orders: "+err.Error())
+	}
+
+	return templates.OrderHistoryPage(orders).Render(c.Request().Context(), c.Response())
 }
 
 // PostLookup handles the lookup form submission

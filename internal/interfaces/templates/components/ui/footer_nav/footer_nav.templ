@@ -47,3 +47,19 @@ templ FooterNav(props Props) {
 	</nav>
 }
 
+templ CustomerFooterNav(props Props) {
+	<nav
+		style="bottom: 0"
+		class={ utils.TwMerge(
+			"md:hidden fixed left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex justify-around items-center h-16 pb-[env(safe-area-inset-bottom)]",
+			props.Class,
+		) }
+	>
+		@NavItem(props.CurrentPath, "/menu", "Menu") {
+			@icon.Utensils(icon.Props{Class: "size-5"})
+		}
+		@NavItem(props.CurrentPath, "/order/lookup", "Orders") {
+			@icon.History(icon.Props{Class: "size-5"})
+		}
+	</nav>
+}

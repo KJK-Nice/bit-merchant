@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+// Event constants
+const (
+	EventOrderCreated   = "OrderCreated"
+	EventOrderPaid      = "OrderPaid"
+	EventOrderPreparing = "OrderPreparing"
+	EventOrderReady     = "OrderReady"
+	EventOrderCompleted = "OrderCompleted"
+)
+
 // DomainEvent represents a domain event interface
 type DomainEvent interface {
 	EventName() string
@@ -27,7 +36,7 @@ type OrderCreated struct {
 
 // EventName returns the event name
 func (e OrderCreated) EventName() string {
-	return "OrderCreated"
+	return EventOrderCreated
 }
 
 // OccurredAt returns when the event occurred
@@ -46,7 +55,7 @@ type OrderPaid struct {
 
 // EventName returns the event name
 func (e OrderPaid) EventName() string {
-	return "OrderPaid"
+	return EventOrderPaid
 }
 
 // OccurredAt returns when the event occurred
@@ -64,7 +73,7 @@ type OrderPreparing struct {
 
 // EventName returns the event name
 func (e OrderPreparing) EventName() string {
-	return "OrderPreparing"
+	return EventOrderPreparing
 }
 
 // OccurredAt returns when the event occurred
@@ -82,7 +91,7 @@ type OrderReady struct {
 
 // EventName returns the event name
 func (e OrderReady) EventName() string {
-	return "OrderReady"
+	return EventOrderReady
 }
 
 // OccurredAt returns when the event occurred
@@ -100,7 +109,7 @@ type OrderCompleted struct {
 
 // EventName returns the event name
 func (e OrderCompleted) EventName() string {
-	return "OrderCompleted"
+	return EventOrderCompleted
 }
 
 // OccurredAt returns when the event occurred

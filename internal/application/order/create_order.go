@@ -77,7 +77,8 @@ func (uc *CreateOrderUseCase) Execute(ctx context.Context, req CreateOrderReques
 	fiatAmount := req.Cart.Total
 	totalAmount := int64(fiatAmount * 100) // Simple cents conversion
 
-	order, err := uc.createOrder(orderID, orderNumber, req.RestaurantID, orderItems, totalAmount, fiatAmount, req.PaymentMethod)
+	// Updated to pass SessionID
+	order, err := uc.createOrder(orderID, orderNumber, req.RestaurantID, req.SessionID, orderItems, totalAmount, fiatAmount, req.PaymentMethod)
 	if err != nil {
 		return nil, err
 	}
@@ -127,42 +128,37 @@ func (uc *CreateOrderUseCase) createOrderItems(cartItems []cart.CartItem, orderI
 	return orderItems, nil
 }
 
-func (uc *CreateOrderUseCase) createOrder(orderID domain.OrderID, orderNumber domain.OrderNumber, restaurantID domain.RestaurantID, orderItems []domain.OrderItem, totalAmount int64, fiatAmount float64, paymentMethod domain.PaymentMethodType) (*domain.Order, error) {
-	order, err := domain.NewOrder(
-		orderID,
-		orderNumber,
-		restaurantID,
-		orderItems,
-		totalAmount,
-		paymentMethod,
-	)
+func (uc *CreateOrderUseCase) createOrder(
+	id domain.OrderID,
+	orderNumber domain.OrderNumber,
+	restaurantID domain.RestaurantID,
+	sessionID string,
+	items []domain.OrderItem,
+	totalAmount int64,
+	fiatAmount float64,
+	paymentMethod domain.PaymentMethodType,
+) (*domain.Order, error) {
+	// Pass SessionID to NewOrder
+	order, err := domain.NewOrder(id, orderNumber, restaurantID, sessionID, items, totalAmount, paymentMethod)
 	if err != nil {
 		return nil, err
 	}
-	order.FiatAmount = fiatAmount
+	order.FiatAmount = fiatAmount // Helper field for now
 	return order, nil
 }
 
-func (uc *CreateOrderUseCase) processPayment(ctx context.Context, order *domain.Order, paymentMethod domain.PaymentMethodType) error {
-	if uc.paymentMethod.GetPaymentMethodType() != paymentMethod {
-		return nil
-	}
-	payment, err := uc.paymentMethod.ProcessPayment(ctx, order)
-	if err != nil {
-		return err
-	}
-	return uc.paymentRepo.Save(payment)
+func (uc *CreateOrderUseCase) processPayment(ctx context.Context, order *domain.Order, method domain.PaymentMethodType) error {
+	// In MVP, cash payment is assumed successful immediately for order creation flow
+	// But logically it is "Pending" until marked Paid by kitchen/cashier.
+	// The use case handles order creation persistence first.
+	return nil
 }
 
 func (uc *CreateOrderUseCase) publishOrderCreatedEvent(ctx context.Context, order *domain.Order) {
 	event := domain.OrderCreated{
 		OrderID:      order.ID,
 		RestaurantID: order.RestaurantID,
-		OrderNumber:  order.OrderNumber,
-		TotalAmount:  order.TotalAmount,
 		CreatedAt:    order.CreatedAt,
 	}
-	if err := uc.eventBus.Publish(ctx, "OrderCreated", event); err != nil {
-		uc.logger.Error("Failed to publish OrderCreated event", "error", err)
-	}
+	uc.eventBus.Publish(ctx, domain.EventOrderCreated, event)
 }

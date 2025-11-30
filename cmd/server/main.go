@@ -98,6 +98,7 @@ func main() {
 	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo)
 	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
 	getOrderUC := order.NewGetOrderByNumberUseCase(orderRepo)
+	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo) // Added
 
 	// Kitchen Use Cases
 	getKitchenOrdersUC := kitchen.NewGetKitchenOrdersUseCase(orderRepo)
@@ -127,7 +128,7 @@ func main() {
 	// 3. Handlers
 	menuHandler := handler.NewMenuHandler(getMenuUC, cartService)
 	cartHandler := handler.NewCartHandler(cartService, menuItemRepo)
-	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, cartService)
+	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, getCustomerOrdersUC, cartService)
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC)
 	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuUC, uploadPhotoUC, generateQRUC)
 	ownerHandler := handler.NewOwnerHandler(createRestUC)

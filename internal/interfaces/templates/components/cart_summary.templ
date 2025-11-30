@@ -58,3 +58,32 @@ templ CartSummary(cart *cart.Cart, showCheckout bool) {
 	}
 }
 
+func getTotalQuantity(cart *cart.Cart) int {
+	count := 0
+	for _, item := range cart.Items {
+		count += item.Quantity
+	}
+	return count
+}
+
+templ CartFloatingButton(cart *cart.Cart) {
+	<div id="cart-floating-button">
+		if len(cart.Items) > 0 {
+			<div class="fixed z-40 left-0 right-0 px-4 pointer-events-none md:hidden" style="bottom: calc(4rem + env(safe-area-inset-bottom) + 1rem)">
+				@button.Button(button.Props{
+					Class: "w-full shadow-lg pointer-events-auto flex justify-between items-center py-6 text-lg",
+					Variant: button.VariantDefault,
+					Href: "/order/confirm",
+				}) {
+					<div class="flex items-center gap-3">
+						<div class="bg-primary-foreground text-primary rounded-full min-w-[2rem] h-8 px-2 flex items-center justify-center text-sm font-bold">
+							{ fmt.Sprintf("%d", getTotalQuantity(cart)) }
+						</div>
+						<span class="font-bold">View Cart</span>
+					</div>
+					<span class="font-bold">{ fmt.Sprintf("$%.2f", cart.Total) }</span>
+				}
+			</div>
+		}
+	</div>
+}

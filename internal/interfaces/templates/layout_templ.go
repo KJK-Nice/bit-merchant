@@ -29,7 +29,7 @@ func Layout(title string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\"><title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -42,7 +42,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><link href=\"/assets/css/output.css\" rel=\"stylesheet\"><script type=\"module\" src=\"https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js\"></script><script src=\"/assets/js/input.min.js\"></script><script>\n\t\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\t\twindow.addEventListener('load', function() {\n\t\t\t\t\t\tnavigator.serviceWorker.register('/sw.js').then(function(registration) {\n\t\t\t\t\t\t\tconsole.log('ServiceWorker registration successful with scope: ', registration.scope);\n\t\t\t\t\t\t}, function(err) {\n\t\t\t\t\t\t\tconsole.log('ServiceWorker registration failed: ', err);\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t</script></head><body class=\"bg-background text-foreground antialiased min-h-screen\"><main class=\"container mx-auto py-6\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><link href=\"/assets/css/output.css\" rel=\"stylesheet\"><script type=\"module\" src=\"https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js\"></script><script src=\"/assets/js/input.min.js\"></script><script>\n\t\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\t\twindow.addEventListener('load', function() {\n\t\t\t\t\t\tnavigator.serviceWorker.register('/sw.js').then(function(registration) {\n\t\t\t\t\t\t\tconsole.log('ServiceWorker registration successful with scope: ', registration.scope);\n\t\t\t\t\t\t}, function(err) {\n\t\t\t\t\t\t\tconsole.log('ServiceWorker registration failed: ', err);\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t</script></head><body class=\"bg-background text-foreground antialiased min-h-screen flex flex-col\"><main class=\"container mx-auto py-6 flex-grow\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
