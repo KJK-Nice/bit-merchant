@@ -113,6 +113,14 @@ func (c *CustomerActor) ViewsOrderHistory() *CustomerActor {
 	return c
 }
 
+// ViewsOrderConfirmation views the order confirmation page
+func (c *CustomerActor) ViewsOrderConfirmation() *CustomerActor {
+	c.scenario.addStep(&ViewOrderConfirmationStep{
+		SessionID: c.sessionID,
+	})
+	return c
+}
+
 // KitchenActor represents kitchen actions
 type KitchenActor struct {
 	scenario *Scenario

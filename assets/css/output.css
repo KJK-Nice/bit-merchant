@@ -964,9 +964,6 @@
   .bg-transparent {
     background-color: transparent;
   }
-  .bg-white {
-    background-color: var(--color-white);
-  }
   .object-cover {
     object-fit: cover;
   }
@@ -1141,9 +1138,6 @@
   }
   .text-foreground {
     color: var(--foreground);
-  }
-  .text-gray-500 {
-    color: var(--color-gray-500);
   }
   .text-muted-foreground {
     color: var(--muted-foreground);

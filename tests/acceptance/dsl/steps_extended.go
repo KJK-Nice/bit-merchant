@@ -80,3 +80,21 @@ func (s *ViewDashboardStep) Execute(t *testing.T, app *TestApplication) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, rec.Code)
 }
+
+// ViewOrderConfirmationStep represents viewing the order confirmation page
+type ViewOrderConfirmationStep struct {
+	SessionID string
+}
+
+func (s *ViewOrderConfirmationStep) Execute(t *testing.T, app *TestApplication) {
+	req := httptest.NewRequest(http.MethodGet, "/order/confirm", nil)
+	req.AddCookie(&http.Cookie{Name: "bitmerchant_session", Value: s.SessionID})
+
+	rec := httptest.NewRecorder()
+	c := app.echo.NewContext(req, rec)
+	c.Set("sessionID", s.SessionID)
+
+	err := app.orderHandler.GetConfirmOrder(c)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, rec.Code)
+}

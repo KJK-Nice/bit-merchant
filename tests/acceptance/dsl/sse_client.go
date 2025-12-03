@@ -159,12 +159,26 @@ type SSEStep struct {
 }
 
 func (s *SSEStep) Execute(t *testing.T, app *TestApplication) {
-	client := NewSSEClient(t, app, s.Path)
+	// Resolve order number placeholder if path contains "/order/" and context has order
+	resolvedPath := s.Path
+	if app.context != nil && s.Path != "" {
+		// If path contains order number placeholder, resolve it
+		if app.context.GetCreatedOrderNumber() != "" && s.Path == "/order/0001/stream" {
+			// Replace placeholder with actual order number
+			resolvedPath = "/order/" + string(app.context.GetCreatedOrderNumber()) + "/stream"
+		}
+	}
+	
+	client := NewSSEClient(t, app, resolvedPath)
 	// Store client in test context for later assertions
 	if app.context != nil {
-		app.context.SetSSEClient(s.Path, client)
+		app.context.SetSSEClient(resolvedPath, client)
+		// Also store with original path for lookup
+		if resolvedPath != s.Path {
+			app.context.SetSSEClient(s.Path, client)
+		}
 	}
-
+	
 	// Capture any already-broadcast events for this topic
 	if app.testSSEHandler != nil && client.topic != "" {
 		broadcasts := app.testSSEHandler.GetCapturedBroadcasts(client.topic)
