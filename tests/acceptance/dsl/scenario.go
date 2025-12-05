@@ -2,6 +2,7 @@ package dsl
 
 import (
 	"testing"
+	"time"
 )
 
 // Action represents either a step or an assertion
@@ -16,7 +17,11 @@ type StepAction struct {
 }
 
 func (a StepAction) Execute(t *testing.T, app *TestApplication) {
+	start := time.Now()
 	a.Step.Execute(t, app)
+	if app.context != nil {
+		app.context.SetLastStepDuration(time.Since(start))
+	}
 }
 
 func (a StepAction) IsAssertion() bool {
@@ -100,4 +105,12 @@ func (s *Scenario) Run() {
 			action.Execute(t, app)
 		}
 	})
+}
+
+// BuildApp builds the test application without running the scenario
+// Useful for Rod-based tests that need manual control
+func (s *Scenario) BuildApp(t *testing.T) (*TestApplication, *TestContext) {
+	app := s.setup.Build(t)
+	app.context = s.context
+	return app, s.context
 }

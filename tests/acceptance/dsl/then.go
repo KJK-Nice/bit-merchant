@@ -20,10 +20,10 @@ func (t *ThenBuilder) OrderShouldBe(orderNumber string) *OrderAssertion {
 
 // OrderAssertion provides assertions for order state
 type OrderAssertion struct {
-	OrderNumber        string
-	PaymentStatus      *domain.PaymentStatus
-	FulfillmentStatus  *domain.FulfillmentStatus
-	ExpectedHTML       []string
+	OrderNumber       string
+	PaymentStatus     *domain.PaymentStatus
+	FulfillmentStatus *domain.FulfillmentStatus
+	ExpectedHTML      []string
 }
 
 // WithPaymentStatus asserts payment status
@@ -88,9 +88,15 @@ func (t *ThenBuilder) KitchenDashboardShouldShow() *KitchenDashboardAssertion {
 
 // KitchenDashboardAssertion provides assertions for kitchen dashboard
 type KitchenDashboardAssertion struct {
-	ExpectedOrderCount *int
-	ContainsOrderNumber []string
-	OrderStatus        map[string]string // orderNumber -> status
+	ExpectedOrderCount        *int
+	ContainsOrderNumber       []string
+	OrderStatus               map[string]string   // orderNumber -> status
+	ExpectedOrderShowsDetails map[string]bool     // orderNumber -> should show details
+	ExpectedOrderShowsItems   map[string][]string // orderNumber -> item names
+	ExpectedOrderShowsTotal   map[string]float64  // orderNumber -> expected total
+	OrderShowsTimestamp       map[string]bool     // orderNumber -> should show timestamp
+	OrderShowsPaymentStatus   map[string]bool     // orderNumber -> should show payment status
+	OrdersSortedByTime        bool                // orders should be sorted by time (oldest first)
 }
 
 // OrderCount asserts the number of orders
@@ -114,3 +120,35 @@ func (a *KitchenDashboardAssertion) OrderWithStatus(orderNumber, status string) 
 	return a
 }
 
+// OrderShowsDetails asserts that an order shows all required details
+func (a *KitchenDashboardAssertion) OrderShowsDetails(orderNumber string) *KitchenDashboardAssertion {
+	if a.ExpectedOrderShowsDetails == nil {
+		a.ExpectedOrderShowsDetails = make(map[string]bool)
+	}
+	a.ExpectedOrderShowsDetails[orderNumber] = true
+	return a
+}
+
+// OrderShowsItems asserts that an order shows specific items
+func (a *KitchenDashboardAssertion) OrderShowsItems(orderNumber string, items []string) *KitchenDashboardAssertion {
+	if a.ExpectedOrderShowsItems == nil {
+		a.ExpectedOrderShowsItems = make(map[string][]string)
+	}
+	a.ExpectedOrderShowsItems[orderNumber] = items
+	return a
+}
+
+// OrderShowsTotal asserts that an order shows a specific total amount
+func (a *KitchenDashboardAssertion) OrderShowsTotal(orderNumber string, total float64) *KitchenDashboardAssertion {
+	if a.ExpectedOrderShowsTotal == nil {
+		a.ExpectedOrderShowsTotal = make(map[string]float64)
+	}
+	a.ExpectedOrderShowsTotal[orderNumber] = total
+	return a
+}
+
+// OrdersAreSortedByTime asserts that orders are sorted by time received (oldest first)
+func (a *KitchenDashboardAssertion) OrdersAreSortedByTime() *KitchenDashboardAssertion {
+	a.OrdersSortedByTime = true
+	return a
+}

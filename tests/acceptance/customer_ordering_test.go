@@ -28,7 +28,8 @@ func TestCustomerOrdering_QRCodeScanLoadsMenu(t *testing.T) {
 				ItemCount(2).
 				ContainsItem("Burger").
 				ContainsItem("Pizza")
-			// TODO: Add performance assertion (<2s load time) - would need timing helper
+			// Assert performance requirement (<2s load time)
+			t.PerformanceShould().RespondInLessThan(2 * time.Second)
 		}).
 		Run()
 }
@@ -220,4 +221,3 @@ func TestCustomerOrdering_CustomerPaysCashAndSeesUpdates(t *testing.T) {
 		}).
 		Run()
 }
-

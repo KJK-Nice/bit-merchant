@@ -6,6 +6,17 @@ A fluent Domain-Specific Language (DSL) for writing readable acceptance tests in
 
 This DSL provides a clean, readable way to write acceptance tests that verify end-to-end behavior of the application. Tests are written in a natural language style that makes them easy to understand and maintain.
 
+## Rod as Universal Driver
+
+The DSL uses **Rod** (browser automation) as the universal driver for all acceptance tests. This provides:
+
+- **Real browser testing**: Tests run in a real headless Chrome browser, verifying JavaScript, CSS, and DOM updates
+- **Natural SSE testing**: Server-Sent Events are handled automatically by Datastar through the browser's EventSource API
+- **Consistent execution model**: All tests use the same browser-based approach
+- **Better reliability**: Tests reflect the actual user experience
+
+The DSL focuses on **what** to test (business scenarios), while Rod handles **how** to test (browser automation). This separation makes tests more maintainable and reliable.
+
 ## Basic Structure
 
 ```go
@@ -136,10 +147,27 @@ Then(func(t *dsl.ThenBuilder) {
 
 ### SSE Assertions
 
-- `SSEStreamShouldReceive(stream)` - Assert SSE events
+SSE events are handled automatically by Datastar through the browser's EventSource API. Tests verify DOM updates rather than intercepting SSE messages:
+
+```go
+When(func(w *dsl.WhenBuilder) {
+    w.Customer("session-1").CreatesOrder()
+    // Navigate to order page - Datastar automatically connects to SSE
+    w.Customer("session-1").ViewsOrder("")
+}).
+Then(func(t *dsl.ThenBuilder) {
+    // Verify DOM was updated by SSE event
+    t.SSEStreamShouldReceive("/order/0001/stream").
+        Event("datastar-patch-elements").
+        ContainsHTML("PAID")
+})
+```
+
+The `ConnectsToSSE` step navigates to the appropriate page and sets up DOM observers to detect SSE-driven updates.
+
+- `SSEStreamShouldReceive(stream)` - Assert SSE events (verifies DOM updates)
   - `Event(eventType)` - Assert event type
-  - `WithSelector(selector)` - Assert CSS selector
-  - `ContainsHTML(html)` - Assert HTML content
+  - `ContainsHTML(html)` - Assert HTML content in updated DOM
 
 ## Context and Order Tracking
 
@@ -171,9 +199,40 @@ Will execute: Step → Assertion → Step → Assertion
 
 This ensures assertions verify state immediately after actions.
 
+## SSE Testing with Rod
+
+When you use `ConnectsToSSE`, the DSL:
+1. Navigates to the appropriate page (e.g., `/kitchen` for `/kitchen/stream`)
+2. Waits for Datastar to initialize and connect to the SSE stream
+3. Sets up DOM observers to detect changes made by SSE events
+4. Verifies DOM updates rather than intercepting SSE messages
+
+This approach is more reliable because:
+- It tests the actual user experience (browser receives SSE events)
+- It verifies that Datastar correctly processes SSE events and updates the DOM
+- It doesn't require complex SSE interception logic
+
+Example:
+```go
+When(func(w *dsl.WhenBuilder) {
+    w.Customer("session-1").CreatesOrder()
+    // Connect to order status stream - navigates to order page
+    w.ConnectsToSSE("/order/0001/stream").Stream()
+}).
+When(func(w *dsl.WhenBuilder) {
+    w.Kitchen().MarksOrderPaid("")
+}).
+Then(func(t *dsl.ThenBuilder) {
+    // Verify DOM was updated by SSE event
+    t.SSEStreamShouldReceive("/order/0001/stream").
+        Event("datastar-patch-elements").
+        ContainsHTML("PAID")
+})
+```
+
 ## Examples
 
-See `tests/acceptance/kitchen_workflow_test.go` for complete examples.
+See `tests/acceptance/kitchen_workflow_test.go` and `tests/acceptance/customer_ordering_test.go` for complete examples.
 
 ## Extending the DSL
 

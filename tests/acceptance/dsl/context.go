@@ -1,6 +1,8 @@
 package dsl
 
 import (
+	"time"
+
 	"bitmerchant/internal/domain"
 )
 
@@ -9,14 +11,13 @@ type TestContext struct {
 	createdOrderID     domain.OrderID
 	createdOrderNumber domain.OrderNumber
 	restaurantID       domain.RestaurantID
-	sseClients         map[string]*SSEClient // path -> client
+	lastStepDuration   time.Duration
 }
 
 // NewTestContext creates a new test context
 func NewTestContext() *TestContext {
 	return &TestContext{
 		restaurantID: domain.RestaurantID("restaurant_1"),
-		sseClients:   make(map[string]*SSEClient),
 	}
 }
 
@@ -36,12 +37,12 @@ func (ctx *TestContext) GetCreatedOrderNumber() domain.OrderNumber {
 	return ctx.createdOrderNumber
 }
 
-// SetSSEClient stores an SSE client
-func (ctx *TestContext) SetSSEClient(path string, client *SSEClient) {
-	ctx.sseClients[path] = client
+// SetLastStepDuration stores the duration of the last executed step
+func (ctx *TestContext) SetLastStepDuration(d time.Duration) {
+	ctx.lastStepDuration = d
 }
 
-// GetSSEClient retrieves an SSE client
-func (ctx *TestContext) GetSSEClient(path string) *SSEClient {
-	return ctx.sseClients[path]
+// GetLastStepDuration returns the duration of the last executed step
+func (ctx *TestContext) GetLastStepDuration() time.Duration {
+	return ctx.lastStepDuration
 }

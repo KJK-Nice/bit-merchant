@@ -2,32 +2,67 @@
 
 ## ✅ Completed Features
 
-### 1. SSE Client Helper for Real-Time Testing
+### 1. Rod as Universal Driver
 
 **Files:**
-- `sse_client.go` - SSE client implementation
-- `test_sse_handler.go` - Test wrapper that captures broadcasts
+- `rod_helpers.go` - Rod browser automation helpers
+- `server.go` - HTTP test server for Rod
+- `setup.go` - TestApplication with Rod browser integration
 
 **Features:**
-- `SSEClient` - Captures SSE events broadcast by the application
-- `ParseSSEMessage` - Parses SSE messages including Datastar format
-- `WaitForEvent` - Waits for specific event types
-- `WaitForDatastarPatch` - Waits for Datastar patch events with selectors
-- `GetAllEvents` - Returns all captured events
-- `GetEventsByType` - Filters events by type
+- **Real browser testing**: All tests run in a headless Chrome browser via Rod
+- **Natural SSE testing**: SSE events handled by browser's EventSource API
+- **DOM monitoring**: Automatic detection of DOM updates via MutationObserver
+- **Consistent execution**: Single driver model for all acceptance tests
+
+**Benefits:**
+- Tests verify actual user experience (JavaScript, CSS, DOM)
+- No complex SSE interception needed
+- Better reliability and maintainability
+- Clear separation: DSL = "what", Rod = "how"
+
+**Usage:**
+```go
+// All steps automatically use Rod browser
+When(func(w *dsl.WhenBuilder) {
+    w.Customer("session-1").ViewsMenu()  // Navigates via browser
+    w.Customer("session-1").CreatesOrder()  // HTTP POST via browser
+})
+```
+
+### 2. SSE Testing with Rod (Real-Time Updates)
+
+**Files:**
+- `rod_helpers.go` - DOM monitoring helpers
+- `assertions.go` - SSE assertions using DOM verification
+
+**Features:**
+- Automatic SSE connection via Datastar's `data-init` attributes
+- DOM change detection via MutationObserver
+- Verification of DOM updates rather than SSE message interception
+
+**How it works:**
+1. `ConnectsToSSE` navigates to the appropriate page
+2. Datastar automatically connects to SSE stream via `data-init`
+3. DOM observers detect changes made by SSE events
+4. Assertions verify DOM was updated correctly
 
 **Usage:**
 ```go
 When(func(w *dsl.WhenBuilder) {
-    w.ConnectsToSSE("/kitchen/stream").Stream()
+    w.Customer("session-1").CreatesOrder()
+    // Navigate to order page - Datastar connects to SSE automatically
+    w.ConnectsToSSE("/order/0001/stream").Stream()
 }).
 Then(func(t *dsl.ThenBuilder) {
-    t.SSEStreamShouldReceive("/kitchen/stream").
+    // Verify DOM was updated by SSE event
+    t.SSEStreamShouldReceive("/order/0001/stream").
         Event("datastar-patch-elements").
-        WithSelector("#orders-list").
-        ContainsHTML("Order #0001")
+        ContainsHTML("PAID")
 })
 ```
+
+**Note:** The old `SSEClient` approach is deprecated. New tests should use Rod DOM monitoring.
 
 ### 2. Enhanced Assertion Types
 
@@ -109,21 +144,25 @@ Then(func(t *dsl.ThenBuilder) {
 
 ## Implementation Details
 
-### SSE Event Capture
+### Rod Browser Integration
 
-The framework uses a `TestSSEHandler` wrapper that:
-1. Embeds the real `SSEHandler` for compatibility
-2. Captures all `Broadcast` calls
-3. Stores broadcasts by topic
-4. Allows SSE clients to retrieve captured events
+The framework uses Rod to:
+1. Launch a headless Chrome browser for each test
+2. Start an HTTP server for the test application
+3. Navigate to pages and interact with the DOM
+4. Monitor DOM changes via MutationObserver
+5. Verify SSE-driven updates by checking DOM state
 
-### Event Flow
+### SSE Event Flow (Rod-Based)
 
 1. Domain event is published via `EventBus`
 2. Event handler processes event and calls `SSEHandler.Broadcast`
-3. `TestSSEHandler` captures the broadcast
-4. SSE clients retrieve captured events
-5. Assertions verify events were received
+3. Browser's EventSource API receives SSE message
+4. Datastar processes the SSE event and updates the DOM
+5. MutationObserver detects DOM changes
+6. Assertions verify DOM was updated correctly
+
+This approach is more reliable because it tests the actual user experience.
 
 ### Context Management
 
@@ -193,11 +232,27 @@ func TestCompleteWorkflow(t *testing.T) {
 }
 ```
 
+## Rod Helper Methods
+
+Available in `rod_helpers.go`:
+
+- `NavigateTo(path)` - Navigate to a URL
+- `GetPage()` - Get current browser page
+- `WaitForDOMUpdate(selector, count, timeout)` - Wait for DOM changes
+- `WaitForSSEEvent(timeout)` - Wait for SSE-driven DOM updates
+- `SetupDOMObserver(selector)` - Set up MutationObserver
+- `SetCookie(name, value)` - Set browser cookie
+- `GetCurrentURL()` - Get current page URL
+- `ElementExists(selector)` - Check if element exists
+- `GetElementText(selector)` - Get element text content
+- `GetElementCount(selector)` - Get child element count
+
 ## Next Steps (Future Enhancements)
 
-1. **Watermill CQRS Integration**: Add assertions for Watermill command/query buses
-2. **Performance Testing**: Add timing assertions for SSE event delivery
-3. **Concurrent Testing**: Support multiple SSE clients simultaneously
-4. **Event Replay**: Replay captured events for testing event handlers
+1. **More Rod Helpers**: Add click, fill, screenshot helpers
+2. **Watermill CQRS Integration**: Add assertions for Watermill command/query buses
+3. **Performance Testing**: Enhanced timing assertions for SSE event delivery
+4. **Concurrent Testing**: Support multiple browser tabs/windows
 5. **Visual Diff**: HTML diff assertions for better failure messages
+6. **Network Monitoring**: Track and verify network requests
 
