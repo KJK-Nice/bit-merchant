@@ -19,3 +19,18 @@ tasks:
     desc: Start development server with hot reload
     cmds:
       - task --parallel tailwind templ
+
+  test:acceptance:
+    desc: Run acceptance tests
+    cmds:
+      - go test ./tests/acceptance/... -v -timeout 120s
+
+  test:acceptance:short:
+    desc: Run acceptance tests with shorter timeout
+    cmds:
+      - go test ./tests/acceptance/... -v -timeout 60s
+
+  test:acceptance:watch:
+    desc: Run acceptance tests in watch mode (requires entr or similar)
+    cmds:
+      - find tests/acceptance -name "*.go" | entr -c go test ./tests/acceptance/... -v -timeout 120s
