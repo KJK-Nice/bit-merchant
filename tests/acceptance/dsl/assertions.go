@@ -160,43 +160,73 @@ func (a *KitchenDashboardAssertion) Verify(t *testing.T, app *TestApplication) {
 	}
 
 	for _, orderNumber := range a.ContainsOrderNumber {
-		assert.Contains(t, body, orderNumber, "Expected order number not found in kitchen dashboard")
+		// Resolve empty string to context's created order number
+		resolvedOrderNumber := orderNumber
+		if resolvedOrderNumber == "" && app.context != nil {
+			resolvedOrderNumber = string(app.context.GetCreatedOrderNumber())
+		}
+		require.NotEmpty(t, resolvedOrderNumber, "OrderNumber must be provided or order must be created first")
+		assert.Contains(t, body, resolvedOrderNumber, "Expected order number not found in kitchen dashboard")
 	}
 
 	for orderNumber, expectedStatus := range a.OrderStatus {
+		// Resolve empty string to context's created order number
+		resolvedOrderNumber := orderNumber
+		if resolvedOrderNumber == "" && app.context != nil {
+			resolvedOrderNumber = string(app.context.GetCreatedOrderNumber())
+		}
+		require.NotEmpty(t, resolvedOrderNumber, "OrderNumber must be provided or order must be created first")
 		// Verify order status in HTML
 		// This is a simplified check - in production you'd parse HTML properly
-		if strings.Contains(body, orderNumber) {
+		if strings.Contains(body, resolvedOrderNumber) {
 			// Check if status text appears near the order number
-			assert.Contains(t, body, expectedStatus, "Expected status %s for order %s", expectedStatus, orderNumber)
+			assert.Contains(t, body, expectedStatus, "Expected status %s for order %s", expectedStatus, resolvedOrderNumber)
 		}
 	}
 
 	// Verify order details
 	for orderNumber, shouldShow := range a.ExpectedOrderShowsDetails {
 		if shouldShow {
+			// Resolve empty string to context's created order number
+			resolvedOrderNumber := orderNumber
+			if resolvedOrderNumber == "" && app.context != nil {
+				resolvedOrderNumber = string(app.context.GetCreatedOrderNumber())
+			}
+			require.NotEmpty(t, resolvedOrderNumber, "OrderNumber must be provided or order must be created first")
 			// Verify order number is present
-			assert.Contains(t, body, orderNumber, "Order number %s not found", orderNumber)
+			assert.Contains(t, body, resolvedOrderNumber, "Order number %s not found", resolvedOrderNumber)
 			// Verify order shows items (look for list structure)
-			assert.Contains(t, body, "list-disc", "Order %s should show items list", orderNumber)
+			assert.Contains(t, body, "list-disc", "Order %s should show items list", resolvedOrderNumber)
 			// Verify order shows total (look for "Total:" text)
-			assert.Contains(t, body, "Total:", "Order %s should show total amount", orderNumber)
+			assert.Contains(t, body, "Total:", "Order %s should show total amount", resolvedOrderNumber)
 		}
 	}
 
 	// Verify order items
 	for orderNumber, expectedItems := range a.ExpectedOrderShowsItems {
+		// Resolve empty string to context's created order number
+		resolvedOrderNumber := orderNumber
+		if resolvedOrderNumber == "" && app.context != nil {
+			resolvedOrderNumber = string(app.context.GetCreatedOrderNumber())
+		}
+		require.NotEmpty(t, resolvedOrderNumber, "OrderNumber must be provided or order must be created first")
 		for _, itemName := range expectedItems {
 			// Find the order section and verify item is present
-			assert.Contains(t, body, itemName, "Order %s should contain item %s", orderNumber, itemName)
+			assert.Contains(t, body, itemName, "Order %s should contain item %s", resolvedOrderNumber, itemName)
 		}
 	}
 
 	// Verify order totals
 	for orderNumber, expectedTotal := range a.ExpectedOrderShowsTotal {
+		// Resolve empty string to context's created order number
+		resolvedOrderNumber := orderNumber
+		if resolvedOrderNumber == "" && app.context != nil {
+			resolvedOrderNumber = string(app.context.GetCreatedOrderNumber())
+		}
+		require.NotEmpty(t, resolvedOrderNumber, "OrderNumber must be provided or order must be created first")
 		// Look for the total amount formatted as currency
 		totalStr := fmt.Sprintf("$%.2f", expectedTotal)
-		assert.Contains(t, body, totalStr, "Order %s should show total %s", orderNumber, totalStr)
+		assert.Contains(t, body, totalStr, "Order %s should show total %s", resolvedOrderNumber, totalStr)
 	}
 
 	// Verify order sorting (oldest first)
