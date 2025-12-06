@@ -19,3 +19,8 @@ tasks:
     desc: Start development server with hot reload
     cmds:
       - task --parallel tailwind templ
+
+  test:acceptance:
+    desc: Run acceptance tests
+    cmds:
+      - go test -v ./tests/acceptance/...
