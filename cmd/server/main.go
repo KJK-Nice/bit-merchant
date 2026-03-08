@@ -177,7 +177,7 @@ func main() {
 	e.Use(middleware.SessionMiddleware())
 	e.Use(middleware.PerformanceMiddleware(logger, 200*time.Millisecond))
 	e.Use(middleware.RateLimitMiddleware())
-	// e.Use(middleware.CSRFMiddleware()) // TODO: Enable after updating templates with CSRF token
+	e.Use(middleware.CSRFMiddleware())
 	// e.Use(middleware.LoggingMiddleware())
 
 	// Static files

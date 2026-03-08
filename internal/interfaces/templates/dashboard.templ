@@ -7,7 +7,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem) {
+templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem, csrfToken string) {
 	@layouts.Dashboard("Sales Dashboard", "/dashboard") {
 		<div class="space-y-8 mt-4">
 			<!-- Stats Cards -->
@@ -30,6 +30,7 @@ templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, to
 			<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
 				<h2 class="text-xl font-bold mb-4">Restaurant Status</h2>
 				<form action="/dashboard/toggle-open" method="POST">
+					<input type="hidden" name="csrf" value={ csrfToken }/>
 					<button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
 						Toggle Open/Closed
 					</button>

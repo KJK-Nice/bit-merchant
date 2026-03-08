@@ -56,9 +56,9 @@ func (h *DashboardHandler) Dashboard(c echo.Context) error {
 	// Ideally we need GetRestaurantUseCase here.
 	// Let's proceed without it for now and pass a boolean/struct to template.
 	// Or verify if we can add GetRestaurantUseCase.
-	
+
 	// For now, we just pass data to template.
-	return templates.DashboardPage(stats, history, topItems).Render(c.Request().Context(), c.Response())
+	return templates.DashboardPage(stats, history, topItems, getCSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
 func (h *DashboardHandler) ToggleOpen(c echo.Context) error {
@@ -73,18 +73,17 @@ func (h *DashboardHandler) ToggleOpen(c echo.Context) error {
 	// For Datastar we'd return a fragment. For now, let's redirect or return fragment.
 	// If request header has "Datastar-Request", return fragment.
 	// Simpler: Redirect to dashboard.
-	
+
 	// Wait, test expects 200 OK. Redirect is 302.
 	// If we use Datastar, we return 200 with fragment.
 	// Let's assume standard form post for now -> Redirect.
 	// But test assertion is 200.
-	
+
 	// Let's return a simple text for now to pass the test, or update test to expect redirect.
 	// Better: return the updated button fragment.
-	
+
 	if isOpen {
 		return c.String(http.StatusOK, "<button>Open</button>")
 	}
 	return c.String(http.StatusOK, "<button>Closed</button>")
 }
-

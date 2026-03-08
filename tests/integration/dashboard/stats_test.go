@@ -67,5 +67,32 @@ func TestDashboardIntegration(t *testing.T) {
 		assert.Equal(t, 30.0, stats.TotalSales)
 		assert.Equal(t, 30.0, stats.AverageOrderValue)
 	})
-}
 
+	t.Run("Weekly Stats Include Recent Paid Orders", func(t *testing.T) {
+		items := []domain.OrderItem{
+			{MenuItemID: "i2", Name: "Fries", Quantity: 1, UnitPrice: 12.0, Subtotal: 12.0},
+		}
+
+		recentPaid, err := domain.NewOrder("recent_paid", "2001", "restaurant_1", "sess_week", items, 1200, domain.PaymentMethodTypeCash)
+		assert.NoError(t, err)
+		recentPaid.PaymentStatus = domain.PaymentStatusPaid
+		recentPaid.FiatAmount = 12.0
+		recentPaid.CreatedAt = time.Now().AddDate(0, 0, -3)
+		_ = orderRepo.Save(recentPaid)
+
+		oldPaid, err := domain.NewOrder("old_paid", "2002", "restaurant_1", "sess_week", items, 900, domain.PaymentMethodTypeCash)
+		assert.NoError(t, err)
+		oldPaid.PaymentStatus = domain.PaymentStatusPaid
+		oldPaid.FiatAmount = 9.0
+		oldPaid.CreatedAt = time.Now().AddDate(0, 0, -10)
+		_ = orderRepo.Save(oldPaid)
+
+		stats, err := getStatsUC.Execute(context.Background(), "restaurant_1", dashboard.DateRangeWeek)
+		assert.NoError(t, err)
+
+		// Includes previously created paid order ($30) + recent paid order ($12), excludes oldPaid ($9).
+		assert.Equal(t, 2, stats.OrderCount)
+		assert.Equal(t, 42.0, stats.TotalSales)
+		assert.Equal(t, 21.0, stats.AverageOrderValue)
+	})
+}

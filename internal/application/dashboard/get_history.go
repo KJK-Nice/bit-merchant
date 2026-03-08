@@ -23,11 +23,18 @@ func (uc *GetOrderHistoryUseCase) Execute(ctx context.Context, restaurantID doma
 		return nil, err
 	}
 
+	var paidOrders []*domain.Order
+	for _, order := range orders {
+		if order.PaymentStatus != domain.PaymentStatusPaid {
+			continue
+		}
+		paidOrders = append(paidOrders, order)
+	}
+
 	// Sort by CreatedAt desc
-	sort.Slice(orders, func(i, j int) bool {
-		return orders[i].CreatedAt.After(orders[j].CreatedAt)
+	sort.Slice(paidOrders, func(i, j int) bool {
+		return paidOrders[i].CreatedAt.After(paidOrders[j].CreatedAt)
 	})
 
-	return orders, nil
+	return paidOrders, nil
 }
-

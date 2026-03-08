@@ -20,7 +20,7 @@ func NewOwnerHandler(createRestaurantUC *restaurant.CreateRestaurantUseCase) *Ow
 
 // GetSignup handles GET /owner/signup
 func (h *OwnerHandler) GetSignup(c echo.Context) error {
-	return templates.OwnerSignup().Render(c.Request().Context(), c.Response())
+	return templates.OwnerSignup(getCSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
 // PostSignup handles POST /owner/signup
@@ -42,4 +42,3 @@ func (h *OwnerHandler) PostSignup(c echo.Context) error {
 	// Redirect to dashboard menu after signup
 	return c.Redirect(http.StatusFound, "/dashboard/menu?restaurant_id="+string(rest.ID))
 }
-

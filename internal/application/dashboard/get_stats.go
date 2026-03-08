@@ -39,13 +39,13 @@ func (uc *GetDashboardStatsUseCase) Execute(ctx context.Context, restaurantID do
 
 	var count int
 	var totalSales float64
-	
+
 	now := time.Now()
-	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	rangeStart := getRangeStart(now, rangeType)
 
 	for _, o := range orders {
 		// Filter by date
-		if o.CreatedAt.Before(startOfDay) {
+		if o.CreatedAt.Before(rangeStart) {
 			continue
 		}
 
@@ -70,3 +70,18 @@ func (uc *GetDashboardStatsUseCase) Execute(ctx context.Context, restaurantID do
 	}, nil
 }
 
+func getRangeStart(now time.Time, rangeType DateRange) time.Time {
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	switch rangeType {
+	case DateRangeToday:
+		return startOfToday
+	case DateRangeWeek:
+		// Rolling 7-day window including today.
+		return startOfToday.AddDate(0, 0, -6)
+	case DateRangeMonth:
+		return time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	default:
+		return startOfToday
+	}
+}

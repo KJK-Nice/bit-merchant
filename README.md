@@ -56,6 +56,12 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
   go test ./...
   ```
 
+## Current Status
+
+- Dashboard analytics now support `today`, `week`, and `month` date ranges with unit/integration coverage.
+- CSRF protection is enabled in the Echo middleware stack, with token handling for both form submissions and Datastar-driven POST requests.
+- Dashboard and mobile footer navigation were revalidated, and menu closed-state rendering was fixed (`circle-alert` icon usage).
+
 ## License
 
 Proprietary.

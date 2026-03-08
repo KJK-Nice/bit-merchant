@@ -22,7 +22,7 @@ templ MenuPage(data *menu.MenuResponse, cart *cart.Cart) {
 			if !data.Restaurant.IsOpen {
 				<div class="bg-destructive text-destructive-foreground p-4 rounded-md shadow-sm">
 					<div class="flex items-center gap-2">
-						@icon.Icon("alert-circle")(icon.Props{Class: "h-5 w-5"})
+						@icon.Icon("circle-alert")(icon.Props{Class: "h-5 w-5"})
 						<h3 class="font-bold text-lg">Currently Closed</h3>
 					</div>
 					if data.Restaurant.ClosedMessage != "" {

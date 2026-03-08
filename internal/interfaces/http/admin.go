@@ -49,7 +49,7 @@ func (h *AdminHandler) Dashboard(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to load dashboard: "+err.Error())
 	}
 
-	return admin.Dashboard(menuData).Render(c.Request().Context(), c.Response())
+	return admin.Dashboard(menuData, getCSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
 // GetMenu handles GET /dashboard/menu
@@ -61,7 +61,7 @@ func (h *AdminHandler) GetMenu(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to load menu: "+err.Error())
 	}
 
-	return admin.Dashboard(menuData).Render(c.Request().Context(), c.Response())
+	return admin.Dashboard(menuData, getCSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
 // CreateCategory handles POST /admin/category
@@ -104,7 +104,7 @@ func (h *AdminHandler) CreateMenuCategory(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	return admin.Dashboard(menuData).Render(c.Request().Context(), c.Response())
+	return admin.Dashboard(menuData, getCSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
 // CreateItem handles POST /admin/item
@@ -161,7 +161,7 @@ func (h *AdminHandler) CreateMenuItem(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	return admin.Dashboard(menuData).Render(c.Request().Context(), c.Response())
+	return admin.Dashboard(menuData, getCSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
 // UploadPhoto handles POST /admin/item/:id/photo
@@ -226,7 +226,7 @@ func (h *AdminHandler) UploadMenuItemPhoto(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	return admin.Dashboard(menuData).Render(c.Request().Context(), c.Response())
+	return admin.Dashboard(menuData, getCSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
 // GenerateQR handles GET /admin/qr

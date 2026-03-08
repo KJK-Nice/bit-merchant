@@ -45,7 +45,7 @@ func (h *OrderHandler) GetConfirmOrder(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/menu")
 	}
 
-	return templates.OrderConfirmationPage(cart).Render(c.Request().Context(), c.Response())
+	return templates.OrderConfirmationPage(cart, getCSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
 // CreateOrder handles POST /order/create

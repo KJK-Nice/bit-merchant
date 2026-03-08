@@ -20,6 +20,16 @@
 
 ---
 
+## Restart Checkpoint (2026-03-08)
+
+- [x] R001 Regenerated `assets/css/output.css` and verified clean baseline with `go test ./...`
+- [x] R002 Smoke-tested core routes and SSE endpoints on running server (`/menu`, `/order/*`, `/kitchen`, `/dashboard`)
+- [x] R003 Completed `DateRange` behavior in dashboard stats (`today/week/month`) and expanded dashboard unit/integration tests
+- [x] R004 Enabled CSRF middleware and wired CSRF token flow for form and Datastar POST requests
+- [x] R005 Validated dashboard/mobile footer nav rendering and fixed closed-banner icon rendering in menu template
+
+---
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: Project initialization and basic structure

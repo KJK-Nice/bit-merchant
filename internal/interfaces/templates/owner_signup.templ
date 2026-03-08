@@ -6,7 +6,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 )
 
-templ OwnerSignup() {
+templ OwnerSignup(csrfToken string) {
 	@Layout("Restaurant Signup - BitMerchant") {
 		<div class="max-w-md mx-auto mt-8">
 			@card.Card() {
@@ -20,6 +20,7 @@ templ OwnerSignup() {
 				}
 				@card.Content() {
 					<form method="POST" action="/owner/signup" class="space-y-4">
+						<input type="hidden" name="csrf" value={ csrfToken }/>
 						<div>
 							<label for="name" class="block text-sm font-medium mb-2">
 								Restaurant Name
