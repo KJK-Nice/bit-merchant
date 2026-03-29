@@ -5,15 +5,22 @@ import (
 
 	"bitmerchant/internal/application/dashboard"
 	"bitmerchant/internal/domain"
+	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
+templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem, rest *domain.Restaurant, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, statusError string) {
 	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div class="space-y-8 mt-4">
+			if statusError != "" {
+				<div class="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+					{ statusError }
+				</div>
+			}
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 				@card.Card() {
 					@card.Header(card.HeaderProps{Class: "pb-2"}) {
@@ -53,11 +60,53 @@ templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, to
 						Restaurant Status
 					}
 				}
-				@card.Content() {
-					<form action="/dashboard/toggle-open" method="POST">
+				@card.Content(card.ContentProps{Class: "space-y-4"}) {
+					<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+						<p class="text-sm text-muted-foreground">Customers see this on the public menu.</p>
+						if rest.IsOpen {
+							@badge.Badge(badge.Props{Variant: badge.VariantDefault}) {
+								Open
+							}
+						} else {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+								Closed
+							}
+						}
+					</div>
+					if !rest.IsOpen && rest.ClosedMessage != "" {
+						<div class="text-sm space-y-1">
+							<p class="font-medium text-foreground">Message shown to guests</p>
+							<p class="text-muted-foreground whitespace-pre-wrap">{ rest.ClosedMessage }</p>
+						</div>
+					}
+					if !rest.IsOpen && rest.ReopeningHours != "" {
+						<div class="text-sm space-y-1">
+							<p class="font-medium text-foreground">Reopening</p>
+							<p class="text-muted-foreground">{ rest.ReopeningHours }</p>
+						</div>
+					}
+					<form action="/dashboard/toggle-open" method="POST" class="space-y-4">
 						<input type="hidden" name="csrf" value={ csrfToken }/>
-						@button.Button(button.Props{Type: "submit"}) {
-							Toggle Open/Closed
+						if rest.IsOpen {
+							<div class="space-y-2">
+								@label.Label(label.Props{For: "closed_message"}) {
+									Message for guests (optional)
+								}
+								<textarea id="closed_message" name="closed_message" rows="3" class="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" placeholder="e.g. Closed for a private event today."></textarea>
+							</div>
+							<div class="space-y-2">
+								@label.Label(label.Props{For: "reopening_hours"}) {
+									Expected reopening (optional)
+								}
+								<input type="text" id="reopening_hours" name="reopening_hours" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" placeholder="e.g. Tomorrow 11am"/>
+							</div>
+							@button.Button(button.Props{Type: "submit", Variant: button.VariantDestructive}) {
+								Close restaurant
+							}
+						} else {
+							@button.Button(button.Props{Type: "submit"}) {
+								Open restaurant
+							}
 						}
 					</form>
 				}

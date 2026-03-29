@@ -19,6 +19,7 @@ func TestListVisitedRestaurantsUseCase(t *testing.T) {
 	ord := memory.NewMemoryOrderRepository()
 
 	r1, _ := domain.NewRestaurant("r1", "First")
+	r1.UpdateStatus(false, "", "")
 	r2, _ := domain.NewRestaurant("r2", "Second")
 	require.NoError(t, rest.Save(r1))
 	require.NoError(t, rest.Save(r2))
@@ -43,6 +44,8 @@ func TestListVisitedRestaurantsUseCase(t *testing.T) {
 	require.Len(t, out, 2)
 	assert.Equal(t, domain.RestaurantID("r2"), out[0].RestaurantID)
 	assert.Equal(t, domain.RestaurantID("r1"), out[1].RestaurantID)
+	assert.True(t, out[0].IsOpen)
+	assert.False(t, out[1].IsOpen)
 	var ordered *places.VisitedPlace
 	for i := range out {
 		if out[i].RestaurantID == "r1" {

@@ -54,8 +54,11 @@ func TestDashboardHandler(t *testing.T) {
 		err := h.Dashboard(c)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), "Sales Dashboard")
-		assert.Contains(t, rec.Body.String(), "10.00") // Total Sales
+		body := rec.Body.String()
+		assert.Contains(t, body, "Sales Dashboard")
+		assert.Contains(t, body, "10.00") // Total Sales
+		assert.Contains(t, body, "Restaurant Status")
+		assert.Contains(t, body, "Open")
 	})
 
 	t.Run("POST /dashboard/toggle-open", func(t *testing.T) {
@@ -68,13 +71,11 @@ func TestDashboardHandler(t *testing.T) {
 
 		err := h.ToggleOpen(c)
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, http.StatusFound, rec.Code)
+		loc := rec.Header().Get("Location")
+		assert.Contains(t, loc, "/dashboard")
 
-		// Verify restaurant state changed
 		updated, _ := restaurantRepo.FindByID("restaurant_1")
-		// Default was whatever NewRestaurant sets (probably false or true, let's say it toggled)
-		// If it was false (closed), now true (open).
-		_ = updated
-		// We can check response body for button text change if we implement partial updates properly.
+		assert.False(t, updated.IsOpen)
 	})
 }

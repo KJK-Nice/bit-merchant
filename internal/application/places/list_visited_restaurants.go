@@ -13,6 +13,7 @@ type VisitedPlace struct {
 	Name           string
 	LastVisitedAt  time.Time
 	HasOrderedHere bool
+	IsOpen         bool
 }
 
 // ListVisitedRestaurantsUseCase builds the "My places" list for a session.
@@ -63,6 +64,7 @@ func (uc *ListVisitedRestaurantsUseCase) Execute(ctx context.Context, sessionID 
 			Name:           rest.Name,
 			LastVisitedAt:  v.LastVisitedAt,
 			HasOrderedHere: hasOrdered,
+			IsOpen:         rest.IsOpen,
 		})
 	}
 	return out, nil

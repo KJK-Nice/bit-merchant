@@ -19,7 +19,7 @@ func NewRestaurantRepository(db *sql.DB) *RestaurantRepository {
 func (r *RestaurantRepository) Save(restaurant *domain.Restaurant) error {
 	_, err := r.db.Exec(
 		`INSERT INTO restaurants (id, name, table_count, is_open, closed_message, reopening_hours, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		 ON CONFLICT (id) DO UPDATE
 		 SET name = EXCLUDED.name,
 		     table_count = EXCLUDED.table_count,

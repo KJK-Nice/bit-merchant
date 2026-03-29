@@ -54,4 +54,5 @@ func TestMenuThenMyPlacesListsRestaurant(t *testing.T) {
 	body := rec2.Body.String()
 	assert.Contains(t, body, "Stamp Diner")
 	assert.Contains(t, body, "visit-test-r")
+	assert.Contains(t, body, "Open")
 }

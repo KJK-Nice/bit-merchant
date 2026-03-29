@@ -38,5 +38,7 @@ func TestGetMyPlaces(t *testing.T) {
 
 	require.NoError(t, h.GetMyPlaces(c))
 	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Contains(t, rec.Body.String(), "Contract Cafe")
+	body := rec.Body.String()
+	assert.Contains(t, body, "Contract Cafe")
+	assert.Contains(t, body, "Open")
 }

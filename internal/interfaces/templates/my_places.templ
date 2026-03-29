@@ -29,7 +29,7 @@ templ MyPlacesPage(visited []places.VisitedPlace) {
 					}
 				}
 			} else {
-				<div class="space-y-3">
+				<div class="flex flex-col gap-3">
 					for _, p := range visited {
 						<a
 							href={ templ.SafeURL(fmt.Sprintf("/menu?restaurantID=%s", url.QueryEscape(string(p.RestaurantID)))) }
@@ -38,16 +38,27 @@ templ MyPlacesPage(visited []places.VisitedPlace) {
 							@card.Card() {
 								@card.Content(card.ContentProps{Class: "p-4"}) {
 									<div class="flex justify-between items-start gap-3">
-										<div class="min-w-0">
-											<h2 class="font-semibold text-lg truncate">{ p.Name }</h2>
-											<p class="text-xs text-muted-foreground mt-1">
+										<div class="min-w-0 space-y-2">
+											<div class="flex flex-wrap items-center gap-3">
+												<h2 class="font-semibold text-lg truncate max-w-full">{ p.Name }</h2>
+												if p.IsOpen {
+													@badge.Badge(badge.Props{Variant: badge.VariantDefault}) {
+														Open
+													}
+												} else {
+													@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+														Closed
+													}
+												}
+											</div>
+											<p class="text-xs text-muted-foreground">
 												Last visit { p.LastVisitedAt.Format(time.DateTime) }
 											</p>
 										</div>
-										<div class="flex flex-col items-end gap-1 shrink-0">
+										<div class="flex flex-col items-end gap-1.5 shrink-0">
 											@icon.MapPin(icon.Props{Class: "size-5 text-muted-foreground"})
 											if p.HasOrderedHere {
-												@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+												@badge.Badge(badge.Props{Variant: badge.VariantOutline}) {
 													Ordered here
 												}
 											}

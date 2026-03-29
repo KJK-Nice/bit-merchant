@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Scan Templ sources so utilities used only in *.templ appear in the build (e.g. gap-*). */
+@source "../../internal/interfaces/templates";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
