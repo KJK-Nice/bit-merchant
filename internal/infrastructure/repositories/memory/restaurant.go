@@ -24,7 +24,8 @@ func NewMemoryRestaurantRepository() *MemoryRestaurantRepository {
 func (r *MemoryRestaurantRepository) Save(restaurant *domain.Restaurant) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.restaurants[restaurant.ID] = restaurant
+	cp := *restaurant
+	r.restaurants[restaurant.ID] = &cp
 	return nil
 }
 

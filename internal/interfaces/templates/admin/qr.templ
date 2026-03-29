@@ -1,0 +1,99 @@
+package admin
+
+import (
+	"bitmerchant/internal/domain"
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/layouts"
+	"strconv"
+)
+
+templ QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, restaurantName string, tableNumbers []int, tableCountInput int, qrError string, saved bool) {
+	@layouts.Dashboard("QR codes", "/admin/qr", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
+		<div class="space-y-8 mt-4 max-w-4xl">
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+				<div>
+					if saved {
+						<p class="text-sm text-muted-foreground mb-1">Settings saved.</p>
+					}
+					<h1 class="text-2xl font-bold tracking-tight">Table QR codes</h1>
+					<p class="text-muted-foreground text-sm mt-1">
+						Each code opens your menu for this restaurant. Print a sheet for every table.
+					</p>
+				</div>
+				<div class="flex flex-wrap gap-2 no-print">
+					@button.Button(button.Props{
+						Href:   "/admin/qr/print",
+						Target: "_blank",
+						Attributes: templ.Attributes{
+							"rel": "noopener noreferrer",
+						},
+					}) {
+						Print all tables
+					}
+				</div>
+			</div>
+			if qrError != "" {
+				<div class="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+					{ qrError }
+				</div>
+			}
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Number of tables
+					}
+					@card.Description() {
+						We generate one QR code per table (range { strconv.Itoa(domain.MinTableCount) }–{ strconv.Itoa(domain.MaxTableCount) }).
+					}
+				}
+				@card.Content() {
+					<form method="POST" action="/admin/qr/settings" class="space-y-4 max-w-xs">
+						<input type="hidden" name="csrf" value={ csrfToken }/>
+						<div>
+							<label for="table-count" class="block text-sm font-medium mb-2">Tables</label>
+							@input.Input(input.Props{
+								ID:       "table-count",
+								Name:     "tableCount",
+								Type:     input.TypeNumber,
+								Required: true,
+								Value:    strconv.Itoa(tableCountInput),
+								Attributes: templ.Attributes{
+									"min": strconv.Itoa(domain.MinTableCount),
+									"max": strconv.Itoa(domain.MaxTableCount),
+								},
+							})
+						</div>
+						@button.Button(button.Props{Type: button.TypeSubmit}) {
+							Save
+						}
+					</form>
+				}
+			}
+			<div>
+				<h2 class="text-lg font-semibold mb-3">Preview</h2>
+				if len(tableNumbers) == 0 {
+					<p class="text-sm text-muted-foreground">Set at least one table to see previews.</p>
+				} else {
+					<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+						for _, n := range tableNumbers {
+							@card.Card() {
+								@card.Header() {
+									@card.Title() {
+										{ restaurantName } — Table { strconv.Itoa(n) }
+									}
+								}
+								@card.Content() {
+									<div class="flex justify-center p-2 bg-white rounded-md">
+										<img src={ "/admin/qr/table/" + strconv.Itoa(n) } width="200" height="200" alt={ "QR code for table " + strconv.Itoa(n) } class="w-[200px] h-[200px]"/>
+									</div>
+								}
+							}
+						}
+					</div>
+				}
+			</div>
+		</div>
+	}
+}

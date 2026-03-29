@@ -1,26 +1,33 @@
 package http
 
 import (
+	"net/http"
+	"net/url"
+	"strconv"
+
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/application/restaurant"
 	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates/admin"
-	"encoding/base64"
-	"fmt"
-	"net/http"
-	"net/url"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
 
 const adminMenuDashboardPath = "/admin/dashboard"
+const adminQRPath = "/admin/qr"
 
 func adminMenuRedirect(errMsg string) string {
 	if errMsg == "" {
 		return adminMenuDashboardPath
 	}
 	return adminMenuDashboardPath + "?error=" + url.QueryEscape(errMsg)
+}
+
+func adminQRRedirect(errMsg string) string {
+	if errMsg == "" {
+		return adminQRPath
+	}
+	return adminQRPath + "?error=" + url.QueryEscape(errMsg)
 }
 
 func (h *AdminHandler) restaurantID(c echo.Context) (domain.RestaurantID, error) {
@@ -49,7 +56,8 @@ type AdminHandler struct {
 	updateItemUC       *menu.UpdateMenuItemUseCase
 	updateCategoryUC   *menu.UpdateMenuCategoryUseCase
 	toggleItemAvailUC  *menu.ToggleMenuItemAvailabilityUseCase
-	uploadPhotoUC      *menu.UploadPhotoUseCase
+	uploadPhotoUC       *menu.UploadPhotoUseCase
+	updateTableCountUC *restaurant.UpdateRestaurantTableCountUseCase
 	generateQRUC       *restaurant.GenerateRestaurantQRUseCase
 	membershipRepo     domain.MembershipRepository
 	restaurantRepo     domain.RestaurantRepository
@@ -65,6 +73,7 @@ func NewAdminHandler(
 	updateCategoryUC *menu.UpdateMenuCategoryUseCase,
 	toggleItemAvailUC *menu.ToggleMenuItemAvailabilityUseCase,
 	uploadPhotoUC *menu.UploadPhotoUseCase,
+	updateTableCountUC *restaurant.UpdateRestaurantTableCountUseCase,
 	generateQRUC *restaurant.GenerateRestaurantQRUseCase,
 	membershipRepo domain.MembershipRepository,
 	restaurantRepo domain.RestaurantRepository,
@@ -77,7 +86,8 @@ func NewAdminHandler(
 		updateItemUC:       updateItemUC,
 		updateCategoryUC:   updateCategoryUC,
 		toggleItemAvailUC:  toggleItemAvailUC,
-		uploadPhotoUC:      uploadPhotoUC,
+		uploadPhotoUC:       uploadPhotoUC,
+		updateTableCountUC: updateTableCountUC,
 		generateQRUC:       generateQRUC,
 		membershipRepo:     membershipRepo,
 		restaurantRepo:     restaurantRepo,
@@ -253,44 +263,89 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 	return c.Redirect(http.StatusFound, adminMenuDashboardPath)
 }
 
-// GenerateQR handles GET /admin/qr
-func (h *AdminHandler) GenerateQR(c echo.Context) error {
+func (h *AdminHandler) renderQRPage(c echo.Context, rest *domain.Restaurant, qrError string, saved bool) error {
+	dn, st, ini := LayoutUserStringsFromContext(c)
+	switchOpts, activeRole, canCreate, sErr := RestaurantSwitcherData(c, h.membershipRepo, h.restaurantRepo)
+	if sErr != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load navigation")
+	}
+	label := ActiveRestaurantLabel(c.Request().Context(), rest.ID, h.restaurantRepo)
+	tc := rest.TableCount
+	if tc < domain.MinTableCount {
+		tc = domain.MinTableCount
+	}
+	tables := make([]int, tc)
+	for i := range tables {
+		tables[i] = i + 1
+	}
+	return admin.QRPage(getCSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate, rest.Name, tables, tc, qrError, saved).Render(c.Request().Context(), c.Response())
+}
+
+// GetQRPage handles GET /admin/qr
+func (h *AdminHandler) GetQRPage(c echo.Context) error {
 	restaurantID, err := h.restaurantID(c)
 	if err != nil {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
-
-	png, err := h.generateQRUC.Execute(c.Request().Context(), string(restaurantID))
+	rest, err := h.restaurantRepo.FindByID(restaurantID)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+		return c.String(http.StatusInternalServerError, "Failed to load restaurant")
 	}
+	return h.renderQRPage(c, rest, c.QueryParam("error"), c.QueryParam("saved") == "1")
+}
 
+// PostQRSettings handles POST /admin/qr/settings
+func (h *AdminHandler) PostQRSettings(c echo.Context) error {
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
+	count, _ := strconv.Atoi(c.FormValue("tableCount"))
+	if err := h.updateTableCountUC.Execute(c.Request().Context(), restaurantID, count); err != nil {
+		return c.Redirect(http.StatusFound, adminQRRedirect(err.Error()))
+	}
+	return c.Redirect(http.StatusFound, adminQRPath+"?saved=1")
+}
+
+// GetQRTablePNG handles GET /admin/qr/table/:table
+func (h *AdminHandler) GetQRTablePNG(c echo.Context) error {
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
+	n, err := strconv.Atoi(c.Param("table"))
+	if err != nil || n < domain.MinTableCount {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid table")
+	}
+	png, err := h.generateQRUC.Execute(c.Request().Context(), restaurantID, n)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
 	return c.Blob(http.StatusOK, "image/png", png)
+}
+
+// GetQRPrint handles GET /admin/qr/print
+func (h *AdminHandler) GetQRPrint(c echo.Context) error {
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
+	rest, err := h.restaurantRepo.FindByID(restaurantID)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load restaurant")
+	}
+	n := rest.TableCount
+	if n < domain.MinTableCount {
+		n = domain.MinTableCount
+	}
+	tables := make([]int, n)
+	for i := range tables {
+		tables[i] = i + 1
+	}
+	return admin.QRPrintPage(rest.Name, tables).Render(c.Request().Context(), c.Response())
 }
 
 // GetQRCode handles GET /dashboard/qr-code
 func (h *AdminHandler) GetQRCode(c echo.Context) error {
-	restaurantID, err := h.restaurantID(c)
-	if err != nil {
-		return c.String(http.StatusUnauthorized, err.Error())
-	}
-
-	png, err := h.generateQRUC.Execute(c.Request().Context(), string(restaurantID))
-	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.HTML(http.StatusOK, fmt.Sprintf(`
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<title>QR Code - BitMerchant</title>
-		</head>
-		<body>
-			<h1>Restaurant QR Code</h1>
-			<img src="data:image/png;base64,%s" alt="QR Code" />
-			<p>Scan this QR code to view the menu</p>
-		</body>
-		</html>
-	`, base64.StdEncoding.EncodeToString(png)))
+	return c.Redirect(http.StatusFound, adminQRPath)
 }

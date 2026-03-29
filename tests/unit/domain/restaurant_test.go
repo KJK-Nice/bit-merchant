@@ -21,6 +21,7 @@ func TestNewRestaurant(t *testing.T) {
 		assert.Equal(t, id, restaurant.ID)
 		assert.Equal(t, name, restaurant.Name)
 		assert.True(t, restaurant.IsOpen)
+		assert.Equal(t, domain.MinTableCount, restaurant.TableCount)
 		assert.WithinDuration(t, time.Now(), restaurant.CreatedAt, time.Second)
 		assert.WithinDuration(t, time.Now(), restaurant.UpdatedAt, time.Second)
 	})
@@ -40,6 +41,13 @@ func TestNewRestaurant(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "restaurant name must be between 1 and 100 characters")
 	})
+}
+
+func TestValidateTableCount(t *testing.T) {
+	assert.NoError(t, domain.ValidateTableCount(1))
+	assert.NoError(t, domain.ValidateTableCount(200))
+	assert.Error(t, domain.ValidateTableCount(0))
+	assert.Error(t, domain.ValidateTableCount(201))
 }
 
 func TestRestaurant_UpdateStatus(t *testing.T) {

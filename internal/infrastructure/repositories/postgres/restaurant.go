@@ -18,16 +18,18 @@ func NewRestaurantRepository(db *sql.DB) *RestaurantRepository {
 
 func (r *RestaurantRepository) Save(restaurant *domain.Restaurant) error {
 	_, err := r.db.Exec(
-		`INSERT INTO restaurants (id, name, is_open, closed_message, reopening_hours, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`INSERT INTO restaurants (id, name, table_count, is_open, closed_message, reopening_hours, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		 ON CONFLICT (id) DO UPDATE
 		 SET name = EXCLUDED.name,
+		     table_count = EXCLUDED.table_count,
 		     is_open = EXCLUDED.is_open,
 		     closed_message = EXCLUDED.closed_message,
 		     reopening_hours = EXCLUDED.reopening_hours,
 		     updated_at = EXCLUDED.updated_at`,
 		string(restaurant.ID),
 		restaurant.Name,
+		restaurant.TableCount,
 		restaurant.IsOpen,
 		restaurant.ClosedMessage,
 		restaurant.ReopeningHours,
@@ -39,7 +41,7 @@ func (r *RestaurantRepository) Save(restaurant *domain.Restaurant) error {
 
 func (r *RestaurantRepository) FindByID(id domain.RestaurantID) (*domain.Restaurant, error) {
 	row := r.db.QueryRow(
-		`SELECT id, name, is_open, closed_message, reopening_hours, created_at, updated_at
+		`SELECT id, name, table_count, is_open, closed_message, reopening_hours, created_at, updated_at
 		   FROM restaurants
 		  WHERE id = $1`,
 		string(id),
@@ -48,13 +50,14 @@ func (r *RestaurantRepository) FindByID(id domain.RestaurantID) (*domain.Restaur
 	var (
 		restaurantID   string
 		name           string
+		tableCount     int
 		isOpen         bool
 		closedMessage  string
 		reopeningHours string
 		createdAt      sql.NullTime
 		updatedAt      sql.NullTime
 	)
-	if err := row.Scan(&restaurantID, &name, &isOpen, &closedMessage, &reopeningHours, &createdAt, &updatedAt); err != nil {
+	if err := row.Scan(&restaurantID, &name, &tableCount, &isOpen, &closedMessage, &reopeningHours, &createdAt, &updatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("restaurant not found")
 		}
@@ -64,6 +67,7 @@ func (r *RestaurantRepository) FindByID(id domain.RestaurantID) (*domain.Restaur
 	return &domain.Restaurant{
 		ID:             domain.RestaurantID(restaurantID),
 		Name:           name,
+		TableCount:     tableCount,
 		IsOpen:         isOpen,
 		ClosedMessage:  closedMessage,
 		ReopeningHours: reopeningHours,
@@ -76,13 +80,15 @@ func (r *RestaurantRepository) Update(restaurant *domain.Restaurant) error {
 	result, err := r.db.Exec(
 		`UPDATE restaurants
 		    SET name = $2,
-		        is_open = $3,
-		        closed_message = $4,
-		        reopening_hours = $5,
-		        updated_at = $6
+		        table_count = $3,
+		        is_open = $4,
+		        closed_message = $5,
+		        reopening_hours = $6,
+		        updated_at = $7
 		  WHERE id = $1`,
 		string(restaurant.ID),
 		restaurant.Name,
+		restaurant.TableCount,
 		restaurant.IsOpen,
 		restaurant.ClosedMessage,
 		restaurant.ReopeningHours,

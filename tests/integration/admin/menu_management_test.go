@@ -10,6 +10,7 @@ import (
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/application/restaurant"
 	"bitmerchant/internal/domain"
+	"bitmerchant/internal/infrastructure/qr"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
 	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
@@ -39,6 +40,8 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 	updateItemUC := menu.NewUpdateMenuItemUseCase(repoItem, repoCat)
 	updateCategoryUC := menu.NewUpdateMenuCategoryUseCase(repoCat)
 	toggleAvailUC := menu.NewToggleMenuItemAvailabilityUseCase(repoItem)
+	updateTableUC := restaurant.NewUpdateRestaurantTableCountUseCase(repoRest)
+	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
 
 	adminHandler := handler.NewAdminHandler(
 		createRestUC,
@@ -49,7 +52,8 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 		updateCategoryUC,
 		toggleAvailUC,
 		nil,
-		nil,
+		updateTableUC,
+		generateQRUC,
 		membershipRepo,
 		repoRest,
 	)

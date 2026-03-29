@@ -47,7 +47,8 @@ func TestKitchenWorkflow(t *testing.T) {
 
 	// Seed Data
 	restaurantID := domain.RestaurantID("restaurant_1")
-	_ = restRepo.Save(&domain.Restaurant{ID: restaurantID, Name: "Test Cafe", IsOpen: true})
+	rSeed, _ := domain.NewRestaurant(restaurantID, "Test Cafe")
+	_ = restRepo.Save(rSeed)
 
 	cat1, _ := domain.NewMenuCategory("cat_1", restaurantID, "Mains", 1)
 	_ = menuCatRepo.Save(cat1)

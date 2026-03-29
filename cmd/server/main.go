@@ -89,7 +89,8 @@ func main() {
 	getHistoryUC := dashboard.NewGetOrderHistoryUseCase(repos.Order)
 	getTopItemsUC := dashboard.NewGetTopSellingItemsUseCase(repos.Order)
 	toggleOpenUC := restaurant.NewToggleRestaurantOpenUseCase(repos.Restaurant)
-	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qrService, cfg.BaseURL)
+	updateTableCountUC := restaurant.NewUpdateRestaurantTableCountUseCase(repos.Restaurant)
+	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qrService, cfg.BaseURL, repos.Restaurant)
 
 	sessionOpts := middleware.SessionOptions{
 		SecureCookie: middleware.ShouldUseSecureCookies(cfg.BaseURL, cfg.ForceSecureCookie),
@@ -104,7 +105,7 @@ func main() {
 	cartHandler := handler.NewCartHandler(cartService, repos.MenuItem)
 	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, getCustomerOrdersUC, cartService)
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, repos.Restaurant, repos.Membership)
-	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuAdminUC, updateMenuItemUC, updateMenuCategoryUC, toggleItemAvailUC, uploadPhotoUC, generateQRUC, repos.Membership, repos.Restaurant)
+	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuAdminUC, updateMenuItemUC, updateMenuCategoryUC, toggleItemAvailUC, uploadPhotoUC, updateTableCountUC, generateQRUC, repos.Membership, repos.Restaurant)
 	ownerHandler := handler.NewOwnerHandler(createRestUC)
 	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, repos.Restaurant, repos.Membership, logger.Logger)
 	authHandler := handler.NewAuthHandler(webauthnSvc, repos.User, repos.Membership, repos.Invitation, repos.Session, repos.Restaurant, createRestUC, logger.Logger, sessionOpts)

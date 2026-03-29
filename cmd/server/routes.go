@@ -57,7 +57,10 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo domain.
 	adminGroup.POST("/item/:id/update", handlers.Admin.UpdateItem)
 	adminGroup.POST("/item/:id/toggle-availability", handlers.Admin.ToggleItemAvailability)
 	adminGroup.POST("/item/:id/photo", handlers.Admin.UploadPhoto)
-	adminGroup.GET("/qr", handlers.Admin.GenerateQR)
+	adminGroup.GET("/qr", handlers.Admin.GetQRPage)
+	adminGroup.POST("/qr/settings", handlers.Admin.PostQRSettings)
+	adminGroup.GET("/qr/print", handlers.Admin.GetQRPrint)
+	adminGroup.GET("/qr/table/:table", handlers.Admin.GetQRTablePNG)
 
 	e.GET("/owner/signup", handlers.Owner.GetSignup)
 	e.POST("/owner/signup", handlers.Owner.PostSignup)
