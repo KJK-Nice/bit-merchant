@@ -58,6 +58,22 @@ func TestCartService(t *testing.T) {
 		c := s.GetCart(sessionID)
 		assert.Empty(t, c.Items)
 	})
+
+	t.Run("switch restaurant clears cart", func(t *testing.T) {
+		s2 := cart.NewCartService()
+		sid := "session_switch"
+		a, _ := domain.NewMenuItem("ia", "c1", "ra", "A", 5)
+		b, _ := domain.NewMenuItem("ib", "c2", "rb", "B", 7)
+		require.NoError(t, s2.AddItem(sid, a, 1))
+		c := s2.GetCart(sid)
+		assert.Equal(t, domain.RestaurantID("ra"), c.RestaurantID)
+		require.NoError(t, s2.AddItem(sid, b, 2))
+		c = s2.GetCart(sid)
+		assert.Len(t, c.Items, 1)
+		assert.Equal(t, domain.RestaurantID("rb"), c.RestaurantID)
+		assert.Equal(t, "B", c.Items[0].Name)
+		assert.Equal(t, 2, c.Items[0].Quantity)
+	})
 }
 
 // Need to test infrastructure/payment/cash too?

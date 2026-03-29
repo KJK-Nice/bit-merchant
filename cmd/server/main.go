@@ -11,6 +11,7 @@ import (
 	"bitmerchant/internal/application/kitchen"
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/application/order"
+	"bitmerchant/internal/application/places"
 	"bitmerchant/internal/application/restaurant"
 	"bitmerchant/internal/domain"
 	authInfra "bitmerchant/internal/infrastructure/auth"
@@ -72,8 +73,10 @@ func main() {
 	updateMenuCategoryUC := menu.NewUpdateMenuCategoryUseCase(repos.MenuCategory)
 	toggleItemAvailUC := menu.NewToggleMenuItemAvailabilityUseCase(repos.MenuItem)
 	createOrderUC := order.NewCreateOrderUseCase(repos.Order, repos.Payment, repos.Restaurant, eventBus, paymentMethod, logger)
-	getOrderUC := order.NewGetOrderByNumberUseCase(repos.Order)
+	getCustomerOrderByNumberUC := order.NewGetCustomerOrderByNumberUseCase(repos.Order)
 	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(repos.Order)
+	recordMenuVisitUC := places.NewRecordMenuVisitUseCase(repos.Restaurant, repos.SessionRestaurantVisits)
+	listVisitedUC := places.NewListVisitedRestaurantsUseCase(repos.SessionRestaurantVisits, repos.Restaurant, repos.Order)
 
 	getKitchenOrdersUC := kitchen.NewGetKitchenOrdersUseCase(repos.Order)
 	markPaidUC := kitchen.NewMarkOrderPaidUseCase(repos.Order, eventBus)
@@ -101,9 +104,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	menuHandler := handler.NewMenuHandler(getMenuUC, cartService)
+	menuHandler := handler.NewMenuHandler(getMenuUC, cartService, recordMenuVisitUC)
 	cartHandler := handler.NewCartHandler(cartService, repos.MenuItem)
-	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, getCustomerOrdersUC, cartService)
+	orderHandler := handler.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, cartService)
+	placesHandler := handler.NewPlacesHandler(listVisitedUC)
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, repos.Restaurant, repos.Membership)
 	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuAdminUC, updateMenuItemUC, updateMenuCategoryUC, toggleItemAvailUC, uploadPhotoUC, updateTableCountUC, generateQRUC, repos.Membership, repos.Restaurant)
 	ownerHandler := handler.NewOwnerHandler(createRestUC)
@@ -128,6 +132,7 @@ func main() {
 		Menu:      menuHandler,
 		Cart:      cartHandler,
 		Order:     orderHandler,
+		Places:    placesHandler,
 		Kitchen:   kitchenHandler,
 		Admin:     adminHandler,
 		Owner:     ownerHandler,

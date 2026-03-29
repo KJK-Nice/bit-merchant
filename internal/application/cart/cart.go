@@ -18,8 +18,9 @@ type CartItem struct {
 
 // Cart represents a shopping cart
 type Cart struct {
-	Items []CartItem
-	Total float64
+	RestaurantID domain.RestaurantID // restaurant context for all line items (empty when cart is empty)
+	Items        []CartItem
+	Total        float64
 }
 
 // CartService manages session-based carts
@@ -41,7 +42,7 @@ func (s *CartService) GetCart(sessionID string) *Cart {
 	defer s.mu.RUnlock()
 	cart, exists := s.carts[sessionID]
 	if !exists {
-		return &Cart{Items: []CartItem{}, Total: 0}
+		return &Cart{Items: []CartItem{}, Total: 0, RestaurantID: ""}
 	}
 	// Return copy to prevent concurrency issues if caller modifies it without lock
 	// But for simplicity in MVP, returning pointer is risky but acceptable if used carefully.
@@ -60,8 +61,15 @@ func (s *CartService) AddItem(sessionID string, item *domain.MenuItem, quantity 
 
 	cart, exists := s.carts[sessionID]
 	if !exists {
-		cart = &Cart{Items: []CartItem{}, Total: 0}
+		cart = &Cart{Items: []CartItem{}, Total: 0, RestaurantID: ""}
 		s.carts[sessionID] = cart
+	}
+
+	// Switching restaurants clears the cart so items are never mixed across tenants.
+	if len(cart.Items) > 0 && cart.RestaurantID != "" && cart.RestaurantID != item.RestaurantID {
+		cart.Items = nil
+		cart.Total = 0
+		cart.RestaurantID = ""
 	}
 
 	// Find existing item
@@ -86,6 +94,7 @@ func (s *CartService) AddItem(sessionID string, item *domain.MenuItem, quantity 
 		})
 	}
 
+	cart.RestaurantID = item.RestaurantID
 	s.recalculateTotal(cart)
 	return nil
 }
@@ -107,6 +116,9 @@ func (s *CartService) RemoveItem(sessionID string, itemID domain.ItemID) error {
 		}
 	}
 	cart.Items = newItems
+	if len(cart.Items) == 0 {
+		cart.RestaurantID = ""
+	}
 	s.recalculateTotal(cart)
 	return nil
 }
@@ -128,8 +140,9 @@ func (s *CartService) recalculateTotal(cart *Cart) {
 
 func (s *CartService) copyCart(cart *Cart) *Cart {
 	newCart := &Cart{
-		Total: cart.Total,
-		Items: make([]CartItem, len(cart.Items)),
+		RestaurantID: cart.RestaurantID,
+		Total:        cart.Total,
+		Items:        make([]CartItem, len(cart.Items)),
 	}
 	copy(newCart.Items, cart.Items)
 	return newCart

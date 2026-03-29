@@ -7,6 +7,7 @@ import (
 
 	"bitmerchant/internal/application/cart"
 	"bitmerchant/internal/application/menu"
+	"bitmerchant/internal/application/places"
 	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
@@ -29,8 +30,10 @@ func TestGetMenu(t *testing.T) {
 	cat, _ := domain.NewMenuCategory("c1", "r1", "Starters", 1)
 	require.NoError(t, catRepo.Save(cat))
 
+	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
+	recordVisitUC := places.NewRecordMenuVisitUseCase(restRepo, visitRepo)
 	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo)
-	h := handler.NewMenuHandler(uc, cartService)
+	h := handler.NewMenuHandler(uc, cartService, recordVisitUC)
 
 	// Setup Echo
 	e := echo.New()

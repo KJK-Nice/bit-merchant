@@ -14,6 +14,7 @@ type routeHandlers struct {
 	Menu      *handler.MenuHandler
 	Cart      *handler.CartHandler
 	Order     *handler.OrderHandler
+	Places    *handler.PlacesHandler
 	Kitchen   *handler.KitchenHandler
 	Admin     *handler.AdminHandler
 	Owner     *handler.OwnerHandler
@@ -28,6 +29,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo domain.
 	})
 
 	e.GET("/menu", handlers.Menu.GetMenu)
+	e.GET("/my-places", handlers.Places.GetMyPlaces)
 
 	e.GET("/cart", handlers.Cart.GetCart)
 	e.POST("/cart/add", handlers.Cart.AddToCart)

@@ -13,6 +13,7 @@ import (
 	"bitmerchant/internal/application/kitchen"
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/application/order"
+	"bitmerchant/internal/application/places"
 	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/events"
 	eventHandlers "bitmerchant/internal/infrastructure/events/handlers"
@@ -58,7 +59,7 @@ func TestKitchenWorkflow(t *testing.T) {
 
 	// Use Cases
 	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
-	getOrderUC := order.NewGetOrderByNumberUseCase(orderRepo)
+	getCustomerOrderUC := order.NewGetCustomerOrderByNumberUseCase(orderRepo)
 	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
 	getKitchenOrdersUC := kitchen.NewGetKitchenOrdersUseCase(orderRepo)
 	markPaidUC := kitchen.NewMarkOrderPaidUseCase(orderRepo, eventBus)
@@ -68,8 +69,10 @@ func TestKitchenWorkflow(t *testing.T) {
 
 	// Handlers
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
-	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, getCustomerOrdersUC, cartService)
-	_ = handler.NewMenuHandler(getMenuUC, cartService)
+	orderHandler := handler.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
+	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
+	recordVisitUC := places.NewRecordMenuVisitUseCase(restRepo, visitRepo)
+	_ = handler.NewMenuHandler(getMenuUC, cartService, recordVisitUC)
 
 	// Event Handlers
 	orderCreatedHandler := eventHandlers.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
@@ -116,7 +119,9 @@ func TestKitchenWorkflow(t *testing.T) {
 	sessionID := "session-1"
 	_ = cartService.AddItem(sessionID, item1, 1)
 
-	req := httptest.NewRequest(http.MethodPost, "/order/create", nil)
+	form := "paymentMethod=cash&restaurantID=" + string(restaurantID)
+	req := httptest.NewRequest(http.MethodPost, "/order/create", strings.NewReader(form))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 	req.AddCookie(&http.Cookie{Name: "bitmerchant_session", Value: sessionID})
 
 	rec := httptest.NewRecorder()

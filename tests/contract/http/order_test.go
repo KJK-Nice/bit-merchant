@@ -33,11 +33,11 @@ func TestOrderEndpoints(t *testing.T) {
 	require.NoError(t, restRepo.Save(rest))
 
 	createUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
-	getUC := order.NewGetOrderByNumberUseCase(orderRepo)
+	getCustomerOrderUC := order.NewGetCustomerOrderByNumberUseCase(orderRepo)
 	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
 	cartService := cart.NewCartService()
 
-	h := handler.NewOrderHandler(createUC, getUC, getCustomerOrdersUC, cartService)
+	h := handler.NewOrderHandler(createUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
 
 	e := echo.New()
 
@@ -59,6 +59,7 @@ func TestOrderEndpoints(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/order/1234", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set("sessionID", "session_1")
 		c.SetPath("/order/:orderNumber")
 		c.SetParamNames("orderNumber")
 		c.SetParamValues("1234")

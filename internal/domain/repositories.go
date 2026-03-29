@@ -82,3 +82,9 @@ type SessionRepository interface {
 	Delete(id string) error
 	DeleteByUserID(userID UserID) error
 }
+
+// SessionRestaurantVisitRepository persists per-session menu visits for the customer "My places" list.
+type SessionRestaurantVisitRepository interface {
+	Upsert(visit *SessionRestaurantVisit) error
+	FindBySessionID(sessionID string) ([]*SessionRestaurantVisit, error)
+}
