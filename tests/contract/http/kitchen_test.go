@@ -92,7 +92,7 @@ func TestKitchenEndpoints(t *testing.T) {
 	markReadyUC := kitchen.NewMarkOrderReadyUseCase(mockRepo, mockBus)
 
 	// Setup Handler
-	h := handler.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC)
+	h := handler.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil)
 
 	// Routes
 	e.GET("/kitchen", h.GetKitchen)

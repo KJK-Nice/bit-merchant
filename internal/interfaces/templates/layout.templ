@@ -1,5 +1,7 @@
 package templates
 
+import "bitmerchant/internal/interfaces/templates/components/ui/label"
+
 templ Layout(title string) {
 	<!DOCTYPE html>
 	<html lang="en">
@@ -56,6 +58,7 @@ templ Layout(title string) {
 				})();
 			</script>
 			<script src="/assets/js/input.min.js"></script>
+			@label.Script()
 			<script>
 				if ('serviceWorker' in navigator) {
 					window.addEventListener('load', function() {

@@ -2,90 +2,124 @@ package templates
 
 import (
 	"fmt"
+
 	"bitmerchant/internal/application/dashboard"
 	"bitmerchant/internal/domain"
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/table"
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem, csrfToken string, activeRestaurantID string) {
-	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantID) {
+templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem, csrfToken string, activeRestaurantID string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string) {
+	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantID, activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken) {
 		<div class="space-y-8 mt-4">
-			<!-- Stats Cards -->
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
-					<h3 class="text-muted-foreground text-sm font-medium">Total Sales (Today)</h3>
-					<p class="text-3xl font-bold">${ fmt.Sprintf("%.2f", stats.TotalSales) }</p>
-				</div>
-				<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
-					<h3 class="text-muted-foreground text-sm font-medium">Orders (Today)</h3>
-					<p class="text-3xl font-bold">{ fmt.Sprintf("%d", stats.OrderCount) }</p>
-				</div>
-				<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
-					<h3 class="text-muted-foreground text-sm font-medium">Avg Order Value</h3>
-					<p class="text-3xl font-bold">${ fmt.Sprintf("%.2f", stats.AverageOrderValue) }</p>
-				</div>
-			</div>
-
-			<!-- Restaurant Status -->
-			<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
-				<h2 class="text-xl font-bold mb-4">Restaurant Status</h2>
-				<form action="/dashboard/toggle-open" method="POST">
-					<input type="hidden" name="csrf" value={ csrfToken }/>
-					<button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-						Toggle Open/Closed
-					</button>
-				</form>
-			</div>
-
-			<!-- Top Items -->
-			<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
-				<h2 class="text-xl font-bold mb-4">Top Selling Items</h2>
-				<table class="min-w-full">
-					<thead>
-						<tr class="text-left border-b">
-							<th class="pb-2">Item</th>
-							<th class="pb-2">Quantity</th>
-							<th class="pb-2">Revenue</th>
-						</tr>
-					</thead>
-					<tbody>
-						for _, item := range topItems {
-							<tr class="border-b last:border-0">
-								<td class="py-2">{ item.Name }</td>
-								<td class="py-2">{ fmt.Sprintf("%d", item.Quantity) }</td>
-								<td class="py-2">${ fmt.Sprintf("%.2f", item.Revenue) }</td>
-							</tr>
+				@card.Card() {
+					@card.Header(card.HeaderProps{Class: "pb-2"}) {
+						@card.Title(card.TitleProps{Class: "text-sm font-medium text-muted-foreground"}) {
+							Total Sales (Today)
 						}
-					</tbody>
-				</table>
+					}
+					@card.Content(card.ContentProps{Class: "pt-0"}) {
+						<p class="text-3xl font-bold">${ fmt.Sprintf("%.2f", stats.TotalSales) }</p>
+					}
+				}
+				@card.Card() {
+					@card.Header(card.HeaderProps{Class: "pb-2"}) {
+						@card.Title(card.TitleProps{Class: "text-sm font-medium text-muted-foreground"}) {
+							Orders (Today)
+						}
+					}
+					@card.Content(card.ContentProps{Class: "pt-0"}) {
+						<p class="text-3xl font-bold">{ fmt.Sprintf("%d", stats.OrderCount) }</p>
+					}
+				}
+				@card.Card() {
+					@card.Header(card.HeaderProps{Class: "pb-2"}) {
+						@card.Title(card.TitleProps{Class: "text-sm font-medium text-muted-foreground"}) {
+							Avg Order Value
+						}
+					}
+					@card.Content(card.ContentProps{Class: "pt-0"}) {
+						<p class="text-3xl font-bold">${ fmt.Sprintf("%.2f", stats.AverageOrderValue) }</p>
+					}
+				}
 			</div>
 
-			<!-- Recent Orders -->
-			<div class="bg-card text-card-foreground p-6 rounded-lg shadow border">
-				<h2 class="text-xl font-bold mb-4">Recent Orders</h2>
-				<div class="overflow-x-auto">
-					<table class="min-w-full">
-						<thead>
-							<tr class="text-left border-b">
-								<th class="pb-2">Order #</th>
-								<th class="pb-2">Date</th>
-								<th class="pb-2">Total</th>
-								<th class="pb-2">Status</th>
-							</tr>
-						</thead>
-						<tbody>
-							for _, order := range history {
-								<tr class="border-b last:border-0">
-									<td class="py-2">{ string(order.OrderNumber) }</td>
-									<td class="py-2">{ order.CreatedAt.Format("15:04:05") }</td>
-									<td class="py-2">${ fmt.Sprintf("%.2f", order.FiatAmount) }</td>
-									<td class="py-2">{ string(order.PaymentStatus) }</td>
-								</tr>
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Restaurant Status
+					}
+				}
+				@card.Content() {
+					<form action="/dashboard/toggle-open" method="POST">
+						<input type="hidden" name="csrf" value={ csrfToken }/>
+						@button.Button(button.Props{Type: "submit"}) {
+							Toggle Open/Closed
+						}
+					</form>
+				}
+			}
+
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Top Selling Items
+					}
+				}
+				@card.Content() {
+					@table.Table() {
+						@table.Header() {
+							@table.Row() {
+								@table.Head() { Item }
+								@table.Head() { Quantity }
+								@table.Head() { Revenue }
 							}
-						</tbody>
-					</table>
-				</div>
-			</div>
+						}
+						@table.Body() {
+							for _, item := range topItems {
+								@table.Row() {
+									@table.Cell() { { item.Name } }
+									@table.Cell() { { fmt.Sprintf("%d", item.Quantity) } }
+									@table.Cell() { { fmt.Sprintf("$%.2f", item.Revenue) } }
+								}
+							}
+						}
+					}
+				}
+			}
+
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Recent Orders
+					}
+				}
+				@card.Content() {
+					@table.Table() {
+						@table.Header() {
+							@table.Row() {
+								@table.Head() { Order # }
+								@table.Head() { Date }
+								@table.Head() { Total }
+								@table.Head() { Status }
+							}
+						}
+						@table.Body() {
+							for _, order := range history {
+								@table.Row() {
+									@table.Cell() { { string(order.OrderNumber) } }
+									@table.Cell() { { order.CreatedAt.Format("15:04:05") } }
+									@table.Cell() { { fmt.Sprintf("$%.2f", order.FiatAmount) } }
+									@table.Cell() { { string(order.PaymentStatus) } }
+								}
+							}
+						}
+					}
+				}
+			}
 		</div>
 	}
 }

@@ -5,6 +5,7 @@ import (
 
 	"bitmerchant/internal/application/dashboard"
 	"bitmerchant/internal/application/restaurant"
+	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates"
 
 	"github.com/labstack/echo/v4"
@@ -15,6 +16,7 @@ type DashboardHandler struct {
 	getHistoryUC  *dashboard.GetOrderHistoryUseCase
 	getTopItemsUC *dashboard.GetTopSellingItemsUseCase
 	toggleOpenUC  *restaurant.ToggleRestaurantOpenUseCase
+	restaurantRepo domain.RestaurantRepository
 }
 
 func NewDashboardHandler(
@@ -22,12 +24,14 @@ func NewDashboardHandler(
 	getHistoryUC *dashboard.GetOrderHistoryUseCase,
 	getTopItemsUC *dashboard.GetTopSellingItemsUseCase,
 	toggleOpenUC *restaurant.ToggleRestaurantOpenUseCase,
+	restaurantRepo domain.RestaurantRepository,
 ) *DashboardHandler {
 	return &DashboardHandler{
-		getStatsUC:    getStatsUC,
-		getHistoryUC:  getHistoryUC,
-		getTopItemsUC: getTopItemsUC,
-		toggleOpenUC:  toggleOpenUC,
+		getStatsUC:     getStatsUC,
+		getHistoryUC:   getHistoryUC,
+		getTopItemsUC:  getTopItemsUC,
+		toggleOpenUC:   toggleOpenUC,
+		restaurantRepo: restaurantRepo,
 	}
 }
 
@@ -59,8 +63,9 @@ func (h *DashboardHandler) Dashboard(c echo.Context) error {
 	// Let's proceed without it for now and pass a boolean/struct to template.
 	// Or verify if we can add GetRestaurantUseCase.
 
-	// For now, we just pass data to template.
-	return templates.DashboardPage(stats, history, topItems, getCSRFToken(c), string(restaurantID)).Render(c.Request().Context(), c.Response())
+	dn, st, ini := LayoutUserStringsFromContext(c)
+	label := ActiveRestaurantLabel(c.Request().Context(), restaurantID, h.restaurantRepo)
+	return templates.DashboardPage(stats, history, topItems, getCSRFToken(c), string(restaurantID), label, dn, st, ini).Render(c.Request().Context(), c.Response())
 }
 
 func (h *DashboardHandler) ToggleOpen(c echo.Context) error {

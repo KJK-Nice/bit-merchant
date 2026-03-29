@@ -40,7 +40,7 @@ func TestDashboardHandler(t *testing.T) {
 	getTopItemsUC := dashboard.NewGetTopSellingItemsUseCase(orderRepo)
 	toggleOpenUC := restaurant.NewToggleRestaurantOpenUseCase(restaurantRepo)
 
-	h := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC)
+	h := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, nil)
 
 	e := echo.New()
 

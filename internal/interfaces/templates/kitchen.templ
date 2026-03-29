@@ -6,8 +6,8 @@ import (
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-templ KitchenPage(orders []*domain.Order, activeRestaurantID string) {
-	@layouts.Dashboard("Kitchen Display", "/kitchen", activeRestaurantID) {
+templ KitchenPage(orders []*domain.Order, csrfToken string, activeRestaurantID string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string) {
+	@layouts.Dashboard("Kitchen Display", "/kitchen", activeRestaurantID, activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken) {
 		<div 
 			id="kitchen-display" 
 			data-init="@get('/kitchen/stream')"

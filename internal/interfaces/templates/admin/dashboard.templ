@@ -6,15 +6,17 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
+	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"fmt"
 )
 
-templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantID string) {
-	@layouts.Dashboard("Menu Management", "/admin/dashboard", activeRestaurantID) {
+templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantID string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string) {
+	@layouts.Dashboard("Menu Management", "/admin/dashboard", activeRestaurantID, activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken) {
 		<div class="space-y-8 mt-4">
 			<div class="flex justify-between items-center">
 				<h2 class="text-3xl font-bold tracking-tight">Menu Management</h2>
@@ -32,12 +34,16 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantI
 						<form action="/admin/category" method="post" class="space-y-4">
 							<input type="hidden" name="csrf" value={ csrfToken }/>
 							<div class="space-y-2">
-								<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Name</label>
-								@input.Input(input.Props{Type: "text", Name: "name", Required: true, Placeholder: "e.g. Appetizers"})
+								@label.Label(label.Props{For: "new-category-name"}) {
+									Name
+								}
+								@input.Input(input.Props{Type: "text", ID: "new-category-name", Name: "name", Required: true, Placeholder: "e.g. Appetizers"})
 							</div>
 							<div class="space-y-2">
-								<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Display Order</label>
-								@input.Input(input.Props{Type: "number", Name: "displayOrder", Value: "1"})
+								@label.Label(label.Props{For: "new-category-display-order"}) {
+									Display Order
+								}
+								@input.Input(input.Props{Type: "number", ID: "new-category-display-order", Name: "displayOrder", Value: "1"})
 							</div>
 							@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Add Category }
 						</form>
@@ -67,25 +73,34 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantI
 										<input type="hidden" name="categoryID" value={ string(catData.Category.ID) }/>
 										<div class="grid grid-cols-2 gap-4">
 											<div class="space-y-2">
-												<label class="text-sm font-medium">Name</label>
-												@input.Input(input.Props{Type: "text", Name: "name", Placeholder: "Item Name", Required: true})
+												@label.Label(label.Props{For: "add-item-name-" + string(catData.Category.ID)}) {
+													Name
+												}
+												@input.Input(input.Props{Type: "text", ID: "add-item-name-" + string(catData.Category.ID), Name: "name", Placeholder: "Item Name", Required: true})
 											</div>
 											<div class="space-y-2">
-												<label class="text-sm font-medium">Price</label>
-												@input.Input(input.Props{Type: "number", Step: "0.01", Name: "price", Placeholder: "Price", Required: true})
+												@label.Label(label.Props{For: "add-item-price-" + string(catData.Category.ID)}) {
+													Price
+												}
+												@input.Input(input.Props{Type: "number", Step: "0.01", ID: "add-item-price-" + string(catData.Category.ID), Name: "price", Placeholder: "Price", Required: true})
 											</div>
 										</div>
 										<div class="space-y-2">
-											<label class="text-sm font-medium">Description</label>
-											<textarea 
-												name="description" 
-												placeholder="Description" 
-												class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-											></textarea>
+											@label.Label(label.Props{For: "add-item-desc-" + string(catData.Category.ID)}) {
+												Description
+											}
+											@textarea.Textarea(textarea.Props{
+												ID:          "add-item-desc-" + string(catData.Category.ID),
+												Name:        "description",
+												Placeholder: "Description",
+												Rows:        4,
+											})
 										</div>
 										<div class="flex items-center space-x-2">
-											<input type="checkbox" name="available" checked class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"/>
-											<label class="text-sm font-medium leading-none">Available</label>
+											<input type="checkbox" id={ "add-item-available-" + string(catData.Category.ID) } name="available" checked class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
+											@label.Label(label.Props{For: "add-item-available-" + string(catData.Category.ID), Class: "cursor-pointer"}) {
+												Available
+											}
 										</div>
 										@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Add Item }
 									</form>

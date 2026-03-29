@@ -11,10 +11,11 @@ import (
 )
 
 type KitchenHandler struct {
-	getOrdersUC     *kitchen.GetKitchenOrdersUseCase
-	markPaidUC      *kitchen.MarkOrderPaidUseCase
-	markPreparingUC *kitchen.MarkOrderPreparingUseCase
-	markReadyUC     *kitchen.MarkOrderReadyUseCase
+	getOrdersUC      *kitchen.GetKitchenOrdersUseCase
+	markPaidUC       *kitchen.MarkOrderPaidUseCase
+	markPreparingUC  *kitchen.MarkOrderPreparingUseCase
+	markReadyUC      *kitchen.MarkOrderReadyUseCase
+	restaurantRepo   domain.RestaurantRepository
 }
 
 func NewKitchenHandler(
@@ -22,12 +23,14 @@ func NewKitchenHandler(
 	markPaidUC *kitchen.MarkOrderPaidUseCase,
 	markPreparingUC *kitchen.MarkOrderPreparingUseCase,
 	markReadyUC *kitchen.MarkOrderReadyUseCase,
+	restaurantRepo domain.RestaurantRepository,
 ) *KitchenHandler {
 	return &KitchenHandler{
 		getOrdersUC:     getOrdersUC,
 		markPaidUC:      markPaidUC,
 		markPreparingUC: markPreparingUC,
 		markReadyUC:     markReadyUC,
+		restaurantRepo:  restaurantRepo,
 	}
 }
 
@@ -40,7 +43,9 @@ func (h *KitchenHandler) GetKitchen(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	return templates.KitchenPage(orders, string(restaurantID)).Render(c.Request().Context(), c.Response())
+	dn, st, ini := LayoutUserStringsFromContext(c)
+	label := ActiveRestaurantLabel(c.Request().Context(), restaurantID, h.restaurantRepo)
+	return templates.KitchenPage(orders, getCSRFToken(c), string(restaurantID), label, dn, st, ini).Render(c.Request().Context(), c.Response())
 }
 
 func (h *KitchenHandler) MarkPaid(c echo.Context) error {

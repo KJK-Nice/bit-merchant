@@ -8,6 +8,8 @@ package templates
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "bitmerchant/internal/interfaces/templates/components/ui/label"
+
 func Layout(title string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -36,13 +38,21 @@ func Layout(title string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layout.templ`, Line: 9, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layout.templ`, Line: 11, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script>\n\t\t\t\tif (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {\n\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t}\n\t\t\t\twindow.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {\n\t\t\t\t\tif (event.matches) {\n\t\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tdocument.documentElement.classList.remove('dark');\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t</script><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><link href=\"/assets/css/output.css\" rel=\"stylesheet\"><script type=\"module\" src=\"https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js\"></script><script>\n\t\t\t\t(function () {\n\t\t\t\t\tfunction getCookie(name) {\n\t\t\t\t\t\tconst value = `; ${document.cookie}`;\n\t\t\t\t\t\tconst parts = value.split(`; ${name}=`);\n\t\t\t\t\t\tif (parts.length === 2) {\n\t\t\t\t\t\t\treturn parts.pop().split(';').shift();\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\n\t\t\t\t\tconst originalFetch = window.fetch.bind(window);\n\t\t\t\t\twindow.fetch = function (input, init) {\n\t\t\t\t\t\tconst method = ((init && init.method) || 'GET').toUpperCase();\n\t\t\t\t\t\tif (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst csrfToken = getCookie('csrf');\n\t\t\t\t\t\tif (!csrfToken) {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst headers = new Headers((init && init.headers) || {});\n\t\t\t\t\t\tif (!headers.has('X-CSRF-Token')) {\n\t\t\t\t\t\t\theaders.set('X-CSRF-Token', csrfToken);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst nextInit = Object.assign({}, init || {}, { headers: headers });\n\t\t\t\t\t\treturn originalFetch(input, nextInit);\n\t\t\t\t\t};\n\t\t\t\t})();\n\t\t\t</script><script src=\"/assets/js/input.min.js\"></script><script>\n\t\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\t\twindow.addEventListener('load', function() {\n\t\t\t\t\t\tnavigator.serviceWorker.register('/sw.js').then(function(registration) {\n\t\t\t\t\t\t\tconsole.log('ServiceWorker registration successful with scope: ', registration.scope);\n\t\t\t\t\t\t}, function(err) {\n\t\t\t\t\t\t\tconsole.log('ServiceWorker registration failed: ', err);\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t</script></head><body class=\"bg-background text-foreground antialiased min-h-screen flex flex-col\"><main class=\"container mx-auto py-6 flex-grow\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script>\n\t\t\t\tif (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {\n\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t}\n\t\t\t\twindow.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {\n\t\t\t\t\tif (event.matches) {\n\t\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tdocument.documentElement.classList.remove('dark');\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t</script><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><link href=\"/assets/css/output.css\" rel=\"stylesheet\"><script type=\"module\" src=\"https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js\"></script><script>\n\t\t\t\t(function () {\n\t\t\t\t\tfunction getCookie(name) {\n\t\t\t\t\t\tconst value = `; ${document.cookie}`;\n\t\t\t\t\t\tconst parts = value.split(`; ${name}=`);\n\t\t\t\t\t\tif (parts.length === 2) {\n\t\t\t\t\t\t\treturn parts.pop().split(';').shift();\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\n\t\t\t\t\tconst originalFetch = window.fetch.bind(window);\n\t\t\t\t\twindow.fetch = function (input, init) {\n\t\t\t\t\t\tconst method = ((init && init.method) || 'GET').toUpperCase();\n\t\t\t\t\t\tif (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst csrfToken = getCookie('csrf');\n\t\t\t\t\t\tif (!csrfToken) {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst headers = new Headers((init && init.headers) || {});\n\t\t\t\t\t\tif (!headers.has('X-CSRF-Token')) {\n\t\t\t\t\t\t\theaders.set('X-CSRF-Token', csrfToken);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst nextInit = Object.assign({}, init || {}, { headers: headers });\n\t\t\t\t\t\treturn originalFetch(input, nextInit);\n\t\t\t\t\t};\n\t\t\t\t})();\n\t\t\t</script><script src=\"/assets/js/input.min.js\"></script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = label.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<script>\n\t\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\t\twindow.addEventListener('load', function() {\n\t\t\t\t\t\tnavigator.serviceWorker.register('/sw.js').then(function(registration) {\n\t\t\t\t\t\t\tconsole.log('ServiceWorker registration successful with scope: ', registration.scope);\n\t\t\t\t\t\t}, function(err) {\n\t\t\t\t\t\t\tconsole.log('ServiceWorker registration failed: ', err);\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t</script></head><body class=\"bg-background text-foreground antialiased min-h-screen flex flex-col\"><main class=\"container mx-auto py-6 flex-grow\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -50,7 +60,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

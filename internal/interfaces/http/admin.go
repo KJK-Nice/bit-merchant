@@ -17,6 +17,15 @@ func (h *AdminHandler) restaurantID(c echo.Context) (domain.RestaurantID, error)
 	return getRestaurantIDFromContext(c)
 }
 
+func (h *AdminHandler) renderAdminDashboard(c echo.Context, menuData *menu.MenuResponse, restaurantID domain.RestaurantID) error {
+	activeLabel := string(restaurantID)
+	if menuData != nil && menuData.Restaurant != nil && menuData.Restaurant.Name != "" {
+		activeLabel = menuData.Restaurant.Name
+	}
+	dn, st, ini := LayoutUserStringsFromContext(c)
+	return admin.Dashboard(menuData, getCSRFToken(c), string(restaurantID), activeLabel, dn, st, ini).Render(c.Request().Context(), c.Response())
+}
+
 type AdminHandler struct {
 	createRestaurantUC *restaurant.CreateRestaurantUseCase
 	createCategoryUC   *menu.CreateMenuCategoryUseCase
@@ -56,7 +65,7 @@ func (h *AdminHandler) Dashboard(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to load dashboard: "+err.Error())
 	}
 
-	return admin.Dashboard(menuData, getCSRFToken(c), string(restaurantID)).Render(c.Request().Context(), c.Response())
+	return h.renderAdminDashboard(c, menuData, restaurantID)
 }
 
 // GetMenu handles GET /dashboard/menu
@@ -71,7 +80,7 @@ func (h *AdminHandler) GetMenu(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to load menu: "+err.Error())
 	}
 
-	return admin.Dashboard(menuData, getCSRFToken(c), string(restaurantID)).Render(c.Request().Context(), c.Response())
+	return h.renderAdminDashboard(c, menuData, restaurantID)
 }
 
 // CreateCategory handles POST /admin/category
@@ -120,7 +129,7 @@ func (h *AdminHandler) CreateMenuCategory(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	return admin.Dashboard(menuData, getCSRFToken(c), string(restaurantID)).Render(c.Request().Context(), c.Response())
+	return h.renderAdminDashboard(c, menuData, restaurantID)
 }
 
 // CreateItem handles POST /admin/item
@@ -183,7 +192,7 @@ func (h *AdminHandler) CreateMenuItem(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	return admin.Dashboard(menuData, getCSRFToken(c), string(restaurantID)).Render(c.Request().Context(), c.Response())
+	return h.renderAdminDashboard(c, menuData, restaurantID)
 }
 
 // UploadPhoto handles POST /admin/item/:id/photo
@@ -254,7 +263,7 @@ func (h *AdminHandler) UploadMenuItemPhoto(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	return admin.Dashboard(menuData, getCSRFToken(c), string(restaurantID)).Render(c.Request().Context(), c.Response())
+	return h.renderAdminDashboard(c, menuData, restaurantID)
 }
 
 // GenerateQR handles GET /admin/qr

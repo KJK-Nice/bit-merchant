@@ -333,6 +333,24 @@ func (h *AuthHandler) FinishLogin(c echo.Context) error {
 	})
 }
 
+func (h *AuthHandler) restaurantOptionsForMemberships(memberships []*domain.Membership) []templates.RestaurantOption {
+	options := make([]templates.RestaurantOption, 0, len(memberships))
+	for _, membership := range memberships {
+		option := templates.RestaurantOption{
+			RestaurantID: string(membership.RestaurantID),
+			Role:         string(membership.Role),
+			DisplayName:  string(membership.RestaurantID),
+		}
+		if h.restaurantRepo != nil {
+			if rest, restErr := h.restaurantRepo.FindByID(membership.RestaurantID); restErr == nil && rest != nil && rest.Name != "" {
+				option.DisplayName = rest.Name
+			}
+		}
+		options = append(options, option)
+	}
+	return options
+}
+
 func (h *AuthHandler) GetSelectRestaurant(c echo.Context) error {
 	user, ok := getAuthenticatedUser(c)
 	if !ok || user == nil {
@@ -349,22 +367,40 @@ func (h *AuthHandler) GetSelectRestaurant(c echo.Context) error {
 		currentRestaurantID = string(*session.RestaurantID)
 	}
 
-	options := make([]templates.RestaurantOption, 0, len(memberships))
-	for _, membership := range memberships {
-		option := templates.RestaurantOption{
-			RestaurantID: string(membership.RestaurantID),
-			Role:         string(membership.Role),
-			DisplayName:  string(membership.RestaurantID),
-		}
-		if h.restaurantRepo != nil {
-			if rest, restErr := h.restaurantRepo.FindByID(membership.RestaurantID); restErr == nil && rest != nil && rest.Name != "" {
-				option.DisplayName = rest.Name
-			}
-		}
-		options = append(options, option)
+	options := h.restaurantOptionsForMemberships(memberships)
+	return templates.AuthSelectRestaurant(getCSRFToken(c), currentRestaurantID, options).Render(c.Request().Context(), c.Response())
+}
+
+func (h *AuthHandler) GetProfile(c echo.Context) error {
+	user, ok := getAuthenticatedUser(c)
+	if !ok || user == nil {
+		return c.Redirect(http.StatusFound, "/auth/login")
 	}
 
-	return templates.AuthSelectRestaurant(getCSRFToken(c), currentRestaurantID, options).Render(c.Request().Context(), c.Response())
+	memberships, err := h.membershipRepo.FindByUserID(user.ID)
+	if err != nil {
+		h.logger.Error("GetProfile memberships failed", "error", err, "userID", user.ID)
+		return c.String(http.StatusInternalServerError, "failed to load profile")
+	}
+	options := h.restaurantOptionsForMemberships(memberships)
+
+	var activeRID string
+	var label string
+	if rid, rerr := getRestaurantIDFromContext(c); rerr == nil {
+		activeRID = string(rid)
+		label = ActiveRestaurantLabel(c.Request().Context(), rid, h.restaurantRepo)
+	}
+
+	dn, st, ini := LayoutUserStrings(user)
+	return templates.AuthProfilePage(
+		getCSRFToken(c),
+		"/auth/profile",
+		activeRID,
+		label,
+		dn, st, ini,
+		user,
+		options,
+	).Render(c.Request().Context(), c.Response())
 }
 
 func (h *AuthHandler) PostSelectRestaurant(c echo.Context) error {

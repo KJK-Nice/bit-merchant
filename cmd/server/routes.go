@@ -70,6 +70,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo domain.
 
 	authSelectionGroup := e.Group("/auth")
 	authSelectionGroup.Use(middleware.RequireAuth())
+	authSelectionGroup.GET("/profile", handlers.Auth.GetProfile)
 	authSelectionGroup.GET("/select-restaurant", handlers.Auth.GetSelectRestaurant)
 	authSelectionGroup.POST("/select-restaurant", handlers.Auth.PostSelectRestaurant)
 

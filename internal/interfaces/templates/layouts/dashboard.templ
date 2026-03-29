@@ -6,11 +6,13 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
+	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 )
 
-templ Dashboard(title string, currentPath string, currentRestaurantID string) {
+templ Dashboard(title string, currentPath string, currentRestaurantID string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, csrfToken string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -71,8 +73,13 @@ templ Dashboard(title string, currentPath string, currentRestaurantID string) {
 			@dropdown.Script()
 			@avatar.Script()
 			@popover.Script()
+			@label.Script()
+			@textarea.Script()
 		</head>
 		<body class="bg-background text-foreground antialiased min-h-screen">
+			<form id="layout-logout-form" method="post" action="/auth/logout" class="hidden">
+				<input type="hidden" name="csrf" value={ csrfToken }/>
+			</form>
 			@sidebar.Layout() {
 				@sidebar.Sidebar(sidebar.Props{
 					Collapsible: sidebar.CollapsibleIcon,
@@ -158,15 +165,15 @@ templ Dashboard(title string, currentPath string, currentRestaurantID string) {
 											@avatar.Avatar(avatar.Props{Class: "size-8 rounded-lg"}) {
 												@avatar.Image(avatar.ImageProps{
 													Src: "",
-													Alt: "John Doe avatar",
+													Alt: userDisplayName + " avatar",
 												})
 												@avatar.Fallback() {
-													JD
+													{ userInitials }
 												}
 											}
 											<div class="grid flex-1 text-left text-sm leading-tight">
-												<span class="truncate font-medium">John Doe</span>
-												<span class="truncate text-xs">john@example.com</span>
+												<span class="truncate font-medium">{ userDisplayName }</span>
+												<span class="truncate text-xs text-muted-foreground">{ userSubtitle }</span>
 											</div>
 											@icon.ChevronsUpDown(icon.Props{Class: "ml-auto size-4"})
 										}
@@ -176,23 +183,24 @@ templ Dashboard(title string, currentPath string, currentRestaurantID string) {
 										Placement: dropdown.PlacementTopStart,
 									}) {
 										@dropdown.Label() {
-											John Doe
+											{ userDisplayName }
 										}
 										@dropdown.Separator()
-										@dropdown.Item() {
+										@dropdown.Item(dropdown.ItemProps{
+											Href: "/auth/profile",
+										}) {
 											<span class="flex items-center">
 												@icon.User(icon.Props{Size: 16, Class: "mr-2"})
 												Profile
 											</span>
 										}
-										@dropdown.Item() {
-											<span class="flex items-center">
-												@icon.Settings(icon.Props{Size: 16, Class: "mr-2"})
-												Settings
-											</span>
-										}
 										@dropdown.Separator()
-										@dropdown.Item() {
+										@dropdown.Item(dropdown.ItemProps{
+											Attributes: templ.Attributes{
+												"form": "layout-logout-form",
+												"type": "submit",
+											},
+										}) {
 											<span class="flex items-center">
 												@icon.LogOut(icon.Props{Size: 16, Class: "mr-2"})
 												Log out
@@ -210,9 +218,14 @@ templ Dashboard(title string, currentPath string, currentRestaurantID string) {
 							@sidebar.Trigger(sidebar.TriggerProps{Class: "-ml-1"})
 						</div>
 						<div class="font-medium">{ title }</div>
-						<div class="ml-auto flex items-center gap-3 text-sm">
-							if currentRestaurantID != "" {
-								<span class="text-muted-foreground">Active: { currentRestaurantID }</span>
+						<div class="ml-auto flex flex-col items-end gap-0.5 text-sm md:flex-row md:items-center md:gap-3">
+							if activeRestaurantLabel != "" {
+								<div class="flex flex-col items-end md:flex-row md:items-center md:gap-2">
+									<span class="text-muted-foreground">Active: { activeRestaurantLabel }</span>
+									if currentRestaurantID != "" && activeRestaurantLabel != currentRestaurantID {
+										<span class="text-xs text-muted-foreground hidden md:inline">{ currentRestaurantID }</span>
+									}
+								</div>
 							}
 							<a href="/auth/select-restaurant" class="underline">Switch restaurant</a>
 						</div>
