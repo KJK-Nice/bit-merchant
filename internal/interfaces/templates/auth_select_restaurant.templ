@@ -6,12 +6,6 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
 )
 
-type RestaurantOption struct {
-	RestaurantID string
-	DisplayName  string
-	Role         string
-}
-
 templ AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options []RestaurantOption) {
 	@Layout("Select Restaurant - BitMerchant") {
 		<div class="max-w-xl mx-auto mt-8">

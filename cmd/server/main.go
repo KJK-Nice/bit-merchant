@@ -99,10 +99,10 @@ func main() {
 	menuHandler := handler.NewMenuHandler(getMenuUC, cartService)
 	cartHandler := handler.NewCartHandler(cartService, repos.MenuItem)
 	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, getCustomerOrdersUC, cartService)
-	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, repos.Restaurant)
-	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuUC, uploadPhotoUC, generateQRUC)
+	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, repos.Restaurant, repos.Membership)
+	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuUC, uploadPhotoUC, generateQRUC, repos.Membership, repos.Restaurant)
 	ownerHandler := handler.NewOwnerHandler(createRestUC)
-	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, repos.Restaurant)
+	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, repos.Restaurant, repos.Membership, logger.Logger)
 	authHandler := handler.NewAuthHandler(webauthnSvc, repos.User, repos.Membership, repos.Invitation, repos.Session, repos.Restaurant, createRestUC, logger.Logger, sessionOpts)
 
 	setupEventSubscriptions(eventBus, logger, sseHandler, repos.Order)

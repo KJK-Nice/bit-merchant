@@ -16,6 +16,7 @@ type KitchenHandler struct {
 	markPreparingUC  *kitchen.MarkOrderPreparingUseCase
 	markReadyUC      *kitchen.MarkOrderReadyUseCase
 	restaurantRepo   domain.RestaurantRepository
+	membershipRepo   domain.MembershipRepository
 }
 
 func NewKitchenHandler(
@@ -24,6 +25,7 @@ func NewKitchenHandler(
 	markPreparingUC *kitchen.MarkOrderPreparingUseCase,
 	markReadyUC *kitchen.MarkOrderReadyUseCase,
 	restaurantRepo domain.RestaurantRepository,
+	membershipRepo domain.MembershipRepository,
 ) *KitchenHandler {
 	return &KitchenHandler{
 		getOrdersUC:     getOrdersUC,
@@ -31,6 +33,7 @@ func NewKitchenHandler(
 		markPreparingUC: markPreparingUC,
 		markReadyUC:     markReadyUC,
 		restaurantRepo:  restaurantRepo,
+		membershipRepo:  membershipRepo,
 	}
 }
 
@@ -45,7 +48,11 @@ func (h *KitchenHandler) GetKitchen(c echo.Context) error {
 	}
 	dn, st, ini := LayoutUserStringsFromContext(c)
 	label := ActiveRestaurantLabel(c.Request().Context(), restaurantID, h.restaurantRepo)
-	return templates.KitchenPage(orders, getCSRFToken(c), string(restaurantID), label, dn, st, ini).Render(c.Request().Context(), c.Response())
+	switchOpts, activeRole, canCreate, sErr := RestaurantSwitcherData(c, h.membershipRepo, h.restaurantRepo)
+	if sErr != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load navigation")
+	}
+	return templates.KitchenPage(orders, getCSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate).Render(c.Request().Context(), c.Response())
 }
 
 func (h *KitchenHandler) MarkPaid(c echo.Context) error {

@@ -1,11 +1,13 @@
 package http
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -333,22 +335,8 @@ func (h *AuthHandler) FinishLogin(c echo.Context) error {
 	})
 }
 
-func (h *AuthHandler) restaurantOptionsForMemberships(memberships []*domain.Membership) []templates.RestaurantOption {
-	options := make([]templates.RestaurantOption, 0, len(memberships))
-	for _, membership := range memberships {
-		option := templates.RestaurantOption{
-			RestaurantID: string(membership.RestaurantID),
-			Role:         string(membership.Role),
-			DisplayName:  string(membership.RestaurantID),
-		}
-		if h.restaurantRepo != nil {
-			if rest, restErr := h.restaurantRepo.FindByID(membership.RestaurantID); restErr == nil && rest != nil && rest.Name != "" {
-				option.DisplayName = rest.Name
-			}
-		}
-		options = append(options, option)
-	}
-	return options
+func (h *AuthHandler) restaurantOptionsForMemberships(ctx context.Context, memberships []*domain.Membership) []templates.RestaurantOption {
+	return RestaurantSwitchOptionsFromMemberships(ctx, memberships, h.restaurantRepo)
 }
 
 func (h *AuthHandler) GetSelectRestaurant(c echo.Context) error {
@@ -367,7 +355,7 @@ func (h *AuthHandler) GetSelectRestaurant(c echo.Context) error {
 		currentRestaurantID = string(*session.RestaurantID)
 	}
 
-	options := h.restaurantOptionsForMemberships(memberships)
+	options := h.restaurantOptionsForMemberships(c.Request().Context(), memberships)
 	return templates.AuthSelectRestaurant(getCSRFToken(c), currentRestaurantID, options).Render(c.Request().Context(), c.Response())
 }
 
@@ -382,25 +370,136 @@ func (h *AuthHandler) GetProfile(c echo.Context) error {
 		h.logger.Error("GetProfile memberships failed", "error", err, "userID", user.ID)
 		return c.String(http.StatusInternalServerError, "failed to load profile")
 	}
-	options := h.restaurantOptionsForMemberships(memberships)
-
+	opts := RestaurantSwitchOptionsFromMemberships(c.Request().Context(), memberships, h.restaurantRepo)
 	var activeRID string
 	var label string
+	var activeRole string
 	if rid, rerr := getRestaurantIDFromContext(c); rerr == nil {
 		activeRID = string(rid)
 		label = ActiveRestaurantLabel(c.Request().Context(), rid, h.restaurantRepo)
+		activeRole = ActiveRestaurantRoleForMemberships(activeRID, memberships)
 	}
+
+	canCreateRestaurant := activeRole == string(domain.RoleOwner)
 
 	dn, st, ini := LayoutUserStrings(user)
 	return templates.AuthProfilePage(
 		getCSRFToken(c),
 		"/auth/profile",
-		activeRID,
 		label,
 		dn, st, ini,
 		user,
-		options,
+		opts,
+		activeRole,
+		canCreateRestaurant,
 	).Render(c.Request().Context(), c.Response())
+}
+
+func (h *AuthHandler) GetNewRestaurant(c echo.Context) error {
+	user, ok := getAuthenticatedUser(c)
+	if !ok || user == nil {
+		return c.Redirect(http.StatusFound, "/auth/login")
+	}
+
+	restaurantID, err := getRestaurantIDFromContext(c)
+	if err != nil {
+		return c.String(http.StatusForbidden, "restaurant context required")
+	}
+
+	membership, err := h.membershipRepo.FindByUserAndRestaurant(user.ID, restaurantID)
+	if err != nil || membership == nil || membership.Role != domain.RoleOwner {
+		return c.String(http.StatusForbidden, "only owners can create restaurants")
+	}
+
+	memberships, err := h.membershipRepo.FindByUserID(user.ID)
+	if err != nil {
+		h.logger.Error("GetNewRestaurant memberships failed", "error", err, "userID", user.ID)
+		return c.String(http.StatusInternalServerError, "failed to load profile")
+	}
+	opts := RestaurantSwitchOptionsFromMemberships(c.Request().Context(), memberships, h.restaurantRepo)
+	activeRole := ActiveRestaurantRoleForMemberships(string(restaurantID), memberships)
+	canCreateRestaurant := activeRole == string(domain.RoleOwner)
+
+	dn, st, ini := LayoutUserStrings(user)
+	label := ActiveRestaurantLabel(c.Request().Context(), restaurantID, h.restaurantRepo)
+	return templates.AuthNewRestaurantPage(
+		getCSRFToken(c),
+		"/auth/restaurants/new",
+		label,
+		dn, st, ini,
+		opts,
+		activeRole,
+		canCreateRestaurant,
+	).Render(c.Request().Context(), c.Response())
+}
+
+func (h *AuthHandler) PostNewRestaurant(c echo.Context) error {
+	user, ok := getAuthenticatedUser(c)
+	if !ok || user == nil {
+		return c.String(http.StatusUnauthorized, "unauthorized")
+	}
+
+	restaurantID, err := getRestaurantIDFromContext(c)
+	if err != nil {
+		return c.String(http.StatusForbidden, "restaurant context required")
+	}
+
+	membership, err := h.membershipRepo.FindByUserAndRestaurant(user.ID, restaurantID)
+	if err != nil || membership == nil || membership.Role != domain.RoleOwner {
+		return c.String(http.StatusForbidden, "only owners can create restaurants")
+	}
+	if h.createRestaurant == nil {
+		return c.String(http.StatusInternalServerError, "restaurant creation unavailable")
+	}
+
+	name := strings.TrimSpace(c.FormValue("name"))
+	if name == "" {
+		return c.String(http.StatusBadRequest, "restaurant name is required")
+	}
+
+	rest, err := h.createRestaurant.Execute(c.Request().Context(), restaurant.CreateRestaurantRequest{Name: name})
+	if err != nil {
+		h.logger.Error("PostNewRestaurant create failed", "error", err, "userID", user.ID)
+		return c.String(http.StatusInternalServerError, "failed to create restaurant")
+	}
+
+	newMembership, memErr := domain.NewMembership(
+		domain.MembershipID(uuid.NewString()),
+		user.ID,
+		rest.ID,
+		domain.RoleOwner,
+	)
+	if memErr != nil {
+		return c.String(http.StatusBadRequest, memErr.Error())
+	}
+	if memErr = h.membershipRepo.Save(newMembership); memErr != nil {
+		h.logger.Error("PostNewRestaurant save membership failed", "error", memErr, "userID", user.ID, "restaurantID", rest.ID)
+		return c.String(http.StatusInternalServerError, "failed to save membership")
+	}
+
+	sessionID, _ := c.Get("sessionID").(string)
+	if sessionID == "" {
+		return c.String(http.StatusUnauthorized, "session not found")
+	}
+	session, sessErr := h.sessionRepo.Get(sessionID)
+	if sessErr != nil || session == nil {
+		session = &domain.Session{
+			ID:        sessionID,
+			CreatedAt: time.Now(),
+		}
+	}
+	session.UserID = &user.ID
+	rid := rest.ID
+	session.RestaurantID = &rid
+	session.ExpiresAt = time.Now().Add(h.sessionOpts.WithDefaults().TTL)
+	if err := h.sessionRepo.Save(session); err != nil {
+		h.logger.Error("PostNewRestaurant save session failed", "error", err, "userID", user.ID)
+		return c.String(http.StatusInternalServerError, "failed to save session")
+	}
+
+	setAuthenticatedContext(c, user, session)
+	h.logger.Info("Restaurant created", "userID", user.ID, "restaurantID", rest.ID)
+	return c.Redirect(http.StatusFound, "/dashboard")
 }
 
 func (h *AuthHandler) PostSelectRestaurant(c echo.Context) error {

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log/slog"
 	"net/http"
 
 	"bitmerchant/internal/application/dashboard"
@@ -12,11 +13,13 @@ import (
 )
 
 type DashboardHandler struct {
-	getStatsUC    *dashboard.GetDashboardStatsUseCase
-	getHistoryUC  *dashboard.GetOrderHistoryUseCase
-	getTopItemsUC *dashboard.GetTopSellingItemsUseCase
-	toggleOpenUC  *restaurant.ToggleRestaurantOpenUseCase
+	getStatsUC     *dashboard.GetDashboardStatsUseCase
+	getHistoryUC   *dashboard.GetOrderHistoryUseCase
+	getTopItemsUC  *dashboard.GetTopSellingItemsUseCase
+	toggleOpenUC   *restaurant.ToggleRestaurantOpenUseCase
 	restaurantRepo domain.RestaurantRepository
+	membershipRepo domain.MembershipRepository
+	logger         *slog.Logger
 }
 
 func NewDashboardHandler(
@@ -25,13 +28,20 @@ func NewDashboardHandler(
 	getTopItemsUC *dashboard.GetTopSellingItemsUseCase,
 	toggleOpenUC *restaurant.ToggleRestaurantOpenUseCase,
 	restaurantRepo domain.RestaurantRepository,
+	membershipRepo domain.MembershipRepository,
+	logger *slog.Logger,
 ) *DashboardHandler {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &DashboardHandler{
 		getStatsUC:     getStatsUC,
 		getHistoryUC:   getHistoryUC,
 		getTopItemsUC:  getTopItemsUC,
 		toggleOpenUC:   toggleOpenUC,
 		restaurantRepo: restaurantRepo,
+		membershipRepo: membershipRepo,
+		logger:         logger,
 	}
 }
 
@@ -65,7 +75,12 @@ func (h *DashboardHandler) Dashboard(c echo.Context) error {
 
 	dn, st, ini := LayoutUserStringsFromContext(c)
 	label := ActiveRestaurantLabel(c.Request().Context(), restaurantID, h.restaurantRepo)
-	return templates.DashboardPage(stats, history, topItems, getCSRFToken(c), string(restaurantID), label, dn, st, ini).Render(c.Request().Context(), c.Response())
+	switchOpts, activeRole, canCreate, sErr := RestaurantSwitcherData(c, h.membershipRepo, h.restaurantRepo)
+	if sErr != nil {
+		h.logger.Error("Dashboard switcher data failed", "error", sErr)
+		return c.String(http.StatusInternalServerError, "Failed to load navigation")
+	}
+	return templates.DashboardPage(stats, history, topItems, getCSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate).Render(c.Request().Context(), c.Response())
 }
 
 func (h *DashboardHandler) ToggleOpen(c echo.Context) error {

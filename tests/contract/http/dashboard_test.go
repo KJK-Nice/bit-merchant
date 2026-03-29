@@ -1,6 +1,7 @@
 package http_test
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -40,7 +41,7 @@ func TestDashboardHandler(t *testing.T) {
 	getTopItemsUC := dashboard.NewGetTopSellingItemsUseCase(orderRepo)
 	toggleOpenUC := restaurant.NewToggleRestaurantOpenUseCase(restaurantRepo)
 
-	h := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, nil)
+	h := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, restaurantRepo, nil, slog.Default())
 
 	e := echo.New()
 

@@ -11,8 +11,8 @@ import (
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem, csrfToken string, activeRestaurantID string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string) {
-	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantID, activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken) {
+templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
+	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div class="space-y-8 mt-4">
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 				@card.Card() {

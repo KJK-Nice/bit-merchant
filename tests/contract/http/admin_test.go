@@ -77,6 +77,7 @@ func TestAdminEndpoints(t *testing.T) {
 	getMenuUC := menu.NewGetMenuUseCase(repoCat, repoItem, repoRest)
 
 	// Initialize Handler (Does not exist yet)
+	membershipRepo := memory.NewMemoryMembershipRepository()
 	adminHandler := handler.NewAdminHandler(
 		createRestUC,
 		createCatUC,
@@ -84,6 +85,8 @@ func TestAdminEndpoints(t *testing.T) {
 		getMenuUC,
 		nil, // uploadPhotoUC
 		nil, // generateQRUC
+		membershipRepo,
+		repoRest,
 	)
 
 	// Seed a restaurant for the dashboard context

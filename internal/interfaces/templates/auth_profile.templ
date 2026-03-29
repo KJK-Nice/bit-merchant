@@ -8,8 +8,8 @@ import (
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-templ AuthProfilePage(csrfToken string, currentPath string, activeRestaurantID string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, user *domain.User, memberships []RestaurantOption) {
-	@layouts.Dashboard("Profile", currentPath, activeRestaurantID, activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken) {
+templ AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, user *domain.User, memberships []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
+	@layouts.Dashboard("Profile", currentPath, activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, memberships, activeRestaurantRole, canCreateRestaurant) {
 		<div class="space-y-8 mt-4 max-w-2xl">
 			<div>
 				<h1 class="text-2xl font-bold tracking-tight">Account</h1>

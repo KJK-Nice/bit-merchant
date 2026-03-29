@@ -1,6 +1,8 @@
 package layouts
 
 import (
+	"strconv"
+
 	"bitmerchant/internal/interfaces/templates/components/ui/avatar"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
@@ -12,7 +14,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 )
 
-templ Dashboard(title string, currentPath string, currentRestaurantID string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, csrfToken string) {
+templ Dashboard(title string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, csrfToken string, switcherOptions []RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -80,6 +82,14 @@ templ Dashboard(title string, currentPath string, currentRestaurantID string, ac
 			<form id="layout-logout-form" method="post" action="/auth/logout" class="hidden">
 				<input type="hidden" name="csrf" value={ csrfToken }/>
 			</form>
+			if len(switcherOptions) >= 2 {
+				for i, opt := range switcherOptions {
+					<form id={ "sidebar-switch-" + strconv.Itoa(i) } method="post" action="/auth/select-restaurant" class="hidden">
+						<input type="hidden" name="csrf" value={ csrfToken }/>
+						<input type="hidden" name="restaurantID" value={ opt.RestaurantID }/>
+					</form>
+				}
+			}
 			@sidebar.Layout() {
 				@sidebar.Sidebar(sidebar.Props{
 					Collapsible: sidebar.CollapsibleIcon,
@@ -88,11 +98,72 @@ templ Dashboard(title string, currentPath string, currentRestaurantID string, ac
 					@sidebar.Header() {
 						@sidebar.Menu() {
 							@sidebar.MenuItem() {
-								@sidebar.MenuButton(sidebar.MenuButtonProps{
-									Href: "/dashboard",
-								}) {
-									@icon.Store(icon.Props{Class: "size-6"})
-									<span class="font-semibold">BitMerchant</span>
+								@dropdown.Dropdown() {
+									@dropdown.Trigger() {
+										@sidebar.MenuButton(sidebar.MenuButtonProps{
+											Tooltip: "Restaurant menu",
+										}) {
+											@icon.Store(icon.Props{Class: "size-6 shrink-0"})
+											<div class="grid flex-1 text-left text-sm leading-tight">
+												<span class="truncate font-semibold">
+													if activeRestaurantLabel != "" {
+														{ activeRestaurantLabel }
+													} else {
+														Restaurant
+													}
+												</span>
+												if activeRestaurantRole != "" {
+													<span class="truncate text-xs text-muted-foreground capitalize">{ activeRestaurantRole }</span>
+												}
+											</div>
+											@icon.ChevronsUpDown(icon.Props{Class: "ml-auto size-4"})
+										}
+									}
+									@dropdown.Content(dropdown.ContentProps{
+										Class:     "w-64",
+										Placement: dropdown.PlacementBottomStart,
+									}) {
+										@dropdown.Label() {
+											Restaurants
+										}
+										if len(switcherOptions) >= 2 {
+											for i, opt := range switcherOptions {
+												@dropdown.Item(dropdown.ItemProps{
+													Attributes: templ.Attributes{
+														"form": "sidebar-switch-" + strconv.Itoa(i),
+														"type": "submit",
+													},
+												}) {
+													<span class="flex flex-col items-start gap-0.5">
+														<span class="font-medium">{ opt.DisplayName }</span>
+														<span class="text-xs text-muted-foreground capitalize">{ opt.Role }</span>
+													</span>
+												}
+											}
+										}
+										if canCreateRestaurant {
+											if len(switcherOptions) >= 2 {
+												@dropdown.Separator()
+											}
+											@dropdown.Item(dropdown.ItemProps{
+												Href: "/auth/restaurants/new",
+											}) {
+												<span class="flex items-center">
+													@icon.CirclePlus(icon.Props{Size: 16, Class: "mr-2"})
+													New restaurant
+												</span>
+											}
+										}
+										@dropdown.Separator()
+										@dropdown.Item(dropdown.ItemProps{
+											Href: "/auth/select-restaurant",
+										}) {
+											<span class="flex items-center">
+												@icon.Settings(icon.Props{Size: 16, Class: "mr-2"})
+												Manage restaurants
+											</span>
+										}
+									}
 								}
 							}
 						}
@@ -218,17 +289,6 @@ templ Dashboard(title string, currentPath string, currentRestaurantID string, ac
 							@sidebar.Trigger(sidebar.TriggerProps{Class: "-ml-1"})
 						</div>
 						<div class="font-medium">{ title }</div>
-						<div class="ml-auto flex flex-col items-end gap-0.5 text-sm md:flex-row md:items-center md:gap-3">
-							if activeRestaurantLabel != "" {
-								<div class="flex flex-col items-end md:flex-row md:items-center md:gap-2">
-									<span class="text-muted-foreground">Active: { activeRestaurantLabel }</span>
-									if currentRestaurantID != "" && activeRestaurantLabel != currentRestaurantID {
-										<span class="text-xs text-muted-foreground hidden md:inline">{ currentRestaurantID }</span>
-									}
-								</div>
-							}
-							<a href="/auth/select-restaurant" class="underline">Switch restaurant</a>
-						</div>
 					</header>
 					<div class="flex-1 flex flex-col p-4 pt-0 pb-24 md:pb-4 overflow-y-auto">
 						{ children... }

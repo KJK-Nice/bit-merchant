@@ -23,7 +23,11 @@ func (h *AdminHandler) renderAdminDashboard(c echo.Context, menuData *menu.MenuR
 		activeLabel = menuData.Restaurant.Name
 	}
 	dn, st, ini := LayoutUserStringsFromContext(c)
-	return admin.Dashboard(menuData, getCSRFToken(c), string(restaurantID), activeLabel, dn, st, ini).Render(c.Request().Context(), c.Response())
+	switchOpts, activeRole, canCreate, sErr := RestaurantSwitcherData(c, h.membershipRepo, h.restaurantRepo)
+	if sErr != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load navigation")
+	}
+	return admin.Dashboard(menuData, getCSRFToken(c), activeLabel, dn, st, ini, switchOpts, activeRole, canCreate).Render(c.Request().Context(), c.Response())
 }
 
 type AdminHandler struct {
@@ -33,6 +37,8 @@ type AdminHandler struct {
 	getMenuUC          *menu.GetMenuUseCase
 	uploadPhotoUC      *menu.UploadPhotoUseCase
 	generateQRUC       *restaurant.GenerateRestaurantQRUseCase
+	membershipRepo     domain.MembershipRepository
+	restaurantRepo     domain.RestaurantRepository
 }
 
 func NewAdminHandler(
@@ -42,6 +48,8 @@ func NewAdminHandler(
 	getMenuUC *menu.GetMenuUseCase,
 	uploadPhotoUC *menu.UploadPhotoUseCase,
 	generateQRUC *restaurant.GenerateRestaurantQRUseCase,
+	membershipRepo domain.MembershipRepository,
+	restaurantRepo domain.RestaurantRepository,
 ) *AdminHandler {
 	return &AdminHandler{
 		createRestaurantUC: createRestaurantUC,
@@ -50,6 +58,8 @@ func NewAdminHandler(
 		getMenuUC:          getMenuUC,
 		uploadPhotoUC:      uploadPhotoUC,
 		generateQRUC:       generateQRUC,
+		membershipRepo:     membershipRepo,
+		restaurantRepo:     restaurantRepo,
 	}
 }
 
