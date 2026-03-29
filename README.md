@@ -49,12 +49,27 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
    ```
 3. Open http://localhost:8080
 
+### Environment variables
+
+Configuration is loaded from the process environment in [`cmd/server/config.go`](cmd/server/config.go). Copy [`.env.example`](.env.example) as reference; the Go binary does not load `.env` files automatically—use your shell, a tool like `direnv`, or Docker Compose.
+
+| Variable | Required | Default | Purpose |
+|----------|----------|---------|---------|
+| `PORT` | No | `8080` | HTTP listen port. |
+| `BASE_URL` | No | `http://localhost:8080` | Public site URL (scheme + host [+ port]). Used for WebAuthn RP ID (hostname), absolute menu URLs in QR codes, and secure-cookie heuristics. Set correctly in every deployed environment. |
+| `COOKIE_SECURE` | No | (off) | If `true`, session cookies are marked `Secure` (use behind HTTPS). |
+| `DATABASE_URL` | No | *(empty)* | Postgres connection string. If unset, the app uses **in-memory** repositories only (no persistence). If set, **Goose migrations run automatically on startup** after the DB is reachable. |
+| `S3_BUCKET_NAME` | No | *(empty)* | S3 bucket for menu item photos. If missing (with `AWS_REGION`), photo uploads are effectively disabled. |
+| `AWS_REGION` | No | *(empty)* | AWS region for S3. |
+
+For S3, the AWS SDK uses its normal credential chain (e.g. `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`, shared config, or instance role). Those keys are **not** defined in `config.go` but are standard for local and cloud setups.
+
 ### Optional PostgreSQL persistence
 
-If `DATABASE_URL` is set, all repositories use PostgreSQL and Goose migrations run on startup:
+If `DATABASE_URL` is set, all repositories use PostgreSQL and Goose migrations run on startup (see [`cmd/server/database.go`](cmd/server/database.go)):
 
 - auth: users, memberships, invitations, sessions
-- core: restaurants, menu categories, menu items, orders, order items, payments
+- core: restaurants, menu categories, menu items, orders, order items, payments, session restaurant visits
 
 Example:
 
@@ -64,6 +79,16 @@ go run cmd/server/main.go
 ```
 
 Goose migration files live under `internal/infrastructure/migrations/sql/`.
+
+### Docker Compose
+
+[`docker-compose.yml`](docker-compose.yml) loads **[`.env.docker`](.env.docker)** for the `app` and `postgres` containers (database URL uses host `postgres`, not `localhost`). Run:
+
+```bash
+docker compose up --build
+```
+
+Adjust `.env.docker` for passwords, `BASE_URL` if you expose the app on another host, or optional S3 variables. If you change `POSTGRES_*`, update the Postgres `healthcheck` in `docker-compose.yml` to use the same user and database name.
 
 ### Multi-restaurant context switcher
 
