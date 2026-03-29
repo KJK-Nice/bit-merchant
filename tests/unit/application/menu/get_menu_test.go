@@ -2,6 +2,7 @@ package menu_test
 
 import (
 	"context"
+	"io"
 	"testing"
 
 	"bitmerchant/internal/application/menu"
@@ -12,11 +13,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type fakePhotoStorage struct{}
+
+func (fakePhotoStorage) Upload(context.Context, string, io.Reader, string) (string, error) {
+	panic("unused")
+}
+
+func (fakePhotoStorage) Delete(context.Context, string) error { return nil }
+
+func (fakePhotoStorage) PresignGet(_ context.Context, key string) (string, error) {
+	return "https://signed.example/" + key, nil
+}
+
 func TestGetMenuUseCase(t *testing.T) {
 	catRepo := memory.NewMemoryMenuCategoryRepository()
 	itemRepo := memory.NewMemoryMenuItemRepository()
 	restRepo := memory.NewMemoryRestaurantRepository()
-	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo)
+	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menu.PhotoSignerConfig{})
 
 	restID := domain.RestaurantID("r1")
 	restaurant, _ := domain.NewRestaurant(restID, "Test Restaurant")
@@ -48,5 +61,27 @@ func TestGetMenuUseCase(t *testing.T) {
 		// Spec implies displaying menu organized by categories.
 		// Let's assume DTO structure for now or check implementation plan.
 		// Implementation plan says: "returns restaurant menu with categories and items"
+	})
+
+	t.Run("presigned_photo_urls", func(t *testing.T) {
+		ucPhoto := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo, fakePhotoStorage{}, menu.PhotoSignerConfig{
+			Bucket: "mybucket",
+		})
+		itemPhoto, _ := domain.NewMenuItem("iphoto", "c1", restID, "With Pix", 10.0)
+		itemPhoto.SetPhotoURLs("restaurants/r1/items/x.jpg", "restaurants/r1/items/x.jpg")
+		require.NoError(t, itemRepo.Save(itemPhoto))
+
+		result, err := ucPhoto.Execute(context.Background(), restID)
+		require.NoError(t, err)
+		var found bool
+		for _, c := range result.Categories {
+			for _, it := range c.Items {
+				if it.ID == itemPhoto.ID {
+					found = true
+					assert.Equal(t, "https://signed.example/restaurants/r1/items/x.jpg", it.PhotoURL)
+				}
+			}
+		}
+		assert.True(t, found)
 	})
 }

@@ -65,7 +65,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	markPaidUC := kitchen.NewMarkOrderPaidUseCase(orderRepo, eventBus)
 	markPreparingUC := kitchen.NewMarkOrderPreparingUseCase(orderRepo, eventBus)
 	markReadyUC := kitchen.NewMarkOrderReadyUseCase(orderRepo, eventBus)
-	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo)
+	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo, nil, menu.PhotoSignerConfig{})
 
 	// Handlers
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)

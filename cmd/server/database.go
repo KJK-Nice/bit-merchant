@@ -19,12 +19,17 @@ func initPhotoStorage(cfg serverConfig, logger *logging.Logger) (domain.PhotoSto
 		return nil, nil
 	}
 
+	expires := time.Duration(cfg.S3PresignGetExpiresSec) * time.Second
+	if cfg.S3PresignGetExpiresSec <= 0 {
+		expires = time.Hour
+	}
+
 	photoStorage, err := s3Storage.NewS3Storage(context.Background(), s3Storage.Config{
-		Bucket:        cfg.S3BucketName,
-		Region:        cfg.AWSRegion,
-		Endpoint:      cfg.S3Endpoint,
-		UsePathStyle:  cfg.S3UsePathStyle,
-		PublicBaseURL: cfg.S3PublicBaseURL,
+		Bucket:            cfg.S3BucketName,
+		Region:            cfg.AWSRegion,
+		Endpoint:          cfg.S3Endpoint,
+		UsePathStyle:      cfg.S3UsePathStyle,
+		PresignGetExpires: expires,
 	})
 	if err != nil {
 		return nil, err

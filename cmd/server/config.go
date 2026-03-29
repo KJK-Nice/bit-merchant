@@ -3,6 +3,7 @@ package main
 import (
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -15,9 +16,10 @@ type serverConfig struct {
 	S3BucketName      string
 	AWSRegion         string
 	// S3-compatible API (optional; non-AWS providers)
-	S3Endpoint       string
-	S3UsePathStyle   bool
-	S3PublicBaseURL  string
+	S3Endpoint             string
+	S3UsePathStyle         bool
+	S3PublicBaseURL        string
+	S3PresignGetExpiresSec int // unset/0 → 1-hour presign TTL (initPhotoStorage)
 }
 
 func loadConfig() (serverConfig, error) {
@@ -39,6 +41,12 @@ func loadConfig() (serverConfig, error) {
 	default:
 		// Path-style is the safe default for most S3-compatible endpoints (MinIO, many gateways).
 		cfg.S3UsePathStyle = cfg.S3Endpoint != ""
+	}
+
+	if v := strings.TrimSpace(os.Getenv("S3_PRESIGN_GET_EXPIRES")); v != "" {
+		if sec, err := strconv.Atoi(v); err == nil && sec > 0 {
+			cfg.S3PresignGetExpiresSec = sec
+		}
 	}
 
 	if cfg.Port == "" {

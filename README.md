@@ -63,9 +63,12 @@ Configuration is loaded from the process environment in [`cmd/server/config.go`]
 | `AWS_REGION` | No | *(empty)* | AWS region for S3. Use `auto` for some S3-compatible providers (e.g. Cloudflare R2). |
 | `S3_ENDPOINT` | No | *(empty)* | Custom S3 API base URL for **non-AWS** storage (MinIO, **Cloudflare R2**, Wasabi, etc.). Example R2: `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`. Omit for real AWS S3. |
 | `S3_USE_PATH_STYLE` | No | `true` when `S3_ENDPOINT` is set, else path-style off for AWS | Path-style URLs (`endpoint/bucket/key`) vs virtual-hosted. Many compat servers need `true`. Set `false` explicitly if your provider requires virtual-hosted style. |
-| `S3_PUBLIC_BASE_URL` | No | *(empty)* | Public base URL stored with menu items after upload (what the browser loads). Use your **R2 public bucket URL**, **custom domain**, or CDN origin—**not** always the same as `S3_ENDPOINT`. If unset with a custom endpoint, URLs default to `S3_ENDPOINT/bucket/key` (path-style), which may not be publicly readable until you expose that path or set this to a public hostname. |
+| `S3_PUBLIC_BASE_URL` | No | *(empty)* | Optional. Used to derive the **object key** from **legacy** menu rows that still store a full public URL (before keys-only storage). Not required for new uploads. |
+| `S3_PRESIGN_GET_EXPIRES` | No | `3600` | Seconds until each **presigned GET** URL for menu photos expires (private buckets). Use a larger value if customers keep the menu open longer than an hour. |
 
 For S3, the AWS SDK uses its normal credential chain (e.g. `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`, shared config, or instance role). Those keys are **not** defined in `config.go` but are standard for local and cloud setups.
+
+**Private buckets:** uploads use `PutObject` with credentials; the database stores the **object key**. The customer menu uses **presigned GET** URLs so browsers can load images without making the bucket public.
 
 ### Optional PostgreSQL persistence
 

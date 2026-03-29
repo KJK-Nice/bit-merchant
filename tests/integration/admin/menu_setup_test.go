@@ -9,24 +9,21 @@ import (
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/application/restaurant"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-// MockPhotoStorage
-type MockPhotoStorage struct {
-	mock.Mock
+type stubPhotoStorage struct{}
+
+func (stubPhotoStorage) Upload(_ context.Context, key string, _ io.Reader, _ string) (string, error) {
+	return key, nil
 }
 
-func (m *MockPhotoStorage) Upload(ctx context.Context, key string, data io.Reader, contentType string) (string, error) {
-	args := m.Called(ctx, key, data, contentType)
-	return args.String(0), args.Error(1)
-}
+func (stubPhotoStorage) Delete(context.Context, string) error { return nil }
 
-func (m *MockPhotoStorage) Delete(ctx context.Context, key string) error {
-	args := m.Called(ctx, key)
-	return args.Error(0)
+func (stubPhotoStorage) PresignGet(_ context.Context, key string) (string, error) {
+	return "https://signed.example/" + key, nil
 }
 
 func TestMenuSetupWorkflow(t *testing.T) {
@@ -34,7 +31,7 @@ func TestMenuSetupWorkflow(t *testing.T) {
 	repoRest := memory.NewMemoryRestaurantRepository()
 	repoCat := memory.NewMemoryMenuCategoryRepository()
 	repoItem := memory.NewMemoryMenuItemRepository()
-	mockStorage := new(MockPhotoStorage)
+	var mockStorage stubPhotoStorage
 
 	createRestUC := restaurant.NewCreateRestaurantUseCase(repoRest)
 	createCatUC := menu.NewCreateMenuCategoryUseCase(repoCat)
@@ -70,9 +67,6 @@ func TestMenuSetupWorkflow(t *testing.T) {
 	require.NotEmpty(t, item.ID)
 
 	// 4. Upload Photo
-	mockStorage.On("Upload", mock.Anything, mock.AnythingOfType("string"), mock.Anything, "image/jpeg").
-		Return("https://s3.aws.com/bucket/photo.jpg", nil)
-
 	photoReq := menu.UploadPhotoRequest{
 		RestaurantID: rest.ID,
 		ItemID:       item.ID,
@@ -81,11 +75,12 @@ func TestMenuSetupWorkflow(t *testing.T) {
 		ContentType:  "image/jpeg",
 	}
 
-	url, err := uploadPhotoUC.Execute(context.Background(), photoReq)
+	storedKey, err := uploadPhotoUC.Execute(context.Background(), photoReq)
 	require.NoError(t, err)
-	assert.Equal(t, "https://s3.aws.com/bucket/photo.jpg", url)
+	assert.Contains(t, storedKey, "restaurants/")
+	assert.Contains(t, storedKey, string(item.ID))
 
-	// Verify Item Updated
+	// Verify Item Updated (object key, not a public URL)
 	updatedItem, _ := repoItem.FindByID(item.ID)
-	assert.Equal(t, "https://s3.aws.com/bucket/photo.jpg", updatedItem.PhotoURL)
+	assert.Equal(t, storedKey, updatedItem.PhotoURL)
 }

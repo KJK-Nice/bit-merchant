@@ -29,7 +29,7 @@ func TestMenuThenMyPlacesListsRestaurant(t *testing.T) {
 	cat, _ := domain.NewMenuCategory("cat-v", "visit-test-r", "All", 0)
 	require.NoError(t, catRepo.Save(cat))
 
-	getMenuUC := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo)
+	getMenuUC := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menu.PhotoSignerConfig{})
 	cartSvc := cart.NewCartService()
 	recordUC := places.NewRecordMenuVisitUseCase(restRepo, visitRepo)
 	menuH := handler.NewMenuHandler(getMenuUC, cartSvc, recordUC)

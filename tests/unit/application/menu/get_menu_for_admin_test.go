@@ -68,7 +68,7 @@ func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *te
 	assert.False(t, names["Soup"])
 
 	// Public menu omits unavailable and empty categories
-	pub := menu.NewGetMenuUseCase(repoCat, repoItem, repoRest)
+	pub := menu.NewGetMenuUseCase(repoCat, repoItem, repoRest, nil, menu.PhotoSignerConfig{})
 	pubResp, err := pub.Execute(ctx, rid)
 	require.NoError(t, err)
 	require.Len(t, pubResp.Categories, 1)

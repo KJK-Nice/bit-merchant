@@ -32,7 +32,7 @@ func TestGetMenu(t *testing.T) {
 
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := places.NewRecordMenuVisitUseCase(restRepo, visitRepo)
-	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo)
+	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menu.PhotoSignerConfig{})
 	h := handler.NewMenuHandler(uc, cartService, recordVisitUC)
 
 	// Setup Echo

@@ -67,7 +67,11 @@ func main() {
 	paymentMethod := cash.NewCashPaymentMethod()
 	sseHandler := handler.NewSSEHandler()
 
-	getMenuUC := menu.NewGetMenuUseCase(repos.MenuCategory, repos.MenuItem, repos.Restaurant)
+	getMenuUC := menu.NewGetMenuUseCase(repos.MenuCategory, repos.MenuItem, repos.Restaurant, photoStorage, menu.PhotoSignerConfig{
+		Bucket:        cfg.S3BucketName,
+		Endpoint:      cfg.S3Endpoint,
+		PublicBaseURL: cfg.S3PublicBaseURL,
+	})
 	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repos.MenuCategory, repos.MenuItem, repos.Restaurant)
 	updateMenuItemUC := menu.NewUpdateMenuItemUseCase(repos.MenuItem, repos.MenuCategory)
 	updateMenuCategoryUC := menu.NewUpdateMenuCategoryUseCase(repos.MenuCategory)
