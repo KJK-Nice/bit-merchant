@@ -17,8 +17,8 @@ COPY . .
 # Generate templ files
 RUN templ generate
 
-# Build the binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o server cmd/server/main.go
+# Build the binary (entire package — not main.go alone, or sibling files are omitted)
+RUN CGO_ENABLED=0 GOOS=linux go build -o server ./cmd/server
 
 # Final stage
 FROM alpine:latest
