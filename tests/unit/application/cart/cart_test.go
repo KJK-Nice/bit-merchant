@@ -7,6 +7,7 @@ import (
 	"bitmerchant/internal/domain"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCartService(t *testing.T) {
@@ -51,7 +52,7 @@ func TestCartService(t *testing.T) {
 	})
 
 	t.Run("ClearCart", func(t *testing.T) {
-		s.AddItem(sessionID, item, 1)
+		require.NoError(t, s.AddItem(sessionID, item, 1))
 		s.ClearCart(sessionID)
 
 		c := s.GetCart(sessionID)

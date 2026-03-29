@@ -22,7 +22,7 @@ func NewCreateRestaurantUseCase(repo domain.RestaurantRepository) *CreateRestaur
 func (uc *CreateRestaurantUseCase) Execute(ctx context.Context, req CreateRestaurantRequest) (*domain.Restaurant, error) {
 	// Generate ID
 	id := domain.RestaurantID(fmt.Sprintf("rest_%d", time.Now().UnixNano()))
-	
+
 	restaurant, err := domain.NewRestaurant(id, req.Name)
 	if err != nil {
 		return nil, err
@@ -34,4 +34,3 @@ func (uc *CreateRestaurantUseCase) Execute(ctx context.Context, req CreateRestau
 
 	return restaurant, nil
 }
-

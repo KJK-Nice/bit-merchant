@@ -60,4 +60,3 @@ func (uc *UploadPhotoUseCase) Execute(ctx context.Context, req UploadPhotoReques
 
 	return url, nil
 }
-

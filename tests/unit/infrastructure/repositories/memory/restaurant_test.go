@@ -7,6 +7,7 @@ import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMemoryRestaurantRepository(t *testing.T) {
@@ -31,7 +32,7 @@ func TestMemoryRestaurantRepository(t *testing.T) {
 
 	t.Run("Update", func(t *testing.T) {
 		rest, _ := domain.NewRestaurant("r2", "Rest 2")
-		repo.Save(rest)
+		require.NoError(t, repo.Save(rest))
 
 		rest.UpdateStatus(false, "Closed", "Tomorrow")
 		err := repo.Update(rest)
@@ -48,4 +49,3 @@ func TestMemoryRestaurantRepository(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
-

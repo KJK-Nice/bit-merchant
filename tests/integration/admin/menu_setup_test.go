@@ -89,4 +89,3 @@ func TestMenuSetupWorkflow(t *testing.T) {
 	updatedItem, _ := repoItem.FindByID(item.ID)
 	assert.Equal(t, "https://s3.aws.com/bucket/photo.jpg", updatedItem.PhotoURL)
 }
-

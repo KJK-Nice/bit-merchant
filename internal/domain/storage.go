@@ -10,4 +10,3 @@ type PhotoStorage interface {
 	Upload(ctx context.Context, key string, data io.Reader, contentType string) (string, error)
 	Delete(ctx context.Context, key string) error
 }
-

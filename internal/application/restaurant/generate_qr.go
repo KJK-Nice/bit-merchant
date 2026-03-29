@@ -26,4 +26,3 @@ func (uc *GenerateRestaurantQRUseCase) Execute(ctx context.Context, restaurantID
 	url := fmt.Sprintf("%s/menu", uc.baseURL)
 	return uc.qrService.GeneratePNG(url, 512)
 }
-

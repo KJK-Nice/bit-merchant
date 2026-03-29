@@ -22,7 +22,7 @@ func (r *OrderRepository) Save(order *domain.Order) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	if err := upsertOrder(tx, order); err != nil {
 		return err
@@ -133,7 +133,7 @@ func (r *OrderRepository) Update(order *domain.Order) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	result, err := tx.Exec(
 		`UPDATE orders

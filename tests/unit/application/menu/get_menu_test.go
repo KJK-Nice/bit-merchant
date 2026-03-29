@@ -9,6 +9,7 @@ import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetMenuUseCase(t *testing.T) {
@@ -19,18 +20,18 @@ func TestGetMenuUseCase(t *testing.T) {
 
 	restID := domain.RestaurantID("r1")
 	restaurant, _ := domain.NewRestaurant(restID, "Test Restaurant")
-	restRepo.Save(restaurant)
+	require.NoError(t, restRepo.Save(restaurant))
 
 	// Setup data
 	cat1, _ := domain.NewMenuCategory("c1", restID, "Starters", 1)
 	cat2, _ := domain.NewMenuCategory("c2", restID, "Mains", 2)
-	catRepo.Save(cat1)
-	catRepo.Save(cat2)
+	require.NoError(t, catRepo.Save(cat1))
+	require.NoError(t, catRepo.Save(cat2))
 
 	item1, _ := domain.NewMenuItem("i1", "c1", restID, "Salad", 10.0)
 	item2, _ := domain.NewMenuItem("i2", "c2", restID, "Steak", 20.0)
-	itemRepo.Save(item1)
-	itemRepo.Save(item2)
+	require.NoError(t, itemRepo.Save(item1))
+	require.NoError(t, itemRepo.Save(item2))
 
 	t.Run("Execute", func(t *testing.T) {
 		result, err := uc.Execute(context.Background(), restID)
@@ -42,11 +43,10 @@ func TestGetMenuUseCase(t *testing.T) {
 		// Check structure
 		// Assuming result structure: struct { Categories []CategoryWithItems }
 		// CategoryWithItems has Items field
-		
-		// For now, assuming pure domain entities returned or DTOs. 
+
+		// For now, assuming pure domain entities returned or DTOs.
 		// Spec implies displaying menu organized by categories.
 		// Let's assume DTO structure for now or check implementation plan.
 		// Implementation plan says: "returns restaurant menu with categories and items"
 	})
 }
-

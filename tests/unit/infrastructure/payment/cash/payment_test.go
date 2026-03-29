@@ -28,7 +28,7 @@ func TestCashPaymentMethod(t *testing.T) {
 		order.FiatAmount = 10.0
 
 		payment, err := method.ProcessPayment(context.Background(), order)
-		
+
 		assert.NoError(t, err)
 		assert.NotNil(t, payment)
 		assert.Equal(t, domain.PaymentMethodTypeCash, payment.Method)
@@ -37,4 +37,3 @@ func TestCashPaymentMethod(t *testing.T) {
 		assert.Equal(t, order.ID, payment.OrderID)
 	})
 }
-

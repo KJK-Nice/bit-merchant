@@ -10,4 +10,3 @@ func RateLimitMiddleware() echo.MiddlewareFunc {
 	// 20 requests per second
 	return middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20))
 }
-

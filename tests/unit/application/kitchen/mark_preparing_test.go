@@ -14,7 +14,7 @@ func TestMarkOrderPreparingUseCase_Execute(t *testing.T) {
 		orderID := domain.OrderID("order-123")
 		// Must be Paid to start preparing
 		existingOrder := createTestOrder("order-123", domain.FulfillmentStatusPaid, domain.PaymentStatusPaid)
-		
+
 		var savedOrder *domain.Order
 		var publishedEvent string
 
@@ -82,4 +82,3 @@ func TestMarkOrderPreparingUseCase_Execute(t *testing.T) {
 		assert.Contains(t, err.Error(), "invalid status transition")
 	})
 }
-

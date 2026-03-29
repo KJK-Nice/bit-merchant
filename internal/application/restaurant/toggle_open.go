@@ -23,11 +23,10 @@ func (uc *ToggleRestaurantOpenUseCase) Execute(ctx context.Context, id domain.Re
 	}
 
 	restaurant.IsOpen = !restaurant.IsOpen
-	
+
 	if err := uc.repo.Save(restaurant); err != nil {
 		return false, err
 	}
 
 	return restaurant.IsOpen, nil
 }
-

@@ -51,4 +51,3 @@ func (h *OrderReadyHandler) Handle(ctx context.Context, event domain.OrderReady)
 
 	return nil
 }
-

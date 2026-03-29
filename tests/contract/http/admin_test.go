@@ -17,6 +17,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // Mock Use Cases for Admin Handler
@@ -88,7 +89,7 @@ func TestAdminEndpoints(t *testing.T) {
 	// Seed a restaurant for the dashboard context
 	restID := domain.RestaurantID("restaurant_1")
 	rest, _ := domain.NewRestaurant(restID, "Test Rest")
-	repoRest.Save(rest)
+	require.NoError(t, repoRest.Save(rest))
 
 	t.Run("GET /admin/dashboard returns dashboard", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/admin/dashboard", nil)

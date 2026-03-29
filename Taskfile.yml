@@ -25,6 +25,29 @@ tasks:
     cmds:
       - "{{.TAILWIND_CMD}} -i ./assets/css/input.css -o ./assets/css/output.css --watch"
 
+  test:
+    desc: Run all tests
+    cmds:
+      - go test ./...
+
+  test:verbose:
+    desc: Run all tests with verbose output and coverage
+    cmds:
+      - go test -v -coverprofile=coverage.out ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run
+
+  check:
+    desc: Run all checks (generate, build, lint, test)
+    cmds:
+      - templ generate
+      - go build ./...
+      - golangci-lint run
+      - go test ./...
+
   dev:
     desc: Start development server with hot reload
     cmds:

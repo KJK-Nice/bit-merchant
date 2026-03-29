@@ -44,10 +44,10 @@ func TestGetTopSellingItemsUseCase(t *testing.T) {
 	t.Run("Get Top Items", func(t *testing.T) {
 		items, err := uc.Execute(context.Background(), restaurantID)
 		assert.NoError(t, err)
-		
+
 		// Expected: Burger (3), Soda (1)
 		assert.Len(t, items, 2)
-		
+
 		assert.Equal(t, "Burger", items[0].Name)
 		assert.Equal(t, 3, items[0].Quantity)
 		assert.Equal(t, 30.0, items[0].Revenue)
@@ -57,4 +57,3 @@ func TestGetTopSellingItemsUseCase(t *testing.T) {
 		assert.Equal(t, 3.0, items[1].Revenue)
 	})
 }
-

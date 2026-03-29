@@ -13,6 +13,7 @@ import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreateOrderUseCase(t *testing.T) {
@@ -26,8 +27,8 @@ func TestCreateOrderUseCase(t *testing.T) {
 	// Setup restaurant
 	restID := domain.RestaurantID("r1")
 	restaurant, _ := domain.NewRestaurant(restID, "Test Rest")
-	restRepo.Save(restaurant)
-	
+	require.NoError(t, restRepo.Save(restaurant))
+
 	uc := order.NewCreateOrderUseCase(
 		orderRepo,
 		paymentRepo,
@@ -42,14 +43,14 @@ func TestCreateOrderUseCase(t *testing.T) {
 		cartSvc := cart.NewCartService()
 		sessionID := "sess_1"
 		item, _ := domain.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
-		cartSvc.AddItem(sessionID, item, 2)
-		
+		require.NoError(t, cartSvc.AddItem(sessionID, item, 2))
+
 		userCart := cartSvc.GetCart(sessionID)
-		
+
 		req := order.CreateOrderRequest{
-			RestaurantID: "r1",
-			SessionID:    sessionID,
-			Cart:         userCart,
+			RestaurantID:  "r1",
+			SessionID:     sessionID,
+			Cart:          userCart,
 			PaymentMethod: domain.PaymentMethodTypeCash,
 		}
 
@@ -58,7 +59,7 @@ func TestCreateOrderUseCase(t *testing.T) {
 		assert.NotNil(t, resp)
 		assert.NotEmpty(t, resp.OrderID)
 		assert.NotEmpty(t, resp.OrderNumber)
-		
+
 		// Verify Order Saved
 		savedOrder, _ := orderRepo.FindByID(resp.OrderID)
 		assert.Equal(t, domain.PaymentStatusPending, savedOrder.PaymentStatus)
@@ -66,4 +67,3 @@ func TestCreateOrderUseCase(t *testing.T) {
 		assert.Equal(t, 20.0, savedOrder.FiatAmount)
 	})
 }
-

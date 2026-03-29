@@ -56,4 +56,3 @@ func TestRestaurant_UpdateStatus(t *testing.T) {
 	assert.Equal(t, "Tomorrow 9am", r.ReopeningHours)
 	assert.True(t, r.UpdatedAt.After(originalUpdate))
 }
-

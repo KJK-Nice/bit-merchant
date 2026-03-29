@@ -67,4 +67,3 @@ func (uc *GetTopSellingItemsUseCase) Execute(ctx context.Context, restaurantID d
 
 	return result, nil
 }
-

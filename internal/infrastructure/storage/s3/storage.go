@@ -63,4 +63,3 @@ func (s *S3Storage) Delete(ctx context.Context, key string) error {
 	}
 	return nil
 }
-

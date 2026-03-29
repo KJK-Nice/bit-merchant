@@ -14,7 +14,7 @@ import (
 func TestToggleRestaurantOpenUseCase(t *testing.T) {
 	repo := memory.NewMemoryRestaurantRepository()
 	uc := restaurant.NewToggleRestaurantOpenUseCase(repo)
-	
+
 	// Setup
 	r, _ := domain.NewRestaurant("r1", "Test Cafe")
 	// Default open? domain logic says NewRestaurant creates it ... usually open or close.
@@ -27,7 +27,7 @@ func TestToggleRestaurantOpenUseCase(t *testing.T) {
 		newState, err := uc.Execute(context.Background(), "r1")
 		assert.NoError(t, err)
 		assert.False(t, newState)
-		
+
 		updated, _ := repo.FindByID("r1")
 		assert.False(t, updated.IsOpen)
 	})
@@ -36,9 +36,8 @@ func TestToggleRestaurantOpenUseCase(t *testing.T) {
 		newState, err := uc.Execute(context.Background(), "r1")
 		assert.NoError(t, err)
 		assert.True(t, newState)
-		
+
 		updated, _ := repo.FindByID("r1")
 		assert.True(t, updated.IsOpen)
 	})
 }
-

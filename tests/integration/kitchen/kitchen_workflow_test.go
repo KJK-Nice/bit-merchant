@@ -79,23 +79,23 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Subscriptions
 	subscribe(t, eventBus, "OrderCreated", func(msg []byte) {
 		var event domain.OrderCreated
-		json.Unmarshal(msg, &event)
-		orderCreatedHandler.Handle(context.Background(), event)
+		require.NoError(t, json.Unmarshal(msg, &event))
+		require.NoError(t, orderCreatedHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, "OrderPaid", func(msg []byte) {
 		var event domain.OrderPaid
-		json.Unmarshal(msg, &event)
-		orderPaidHandler.Handle(context.Background(), event)
+		require.NoError(t, json.Unmarshal(msg, &event))
+		require.NoError(t, orderPaidHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, "OrderPreparing", func(msg []byte) {
 		var event domain.OrderPreparing
-		json.Unmarshal(msg, &event)
-		orderPreparingHandler.Handle(context.Background(), event)
+		require.NoError(t, json.Unmarshal(msg, &event))
+		require.NoError(t, orderPreparingHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, "OrderReady", func(msg []byte) {
 		var event domain.OrderReady
-		json.Unmarshal(msg, &event)
-		orderReadyHandler.Handle(context.Background(), event)
+		require.NoError(t, json.Unmarshal(msg, &event))
+		require.NoError(t, orderReadyHandler.Handle(context.Background(), event))
 	})
 
 	// Echo Setup

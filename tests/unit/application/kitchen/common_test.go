@@ -76,49 +76,6 @@ func (m *mockEventBus) Publish(ctx context.Context, topic string, event interfac
 	return nil
 }
 
-type mockPaymentRepo struct {
-	saveFn               func(payment *domain.Payment) error
-	findByIDFn           func(id domain.PaymentID) (*domain.Payment, error)
-	findByOrderIDFn      func(orderID domain.OrderID) (*domain.Payment, error)
-	findByRestaurantIDFn func(restaurantID domain.RestaurantID) ([]*domain.Payment, error)
-	updateFn             func(payment *domain.Payment) error
-}
-
-func (m *mockPaymentRepo) Save(payment *domain.Payment) error {
-	if m.saveFn != nil {
-		return m.saveFn(payment)
-	}
-	return nil
-}
-
-func (m *mockPaymentRepo) FindByID(id domain.PaymentID) (*domain.Payment, error) {
-	if m.findByIDFn != nil {
-		return m.findByIDFn(id)
-	}
-	return nil, nil
-}
-
-func (m *mockPaymentRepo) FindByOrderID(orderID domain.OrderID) (*domain.Payment, error) {
-	if m.findByOrderIDFn != nil {
-		return m.findByOrderIDFn(orderID)
-	}
-	return nil, nil
-}
-
-func (m *mockPaymentRepo) FindByRestaurantID(restaurantID domain.RestaurantID) ([]*domain.Payment, error) {
-	if m.findByRestaurantIDFn != nil {
-		return m.findByRestaurantIDFn(restaurantID)
-	}
-	return nil, nil
-}
-
-func (m *mockPaymentRepo) Update(payment *domain.Payment) error {
-	if m.updateFn != nil {
-		return m.updateFn(payment)
-	}
-	return nil
-}
-
 // Helper to create a valid order
 func createTestOrder(id string, status domain.FulfillmentStatus, paymentStatus domain.PaymentStatus) *domain.Order {
 	return &domain.Order{

@@ -16,6 +16,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOrderEndpoints(t *testing.T) {
@@ -29,31 +30,31 @@ func TestOrderEndpoints(t *testing.T) {
 
 	// Seed restaurant
 	rest, _ := domain.NewRestaurant("restaurant_1", "Test Restaurant")
-	restRepo.Save(rest)
-	
+	require.NoError(t, restRepo.Save(rest))
+
 	createUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
 	getUC := order.NewGetOrderByNumberUseCase(orderRepo)
 	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
 	cartService := cart.NewCartService()
-	
+
 	h := handler.NewOrderHandler(createUC, getUC, getCustomerOrdersUC, cartService)
-	
+
 	e := echo.New()
 
 	t.Run("Get Order", func(t *testing.T) {
 		// Setup existing order
 		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
 		existingOrder, _ := domain.NewOrder(
-			"o1", 
-			"1234", 
+			"o1",
+			"1234",
 			"restaurant_1",
 			"session_1",
-			[]domain.OrderItem{*item}, 
-			1000, 
+			[]domain.OrderItem{*item},
+			1000,
 			domain.PaymentMethodTypeCash,
 		)
 		existingOrder.FiatAmount = 10.0
-		orderRepo.Save(existingOrder)
+		require.NoError(t, orderRepo.Save(existingOrder))
 
 		req := httptest.NewRequest(http.MethodGet, "/order/1234", nil)
 		rec := httptest.NewRecorder()
@@ -68,4 +69,3 @@ func TestOrderEndpoints(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "Order #1234")
 	})
 }
-

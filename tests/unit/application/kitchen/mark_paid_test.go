@@ -14,7 +14,7 @@ func TestMarkOrderPaidUseCase_Execute(t *testing.T) {
 	t.Run("successfully marks order as paid", func(t *testing.T) {
 		orderID := domain.OrderID("order-123")
 		existingOrder := createTestOrder("order-123", domain.FulfillmentStatusPaid, domain.PaymentStatusPending)
-		
+
 		var savedOrder *domain.Order
 		var publishedEvent string
 
@@ -54,7 +54,7 @@ func TestMarkOrderPaidUseCase_Execute(t *testing.T) {
 				return nil, nil
 			},
 		}
-		
+
 		uc := kitchen.NewMarkOrderPaidUseCase(mockOrderRepo, &mockEventBus{})
 		_, err := uc.Execute(context.Background(), domain.OrderID("non-existent"))
 

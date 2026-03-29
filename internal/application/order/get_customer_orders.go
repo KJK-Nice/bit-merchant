@@ -33,4 +33,3 @@ func (uc *GetCustomerOrdersUseCase) Execute(ctx context.Context, sessionID strin
 
 	return orders, nil
 }
-

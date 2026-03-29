@@ -13,6 +13,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetMenu(t *testing.T) {
@@ -24,9 +25,9 @@ func TestGetMenu(t *testing.T) {
 
 	// Add some data
 	rest, _ := domain.NewRestaurant("r1", "Test Restaurant")
-	restRepo.Save(rest)
+	require.NoError(t, restRepo.Save(rest))
 	cat, _ := domain.NewMenuCategory("c1", "r1", "Starters", 1)
-	catRepo.Save(cat)
+	require.NoError(t, catRepo.Save(cat))
 
 	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo)
 	h := handler.NewMenuHandler(uc, cartService)
