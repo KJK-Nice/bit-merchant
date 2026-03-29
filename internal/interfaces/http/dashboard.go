@@ -60,7 +60,7 @@ func (h *DashboardHandler) Dashboard(c echo.Context) error {
 	// Or verify if we can add GetRestaurantUseCase.
 
 	// For now, we just pass data to template.
-	return templates.DashboardPage(stats, history, topItems, getCSRFToken(c)).Render(c.Request().Context(), c.Response())
+	return templates.DashboardPage(stats, history, topItems, getCSRFToken(c), string(restaurantID)).Render(c.Request().Context(), c.Response())
 }
 
 func (h *DashboardHandler) ToggleOpen(c echo.Context) error {

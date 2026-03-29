@@ -83,6 +83,8 @@ Endpoints:
 - `POST /auth/login/begin`
 - `POST /auth/login/finish`
 - `POST /auth/logout`
+- `GET /auth/select-restaurant`
+- `POST /auth/select-restaurant`
 - `POST /dashboard/invite`
 
 Behavior:
@@ -90,8 +92,12 @@ Behavior:
 - Signup creates user + restaurant + owner membership.
 - Invite flow creates user + membership for invited restaurant/role.
 - Login uses discoverable passkey assertions.
+- Login behavior is context-aware:
+  - if user has one membership, restaurant context is set automatically
+  - if user has multiple memberships, user is redirected to `/auth/select-restaurant`
 - Session ID is rotated on successful login/registration to reduce fixation risk.
 - Invitation updates are now enforced (fail closed when token-consumption persistence fails).
+- Restaurant selection updates the server-side session `RestaurantID`, which is then enforced by `RequireRole(...)`.
 
 ### Middleware
 
@@ -115,6 +121,7 @@ New templates:
 - `internal/interfaces/templates/auth_signup.templ`
 - `internal/interfaces/templates/auth_login.templ`
 - `internal/interfaces/templates/auth_invite.templ`
+- `internal/interfaces/templates/auth_select_restaurant.templ`
 
 Generated files:
 
@@ -138,9 +145,19 @@ Responsibilities:
 - `/dashboard/*` -> owner only
 - `/admin/*` -> owner only
 - `/kitchen/*` -> owner or kitchen staff
+- `/auth/select-restaurant` -> authenticated users only
 
 Handlers for admin/dashboard/kitchen now read restaurant context from authenticated session first.
 If restaurant context is missing on protected operations, handlers now fail instead of using an implicit tenant fallback.
+
+## Persistence Notes
+
+When `DATABASE_URL` is configured, both auth and core business repositories are backed by PostgreSQL:
+
+- auth: users, memberships, invitations, sessions
+- core: restaurants, menu categories, menu items, orders, order items, payments
+
+Goose migrations are applied at startup before repository usage.
 
 ## Hardening Notes
 

@@ -13,8 +13,8 @@ import (
 	"fmt"
 )
 
-templ Dashboard(menuData *menu.MenuResponse, csrfToken string) {
-	@layouts.Dashboard("Menu Management", "/admin/dashboard") {
+templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantID string) {
+	@layouts.Dashboard("Menu Management", "/admin/dashboard", activeRestaurantID) {
 		<div class="space-y-8 mt-4">
 			<div class="flex justify-between items-center">
 				<h2 class="text-3xl font-bold tracking-tight">Menu Management</h2>

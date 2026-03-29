@@ -7,8 +7,8 @@ import (
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem, csrfToken string) {
-	@layouts.Dashboard("Sales Dashboard", "/dashboard") {
+templ DashboardPage(stats *dashboard.DashboardStats, history []*domain.Order, topItems []dashboard.TopItem, csrfToken string, activeRestaurantID string) {
+	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantID) {
 		<div class="space-y-8 mt-4">
 			<!-- Stats Cards -->
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">

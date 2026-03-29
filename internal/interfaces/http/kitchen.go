@@ -40,7 +40,7 @@ func (h *KitchenHandler) GetKitchen(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	return templates.KitchenPage(orders).Render(c.Request().Context(), c.Response())
+	return templates.KitchenPage(orders, string(restaurantID)).Render(c.Request().Context(), c.Response())
 }
 
 func (h *KitchenHandler) MarkPaid(c echo.Context) error {

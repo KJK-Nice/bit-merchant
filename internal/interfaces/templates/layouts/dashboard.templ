@@ -10,7 +10,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
 )
 
-templ Dashboard(title string, currentPath string) {
+templ Dashboard(title string, currentPath string, currentRestaurantID string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -210,6 +210,12 @@ templ Dashboard(title string, currentPath string) {
 							@sidebar.Trigger(sidebar.TriggerProps{Class: "-ml-1"})
 						</div>
 						<div class="font-medium">{ title }</div>
+						<div class="ml-auto flex items-center gap-3 text-sm">
+							if currentRestaurantID != "" {
+								<span class="text-muted-foreground">Active: { currentRestaurantID }</span>
+							}
+							<a href="/auth/select-restaurant" class="underline">Switch restaurant</a>
+						</div>
 					</header>
 					<div class="flex-1 flex flex-col p-4 pt-0 pb-24 md:pb-4 overflow-y-auto">
 						{ children... }

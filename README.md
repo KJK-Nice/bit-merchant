@@ -16,7 +16,7 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
 - **Web Framework**: Echo v4
 - **Templating**: Templ (Type-safe Go templates)
 - **UI Library**: Datastar (Hypermedia) + TemplUI
-- **Database**: In-memory by default, optional PostgreSQL-backed auth persistence via `DATABASE_URL`
+- **Database**: In-memory by default, optional PostgreSQL-backed auth + core persistence via `DATABASE_URL`
 
 ## Getting Started
 
@@ -49,9 +49,12 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
    ```
 3. Open http://localhost:8080
 
-### Optional PostgreSQL auth persistence
+### Optional PostgreSQL persistence
 
-If `DATABASE_URL` is set, auth repositories (users, memberships, invitations, sessions) use PostgreSQL and run Goose migrations on startup.
+If `DATABASE_URL` is set, all repositories use PostgreSQL and Goose migrations run on startup:
+
+- auth: users, memberships, invitations, sessions
+- core: restaurants, menu categories, menu items, orders, order items, payments
 
 Example:
 
@@ -61,6 +64,20 @@ go run cmd/server/main.go
 ```
 
 Goose migration files live under `internal/infrastructure/migrations/sql/`.
+
+### Multi-restaurant context switcher
+
+Authenticated users can switch their active restaurant context:
+
+- `GET /auth/select-restaurant`
+- `POST /auth/select-restaurant`
+
+During passkey login:
+
+- users with one membership are routed directly to dashboard/kitchen based on role
+- users with multiple memberships are routed to restaurant selection first
+
+The active restaurant is stored in the server-side session and enforced by role middleware.
 
 ### Development
 

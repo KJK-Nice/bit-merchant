@@ -62,11 +62,13 @@ func main() {
 	qrService := qr.NewQRCodeService()
 
 	// Repositories
-	restRepo := memory.NewMemoryRestaurantRepository()
-	menuCatRepo := memory.NewMemoryMenuCategoryRepository()
-	menuItemRepo := memory.NewMemoryMenuItemRepository()
-	orderRepo := memory.NewMemoryOrderRepository()
-	paymentRepo := memory.NewMemoryPaymentRepository()
+	var (
+		restRepo     domain.RestaurantRepository   = memory.NewMemoryRestaurantRepository()
+		menuCatRepo  domain.MenuCategoryRepository = memory.NewMemoryMenuCategoryRepository()
+		menuItemRepo domain.MenuItemRepository     = memory.NewMemoryMenuItemRepository()
+		orderRepo    domain.OrderRepository        = memory.NewMemoryOrderRepository()
+		paymentRepo  domain.PaymentRepository      = memory.NewMemoryPaymentRepository()
+	)
 	var (
 		userRepo       domain.UserRepository       = memory.NewMemoryUserRepository()
 		membershipRepo domain.MembershipRepository = memory.NewMemoryMembershipRepository()
@@ -121,7 +123,12 @@ func main() {
 			_ = db.Close()
 			os.Exit(1)
 		}
-		logger.Info("Using PostgreSQL repositories for auth persistence")
+		logger.Info("Using PostgreSQL repositories for core and auth persistence")
+		restRepo = postgresRepos.NewRestaurantRepository(db)
+		menuCatRepo = postgresRepos.NewMenuCategoryRepository(db)
+		menuItemRepo = postgresRepos.NewMenuItemRepository(db)
+		orderRepo = postgresRepos.NewOrderRepository(db)
+		paymentRepo = postgresRepos.NewPaymentRepository(db)
 		userRepo = postgresRepos.NewUserRepository(db)
 		membershipRepo = postgresRepos.NewMembershipRepository(db)
 		invitationRepo = postgresRepos.NewInvitationRepository(db)
@@ -219,7 +226,7 @@ func main() {
 	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuUC, uploadPhotoUC, generateQRUC)
 	ownerHandler := handler.NewOwnerHandler(createRestUC)
 	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC)
-	authHandler := handler.NewAuthHandler(webauthnSvc, userRepo, membershipRepo, invitationRepo, sessionRepo, createRestUC, logger.Logger, sessionOpts)
+	authHandler := handler.NewAuthHandler(webauthnSvc, userRepo, membershipRepo, invitationRepo, sessionRepo, restRepo, createRestUC, logger.Logger, sessionOpts)
 
 	// 4. Event Handlers
 	orderCreatedHandler := eventHandlers.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
@@ -326,6 +333,10 @@ func main() {
 	e.POST("/auth/login/begin", authHandler.BeginLogin)
 	e.POST("/auth/login/finish", authHandler.FinishLogin)
 	e.POST("/auth/logout", authHandler.Logout)
+	authSelectionGroup := e.Group("/auth")
+	authSelectionGroup.Use(middleware.RequireAuth())
+	authSelectionGroup.GET("/select-restaurant", authHandler.GetSelectRestaurant)
+	authSelectionGroup.POST("/select-restaurant", authHandler.PostSelectRestaurant)
 
 	// Dashboard Menu Management (US3)
 	dashboardGroup := e.Group("/dashboard")
