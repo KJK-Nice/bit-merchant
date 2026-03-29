@@ -90,21 +90,23 @@ Behavior:
 - Signup creates user + restaurant + owner membership.
 - Invite flow creates user + membership for invited restaurant/role.
 - Login uses discoverable passkey assertions.
-- Session is upgraded to authenticated state on successful login/registration.
+- Session ID is rotated on successful login/registration to reduce fixation risk.
+- Invitation updates are now enforced (fail closed when token-consumption persistence fails).
 
 ### Middleware
 
 `internal/interfaces/http/middleware/`
 
-- `SessionMiddlewareWithRepos(...)`:
+- `SessionMiddlewareWithReposAndOptions(...)`:
   - Creates/reads cookie session.
   - Loads authenticated user/session into context when available.
+  - Supports secure-cookie and TTL options.
 - `RequireAuth()`:
   - Redirects unauthenticated requests to `/auth/login`.
 - `RequireRole(...)`:
   - Enforces role membership for active restaurant context.
 
-`SessionMiddleware()` without arguments is kept for backward compatibility in tests and legacy setup code.
+`SessionMiddleware()` and `SessionMiddlewareWithRepos(...)` are kept for backward compatibility in tests and legacy setup code.
 
 ## Template + Browser Integration
 
@@ -138,15 +140,22 @@ Responsibilities:
 - `/kitchen/*` -> owner or kitchen staff
 
 Handlers for admin/dashboard/kitchen now read restaurant context from authenticated session first.
+If restaurant context is missing on protected operations, handlers now fail instead of using an implicit tenant fallback.
 
-## Backward Compatibility
+## Hardening Notes
 
 - Existing anonymous customer flow remains intact.
-- Legacy test paths continue to pass through compatibility fallbacks.
+- WebAuthn ceremony state now has stricter lifecycle checks:
+  - typed ceremony matching (registration vs login)
+  - explicit missing-key checks
+  - expiry checks (library expiry + 5 minute max ceremony age)
+- Auth handler responses are sanitized for client-facing errors while logging structured details server-side.
+- Logout explicitly expires the session cookie in the browser.
 
 ## Security Defaults
 
 - Session cookie: `HttpOnly`, `SameSite=Strict`, 24h expiry.
+- Secure cookie: enabled automatically when `BASE_URL` is HTTPS, or forced with `COOKIE_SECURE=true`.
 - Invitation tokens: random 32-byte URL-safe values.
 - Invitation expiry: 7 days.
 - CSRF middleware remains active for state-changing requests.

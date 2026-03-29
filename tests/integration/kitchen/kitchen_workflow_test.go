@@ -143,6 +143,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	req = httptest.NewRequest(http.MethodGet, "/kitchen", nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
+	c.Set(middleware.ContextRestaurantID, restaurantID)
 
 	err = kitchenHandler.GetKitchen(c)
 	require.NoError(t, err)

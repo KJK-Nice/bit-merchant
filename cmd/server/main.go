@@ -140,6 +140,10 @@ func main() {
 	if rpID == "" {
 		rpID = "localhost"
 	}
+	forceSecureCookies := os.Getenv("COOKIE_SECURE") == "true"
+	sessionOpts := middleware.SessionOptions{
+		SecureCookie: middleware.ShouldUseSecureCookies(baseURL, forceSecureCookies),
+	}
 	webauthnSvc, err := authInfra.NewWebAuthnService(rpID, "BitMerchant", []string{baseURL})
 	if err != nil {
 		logger.Error("Failed to initialize WebAuthn service", "error", err)
@@ -154,7 +158,7 @@ func main() {
 	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuUC, uploadPhotoUC, generateQRUC)
 	ownerHandler := handler.NewOwnerHandler(createRestUC)
 	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC)
-	authHandler := handler.NewAuthHandler(webauthnSvc, userRepo, membershipRepo, invitationRepo, sessionRepo, createRestUC)
+	authHandler := handler.NewAuthHandler(webauthnSvc, userRepo, membershipRepo, invitationRepo, sessionRepo, createRestUC, logger.Logger, sessionOpts)
 
 	// 4. Event Handlers
 	orderCreatedHandler := eventHandlers.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
@@ -196,7 +200,7 @@ func main() {
 
 	// Middleware
 	e.Use(echoMiddleware.Recover())
-	e.Use(middleware.SessionMiddlewareWithRepos(sessionRepo, userRepo))
+	e.Use(middleware.SessionMiddlewareWithReposAndOptions(sessionRepo, userRepo, sessionOpts))
 	e.Use(middleware.PerformanceMiddleware(logger, 200*time.Millisecond))
 	e.Use(middleware.RateLimitMiddleware())
 	e.Use(middleware.CSRFMiddleware())

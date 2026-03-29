@@ -12,6 +12,7 @@ import (
 	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
+	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -93,6 +94,7 @@ func TestAdminEndpoints(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/admin/dashboard", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, restID)
 
 		assert.NoError(t, adminHandler.Dashboard(c))
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -104,6 +106,7 @@ func TestAdminEndpoints(t *testing.T) {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, restID)
 
 		assert.NoError(t, adminHandler.CreateCategory(c))
 		// Expect redirect or HTML fragment depending on implementation (Datastar vs standard)
@@ -129,6 +132,7 @@ func TestAdminEndpoints(t *testing.T) {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, restID)
 
 		assert.NoError(t, adminHandler.CreateItem(c))
 		assert.Equal(t, http.StatusFound, rec.Code)

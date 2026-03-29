@@ -20,8 +20,9 @@ const (
 )
 
 type ceremonyState struct {
-	session webauthn.SessionData
-	typ     ceremonyType
+	session   webauthn.SessionData
+	typ       ceremonyType
+	createdAt time.Time
 }
 
 // WebAuthnService wraps go-webauthn and manages temporary ceremony sessions.
@@ -30,6 +31,8 @@ type WebAuthnService struct {
 	mu       sync.RWMutex
 	ceremony map[string]ceremonyState
 }
+
+const defaultCeremonyTTL = 5 * time.Minute
 
 // NewWebAuthnService creates a configured WebAuthn wrapper.
 func NewWebAuthnService(rpID, rpDisplayName string, rpOrigins []string) (*WebAuthnService, error) {
@@ -50,13 +53,16 @@ func NewWebAuthnService(rpID, rpDisplayName string, rpOrigins []string) (*WebAut
 
 // BeginRegistration starts a passkey registration ceremony.
 func (s *WebAuthnService) BeginRegistration(sessionKey string, user *domain.User) (*protocol.CredentialCreation, error) {
+	if sessionKey == "" {
+		return nil, errors.New("session key is required")
+	}
 	options, data, err := s.wa.BeginRegistration(user)
 	if err != nil {
 		return nil, err
 	}
 
 	s.mu.Lock()
-	s.ceremony[sessionKey] = ceremonyState{session: *data, typ: ceremonyRegistration}
+	s.ceremony[sessionKey] = ceremonyState{session: *data, typ: ceremonyRegistration, createdAt: time.Now()}
 	s.mu.Unlock()
 
 	return options, nil
@@ -80,13 +86,16 @@ func (s *WebAuthnService) FinishRegistration(sessionKey string, user *domain.Use
 
 // BeginPasskeyLogin starts a discoverable login ceremony.
 func (s *WebAuthnService) BeginPasskeyLogin(sessionKey string) (*protocol.CredentialAssertion, error) {
+	if sessionKey == "" {
+		return nil, errors.New("session key is required")
+	}
 	assertion, data, err := s.wa.BeginDiscoverableLogin()
 	if err != nil {
 		return nil, err
 	}
 
 	s.mu.Lock()
-	s.ceremony[sessionKey] = ceremonyState{session: *data, typ: ceremonyLogin}
+	s.ceremony[sessionKey] = ceremonyState{session: *data, typ: ceremonyLogin, createdAt: time.Now()}
 	s.mu.Unlock()
 
 	return assertion, nil
@@ -109,6 +118,10 @@ func (s *WebAuthnService) FinishPasskeyLogin(sessionKey string, req *http.Reques
 }
 
 func (s *WebAuthnService) loadCeremony(sessionKey string, expected ceremonyType) (ceremonyState, error) {
+	if sessionKey == "" {
+		return ceremonyState{}, errors.New("session key is required")
+	}
+
 	s.mu.RLock()
 	state, exists := s.ceremony[sessionKey]
 	s.mu.RUnlock()
@@ -119,6 +132,10 @@ func (s *WebAuthnService) loadCeremony(sessionKey string, expected ceremonyType)
 		return ceremonyState{}, errors.New("invalid auth ceremony type")
 	}
 	if !state.session.Expires.IsZero() && state.session.Expires.Before(time.Now()) {
+		s.deleteCeremony(sessionKey)
+		return ceremonyState{}, errors.New("auth ceremony expired")
+	}
+	if state.createdAt.Add(defaultCeremonyTTL).Before(time.Now()) {
 		s.deleteCeremony(sessionKey)
 		return ceremonyState{}, errors.New("auth ceremony expired")
 	}

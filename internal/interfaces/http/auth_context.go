@@ -1,6 +1,8 @@
 package http
 
 import (
+	"errors"
+
 	"bitmerchant/internal/domain"
 	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 
@@ -32,6 +34,5 @@ func getRestaurantIDFromContext(c echo.Context) (domain.RestaurantID, error) {
 	if session, ok := getSession(c); ok && session.RestaurantID != nil {
 		return *session.RestaurantID, nil
 	}
-	// Backward-compatible fallback for legacy handlers/tests.
-	return domain.RestaurantID("restaurant_1"), nil
+	return "", errors.New("restaurant context not available")
 }

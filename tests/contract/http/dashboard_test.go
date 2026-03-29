@@ -12,6 +12,7 @@ import (
 	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
+	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ func TestDashboardHandler(t *testing.T) {
 	// Setup
 	orderRepo := memory.NewMemoryOrderRepository()
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
-	
+
 	// Seed restaurant
 	r, _ := domain.NewRestaurant("restaurant_1", "Test Cafe")
 	_ = restaurantRepo.Save(r)
@@ -47,6 +48,7 @@ func TestDashboardHandler(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/dashboard", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, domain.RestaurantID("restaurant_1"))
 
 		err := h.Dashboard(c)
 		assert.NoError(t, err)
@@ -61,11 +63,12 @@ func TestDashboardHandler(t *testing.T) {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, domain.RestaurantID("restaurant_1"))
 
 		err := h.ToggleOpen(c)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
-		
+
 		// Verify restaurant state changed
 		updated, _ := restaurantRepo.FindByID("restaurant_1")
 		// Default was whatever NewRestaurant sets (probably false or true, let's say it toggled)
@@ -74,4 +77,3 @@ func TestDashboardHandler(t *testing.T) {
 		// We can check response body for button text change if we implement partial updates properly.
 	})
 }
-

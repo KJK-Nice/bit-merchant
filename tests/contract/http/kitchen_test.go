@@ -4,6 +4,7 @@ import (
 	"bitmerchant/internal/application/kitchen"
 	"bitmerchant/internal/domain"
 	handler "bitmerchant/internal/interfaces/http"
+	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -45,30 +46,36 @@ func (m *mockKitchenOrderRepo) Update(order *domain.Order) error {
 
 // Stubs for other methods
 func (m *mockKitchenOrderRepo) Save(order *domain.Order) error { return nil }
-func (m *mockKitchenOrderRepo) FindByOrderNumber(rid domain.RestaurantID, on string) (*domain.Order, error) { return nil, nil }
-func (m *mockKitchenOrderRepo) FindByRestaurantID(rid domain.RestaurantID) ([]*domain.Order, error) { return nil, nil }
-func (m *mockKitchenOrderRepo) FindBySessionID(sessionID string) ([]*domain.Order, error) { return nil, nil }
-
-
+func (m *mockKitchenOrderRepo) FindByOrderNumber(rid domain.RestaurantID, on string) (*domain.Order, error) {
+	return nil, nil
+}
+func (m *mockKitchenOrderRepo) FindByRestaurantID(rid domain.RestaurantID) ([]*domain.Order, error) {
+	return nil, nil
+}
+func (m *mockKitchenOrderRepo) FindBySessionID(sessionID string) ([]*domain.Order, error) {
+	return nil, nil
+}
 
 // Mock EventBus
 type mockKitchenEventBus struct{}
-func (m *mockKitchenEventBus) Publish(ctx context.Context, topic string, event interface{}) error { return nil }
 
+func (m *mockKitchenEventBus) Publish(ctx context.Context, topic string, event interface{}) error {
+	return nil
+}
 
 func TestKitchenEndpoints(t *testing.T) {
 	e := echo.New()
-	
+
 	// Setup Mocks
 	mockRepo := &mockKitchenOrderRepo{
 		orders: []*domain.Order{
 			{
-				ID:           "order-1",
-				OrderNumber:  "101",
-				RestaurantID: "rest-1",
-				PaymentStatus: domain.PaymentStatusPending,
+				ID:                "order-1",
+				OrderNumber:       "101",
+				RestaurantID:      "rest-1",
+				PaymentStatus:     domain.PaymentStatusPending,
 				FulfillmentStatus: domain.FulfillmentStatusPaid, // Technically invalid combination but ok for init
-				TotalAmount: 1000,
+				TotalAmount:       1000,
 				Items: []domain.OrderItem{
 					{MenuItemID: "burger-1", Quantity: 1},
 				},
@@ -97,11 +104,8 @@ func TestKitchenEndpoints(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/kitchen", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		
-		// Mock Session/Context if needed (RestaurantID usually comes from session or config)
-		// For now, handler might hardcode or read from env. 
-		// We'll assume handler handles it.
-		
+		c.Set(httpMiddleware.ContextRestaurantID, domain.RestaurantID("rest-1"))
+
 		if assert.NoError(t, h.GetKitchen(c)) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 			// assert.Contains(t, rec.Body.String(), "Kitchen Display") // Template not impl yet
@@ -124,4 +128,3 @@ func TestKitchenEndpoints(t *testing.T) {
 		}
 	})
 }
-
