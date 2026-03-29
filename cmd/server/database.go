@@ -19,7 +19,13 @@ func initPhotoStorage(cfg serverConfig, logger *logging.Logger) (domain.PhotoSto
 		return nil, nil
 	}
 
-	photoStorage, err := s3Storage.NewS3Storage(context.Background(), cfg.S3BucketName, cfg.AWSRegion)
+	photoStorage, err := s3Storage.NewS3Storage(context.Background(), s3Storage.Config{
+		Bucket:        cfg.S3BucketName,
+		Region:        cfg.AWSRegion,
+		Endpoint:      cfg.S3Endpoint,
+		UsePathStyle:  cfg.S3UsePathStyle,
+		PublicBaseURL: cfg.S3PublicBaseURL,
+	})
 	if err != nil {
 		return nil, err
 	}

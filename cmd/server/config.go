@@ -3,6 +3,7 @@ package main
 import (
 	"net/url"
 	"os"
+	"strings"
 )
 
 type serverConfig struct {
@@ -13,6 +14,10 @@ type serverConfig struct {
 	DatabaseURL       string
 	S3BucketName      string
 	AWSRegion         string
+	// S3-compatible API (optional; non-AWS providers)
+	S3Endpoint       string
+	S3UsePathStyle   bool
+	S3PublicBaseURL  string
 }
 
 func loadConfig() (serverConfig, error) {
@@ -23,6 +28,17 @@ func loadConfig() (serverConfig, error) {
 		DatabaseURL:       os.Getenv("DATABASE_URL"),
 		S3BucketName:      os.Getenv("S3_BUCKET_NAME"),
 		AWSRegion:         os.Getenv("AWS_REGION"),
+		S3Endpoint:        strings.TrimSpace(os.Getenv("S3_ENDPOINT")),
+		S3PublicBaseURL:   strings.TrimSpace(os.Getenv("S3_PUBLIC_BASE_URL")),
+	}
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("S3_USE_PATH_STYLE"))) {
+	case "true", "1", "yes":
+		cfg.S3UsePathStyle = true
+	case "false", "0", "no":
+		cfg.S3UsePathStyle = false
+	default:
+		// Path-style is the safe default for most S3-compatible endpoints (MinIO, many gateways).
+		cfg.S3UsePathStyle = cfg.S3Endpoint != ""
 	}
 
 	if cfg.Port == "" {
