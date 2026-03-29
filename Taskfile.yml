@@ -5,6 +5,16 @@ vars:
     sh: command -v tailwindcss >/dev/null 2>&1 && echo "tailwindcss" || echo "npx tailwindcss@latest"
 
 tasks:
+  compose:
+    desc: Start app stack with Docker Compose
+    cmds:
+      - docker compose up --build
+
+  migrate:
+    desc: Run Goose migrations (requires DATABASE_URL)
+    cmds:
+      - go run ./cmd/migrate/main.go
+
   templ:
     desc: Run templ with integrated server and hot reload
     cmds:

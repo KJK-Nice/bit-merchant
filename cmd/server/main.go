@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -19,13 +20,16 @@ import (
 	"bitmerchant/internal/infrastructure/events"
 	eventHandlers "bitmerchant/internal/infrastructure/events/handlers"
 	"bitmerchant/internal/infrastructure/logging"
+	"bitmerchant/internal/infrastructure/migrations"
 	"bitmerchant/internal/infrastructure/payment/cash"
 	"bitmerchant/internal/infrastructure/qr"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	postgresRepos "bitmerchant/internal/infrastructure/repositories/postgres"
 	s3Storage "bitmerchant/internal/infrastructure/storage/s3"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/http/middleware"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
@@ -63,10 +67,67 @@ func main() {
 	menuItemRepo := memory.NewMemoryMenuItemRepository()
 	orderRepo := memory.NewMemoryOrderRepository()
 	paymentRepo := memory.NewMemoryPaymentRepository()
-	userRepo := memory.NewMemoryUserRepository()
-	membershipRepo := memory.NewMemoryMembershipRepository()
-	invitationRepo := memory.NewMemoryInvitationRepository()
-	sessionRepo := memory.NewMemorySessionRepository()
+	var (
+		userRepo       domain.UserRepository       = memory.NewMemoryUserRepository()
+		membershipRepo domain.MembershipRepository = memory.NewMemoryMembershipRepository()
+		invitationRepo domain.InvitationRepository = memory.NewMemoryInvitationRepository()
+		sessionRepo    domain.SessionRepository    = memory.NewMemorySessionRepository()
+	)
+
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL != "" {
+		bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		createdDB, bootstrapErr := migrations.EnsureDatabaseExists(bootstrapCtx, databaseURL)
+		bootstrapCancel()
+		if bootstrapErr != nil {
+			logger.Error("Failed to ensure database exists", "error", bootstrapErr)
+			os.Exit(1)
+		}
+		if createdDB {
+			logger.Info("Created missing database from DATABASE_URL")
+		} else {
+			logger.Info("Database from DATABASE_URL already exists")
+		}
+
+		db, dbErr := sql.Open("pgx", databaseURL)
+		if dbErr != nil {
+			logger.Error("Failed to open database connection", "error", dbErr)
+			os.Exit(1)
+		}
+
+		// Retry ping because postgres container may be starting up.
+		const (
+			maxPingAttempts = 15
+			pingDelay       = 2 * time.Second
+		)
+		var pingErr error
+		for attempt := 1; attempt <= maxPingAttempts; attempt++ {
+			pingCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			pingErr = db.PingContext(pingCtx)
+			cancel()
+			if pingErr == nil {
+				break
+			}
+			logger.Warn("Database ping failed, retrying", "attempt", attempt, "maxAttempts", maxPingAttempts, "error", pingErr)
+			time.Sleep(pingDelay)
+		}
+		if pingErr != nil {
+			logger.Error("Failed to ping database after retries", "error", pingErr)
+			_ = db.Close()
+			os.Exit(1)
+		}
+		if migrationErr := migrations.Up(context.Background(), db); migrationErr != nil {
+			logger.Error("Failed to run goose migrations", "error", migrationErr)
+			_ = db.Close()
+			os.Exit(1)
+		}
+		logger.Info("Using PostgreSQL repositories for auth persistence")
+		userRepo = postgresRepos.NewUserRepository(db)
+		membershipRepo = postgresRepos.NewMembershipRepository(db)
+		invitationRepo = postgresRepos.NewInvitationRepository(db)
+		sessionRepo = postgresRepos.NewSessionRepository(db)
+		defer db.Close()
+	}
 
 	// Services
 	cartService := cart.NewCartService()

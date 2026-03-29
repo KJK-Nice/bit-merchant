@@ -3,12 +3,36 @@ services:
     build: .
     ports:
       - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       - PORT=8080
       - BASE_URL=http://localhost:8080
+      - DATABASE_URL=postgres://bitmerchant:bitmerchant@postgres:5432/bitmerchant?sslmode=disable
       # Uncomment and set these if using S3
       # - S3_BUCKET_NAME=your-bucket
       # - AWS_REGION=your-region
       # - AWS_ACCESS_KEY_ID=your-key
       # - AWS_SECRET_ACCESS_KEY=your-secret
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=bitmerchant
+      - POSTGRES_PASSWORD=bitmerchant
+      - POSTGRES_DB=bitmerchant
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bitmerchant -d bitmerchant"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 3s
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
 

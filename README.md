@@ -16,7 +16,7 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
 - **Web Framework**: Echo v4
 - **Templating**: Templ (Type-safe Go templates)
 - **UI Library**: Datastar (Hypermedia) + TemplUI
-- **Database**: In-memory (MVP), Interface-ready for PostgreSQL
+- **Database**: In-memory by default, optional PostgreSQL-backed auth persistence via `DATABASE_URL`
 
 ## Getting Started
 
@@ -48,6 +48,19 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
    go run cmd/server/main.go
    ```
 3. Open http://localhost:8080
+
+### Optional PostgreSQL auth persistence
+
+If `DATABASE_URL` is set, auth repositories (users, memberships, invitations, sessions) use PostgreSQL and run Goose migrations on startup.
+
+Example:
+
+```bash
+export DATABASE_URL="postgres://bitmerchant:bitmerchant@localhost:5432/bitmerchant?sslmode=disable"
+go run cmd/server/main.go
+```
+
+Goose migration files live under `internal/infrastructure/migrations/sql/`.
 
 ### Development
 
