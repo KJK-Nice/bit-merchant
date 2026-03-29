@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"bitmerchant/internal/application/order"
 	"bitmerchant/internal/application/restaurant"
 	"bitmerchant/internal/domain"
+	authInfra "bitmerchant/internal/infrastructure/auth"
 	"bitmerchant/internal/infrastructure/events"
 	eventHandlers "bitmerchant/internal/infrastructure/events/handlers"
 	"bitmerchant/internal/infrastructure/logging"
@@ -61,6 +63,10 @@ func main() {
 	menuItemRepo := memory.NewMemoryMenuItemRepository()
 	orderRepo := memory.NewMemoryOrderRepository()
 	paymentRepo := memory.NewMemoryPaymentRepository()
+	userRepo := memory.NewMemoryUserRepository()
+	membershipRepo := memory.NewMemoryMembershipRepository()
+	invitationRepo := memory.NewMemoryInvitationRepository()
+	sessionRepo := memory.NewMemorySessionRepository()
 
 	// Services
 	cartService := cart.NewCartService()
@@ -125,6 +131,21 @@ func main() {
 	}
 	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qrService, baseURL)
 
+	parsedBaseURL, parseErr := url.Parse(baseURL)
+	if parseErr != nil {
+		logger.Error("Failed to parse BASE_URL", "error", parseErr)
+		os.Exit(1)
+	}
+	rpID := parsedBaseURL.Hostname()
+	if rpID == "" {
+		rpID = "localhost"
+	}
+	webauthnSvc, err := authInfra.NewWebAuthnService(rpID, "BitMerchant", []string{baseURL})
+	if err != nil {
+		logger.Error("Failed to initialize WebAuthn service", "error", err)
+		os.Exit(1)
+	}
+
 	// 3. Handlers
 	menuHandler := handler.NewMenuHandler(getMenuUC, cartService)
 	cartHandler := handler.NewCartHandler(cartService, menuItemRepo)
@@ -133,6 +154,7 @@ func main() {
 	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuUC, uploadPhotoUC, generateQRUC)
 	ownerHandler := handler.NewOwnerHandler(createRestUC)
 	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC)
+	authHandler := handler.NewAuthHandler(webauthnSvc, userRepo, membershipRepo, invitationRepo, sessionRepo, createRestUC)
 
 	// 4. Event Handlers
 	orderCreatedHandler := eventHandlers.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
@@ -174,7 +196,7 @@ func main() {
 
 	// Middleware
 	e.Use(echoMiddleware.Recover())
-	e.Use(middleware.SessionMiddleware())
+	e.Use(middleware.SessionMiddlewareWithRepos(sessionRepo, userRepo))
 	e.Use(middleware.PerformanceMiddleware(logger, 200*time.Millisecond))
 	e.Use(middleware.RateLimitMiddleware())
 	e.Use(middleware.CSRFMiddleware())
@@ -209,33 +231,48 @@ func main() {
 	e.GET("/order/:orderNumber/stream", sseHandler.OrderStatusStream)
 
 	// Kitchen
-	e.GET("/kitchen", kitchenHandler.GetKitchen)
-	e.GET("/kitchen/stream", sseHandler.KitchenStream)
-	e.POST("/kitchen/order/:id/mark-paid", kitchenHandler.MarkPaid)
-	e.POST("/kitchen/order/:id/mark-preparing", kitchenHandler.MarkPreparing)
-	e.POST("/kitchen/order/:id/mark-ready", kitchenHandler.MarkReady)
+	kitchenGroup := e.Group("/kitchen")
+	kitchenGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, domain.RoleOwner, domain.RoleKitchenStaff))
+	kitchenGroup.GET("", kitchenHandler.GetKitchen)
+	kitchenGroup.GET("/stream", sseHandler.KitchenStream)
+	kitchenGroup.POST("/order/:id/mark-paid", kitchenHandler.MarkPaid)
+	kitchenGroup.POST("/order/:id/mark-preparing", kitchenHandler.MarkPreparing)
+	kitchenGroup.POST("/order/:id/mark-ready", kitchenHandler.MarkReady)
 
 	// Admin/Owner Menu Management
-	e.GET("/admin/dashboard", adminHandler.Dashboard)
-	e.POST("/admin/category", adminHandler.CreateCategory)
-	e.POST("/admin/item", adminHandler.CreateItem)
-	e.POST("/admin/item/:id/photo", adminHandler.UploadPhoto)
-	e.GET("/admin/qr", adminHandler.GenerateQR)
+	adminGroup := e.Group("/admin")
+	adminGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, domain.RoleOwner))
+	adminGroup.GET("/dashboard", adminHandler.Dashboard)
+	adminGroup.POST("/category", adminHandler.CreateCategory)
+	adminGroup.POST("/item", adminHandler.CreateItem)
+	adminGroup.POST("/item/:id/photo", adminHandler.UploadPhoto)
+	adminGroup.GET("/qr", adminHandler.GenerateQR)
 
 	// Owner Signup
 	e.GET("/owner/signup", ownerHandler.GetSignup)
 	e.POST("/owner/signup", ownerHandler.PostSignup)
 
-	// Dashboard Menu Management (US3)
-	e.GET("/dashboard/menu", adminHandler.GetMenu)
-	e.POST("/dashboard/menu/category", adminHandler.CreateMenuCategory)
-	e.POST("/dashboard/menu/item", adminHandler.CreateMenuItem)
-	e.POST("/dashboard/menu/item/:id/photo", adminHandler.UploadMenuItemPhoto)
-	e.GET("/dashboard/qr-code", adminHandler.GetQRCode)
+	// Auth
+	e.GET("/auth/signup", authHandler.GetSignup)
+	e.GET("/auth/login", authHandler.GetLogin)
+	e.GET("/auth/invite/:token", authHandler.GetInvite)
+	e.POST("/auth/register/begin", authHandler.BeginRegistration)
+	e.POST("/auth/register/finish", authHandler.FinishRegistration)
+	e.POST("/auth/login/begin", authHandler.BeginLogin)
+	e.POST("/auth/login/finish", authHandler.FinishLogin)
+	e.POST("/auth/logout", authHandler.Logout)
 
-	// Dashboard/Analytics
-	e.GET("/dashboard", dashboardHandler.Dashboard)
-	e.POST("/dashboard/toggle-open", dashboardHandler.ToggleOpen)
+	// Dashboard Menu Management (US3)
+	dashboardGroup := e.Group("/dashboard")
+	dashboardGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, domain.RoleOwner))
+	dashboardGroup.GET("", dashboardHandler.Dashboard)
+	dashboardGroup.GET("/menu", adminHandler.GetMenu)
+	dashboardGroup.POST("/menu/category", adminHandler.CreateMenuCategory)
+	dashboardGroup.POST("/menu/item", adminHandler.CreateMenuItem)
+	dashboardGroup.POST("/menu/item/:id/photo", adminHandler.UploadMenuItemPhoto)
+	dashboardGroup.GET("/qr-code", adminHandler.GetQRCode)
+	dashboardGroup.POST("/toggle-open", dashboardHandler.ToggleOpen)
+	dashboardGroup.POST("/invite", authHandler.CreateInvitation)
 
 	// Start server
 	port := os.Getenv("PORT")

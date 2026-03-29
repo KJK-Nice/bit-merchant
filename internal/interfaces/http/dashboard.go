@@ -5,7 +5,6 @@ import (
 
 	"bitmerchant/internal/application/dashboard"
 	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates"
 
 	"github.com/labstack/echo/v4"
@@ -33,7 +32,10 @@ func NewDashboardHandler(
 }
 
 func (h *DashboardHandler) Dashboard(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1") // Default for MVP
+	restaurantID, err := getRestaurantIDFromContext(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 
 	stats, err := h.getStatsUC.Execute(c.Request().Context(), restaurantID, dashboard.DateRangeToday)
 	if err != nil {
@@ -62,7 +64,10 @@ func (h *DashboardHandler) Dashboard(c echo.Context) error {
 }
 
 func (h *DashboardHandler) ToggleOpen(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1")
+	restaurantID, err := getRestaurantIDFromContext(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 
 	isOpen, err := h.toggleOpenUC.Execute(c.Request().Context(), restaurantID)
 	if err != nil {

@@ -32,9 +32,10 @@ func NewKitchenHandler(
 }
 
 func (h *KitchenHandler) GetKitchen(c echo.Context) error {
-	// Hardcoded for US2 MVP as authentication is not part of this story yet
-	// Use "restaurant_1" to match seeded data and tests
-	restaurantID := domain.RestaurantID("restaurant_1") 
+	restaurantID, err := getRestaurantIDFromContext(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 	orders, err := h.getOrdersUC.Execute(c.Request().Context(), restaurantID)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())

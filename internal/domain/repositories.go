@@ -1,5 +1,7 @@
 package domain
 
+import "github.com/go-webauthn/webauthn/webauthn"
+
 // RestaurantRepository defines operations for Restaurant persistence
 type RestaurantRepository interface {
 	Save(restaurant *Restaurant) error
@@ -46,4 +48,37 @@ type PaymentRepository interface {
 	FindByOrderID(orderID OrderID) (*Payment, error)
 	FindByRestaurantID(restaurantID RestaurantID) ([]*Payment, error)
 	Update(payment *Payment) error
+}
+
+// UserRepository defines operations for User persistence.
+type UserRepository interface {
+	Save(user *User) error
+	FindByID(id UserID) (*User, error)
+	FindByCredentialID(credentialID []byte) (*User, *webauthn.Credential, error)
+	Update(user *User) error
+}
+
+// MembershipRepository defines operations for Membership persistence.
+type MembershipRepository interface {
+	Save(membership *Membership) error
+	FindByUserID(userID UserID) ([]*Membership, error)
+	FindByRestaurantID(restaurantID RestaurantID) ([]*Membership, error)
+	FindByUserAndRestaurant(userID UserID, restaurantID RestaurantID) (*Membership, error)
+	Delete(id MembershipID) error
+}
+
+// InvitationRepository defines operations for Invitation persistence.
+type InvitationRepository interface {
+	Save(invitation *Invitation) error
+	FindByToken(token string) (*Invitation, error)
+	FindByRestaurantID(restaurantID RestaurantID) ([]*Invitation, error)
+	Update(invitation *Invitation) error
+}
+
+// SessionRepository defines operations for Session persistence.
+type SessionRepository interface {
+	Save(session *Session) error
+	Get(id string) (*Session, error)
+	Delete(id string) error
+	DeleteByUserID(userID UserID) error
 }

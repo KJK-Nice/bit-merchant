@@ -13,6 +13,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func (h *AdminHandler) restaurantID(c echo.Context) (domain.RestaurantID, error) {
+	return getRestaurantIDFromContext(c)
+}
+
 type AdminHandler struct {
 	createRestaurantUC *restaurant.CreateRestaurantUseCase
 	createCategoryUC   *menu.CreateMenuCategoryUseCase
@@ -42,7 +46,10 @@ func NewAdminHandler(
 
 // Dashboard handles GET /admin/dashboard
 func (h *AdminHandler) Dashboard(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1") // Hardcoded for MVP
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 
 	menuData, err := h.getMenuUC.Execute(c.Request().Context(), restaurantID)
 	if err != nil {
@@ -54,7 +61,10 @@ func (h *AdminHandler) Dashboard(c echo.Context) error {
 
 // GetMenu handles GET /dashboard/menu
 func (h *AdminHandler) GetMenu(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1") // Hardcoded for MVP
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 
 	menuData, err := h.getMenuUC.Execute(c.Request().Context(), restaurantID)
 	if err != nil {
@@ -66,7 +76,10 @@ func (h *AdminHandler) GetMenu(c echo.Context) error {
 
 // CreateCategory handles POST /admin/category
 func (h *AdminHandler) CreateCategory(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1") // Hardcoded for MVP
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 	name := c.FormValue("name")
 	displayOrder, _ := strconv.Atoi(c.FormValue("displayOrder"))
 
@@ -76,7 +89,7 @@ func (h *AdminHandler) CreateCategory(c echo.Context) error {
 		DisplayOrder: displayOrder,
 	}
 
-	if _, err := h.createCategoryUC.Execute(c.Request().Context(), req); err != nil {
+	if _, err = h.createCategoryUC.Execute(c.Request().Context(), req); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -85,7 +98,10 @@ func (h *AdminHandler) CreateCategory(c echo.Context) error {
 
 // CreateMenuCategory handles POST /dashboard/menu/category
 func (h *AdminHandler) CreateMenuCategory(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1") // Hardcoded for MVP
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 	name := c.FormValue("name")
 	displayOrder, _ := strconv.Atoi(c.FormValue("displayOrder"))
 
@@ -95,7 +111,7 @@ func (h *AdminHandler) CreateMenuCategory(c echo.Context) error {
 		DisplayOrder: displayOrder,
 	}
 
-	if _, err := h.createCategoryUC.Execute(c.Request().Context(), req); err != nil {
+	if _, err = h.createCategoryUC.Execute(c.Request().Context(), req); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -109,7 +125,10 @@ func (h *AdminHandler) CreateMenuCategory(c echo.Context) error {
 
 // CreateItem handles POST /admin/item
 func (h *AdminHandler) CreateItem(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1") // Hardcoded for MVP
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 	categoryID := domain.CategoryID(c.FormValue("categoryID"))
 	name := c.FormValue("name")
 	description := c.FormValue("description")
@@ -126,7 +145,7 @@ func (h *AdminHandler) CreateItem(c echo.Context) error {
 		Available:    available,
 	}
 
-	if _, err := h.createItemUC.Execute(c.Request().Context(), req); err != nil {
+	if _, err = h.createItemUC.Execute(c.Request().Context(), req); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -135,7 +154,10 @@ func (h *AdminHandler) CreateItem(c echo.Context) error {
 
 // CreateMenuItem handles POST /dashboard/menu/item
 func (h *AdminHandler) CreateMenuItem(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1") // Hardcoded for MVP
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 	categoryID := domain.CategoryID(c.FormValue("categoryID"))
 	name := c.FormValue("name")
 	description := c.FormValue("description")
@@ -152,7 +174,7 @@ func (h *AdminHandler) CreateMenuItem(c echo.Context) error {
 		Available:    available,
 	}
 
-	if _, err := h.createItemUC.Execute(c.Request().Context(), req); err != nil {
+	if _, err = h.createItemUC.Execute(c.Request().Context(), req); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -166,7 +188,10 @@ func (h *AdminHandler) CreateMenuItem(c echo.Context) error {
 
 // UploadPhoto handles POST /admin/item/:id/photo
 func (h *AdminHandler) UploadPhoto(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1")
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 	itemID := domain.ItemID(c.Param("id"))
 
 	file, err := c.FormFile("photo")
@@ -187,7 +212,7 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 		ContentType:  file.Header.Get("Content-Type"),
 	}
 
-	if _, err := h.uploadPhotoUC.Execute(c.Request().Context(), req); err != nil {
+	if _, err = h.uploadPhotoUC.Execute(c.Request().Context(), req); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -196,7 +221,10 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 
 // UploadMenuItemPhoto handles POST /dashboard/menu/item/:id/photo
 func (h *AdminHandler) UploadMenuItemPhoto(c echo.Context) error {
-	restaurantID := domain.RestaurantID("restaurant_1")
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 	itemID := domain.ItemID(c.Param("id"))
 
 	file, err := c.FormFile("photo")
@@ -217,7 +245,7 @@ func (h *AdminHandler) UploadMenuItemPhoto(c echo.Context) error {
 		ContentType:  file.Header.Get("Content-Type"),
 	}
 
-	if _, err := h.uploadPhotoUC.Execute(c.Request().Context(), req); err != nil {
+	if _, err = h.uploadPhotoUC.Execute(c.Request().Context(), req); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -231,9 +259,12 @@ func (h *AdminHandler) UploadMenuItemPhoto(c echo.Context) error {
 
 // GenerateQR handles GET /admin/qr
 func (h *AdminHandler) GenerateQR(c echo.Context) error {
-	restaurantID := "restaurant_1"
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 
-	png, err := h.generateQRUC.Execute(c.Request().Context(), restaurantID)
+	png, err := h.generateQRUC.Execute(c.Request().Context(), string(restaurantID))
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -243,9 +274,12 @@ func (h *AdminHandler) GenerateQR(c echo.Context) error {
 
 // GetQRCode handles GET /dashboard/qr-code
 func (h *AdminHandler) GetQRCode(c echo.Context) error {
-	restaurantID := "restaurant_1"
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
 
-	png, err := h.generateQRUC.Execute(c.Request().Context(), restaurantID)
+	png, err := h.generateQRUC.Execute(c.Request().Context(), string(restaurantID))
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}

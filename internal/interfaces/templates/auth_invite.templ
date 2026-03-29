@@ -1,0 +1,42 @@
+package templates
+
+import (
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
+)
+
+templ AuthInvite(csrfToken, invitationToken, role string) {
+	@Layout("Accept Invitation - BitMerchant") {
+		<div class="max-w-md mx-auto mt-8">
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Accept invitation
+					}
+					@card.Description() {
+						Register your passkey for role: { role }
+					}
+				}
+				@card.Content() {
+					<form id="passkey-invite-form" class="space-y-4" data-csrf={ csrfToken } data-invitation-token={ invitationToken }>
+						<div>
+							<label for="displayName" class="block text-sm font-medium mb-2">Your name</label>
+							@input.Input(input.Props{
+								ID: "displayName",
+								Name: "displayName",
+								Type: "text",
+								Placeholder: "Kitchen staff name",
+								Required: true,
+							})
+						</div>
+						@button.Button(button.Props{Type: "submit"}) {
+							Accept and register passkey
+						}
+					</form>
+				}
+			}
+		</div>
+		<script src="/static/js/passkey.js"></script>
+	}
+}
