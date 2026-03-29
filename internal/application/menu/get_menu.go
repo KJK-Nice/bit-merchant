@@ -35,7 +35,8 @@ type CategoryWithItems struct {
 	Items    []*domain.MenuItem
 }
 
-// Execute retrieves menu for a restaurant
+// Execute retrieves the customer-facing menu: available items only, active categories only,
+// and omits empty categories.
 func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID domain.RestaurantID) (*MenuResponse, error) {
 	// Get restaurant
 	restaurant, err := uc.restRepo.FindByID(restaurantID)
@@ -79,9 +80,7 @@ func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID domain.Resta
 
 		catItems := itemsByCategory[cat.ID]
 		if len(catItems) == 0 {
-			continue // Skip empty categories? Or keep them? Let's keep them if they are active.
-			// Actually requirement says "display restaurant menu... organized by categories".
-			// Empty categories might look weird. Let's include them for now, owner can deactivate.
+			continue
 		}
 
 		response.Categories = append(response.Categories, CategoryWithItems{

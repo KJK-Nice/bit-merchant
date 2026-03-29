@@ -13,11 +13,17 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"fmt"
+	"strconv"
 )
 
-templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
+templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, menuError string) {
 	@layouts.Dashboard("Menu Management", "/admin/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div class="space-y-8 mt-4">
+			if menuError != "" {
+				<div class="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+					{ menuError }
+				</div>
+			}
 			<div class="flex justify-between items-center">
 				<h2 class="text-3xl font-bold tracking-tight">Menu Management</h2>
 				@dialog.Dialog() {
@@ -51,61 +57,108 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 				}
 			</div>
 
-			<!-- Categories List -->
 			<div class="space-y-6">
 				for _, catData := range menuData.Categories {
 					@card.Card() {
-						@card.Header(card.HeaderProps{Class: "flex flex-row items-center justify-between space-y-0 pb-2"}) {
-							@card.Title() { { catData.Category.Name } }
-							@dialog.Dialog() {
-								@dialog.Trigger(dialog.TriggerProps{}) {
-									@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
-										@icon.Plus(icon.Props{Class: "mr-2 h-4 w-4"})
-										Add Item
+						@card.Header(card.HeaderProps{Class: "flex flex-row items-center justify-between space-y-0 pb-2 gap-2 flex-wrap"}) {
+							<div class="flex items-center gap-2 flex-wrap min-w-0">
+								@card.Title() { { catData.Category.Name } }
+								if !catData.Category.IsActive {
+									@badge.Badge(badge.Props{Variant: badge.VariantOutline}) {
+										Hidden
 									}
 								}
-								@dialog.Content(dialog.ContentProps{}) {
-									@dialog.Header() {
-										@dialog.Title() { { "Add Item to " + catData.Category.Name } }
+							</div>
+							<div class="flex items-center gap-2 shrink-0">
+								@dialog.Dialog() {
+									@dialog.Trigger(dialog.TriggerProps{}) {
+										@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
+											@icon.Pencil(icon.Props{Class: "mr-2 h-4 w-4"})
+											Edit category
+										}
 									}
-									<form action="/admin/item" method="post" class="space-y-4">
-										<input type="hidden" name="csrf" value={ csrfToken }/>
-										<input type="hidden" name="categoryID" value={ string(catData.Category.ID) }/>
-										<div class="grid grid-cols-2 gap-4">
+									@dialog.Content(dialog.ContentProps{}) {
+										@dialog.Header() {
+											@dialog.Title() { { "Edit " + catData.Category.Name } }
+										}
+										<form action={ "/admin/category/" + string(catData.Category.ID) + "/update" } method="post" class="space-y-4">
+											<input type="hidden" name="csrf" value={ csrfToken }/>
 											<div class="space-y-2">
-												@label.Label(label.Props{For: "add-item-name-" + string(catData.Category.ID)}) {
+												@label.Label(label.Props{For: "edit-cat-name-" + string(catData.Category.ID)}) {
 													Name
 												}
-												@input.Input(input.Props{Type: "text", ID: "add-item-name-" + string(catData.Category.ID), Name: "name", Placeholder: "Item Name", Required: true})
+												@input.Input(input.Props{Type: "text", ID: "edit-cat-name-" + string(catData.Category.ID), Name: "name", Required: true, Value: catData.Category.Name})
 											</div>
 											<div class="space-y-2">
-												@label.Label(label.Props{For: "add-item-price-" + string(catData.Category.ID)}) {
-													Price
+												@label.Label(label.Props{For: "edit-cat-order-" + string(catData.Category.ID)}) {
+													Display Order
 												}
-												@input.Input(input.Props{Type: "number", Step: "0.01", ID: "add-item-price-" + string(catData.Category.ID), Name: "price", Placeholder: "Price", Required: true})
+												@input.Input(input.Props{Type: "number", ID: "edit-cat-order-" + string(catData.Category.ID), Name: "displayOrder", Value: strconv.Itoa(catData.Category.DisplayOrder)})
 											</div>
-										</div>
-										<div class="space-y-2">
-											@label.Label(label.Props{For: "add-item-desc-" + string(catData.Category.ID)}) {
-												Description
-											}
-											@textarea.Textarea(textarea.Props{
-												ID:          "add-item-desc-" + string(catData.Category.ID),
-												Name:        "description",
-												Placeholder: "Description",
-												Rows:        4,
-											})
-										</div>
-										<div class="flex items-center space-x-2">
-											<input type="checkbox" id={ "add-item-available-" + string(catData.Category.ID) } name="available" checked class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
-											@label.Label(label.Props{For: "add-item-available-" + string(catData.Category.ID), Class: "cursor-pointer"}) {
-												Available
-											}
-										</div>
-										@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Add Item }
-									</form>
+											<div class="flex items-center space-x-2">
+												if catData.Category.IsActive {
+													<input type="checkbox" id={ "edit-cat-active-" + string(catData.Category.ID) } name="isActive" checked class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
+												} else {
+													<input type="checkbox" id={ "edit-cat-active-" + string(catData.Category.ID) } name="isActive" class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
+												}
+												@label.Label(label.Props{For: "edit-cat-active-" + string(catData.Category.ID), Class: "cursor-pointer"}) {
+													Category visible on customer menu
+												}
+											</div>
+											@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Save category }
+										</form>
+									}
 								}
-							}
+								@dialog.Dialog() {
+									@dialog.Trigger(dialog.TriggerProps{}) {
+										@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
+											@icon.Plus(icon.Props{Class: "mr-2 h-4 w-4"})
+											Add Item
+										}
+									}
+									@dialog.Content(dialog.ContentProps{}) {
+										@dialog.Header() {
+											@dialog.Title() { { "Add Item to " + catData.Category.Name } }
+										}
+										<form action="/admin/item" method="post" class="space-y-4">
+											<input type="hidden" name="csrf" value={ csrfToken }/>
+											<input type="hidden" name="categoryID" value={ string(catData.Category.ID) }/>
+											<div class="grid grid-cols-2 gap-4">
+												<div class="space-y-2">
+													@label.Label(label.Props{For: "add-item-name-" + string(catData.Category.ID)}) {
+														Name
+													}
+													@input.Input(input.Props{Type: "text", ID: "add-item-name-" + string(catData.Category.ID), Name: "name", Placeholder: "Item Name", Required: true})
+												</div>
+												<div class="space-y-2">
+													@label.Label(label.Props{For: "add-item-price-" + string(catData.Category.ID)}) {
+														Price
+													}
+													@input.Input(input.Props{Type: "number", Step: "0.01", ID: "add-item-price-" + string(catData.Category.ID), Name: "price", Placeholder: "Price", Required: true})
+												</div>
+											</div>
+											<div class="space-y-2">
+												@label.Label(label.Props{For: "add-item-desc-" + string(catData.Category.ID)}) {
+													Description
+												}
+												@textarea.Textarea(textarea.Props{
+													ID:          "add-item-desc-" + string(catData.Category.ID),
+													Name:        "description",
+													Placeholder: "Description",
+													Rows:        4,
+												})
+											</div>
+											<div class="flex items-center space-x-2">
+												<input type="checkbox" id={ "add-item-available-" + string(catData.Category.ID) } name="available" checked class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
+												@label.Label(label.Props{For: "add-item-available-" + string(catData.Category.ID), Class: "cursor-pointer"}) {
+													Available
+												}
+											</div>
+											@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Add Item }
+										</form>
+									}
+								}
+							</div>
 						}
 						@card.Content() {
 							if len(catData.Items) > 0 {
@@ -124,12 +177,118 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 												@table.Cell(table.CellProps{Class: "font-medium"}) { { item.Name } }
 												@table.Cell() { { fmt.Sprintf("$%.2f", item.Price) } }
 												@table.Cell() {
-													@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Available }
+													if item.IsAvailable {
+														@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+															Available
+														}
+													} else {
+														@badge.Badge(badge.Props{Variant: badge.VariantOutline}) {
+															Unavailable
+														}
+													}
 												}
 												@table.Cell(table.CellProps{Class: "text-right"}) {
-													@button.Button(button.Props{Variant: button.VariantGhost, Size: button.SizeIcon}) {
-														@icon.Pencil(icon.Props{Class: "h-4 w-4"})
-													}
+													<div class="flex flex-wrap items-center justify-end gap-2">
+														<form method="post" action={ "/admin/item/" + string(item.ID) + "/toggle-availability" } class="inline">
+															<input type="hidden" name="csrf" value={ csrfToken }/>
+															@button.Button(button.Props{Type: "submit", Variant: button.VariantOutline, Size: button.SizeSm}) {
+																if item.IsAvailable {
+																	Mark unavailable
+																} else {
+																	Mark available
+																}
+															}
+														</form>
+														@dialog.Dialog() {
+															@dialog.Trigger(dialog.TriggerProps{}) {
+																@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
+																	@icon.Image(icon.Props{Class: "mr-2 h-4 w-4"})
+																	Photo
+																}
+															}
+															@dialog.Content(dialog.ContentProps{}) {
+																@dialog.Header() {
+																	@dialog.Title() { { "Photo — " + item.Name } }
+																}
+																<form method="post" action={ "/admin/item/" + string(item.ID) + "/photo" } enctype="multipart/form-data" class="space-y-4">
+																	<input type="hidden" name="csrf" value={ csrfToken }/>
+																	<div class="space-y-2">
+																		@label.Label(label.Props{For: "photo-file-" + string(item.ID)}) {
+																			Image file
+																		}
+																		<input type="file" id={ "photo-file-" + string(item.ID) } name="photo" accept="image/*" required class="block w-full text-sm"/>
+																	</div>
+																	@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Upload }
+																</form>
+															}
+														}
+														@dialog.Dialog() {
+															@dialog.Trigger(dialog.TriggerProps{}) {
+																@button.Button(button.Props{Variant: button.VariantGhost, Size: button.SizeIcon}) {
+																	@icon.Pencil(icon.Props{Class: "h-4 w-4"})
+																}
+															}
+															@dialog.Content(dialog.ContentProps{}) {
+																@dialog.Header() {
+																	@dialog.Title() { { "Edit " + item.Name } }
+																}
+																<form action={ "/admin/item/" + string(item.ID) + "/update" } method="post" class="space-y-4">
+																	<input type="hidden" name="csrf" value={ csrfToken }/>
+																	<div class="space-y-2">
+																		@label.Label(label.Props{For: "edit-item-cat-" + string(item.ID)}) {
+																			Category
+																		}
+																		<select id={ "edit-item-cat-" + string(item.ID) } name="categoryID" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
+																			for _, optCat := range menuData.Categories {
+																				if optCat.Category.ID == item.CategoryID {
+																					<option value={ string(optCat.Category.ID) } selected>{ optCat.Category.Name }</option>
+																				} else {
+																					<option value={ string(optCat.Category.ID) }>{ optCat.Category.Name }</option>
+																				}
+																			}
+																		</select>
+																	</div>
+																	<div class="grid grid-cols-2 gap-4">
+																		<div class="space-y-2">
+																			@label.Label(label.Props{For: "edit-item-name-" + string(item.ID)}) {
+																				Name
+																			}
+																			@input.Input(input.Props{Type: "text", ID: "edit-item-name-" + string(item.ID), Name: "name", Required: true, Value: item.Name})
+																		</div>
+																		<div class="space-y-2">
+																			@label.Label(label.Props{For: "edit-item-price-" + string(item.ID)}) {
+																				Price
+																			}
+																			@input.Input(input.Props{Type: "number", Step: "0.01", ID: "edit-item-price-" + string(item.ID), Name: "price", Required: true, Value: strconv.FormatFloat(item.Price, 'f', 2, 64)})
+																		</div>
+																	</div>
+																	<div class="space-y-2">
+																		@label.Label(label.Props{For: "edit-item-desc-" + string(item.ID)}) {
+																			Description
+																		}
+																		@textarea.Textarea(textarea.Props{
+																			ID:          "edit-item-desc-" + string(item.ID),
+																			Name:        "description",
+																			Placeholder: "Description",
+																			Rows:        4,
+																			Value:       item.Description,
+																		})
+																	</div>
+																	<div class="flex items-center space-x-2">
+																		if item.IsAvailable {
+																			<input type="checkbox" id={ "edit-item-avail-" + string(item.ID) } name="available" checked class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
+																		} else {
+																			<input type="checkbox" id={ "edit-item-avail-" + string(item.ID) } name="available" class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
+																		}
+																		@label.Label(label.Props{For: "edit-item-avail-" + string(item.ID), Class: "cursor-pointer"}) {
+																			Available
+																		}
+																	</div>
+																	@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Save item }
+																</form>
+															}
+														}
+													</div>
 												}
 											}
 										}
@@ -145,7 +304,6 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 				}
 			</div>
 
-			<!-- Restaurant Settings & QR -->
 			<div>
 				<h2 class="text-2xl font-semibold mb-4">Restaurant Settings</h2>
 				@card.Card() {

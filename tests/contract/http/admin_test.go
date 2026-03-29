@@ -73,16 +73,20 @@ func TestAdminEndpoints(t *testing.T) {
 	createCatUC := menu.NewCreateMenuCategoryUseCase(repoCat)
 	createItemUC := menu.NewCreateMenuItemUseCase(repoItem)
 
-	// We also need GetMenuUseCase to render the dashboard
-	getMenuUC := menu.NewGetMenuUseCase(repoCat, repoItem, repoRest)
+	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest)
+	updateItemUC := menu.NewUpdateMenuItemUseCase(repoItem, repoCat)
+	updateCategoryUC := menu.NewUpdateMenuCategoryUseCase(repoCat)
+	toggleAvailUC := menu.NewToggleMenuItemAvailabilityUseCase(repoItem)
 
-	// Initialize Handler (Does not exist yet)
 	membershipRepo := memory.NewMemoryMembershipRepository()
 	adminHandler := handler.NewAdminHandler(
 		createRestUC,
 		createCatUC,
 		createItemUC,
-		getMenuUC,
+		getMenuAdminUC,
+		updateItemUC,
+		updateCategoryUC,
+		toggleAvailUC,
 		nil, // uploadPhotoUC
 		nil, // generateQRUC
 		membershipRepo,
@@ -102,7 +106,7 @@ func TestAdminEndpoints(t *testing.T) {
 
 		assert.NoError(t, adminHandler.Dashboard(c))
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), "Dashboard")
+		assert.Contains(t, rec.Body.String(), "Menu Management")
 	})
 
 	t.Run("POST /admin/category creates category", func(t *testing.T) {
