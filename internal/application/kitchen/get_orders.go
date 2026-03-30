@@ -21,7 +21,7 @@ func (uc *GetKitchenOrdersUseCase) Execute(ctx context.Context, restaurantID dom
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Sort by CreatedAt ascending (oldest first)
 	sort.Slice(orders, func(i, j int) bool {
 		return orders[i].CreatedAt.Before(orders[j].CreatedAt)

@@ -7,6 +7,7 @@ import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMemoryMenuCategoryRepository(t *testing.T) {
@@ -27,9 +28,9 @@ func TestMemoryMenuCategoryRepository(t *testing.T) {
 		cat2, _ := domain.NewMenuCategory("c3", "r2", "Cat 2", 2)
 		cat3, _ := domain.NewMenuCategory("c4", "r3", "Cat 3", 1)
 
-		repo.Save(cat1)
-		repo.Save(cat2)
-		repo.Save(cat3)
+		require.NoError(t, repo.Save(cat1))
+		require.NoError(t, repo.Save(cat2))
+		require.NoError(t, repo.Save(cat3))
 
 		cats, err := repo.FindByRestaurantID("r2")
 		assert.NoError(t, err)
@@ -55,9 +56,9 @@ func TestMemoryMenuItemRepository(t *testing.T) {
 		item2, _ := domain.NewMenuItem("i3", "c2", "r2", "Item 2", 12.0)
 		item3, _ := domain.NewMenuItem("i4", "c3", "r3", "Item 3", 15.0)
 
-		repo.Save(item1)
-		repo.Save(item2)
-		repo.Save(item3)
+		require.NoError(t, repo.Save(item1))
+		require.NoError(t, repo.Save(item2))
+		require.NoError(t, repo.Save(item3))
 
 		items, err := repo.FindByRestaurantID("r2")
 		assert.NoError(t, err)
@@ -69,8 +70,8 @@ func TestMemoryMenuItemRepository(t *testing.T) {
 		item2, _ := domain.NewMenuItem("i6", "c2", "r4", "Item 2", 12.0)
 		item2.SetAvailable(false)
 
-		repo.Save(item1)
-		repo.Save(item2)
+		require.NoError(t, repo.Save(item1))
+		require.NoError(t, repo.Save(item2))
 
 		items, err := repo.FindAvailableByRestaurantID("r4")
 		assert.NoError(t, err)
@@ -78,4 +79,3 @@ func TestMemoryMenuItemRepository(t *testing.T) {
 		assert.Equal(t, "i5", string(items[0].ID))
 	})
 }
-

@@ -7,6 +7,7 @@ import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMemoryPaymentRepository(t *testing.T) {
@@ -24,7 +25,7 @@ func TestMemoryPaymentRepository(t *testing.T) {
 
 	t.Run("FindByOrderID", func(t *testing.T) {
 		p, _ := domain.NewPayment("p2", "o2", "r1", domain.PaymentMethodTypeCash, 10.0)
-		repo.Save(p)
+		require.NoError(t, repo.Save(p))
 
 		found, err := repo.FindByOrderID("o2")
 		assert.NoError(t, err)
@@ -39,13 +40,12 @@ func TestMemoryPaymentRepository(t *testing.T) {
 		p2, _ := domain.NewPayment("p4", "o4", "r2", domain.PaymentMethodTypeCash, 10.0)
 		p3, _ := domain.NewPayment("p5", "o5", "r3", domain.PaymentMethodTypeCash, 10.0)
 
-		repo.Save(p1)
-		repo.Save(p2)
-		repo.Save(p3)
+		require.NoError(t, repo.Save(p1))
+		require.NoError(t, repo.Save(p2))
+		require.NoError(t, repo.Save(p3))
 
 		payments, err := repo.FindByRestaurantID("r2")
 		assert.NoError(t, err)
 		assert.Len(t, payments, 2)
 	})
 }
-

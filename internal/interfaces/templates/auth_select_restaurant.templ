@@ -1,0 +1,46 @@
+package templates
+
+import (
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
+)
+
+templ AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options []RestaurantOption) {
+	@Layout("Select Restaurant - BitMerchant") {
+		<div class="max-w-xl mx-auto mt-8">
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Choose active restaurant
+					}
+					@card.Description() {
+						Switch your active workspace before continuing.
+					}
+				}
+				@card.Content() {
+					<form action="/auth/select-restaurant" method="post" class="space-y-4">
+						<input type="hidden" name="csrf" value={ csrfToken }/>
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "restaurantID", Class: "block"}) {
+								Restaurant
+							}
+							<select id="restaurantID" name="restaurantID" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required>
+								for _, option := range options {
+									if option.RestaurantID == currentRestaurantID {
+										<option value={ option.RestaurantID } selected>{ option.DisplayName + " (" + option.Role + ")" }</option>
+									} else {
+										<option value={ option.RestaurantID }>{ option.DisplayName + " (" + option.Role + ")" }</option>
+									}
+								}
+							</select>
+						</div>
+						@button.Button(button.Props{Type: "submit", Class: "w-full"}) {
+							Use this restaurant
+						}
+					</form>
+				}
+			}
+		</div>
+	}
+}

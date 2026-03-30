@@ -49,6 +49,6 @@ func (uc *MarkOrderReadyUseCase) Execute(ctx context.Context, orderID domain.Ord
 	if err := uc.eventBus.Publish(ctx, event.EventName(), event); err != nil {
 		return nil, err
 	}
-	
+
 	return order, nil
 }

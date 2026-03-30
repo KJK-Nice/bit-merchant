@@ -58,7 +58,7 @@ func TestNewOrderItem(t *testing.T) {
 		_, err := domain.NewOrderItem("oi_1", "o_1", "mi_1", "Burger", 1, 0)
 		assert.Error(t, err)
 	})
-	
+
 	t.Run("should fail with empty name", func(t *testing.T) {
 		_, err := domain.NewOrderItem("oi_1", "o_1", "mi_1", "", 1, 10.0)
 		assert.Error(t, err)
@@ -90,7 +90,7 @@ func TestOrder_UpdateFulfillmentStatus(t *testing.T) {
 	t.Run("invalid transition", func(t *testing.T) {
 		// Reset order to Paid
 		order, _ := domain.NewOrder("o_1", "101", "r_1", "session_1", []domain.OrderItem{{}}, 100, domain.PaymentMethodTypeCash)
-		
+
 		// Paid -> Ready (skipping Preparing)
 		err := order.UpdateFulfillmentStatus(domain.FulfillmentStatusReady)
 		assert.Error(t, err)

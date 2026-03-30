@@ -1,25 +1,40 @@
 package errors
 
-import "bitmerchant/internal/interfaces/templates"
+import (
+	"bitmerchant/internal/interfaces/templates"
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+)
 
 templ ServiceUnavailable(message string) {
 	@templates.Layout("Service Unavailable") {
-		<div class="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
-			<h1 class="text-4xl font-bold text-primary">503</h1>
-			<h2 class="text-2xl font-semibold text-foreground">Service Unavailable</h2>
-			<p class="text-muted-foreground max-w-md">
-				if message != "" {
-					{ message }
-				} else {
-					The service is currently unavailable. Please try again later.
+		<div class="flex justify-center items-center min-h-[60vh] p-4">
+			@card.Card(card.Props{Class: "w-full max-w-md text-center"}) {
+				@card.Header() {
+					@card.Title(card.TitleProps{Class: "text-4xl text-primary"}) {
+						503
+					}
+					@card.Description() {
+						<span class="text-2xl font-semibold text-foreground">Service Unavailable</span>
+					}
 				}
-			</p>
-			<div class="pt-4">
-				<button onclick="window.location.reload()" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-					Try Again
-				</button>
-			</div>
+				@card.Content() {
+					<p class="text-muted-foreground text-sm">
+						if message != "" {
+							{ message }
+						} else {
+							The service is currently unavailable. Please try again later.
+						}
+					</p>
+				}
+				@card.Footer(card.FooterProps{Class: "flex justify-center"}) {
+					@button.Button(button.Props{
+						Attributes: templ.Attributes{"onclick": "window.location.reload()"},
+					}) {
+						Try Again
+					}
+				}
+			}
 		</div>
 	}
 }
-

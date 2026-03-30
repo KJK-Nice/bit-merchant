@@ -35,7 +35,7 @@ func (uc *MarkOrderPreparingUseCase) Execute(ctx context.Context, orderID domain
 	if err := order.UpdateFulfillmentStatus(domain.FulfillmentStatusPreparing); err != nil {
 		return nil, err
 	}
-	
+
 	now := time.Now()
 	order.PreparingAt = &now
 

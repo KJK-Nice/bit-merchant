@@ -10,12 +10,15 @@ import (
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/application/restaurant"
 	"bitmerchant/internal/domain"
+	"bitmerchant/internal/infrastructure/qr"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
+	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // Mock Use Cases for Admin Handler
@@ -71,32 +74,43 @@ func TestAdminEndpoints(t *testing.T) {
 	createCatUC := menu.NewCreateMenuCategoryUseCase(repoCat)
 	createItemUC := menu.NewCreateMenuItemUseCase(repoItem)
 
-	// We also need GetMenuUseCase to render the dashboard
-	getMenuUC := menu.NewGetMenuUseCase(repoCat, repoItem, repoRest)
+	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest)
+	updateItemUC := menu.NewUpdateMenuItemUseCase(repoItem, repoCat)
+	updateCategoryUC := menu.NewUpdateMenuCategoryUseCase(repoCat)
+	toggleAvailUC := menu.NewToggleMenuItemAvailabilityUseCase(repoItem)
+	updateTableUC := restaurant.NewUpdateRestaurantTableCountUseCase(repoRest)
+	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
 
-	// Initialize Handler (Does not exist yet)
+	membershipRepo := memory.NewMemoryMembershipRepository()
 	adminHandler := handler.NewAdminHandler(
 		createRestUC,
 		createCatUC,
 		createItemUC,
-		getMenuUC,
+		getMenuAdminUC,
+		updateItemUC,
+		updateCategoryUC,
+		toggleAvailUC,
 		nil, // uploadPhotoUC
-		nil, // generateQRUC
+		updateTableUC,
+		generateQRUC,
+		membershipRepo,
+		repoRest,
 	)
 
 	// Seed a restaurant for the dashboard context
 	restID := domain.RestaurantID("restaurant_1")
 	rest, _ := domain.NewRestaurant(restID, "Test Rest")
-	repoRest.Save(rest)
+	require.NoError(t, repoRest.Save(rest))
 
 	t.Run("GET /admin/dashboard returns dashboard", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/admin/dashboard", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, restID)
 
 		assert.NoError(t, adminHandler.Dashboard(c))
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), "Dashboard")
+		assert.Contains(t, rec.Body.String(), "Menu Management")
 	})
 
 	t.Run("POST /admin/category creates category", func(t *testing.T) {
@@ -104,6 +118,7 @@ func TestAdminEndpoints(t *testing.T) {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, restID)
 
 		assert.NoError(t, adminHandler.CreateCategory(c))
 		// Expect redirect or HTML fragment depending on implementation (Datastar vs standard)
@@ -129,6 +144,7 @@ func TestAdminEndpoints(t *testing.T) {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, restID)
 
 		assert.NoError(t, adminHandler.CreateItem(c))
 		assert.Equal(t, http.StatusFound, rec.Code)

@@ -2,7 +2,14 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 	"time"
+)
+
+// Table count bounds for dining QR workflow (owner-configurable).
+const (
+	MinTableCount = 1
+	MaxTableCount = 200
 )
 
 // RestaurantID represents a unique restaurant identifier
@@ -12,6 +19,7 @@ type RestaurantID string
 type Restaurant struct {
 	ID             RestaurantID
 	Name           string
+	TableCount     int
 	IsOpen         bool
 	ClosedMessage  string
 	ReopeningHours string
@@ -27,11 +35,12 @@ func NewRestaurant(id RestaurantID, name string) (*Restaurant, error) {
 
 	now := time.Now()
 	return &Restaurant{
-		ID:        id,
-		Name:      name,
-		IsOpen:    true,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:         id,
+		Name:       name,
+		TableCount: MinTableCount,
+		IsOpen:     true,
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}, nil
 }
 
@@ -39,6 +48,14 @@ func NewRestaurant(id RestaurantID, name string) (*Restaurant, error) {
 func ValidateRestaurantName(name string) error {
 	if len(name) == 0 || len(name) > 100 {
 		return errors.New("restaurant name must be between 1 and 100 characters")
+	}
+	return nil
+}
+
+// ValidateTableCount checks owner-configured table count for QR printing.
+func ValidateTableCount(n int) error {
+	if n < MinTableCount || n > MaxTableCount {
+		return fmt.Errorf("table count must be between %d and %d", MinTableCount, MaxTableCount)
 	}
 	return nil
 }

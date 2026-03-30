@@ -23,7 +23,7 @@ func NewCreateMenuCategoryUseCase(repo domain.MenuCategoryRepository) *CreateMen
 
 func (uc *CreateMenuCategoryUseCase) Execute(ctx context.Context, req CreateMenuCategoryRequest) (*domain.MenuCategory, error) {
 	id := domain.CategoryID(fmt.Sprintf("cat_%d", time.Now().UnixNano()))
-	
+
 	category, err := domain.NewMenuCategory(id, req.RestaurantID, req.Name, req.DisplayOrder)
 	if err != nil {
 		return nil, err

@@ -1,25 +1,38 @@
 package errors
 
-import "bitmerchant/internal/interfaces/templates"
+import (
+	"bitmerchant/internal/interfaces/templates"
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+)
 
 templ BadRequest(message string) {
 	@templates.Layout("Bad Request") {
-		<div class="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
-			<h1 class="text-4xl font-bold text-primary">400</h1>
-			<h2 class="text-2xl font-semibold text-foreground">Bad Request</h2>
-			<p class="text-muted-foreground max-w-md">
-				if message != "" {
-					{ message }
-				} else {
-					The request could not be processed due to invalid input.
+		<div class="flex justify-center items-center min-h-[60vh] p-4">
+			@card.Card(card.Props{Class: "w-full max-w-md text-center"}) {
+				@card.Header() {
+					@card.Title(card.TitleProps{Class: "text-4xl text-primary"}) {
+						400
+					}
+					@card.Description() {
+						<span class="text-2xl font-semibold text-foreground">Bad Request</span>
+					}
 				}
-			</p>
-			<div class="pt-4">
-				<a href="/" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-					Return Home
-				</a>
-			</div>
+				@card.Content() {
+					<p class="text-muted-foreground text-sm">
+						if message != "" {
+							{ message }
+						} else {
+							The request could not be processed due to invalid input.
+						}
+					</p>
+				}
+				@card.Footer(card.FooterProps{Class: "flex justify-center"}) {
+					@button.Button(button.Props{Href: "/"}) {
+						Return Home
+					}
+				}
+			}
 		</div>
 	}
 }
-

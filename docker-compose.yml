@@ -1,14 +1,32 @@
+# Loads container env from .env.docker (see bitmerchant/.env.docker).
+# For Compose variable substitution in this file, either:
+#   - keep defaults below, or
+#   - run: docker compose --env-file .env.docker up --build
 services:
   app:
     build: .
     ports:
       - "8080:8080"
-    environment:
-      - PORT=8080
-      - BASE_URL=http://localhost:8080
-      # Uncomment and set these if using S3
-      # - S3_BUCKET_NAME=your-bucket
-      # - AWS_REGION=your-region
-      # - AWS_ACCESS_KEY_ID=your-key
-      # - AWS_SECRET_ACCESS_KEY=your-secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env.docker
 
+  postgres:
+    image: postgres:17-alpine
+    env_file:
+      - .env.docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bitmerchant -d bitmerchant"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 3s
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -15,6 +15,7 @@ import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDashboardIntegration(t *testing.T) {
@@ -28,7 +29,7 @@ func TestDashboardIntegration(t *testing.T) {
 
 	// Setup restaurant for order creation check
 	restaurant, _ := domain.NewRestaurant("restaurant_1", "Integration Cafe")
-	restRepo.Save(restaurant)
+	require.NoError(t, restRepo.Save(restaurant))
 
 	// Use Cases
 	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
@@ -39,7 +40,7 @@ func TestDashboardIntegration(t *testing.T) {
 		cartSvc := cart.NewCartService()
 		sessionID := "sess_integration"
 		item, _ := domain.NewMenuItem("i1", "c1", "r1", "Burger", 15.0)
-		cartSvc.AddItem(sessionID, item, 2) // 2 Burgers = $30
+		require.NoError(t, cartSvc.AddItem(sessionID, item, 2)) // 2 Burgers = $30
 		userCart := cartSvc.GetCart(sessionID)
 
 		req := order.CreateOrderRequest{

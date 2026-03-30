@@ -61,6 +61,9 @@ templ CustomerFooterNav(props Props) {
 			@NavItem(props.CurrentPath, "/menu", "Menu") {
 				@icon.Utensils(icon.Props{Class: "size-5"})
 			}
+			@NavItem(props.CurrentPath, "/my-places", "Places") {
+				@icon.MapPin(icon.Props{Class: "size-5"})
+			}
 			@NavItem(props.CurrentPath, "/order/lookup", "Orders") {
 				@icon.History(icon.Props{Class: "size-5"})
 			}

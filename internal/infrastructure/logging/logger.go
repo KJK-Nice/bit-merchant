@@ -24,4 +24,3 @@ func NewLogger() *Logger {
 	slog.SetDefault(logger)
 	return &Logger{logger}
 }
-

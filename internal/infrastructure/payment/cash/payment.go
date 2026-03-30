@@ -36,4 +36,3 @@ func (p *CashPaymentMethod) ValidatePayment(ctx context.Context, order *domain.O
 func (p *CashPaymentMethod) GetPaymentMethodType() domain.PaymentMethodType {
 	return domain.PaymentMethodTypeCash
 }
-

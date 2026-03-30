@@ -7,12 +7,14 @@ import (
 
 	"bitmerchant/internal/application/cart"
 	"bitmerchant/internal/application/menu"
+	"bitmerchant/internal/application/places"
 	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetMenu(t *testing.T) {
@@ -24,12 +26,14 @@ func TestGetMenu(t *testing.T) {
 
 	// Add some data
 	rest, _ := domain.NewRestaurant("r1", "Test Restaurant")
-	restRepo.Save(rest)
+	require.NoError(t, restRepo.Save(rest))
 	cat, _ := domain.NewMenuCategory("c1", "r1", "Starters", 1)
-	catRepo.Save(cat)
+	require.NoError(t, catRepo.Save(cat))
 
-	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo)
-	h := handler.NewMenuHandler(uc, cartService)
+	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
+	recordVisitUC := places.NewRecordMenuVisitUseCase(restRepo, visitRepo)
+	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menu.PhotoSignerConfig{})
+	h := handler.NewMenuHandler(uc, cartService, recordVisitUC)
 
 	// Setup Echo
 	e := echo.New()

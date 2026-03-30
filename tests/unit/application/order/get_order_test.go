@@ -9,6 +9,7 @@ import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetOrderByNumberUseCase(t *testing.T) {
@@ -19,15 +20,15 @@ func TestGetOrderByNumberUseCase(t *testing.T) {
 		// Setup order
 		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
 		existingOrder, _ := domain.NewOrder(
-			"o1", 
-			"1234", 
+			"o1",
+			"1234",
 			"r1",
 			"session_1",
-			[]domain.OrderItem{*item}, 
-			1000, 
+			[]domain.OrderItem{*item},
+			1000,
 			domain.PaymentMethodTypeCash,
 		)
-		repo.Save(existingOrder)
+		require.NoError(t, repo.Save(existingOrder))
 
 		result, err := uc.Execute(context.Background(), "r1", "1234")
 		assert.NoError(t, err)
@@ -40,4 +41,3 @@ func TestGetOrderByNumberUseCase(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
-

@@ -27,4 +27,3 @@ func PerformanceMiddleware(logger *logging.Logger, threshold time.Duration) echo
 		}
 	}
 }
-

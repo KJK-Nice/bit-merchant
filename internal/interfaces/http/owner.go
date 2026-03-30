@@ -34,11 +34,10 @@ func (h *OwnerHandler) PostSignup(c echo.Context) error {
 		Name: name,
 	}
 
-	rest, err := h.createRestaurantUC.Execute(c.Request().Context(), req)
+	_, err := h.createRestaurantUC.Execute(c.Request().Context(), req)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Failed to create restaurant: "+err.Error())
 	}
 
-	// Redirect to dashboard menu after signup
-	return c.Redirect(http.StatusFound, "/dashboard/menu?restaurant_id="+string(rest.ID))
+	return c.Redirect(http.StatusFound, "/admin/dashboard")
 }

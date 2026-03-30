@@ -1,0 +1,56 @@
+package templates
+
+import (
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
+)
+
+templ AuthSignup(csrfToken string) {
+	@Layout("Sign Up - BitMerchant") {
+		<div class="max-w-md mx-auto mt-8">
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Create owner account
+					}
+					@card.Description() {
+						Register with a passkey and create your restaurant.
+					}
+				}
+				@card.Content() {
+					<form id="passkey-signup-form" class="space-y-4" data-csrf={ csrfToken }>
+						<div>
+							<label for="displayName" class="block text-sm font-medium mb-2">Your name</label>
+							@input.Input(input.Props{
+								ID: "displayName",
+								Name: "displayName",
+								Type: "text",
+								Placeholder: "Jane Doe",
+								Required: true,
+							})
+						</div>
+						<div>
+							<label for="restaurantName" class="block text-sm font-medium mb-2">Restaurant name</label>
+							@input.Input(input.Props{
+								ID: "restaurantName",
+								Name: "restaurantName",
+								Type: "text",
+								Placeholder: "BitMerchant Cafe",
+								Required: true,
+							})
+						</div>
+						@button.Button(button.Props{Type: "submit"}) {
+							Create with passkey
+						}
+					</form>
+					<p class="text-sm mt-4">
+						Already have an account?
+						<a class="underline" href="/auth/login">Sign in</a>
+					</p>
+				}
+			}
+		</div>
+		<script src="/static/js/passkey.js"></script>
+	}
+}

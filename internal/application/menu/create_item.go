@@ -26,13 +26,15 @@ func NewCreateMenuItemUseCase(repo domain.MenuItemRepository) *CreateMenuItemUse
 
 func (uc *CreateMenuItemUseCase) Execute(ctx context.Context, req CreateMenuItemRequest) (*domain.MenuItem, error) {
 	id := domain.ItemID(fmt.Sprintf("item_%d", time.Now().UnixNano()))
-	
+
 	item, err := domain.NewMenuItem(id, req.CategoryID, req.RestaurantID, req.Name, req.Price)
 	if err != nil {
 		return nil, err
 	}
-	
-	item.SetDescription(req.Description)
+
+	if err := item.SetDescription(req.Description); err != nil {
+		return nil, err
+	}
 	item.SetAvailable(req.Available)
 
 	if err := uc.repo.Save(item); err != nil {

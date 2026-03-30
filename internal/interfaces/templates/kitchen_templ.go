@@ -14,7 +14,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-func KitchenPage(orders []*domain.Order) templ.Component {
+func KitchenPage(orders []*domain.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -63,7 +63,7 @@ func KitchenPage(orders []*domain.Order) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.Dashboard("Kitchen Display", "/kitchen").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.Dashboard("Kitchen Display", "/kitchen", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

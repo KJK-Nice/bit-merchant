@@ -1,16 +1,20 @@
 package layouts
 
 import (
+	"strconv"
+
 	"bitmerchant/internal/interfaces/templates/components/ui/avatar"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
+	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 )
 
-templ Dashboard(title string, currentPath string) {
+templ Dashboard(title string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, csrfToken string, switcherOptions []RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -71,8 +75,21 @@ templ Dashboard(title string, currentPath string) {
 			@dropdown.Script()
 			@avatar.Script()
 			@popover.Script()
+			@label.Script()
+			@textarea.Script()
 		</head>
 		<body class="bg-background text-foreground antialiased min-h-screen">
+			<form id="layout-logout-form" method="post" action="/auth/logout" class="hidden">
+				<input type="hidden" name="csrf" value={ csrfToken }/>
+			</form>
+			if len(switcherOptions) >= 2 {
+				for i, opt := range switcherOptions {
+					<form id={ "sidebar-switch-" + strconv.Itoa(i) } method="post" action="/auth/select-restaurant" class="hidden">
+						<input type="hidden" name="csrf" value={ csrfToken }/>
+						<input type="hidden" name="restaurantID" value={ opt.RestaurantID }/>
+					</form>
+				}
+			}
 			@sidebar.Layout() {
 				@sidebar.Sidebar(sidebar.Props{
 					Collapsible: sidebar.CollapsibleIcon,
@@ -81,11 +98,72 @@ templ Dashboard(title string, currentPath string) {
 					@sidebar.Header() {
 						@sidebar.Menu() {
 							@sidebar.MenuItem() {
-								@sidebar.MenuButton(sidebar.MenuButtonProps{
-									Href: "/dashboard",
-								}) {
-									@icon.Store(icon.Props{Class: "size-6"})
-									<span class="font-semibold">BitMerchant</span>
+								@dropdown.Dropdown() {
+									@dropdown.Trigger() {
+										@sidebar.MenuButton(sidebar.MenuButtonProps{
+											Tooltip: "Restaurant menu",
+										}) {
+											@icon.Store(icon.Props{Class: "size-6 shrink-0"})
+											<div class="grid flex-1 text-left text-sm leading-tight">
+												<span class="truncate font-semibold">
+													if activeRestaurantLabel != "" {
+														{ activeRestaurantLabel }
+													} else {
+														Restaurant
+													}
+												</span>
+												if activeRestaurantRole != "" {
+													<span class="truncate text-xs text-muted-foreground capitalize">{ activeRestaurantRole }</span>
+												}
+											</div>
+											@icon.ChevronsUpDown(icon.Props{Class: "ml-auto size-4"})
+										}
+									}
+									@dropdown.Content(dropdown.ContentProps{
+										Class:     "w-64",
+										Placement: dropdown.PlacementBottomStart,
+									}) {
+										@dropdown.Label() {
+											Restaurants
+										}
+										if len(switcherOptions) >= 2 {
+											for i, opt := range switcherOptions {
+												@dropdown.Item(dropdown.ItemProps{
+													Attributes: templ.Attributes{
+														"form": "sidebar-switch-" + strconv.Itoa(i),
+														"type": "submit",
+													},
+												}) {
+													<span class="flex flex-col items-start gap-0.5">
+														<span class="font-medium">{ opt.DisplayName }</span>
+														<span class="text-xs text-muted-foreground capitalize">{ opt.Role }</span>
+													</span>
+												}
+											}
+										}
+										if canCreateRestaurant {
+											if len(switcherOptions) >= 2 {
+												@dropdown.Separator()
+											}
+											@dropdown.Item(dropdown.ItemProps{
+												Href: "/auth/restaurants/new",
+											}) {
+												<span class="flex items-center">
+													@icon.CirclePlus(icon.Props{Size: 16, Class: "mr-2"})
+													New restaurant
+												</span>
+											}
+										}
+										@dropdown.Separator()
+										@dropdown.Item(dropdown.ItemProps{
+											Href: "/auth/select-restaurant",
+										}) {
+											<span class="flex items-center">
+												@icon.Settings(icon.Props{Size: 16, Class: "mr-2"})
+												Manage restaurants
+											</span>
+										}
+									}
 								}
 							}
 						}
@@ -158,15 +236,15 @@ templ Dashboard(title string, currentPath string) {
 											@avatar.Avatar(avatar.Props{Class: "size-8 rounded-lg"}) {
 												@avatar.Image(avatar.ImageProps{
 													Src: "",
-													Alt: "John Doe avatar",
+													Alt: userDisplayName + " avatar",
 												})
 												@avatar.Fallback() {
-													JD
+													{ userInitials }
 												}
 											}
 											<div class="grid flex-1 text-left text-sm leading-tight">
-												<span class="truncate font-medium">John Doe</span>
-												<span class="truncate text-xs">john@example.com</span>
+												<span class="truncate font-medium">{ userDisplayName }</span>
+												<span class="truncate text-xs text-muted-foreground">{ userSubtitle }</span>
 											</div>
 											@icon.ChevronsUpDown(icon.Props{Class: "ml-auto size-4"})
 										}
@@ -176,23 +254,24 @@ templ Dashboard(title string, currentPath string) {
 										Placement: dropdown.PlacementTopStart,
 									}) {
 										@dropdown.Label() {
-											John Doe
+											{ userDisplayName }
 										}
 										@dropdown.Separator()
-										@dropdown.Item() {
+										@dropdown.Item(dropdown.ItemProps{
+											Href: "/auth/profile",
+										}) {
 											<span class="flex items-center">
 												@icon.User(icon.Props{Size: 16, Class: "mr-2"})
 												Profile
 											</span>
 										}
-										@dropdown.Item() {
-											<span class="flex items-center">
-												@icon.Settings(icon.Props{Size: 16, Class: "mr-2"})
-												Settings
-											</span>
-										}
 										@dropdown.Separator()
-										@dropdown.Item() {
+										@dropdown.Item(dropdown.ItemProps{
+											Attributes: templ.Attributes{
+												"form": "layout-logout-form",
+												"type": "submit",
+											},
+										}) {
 											<span class="flex items-center">
 												@icon.LogOut(icon.Props{Size: 16, Class: "mr-2"})
 												Log out

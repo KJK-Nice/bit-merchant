@@ -160,5 +160,7 @@ func (uc *CreateOrderUseCase) publishOrderCreatedEvent(ctx context.Context, orde
 		RestaurantID: order.RestaurantID,
 		CreatedAt:    order.CreatedAt,
 	}
-	uc.eventBus.Publish(ctx, domain.EventOrderCreated, event)
+	if err := uc.eventBus.Publish(ctx, domain.EventOrderCreated, event); err != nil {
+		uc.logger.Warn("Failed to publish order created event", "orderID", order.ID, "error", err)
+	}
 }

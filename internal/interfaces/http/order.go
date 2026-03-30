@@ -14,24 +14,24 @@ import (
 
 // OrderHandler handles order-related HTTP requests
 type OrderHandler struct {
-	createOrderUseCase       *order.CreateOrderUseCase
-	getOrderByNumberUseCase  *order.GetOrderByNumberUseCase
-	getCustomerOrdersUseCase *order.GetCustomerOrdersUseCase // Added for history
-	cartService              *cart.CartService
+	createOrderUseCase         *order.CreateOrderUseCase
+	getCustomerOrderByNumberUC *order.GetCustomerOrderByNumberUseCase
+	getCustomerOrdersUseCase   *order.GetCustomerOrdersUseCase
+	cartService                *cart.CartService
 }
 
 // NewOrderHandler creates a new OrderHandler
 func NewOrderHandler(
 	createOrderUseCase *order.CreateOrderUseCase,
-	getOrderByNumberUseCase *order.GetOrderByNumberUseCase,
+	getCustomerOrderByNumberUC *order.GetCustomerOrderByNumberUseCase,
 	getCustomerOrdersUseCase *order.GetCustomerOrdersUseCase,
 	cartService *cart.CartService,
 ) *OrderHandler {
 	return &OrderHandler{
-		createOrderUseCase:       createOrderUseCase,
-		getOrderByNumberUseCase:  getOrderByNumberUseCase,
+		createOrderUseCase:         createOrderUseCase,
+		getCustomerOrderByNumberUC: getCustomerOrderByNumberUC,
 		getCustomerOrdersUseCase: getCustomerOrdersUseCase,
-		cartService:              cartService,
+		cartService:                cartService,
 	}
 }
 
@@ -44,8 +44,11 @@ func (h *OrderHandler) GetConfirmOrder(c echo.Context) error {
 	if len(cart.Items) == 0 {
 		return c.Redirect(http.StatusFound, "/menu")
 	}
+	if cart.RestaurantID == "" {
+		return c.Redirect(http.StatusFound, "/menu")
+	}
 
-	return templates.OrderConfirmationPage(cart, getCSRFToken(c)).Render(c.Request().Context(), c.Response())
+	return templates.OrderConfirmationPage(cart, string(cart.RestaurantID), getCSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
 // CreateOrder handles POST /order/create
@@ -57,7 +60,10 @@ func (h *OrderHandler) CreateOrder(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/menu")
 	}
 
-	restaurantID := domain.RestaurantID("restaurant_1") // Default for MVP
+	restaurantID := domain.RestaurantID(c.FormValue("restaurantID"))
+	if restaurantID == "" || cart.RestaurantID != restaurantID {
+		return c.String(http.StatusBadRequest, "Invalid restaurant for this order")
+	}
 
 	// Get payment method from form
 	paymentMethodVal := c.FormValue("paymentMethod")
@@ -95,14 +101,13 @@ func (h *OrderHandler) GetOrder(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Order number required")
 	}
 
-	restaurantID := domain.RestaurantID("restaurant_1") // Default for MVP
-
-	result, err := h.getOrderByNumberUseCase.Execute(c.Request().Context(), restaurantID, orderNumber)
-	if err != nil {
-		if err.Error() == "order not found" {
+	sessionID, _ := c.Get("sessionID").(string)
+	result, cerr := h.getCustomerOrderByNumberUC.Execute(c.Request().Context(), sessionID, orderNumber)
+	if cerr != nil {
+		if cerr.Error() == "order not found" {
 			return c.String(http.StatusNotFound, "Order not found")
 		}
-		return c.String(http.StatusInternalServerError, err.Error())
+		return c.String(http.StatusInternalServerError, cerr.Error())
 	}
 
 	return templates.OrderStatusPage(result).Render(c.Request().Context(), c.Response())

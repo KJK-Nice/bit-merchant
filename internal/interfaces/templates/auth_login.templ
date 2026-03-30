@@ -1,0 +1,35 @@
+package templates
+
+import (
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+)
+
+templ AuthLogin(csrfToken string) {
+	@Layout("Login - BitMerchant") {
+		<div class="max-w-md mx-auto mt-8">
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Sign in with passkey
+					}
+					@card.Description() {
+						Use your saved passkey to access dashboard and kitchen tools.
+					}
+				}
+				@card.Content() {
+					<form id="passkey-login-form" class="space-y-4" data-csrf={ csrfToken }>
+						@button.Button(button.Props{Type: "submit"}) {
+							Sign in
+						}
+					</form>
+					<p class="text-sm mt-4">
+						New here?
+						<a class="underline" href="/auth/signup">Create account</a>
+					</p>
+				}
+			}
+		</div>
+		<script src="/static/js/passkey.js"></script>
+	}
+}

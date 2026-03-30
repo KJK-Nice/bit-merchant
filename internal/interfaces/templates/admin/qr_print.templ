@@ -1,0 +1,73 @@
+package admin
+
+import "strconv"
+
+// QRPrintPage is a minimal print layout (no app chrome) so owners get a clean sheet from the browser.
+templ QRPrintPage(restaurantName string, tableNumbers []int) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Print QR — { restaurantName }</title>
+			<style>
+				:root {
+					color-scheme: light;
+				}
+				body {
+					font-family: system-ui, sans-serif;
+					margin: 0;
+					padding: 1rem;
+					background: #fff;
+					color: #111;
+				}
+				.toolbar {
+					margin-bottom: 1rem;
+				}
+				.grid {
+					display: grid;
+					grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+					gap: 1.25rem;
+				}
+				.card {
+					border: 1px solid #ddd;
+					border-radius: 8px;
+					padding: 1rem;
+					text-align: center;
+					break-inside: avoid;
+				}
+				.card h2 {
+					font-size: 1rem;
+					margin: 0 0 0.75rem;
+					font-weight: 600;
+				}
+				.card img {
+					width: 200px;
+					height: 200px;
+					image-rendering: pixelated;
+				}
+				@media print {
+					.no-print {
+						display: none !important;
+					}
+					body {
+						padding: 0;
+					}
+				}
+			</style>
+		</head>
+		<body>
+			<div class="toolbar no-print">
+				<button type="button" onclick="window.print()">Print</button>
+			</div>
+			<div class="grid">
+				for _, n := range tableNumbers {
+					<div class="card">
+						<h2>{ restaurantName } — Table { strconv.Itoa(n) }</h2>
+						<img src={ "/admin/qr/table/" + strconv.Itoa(n) } width="200" height="200" alt={ "QR table " + strconv.Itoa(n) }/>
+					</div>
+				}
+			</div>
+		</body>
+	</html>
+}

@@ -1,6 +1,7 @@
 package http_test
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
+	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +23,7 @@ func TestDashboardHandler(t *testing.T) {
 	// Setup
 	orderRepo := memory.NewMemoryOrderRepository()
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
-	
+
 	// Seed restaurant
 	r, _ := domain.NewRestaurant("restaurant_1", "Test Cafe")
 	_ = restaurantRepo.Save(r)
@@ -39,7 +41,7 @@ func TestDashboardHandler(t *testing.T) {
 	getTopItemsUC := dashboard.NewGetTopSellingItemsUseCase(orderRepo)
 	toggleOpenUC := restaurant.NewToggleRestaurantOpenUseCase(restaurantRepo)
 
-	h := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC)
+	h := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, restaurantRepo, nil, slog.Default())
 
 	e := echo.New()
 
@@ -47,12 +49,16 @@ func TestDashboardHandler(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/dashboard", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, domain.RestaurantID("restaurant_1"))
 
 		err := h.Dashboard(c)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), "Sales Dashboard")
-		assert.Contains(t, rec.Body.String(), "10.00") // Total Sales
+		body := rec.Body.String()
+		assert.Contains(t, body, "Sales Dashboard")
+		assert.Contains(t, body, "10.00") // Total Sales
+		assert.Contains(t, body, "Restaurant Status")
+		assert.Contains(t, body, "Open")
 	})
 
 	t.Run("POST /dashboard/toggle-open", func(t *testing.T) {
@@ -61,17 +67,15 @@ func TestDashboardHandler(t *testing.T) {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+		c.Set(httpMiddleware.ContextRestaurantID, domain.RestaurantID("restaurant_1"))
 
 		err := h.ToggleOpen(c)
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusOK, rec.Code)
-		
-		// Verify restaurant state changed
+		assert.Equal(t, http.StatusFound, rec.Code)
+		loc := rec.Header().Get("Location")
+		assert.Contains(t, loc, "/dashboard")
+
 		updated, _ := restaurantRepo.FindByID("restaurant_1")
-		// Default was whatever NewRestaurant sets (probably false or true, let's say it toggled)
-		// If it was false (closed), now true (open).
-		_ = updated
-		// We can check response body for button text change if we implement partial updates properly.
+		assert.False(t, updated.IsOpen)
 	})
 }
-

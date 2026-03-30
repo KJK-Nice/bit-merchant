@@ -1,0 +1,54 @@
+package templates
+
+import (
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/layouts"
+)
+
+templ AuthNewRestaurantPage(csrfToken string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, memberships []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
+	@layouts.Dashboard("New restaurant", currentPath, activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, memberships, activeRestaurantRole, canCreateRestaurant) {
+		<div class="space-y-8 mt-4 max-w-lg">
+			<div>
+				<h1 class="text-2xl font-bold tracking-tight">New restaurant</h1>
+				<p class="text-muted-foreground text-sm mt-1">Create another business and switch to it when you are done.</p>
+			</div>
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Details
+					}
+					@card.Description() {
+						You will be the owner of this restaurant.
+					}
+				}
+				@card.Content() {
+					<form method="POST" action="/auth/restaurants" class="space-y-4">
+						<input type="hidden" name="csrf" value={ csrfToken }/>
+						<div>
+							<label for="restaurant-name" class="block text-sm font-medium mb-2">
+								Restaurant name
+							</label>
+							@input.Input(input.Props{
+								ID:          "restaurant-name",
+								Name:        "name",
+								Type:        "text",
+								Placeholder: "e.g. North Cafe",
+								Required:    true,
+							})
+						</div>
+						<div class="flex flex-wrap gap-2">
+							@button.Button(button.Props{Type: "submit"}) {
+								Create restaurant
+							}
+							@button.Button(button.Props{Href: "/dashboard", Variant: button.VariantOutline}) {
+								Cancel
+							}
+						</div>
+					</form>
+				}
+			}
+		</div>
+	}
+}

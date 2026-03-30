@@ -5,6 +5,16 @@ vars:
     sh: command -v tailwindcss >/dev/null 2>&1 && echo "tailwindcss" || echo "npx tailwindcss@latest"
 
 tasks:
+  compose:
+    desc: Start app stack with Docker Compose
+    cmds:
+      - docker compose up --build
+
+  migrate:
+    desc: Run Goose migrations (requires DATABASE_URL)
+    cmds:
+      - go run ./cmd/migrate/main.go
+
   templ:
     desc: Run templ with integrated server and hot reload
     cmds:
@@ -14,6 +24,29 @@ tasks:
     desc: Watch Tailwind CSS changes
     cmds:
       - "{{.TAILWIND_CMD}} -i ./assets/css/input.css -o ./assets/css/output.css --watch"
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test ./...
+
+  test:verbose:
+    desc: Run all tests with verbose output and coverage
+    cmds:
+      - go test -v -coverprofile=coverage.out ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run
+
+  check:
+    desc: Run all checks (generate, build, lint, test)
+    cmds:
+      - templ generate
+      - go build ./...
+      - golangci-lint run
+      - go test ./...
 
   dev:
     desc: Start development server with hot reload

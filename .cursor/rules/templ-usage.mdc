@@ -1,0 +1,37 @@
+---
+description: Use templ and templui components correctly in this repo
+globs: "**/*.templ"
+alwaysApply: false
+---
+
+# Templ (bit-merchant)
+
+## After edits
+
+- Run `templ generate` from the repo root, then `go build ./...` (or `go test`). Do not commit only `.templ` changes without regenerating `*_templ.go`.
+
+## Go expressions in markup
+
+- Inside another component’s children (e.g. `@table.Cell()`, `@badge.Badge()`), **dynamic values must use the double-brace form** so they compile as Go, not plain text:
+
+```templ
+@table.Cell() { { item.Name } }
+@table.Cell() { { fmt.Sprintf("$%.2f", item.Price) } }
+```
+
+- Wrong (renders as literal text and can break `for` variable usage):
+
+```templ
+@table.Cell() { item.Name }
+```
+
+- If `templ generate` fails with a parser error inside `@component { … }`, simplify expressions (e.g. one identifier per block). If `go build` reports an unused `for` range variable, the inner body is not treating the symbol as Go—use `{ { expr } }` there.
+
+## UI components
+
+- Prefer [templui](https://templui.io/) components already vendored under `internal/interfaces/templates/components/ui/` (`card`, `button`, `table`, `input`, `label`, `textarea`, `badge`, etc.) instead of duplicating shadcn-style classes on raw `<div>` / `<table>` / `<button>`.
+- Add new primitives with `templui add <component>` (see `.templui.json` for paths). If a component ships JS, include `@thatpkg.Script()` in the relevant layout (`layout.templ`, `layouts/dashboard.templ`, etc.).
+
+## Imports
+
+- Use the module path `bitmerchant/...` in `.templ` import blocks (e.g. `bitmerchant/internal/interfaces/templates/components/ui/card`).

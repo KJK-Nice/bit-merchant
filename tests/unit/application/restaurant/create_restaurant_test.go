@@ -39,7 +39,7 @@ func TestCreateRestaurantUseCase_Execute(t *testing.T) {
 		useCase := restaurant.NewCreateRestaurantUseCase(repo)
 
 		repo.On("Save", mock.MatchedBy(func(r *domain.Restaurant) bool {
-			return r.Name == "My Tasty Place" && r.ID != ""
+			return r.Name == "My Tasty Place" && r.ID != "" && r.TableCount == domain.MinTableCount
 		})).Return(nil)
 
 		req := restaurant.CreateRestaurantRequest{

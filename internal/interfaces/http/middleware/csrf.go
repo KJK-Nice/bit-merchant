@@ -13,4 +13,3 @@ func CSRFMiddleware() echo.MiddlewareFunc {
 		CookiePath:  "/",
 	})
 }
-

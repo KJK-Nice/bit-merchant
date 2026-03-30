@@ -13,6 +13,7 @@ import (
 	"bitmerchant/internal/application/kitchen"
 	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/application/order"
+	"bitmerchant/internal/application/places"
 	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/events"
 	eventHandlers "bitmerchant/internal/infrastructure/events/handlers"
@@ -47,7 +48,8 @@ func TestKitchenWorkflow(t *testing.T) {
 
 	// Seed Data
 	restaurantID := domain.RestaurantID("restaurant_1")
-	_ = restRepo.Save(&domain.Restaurant{ID: restaurantID, Name: "Test Cafe", IsOpen: true})
+	rSeed, _ := domain.NewRestaurant(restaurantID, "Test Cafe")
+	_ = restRepo.Save(rSeed)
 
 	cat1, _ := domain.NewMenuCategory("cat_1", restaurantID, "Mains", 1)
 	_ = menuCatRepo.Save(cat1)
@@ -57,18 +59,20 @@ func TestKitchenWorkflow(t *testing.T) {
 
 	// Use Cases
 	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
-	getOrderUC := order.NewGetOrderByNumberUseCase(orderRepo)
+	getCustomerOrderUC := order.NewGetCustomerOrderByNumberUseCase(orderRepo)
 	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
 	getKitchenOrdersUC := kitchen.NewGetKitchenOrdersUseCase(orderRepo)
 	markPaidUC := kitchen.NewMarkOrderPaidUseCase(orderRepo, eventBus)
 	markPreparingUC := kitchen.NewMarkOrderPreparingUseCase(orderRepo, eventBus)
 	markReadyUC := kitchen.NewMarkOrderReadyUseCase(orderRepo, eventBus)
-	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo)
+	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo, nil, menu.PhotoSignerConfig{})
 
 	// Handlers
-	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC)
-	orderHandler := handler.NewOrderHandler(createOrderUC, getOrderUC, getCustomerOrdersUC, cartService)
-	_ = handler.NewMenuHandler(getMenuUC, cartService)
+	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
+	orderHandler := handler.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
+	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
+	recordVisitUC := places.NewRecordMenuVisitUseCase(restRepo, visitRepo)
+	_ = handler.NewMenuHandler(getMenuUC, cartService, recordVisitUC)
 
 	// Event Handlers
 	orderCreatedHandler := eventHandlers.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
@@ -79,23 +83,23 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Subscriptions
 	subscribe(t, eventBus, "OrderCreated", func(msg []byte) {
 		var event domain.OrderCreated
-		json.Unmarshal(msg, &event)
-		orderCreatedHandler.Handle(context.Background(), event)
+		require.NoError(t, json.Unmarshal(msg, &event))
+		require.NoError(t, orderCreatedHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, "OrderPaid", func(msg []byte) {
 		var event domain.OrderPaid
-		json.Unmarshal(msg, &event)
-		orderPaidHandler.Handle(context.Background(), event)
+		require.NoError(t, json.Unmarshal(msg, &event))
+		require.NoError(t, orderPaidHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, "OrderPreparing", func(msg []byte) {
 		var event domain.OrderPreparing
-		json.Unmarshal(msg, &event)
-		orderPreparingHandler.Handle(context.Background(), event)
+		require.NoError(t, json.Unmarshal(msg, &event))
+		require.NoError(t, orderPreparingHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, "OrderReady", func(msg []byte) {
 		var event domain.OrderReady
-		json.Unmarshal(msg, &event)
-		orderReadyHandler.Handle(context.Background(), event)
+		require.NoError(t, json.Unmarshal(msg, &event))
+		require.NoError(t, orderReadyHandler.Handle(context.Background(), event))
 	})
 
 	// Echo Setup
@@ -115,7 +119,9 @@ func TestKitchenWorkflow(t *testing.T) {
 	sessionID := "session-1"
 	_ = cartService.AddItem(sessionID, item1, 1)
 
-	req := httptest.NewRequest(http.MethodPost, "/order/create", nil)
+	form := "paymentMethod=cash&restaurantID=" + string(restaurantID)
+	req := httptest.NewRequest(http.MethodPost, "/order/create", strings.NewReader(form))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 	req.AddCookie(&http.Cookie{Name: "bitmerchant_session", Value: sessionID})
 
 	rec := httptest.NewRecorder()
@@ -143,6 +149,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	req = httptest.NewRequest(http.MethodGet, "/kitchen", nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
+	c.Set(middleware.ContextRestaurantID, restaurantID)
 
 	err = kitchenHandler.GetKitchen(c)
 	require.NoError(t, err)

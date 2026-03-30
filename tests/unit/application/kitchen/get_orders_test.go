@@ -13,10 +13,10 @@ import (
 func TestGetKitchenOrdersUseCase_Execute(t *testing.T) {
 	t.Run("returns orders sorted chronologically", func(t *testing.T) {
 		restaurantID := domain.RestaurantID("rest-1")
-		
+
 		order1 := createTestOrder("o1", domain.FulfillmentStatusPaid, domain.PaymentStatusPaid)
 		order1.CreatedAt = time.Now().Add(-1 * time.Hour)
-		
+
 		order2 := createTestOrder("o2", domain.FulfillmentStatusPreparing, domain.PaymentStatusPaid)
 		order2.CreatedAt = time.Now().Add(-30 * time.Minute)
 
@@ -51,4 +51,3 @@ func TestGetKitchenOrdersUseCase_Execute(t *testing.T) {
 		assert.Empty(t, orders)
 	})
 }
-

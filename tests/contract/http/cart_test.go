@@ -14,6 +14,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCartEndpoints(t *testing.T) {
@@ -21,7 +22,7 @@ func TestCartEndpoints(t *testing.T) {
 	cartService := cart.NewCartService()
 	itemRepo := memory.NewMemoryMenuItemRepository()
 	item, _ := domain.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
-	itemRepo.Save(item)
+	require.NoError(t, itemRepo.Save(item))
 
 	h := handler.NewCartHandler(cartService, itemRepo)
 	e := echo.New()
@@ -65,7 +66,7 @@ func TestCartEndpoints(t *testing.T) {
 
 	t.Run("Remove Item", func(t *testing.T) {
 		// Pre-populate
-		cartService.AddItem("sess_2", item, 1)
+		require.NoError(t, cartService.AddItem("sess_2", item, 1))
 
 		f := make(url.Values)
 		f.Set("itemID", "i1")
