@@ -59,14 +59,14 @@ Configuration is loaded from the process environment in [`cmd/server/config.go`]
 | `BASE_URL` | No | `http://localhost:8080` | Public site URL (scheme + host [+ port]). Used for WebAuthn RP ID (hostname), absolute menu URLs in QR codes, and secure-cookie heuristics. Set correctly in every deployed environment. |
 | `COOKIE_SECURE` | No | (off) | If `true`, session cookies are marked `Secure` (use behind HTTPS). |
 | `DATABASE_URL` | No | *(empty)* | Postgres connection string. If unset, the app uses **in-memory** repositories only (no persistence). If set, **Goose migrations run automatically on startup** after the DB is reachable. |
-| `S3_BUCKET_NAME` | No | *(empty)* | S3 bucket for menu item photos. If missing (with `AWS_REGION`), photo uploads are effectively disabled. |
-| `AWS_REGION` | No | *(empty)* | AWS region for S3. Use `auto` for some S3-compatible providers (e.g. Cloudflare R2). |
-| `S3_ENDPOINT` | No | *(empty)* | Custom S3 API base URL for **non-AWS** storage (MinIO, **Cloudflare R2**, Wasabi, etc.). Example R2: `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`. Omit for real AWS S3. |
-| `S3_USE_PATH_STYLE` | No | `true` when `S3_ENDPOINT` is set, else path-style off for AWS | Path-style URLs (`endpoint/bucket/key`) vs virtual-hosted. Many compat servers need `true`. Set `false` explicitly if your provider requires virtual-hosted style. |
+| `AWS_S3_BUCKET_NAME` | No | *(empty)* | S3 bucket for menu item photos. If missing (with region), photo uploads are disabled. Alias: `S3_BUCKET_NAME`. |
+| `AWS_DEFAULT_REGION` | No | *(empty)* | Region for S3 (SDK + presigning). Use `auto` for some providers (e.g. Cloudflare R2). Alias: `AWS_REGION`. |
+| `AWS_ENDPOINT_URL` | No | *(empty)* | Custom S3 API base URL for **non-AWS** storage (MinIO, R2, Wasabi). Example R2: `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`. Omit for real AWS S3. Alias: `S3_ENDPOINT`. |
+| `S3_USE_PATH_STYLE` | No | `true` when `AWS_ENDPOINT_URL` is set, else path-style off for AWS | Path-style URLs vs virtual-hosted. Many compat servers need `true`. |
 | `S3_PUBLIC_BASE_URL` | No | *(empty)* | Optional. Used to derive the **object key** from **legacy** menu rows that still store a full public URL (before keys-only storage). Not required for new uploads. |
 | `S3_PRESIGN_GET_EXPIRES` | No | `3600` | Seconds until each **presigned GET** URL for menu photos expires (private buckets). Use a larger value if customers keep the menu open longer than an hour. |
 
-For S3, the AWS SDK uses its normal credential chain (e.g. `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`, shared config, or instance role). Those keys are **not** defined in `config.go` but are standard for local and cloud setups.
+Credentials: set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (or use the SDK default chain, e.g. instance role). They are read by the AWS SDK, not listed in `config.go`.
 
 **Private buckets:** uploads use `PutObject` with credentials; the database stores the **object key**. The customer menu uses **presigned GET** URLs so browsers can load images without making the bucket public.
 

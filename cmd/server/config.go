@@ -7,6 +7,16 @@ import (
 	"strings"
 )
 
+// firstEnv returns the first non-empty trimmed value from the given keys.
+func firstEnv(keys ...string) string {
+	for _, k := range keys {
+		if v := strings.TrimSpace(os.Getenv(k)); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
 type serverConfig struct {
 	Port              string
 	BaseURL           string
@@ -28,9 +38,9 @@ func loadConfig() (serverConfig, error) {
 		BaseURL:           os.Getenv("BASE_URL"),
 		ForceSecureCookie: os.Getenv("COOKIE_SECURE") == "true",
 		DatabaseURL:       os.Getenv("DATABASE_URL"),
-		S3BucketName:      os.Getenv("S3_BUCKET_NAME"),
-		AWSRegion:         os.Getenv("AWS_REGION"),
-		S3Endpoint:        strings.TrimSpace(os.Getenv("S3_ENDPOINT")),
+		S3BucketName:      firstEnv("AWS_S3_BUCKET_NAME", "S3_BUCKET_NAME"),
+		AWSRegion:         firstEnv("AWS_DEFAULT_REGION", "AWS_REGION"),
+		S3Endpoint:        firstEnv("AWS_ENDPOINT_URL", "S3_ENDPOINT"),
 		S3PublicBaseURL:   strings.TrimSpace(os.Getenv("S3_PUBLIC_BASE_URL")),
 	}
 	switch strings.ToLower(strings.TrimSpace(os.Getenv("S3_USE_PATH_STYLE"))) {
