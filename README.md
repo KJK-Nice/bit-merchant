@@ -12,16 +12,17 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
 
 ## Tech Stack
 
-- **Language**: Go 1.25+
+- **Language**: Go 1.26+
 - **Web Framework**: Echo v4
 - **Templating**: Templ (Type-safe Go templates)
 - **UI Library**: Datastar (Hypermedia) + TemplUI
 - **Database**: In-memory by default, optional PostgreSQL-backed auth + core persistence via `DATABASE_URL`
 - **Events**: Watermill (in-process event bus for order lifecycle)
+- **Logging**: `log/slog` with [humanslog](https://github.com/ThreeDotsLabs/humanslog) for pretty development output
 
 ## Architecture
 
-The project follows **DDD Lite** (Domain-Driven Design Lite) with bounded contexts, inspired by [Three Dots Labs](https://threedots.tech/post/ddd-lite-in-go-introduction/).
+The project follows **DDD Lite** (Domain-Driven Design Lite) with bounded contexts, inspired by [Three Dots Labs](https://threedots.tech/post/ddd-lite-in-go-introduction/). For conventions, layering, and how to add features in this layout, see [`docs/ddd-lite.md`](docs/ddd-lite.md).
 
 ### Bounded Contexts
 
@@ -95,7 +96,7 @@ The old `internal/domain/` and `internal/application/` packages remain as **type
 
 ### Prerequisites
 
-- Go 1.25+
+- Go 1.26+
 - Docker (for testcontainers integration tests)
 
 ### Installation
@@ -127,7 +128,8 @@ The old `internal/domain/` and `internal/application/` packages remain as **type
 Configuration is loaded from the process environment in [`cmd/server/config.go`](cmd/server/config.go). Copy [`.env.example`](.env.example) as reference; the Go binary does not load `.env` files automatically--use your shell, a tool like `direnv`, or Docker Compose.
 
 | Variable | Required | Default | Purpose |
-|----------|----------|---------|---------|
+|---|---|---|---|
+| `APP_ENV` | No | *(empty)* | Set to `production` for JSON log output. Any other value (including unset) uses [humanslog](https://github.com/ThreeDotsLabs/humanslog) pretty output for development. |
 | `PORT` | No | `8080` | HTTP listen port. |
 | `BASE_URL` | No | `http://localhost:8080` | Public site URL (scheme + host [+ port]). Used for WebAuthn RP ID (hostname), absolute menu URLs in QR codes, and secure-cookie heuristics. Set correctly in every deployed environment. |
 | `COOKIE_SECURE` | No | (off) | If `true`, session cookies are marked `Secure` (use behind HTTPS). |
@@ -184,6 +186,12 @@ During passkey login:
 The active restaurant is stored in the server-side session and enforced by role middleware.
 
 ### Development
+
+- Install git hooks (run once after cloning):
+  ```bash
+  task hooks:install
+  ```
+  This registers a `pre-commit` hook via [lefthook](https://github.com/evilmartians/lefthook) that automatically runs `templ generate` and `golangci-lint` before each commit. Requires `lefthook` (`brew install lefthook`) and `golangci-lint` to be installed.
 
 - Run all tests (unit + integration with in-memory repos):
   ```bash

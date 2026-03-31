@@ -1,0 +1,6 @@
+pre-commit:
+  commands:
+    generate:
+      run: templ generate
+    lint:
+      run: golangci-lint run

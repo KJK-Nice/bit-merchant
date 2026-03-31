@@ -10,10 +10,25 @@ tasks:
     cmds:
       - docker compose up --build
 
+  compose:down:
+    desc: Stop Docker Compose stack (preserves volumes)
+    cmds:
+      - docker compose down
+
   migrate:
     desc: Run Goose migrations (requires DATABASE_URL)
     cmds:
       - go run ./cmd/migrate/main.go
+
+  generate:
+    desc: Generate templ files
+    cmds:
+      - templ generate
+
+  build:
+    desc: Compile server binary to bin/server
+    cmds:
+      - go build -o bin/server ./cmd/server
 
   templ:
     desc: Run templ with integrated server and hot reload
@@ -25,6 +40,11 @@ tasks:
     cmds:
       - "{{.TAILWIND_CMD}} -i ./assets/css/input.css -o ./assets/css/output.css --watch"
 
+  fmt:
+    desc: Format all Go source files
+    cmds:
+      - gofmt -w .
+
   test:
     desc: Run all tests
     cmds:
@@ -35,6 +55,26 @@ tasks:
     cmds:
       - go test -v -coverprofile=coverage.out ./...
 
+  test:unit:
+    desc: Run unit tests only
+    cmds:
+      - go test ./tests/unit/...
+
+  test:integration:
+    desc: Run in-memory integration tests
+    cmds:
+      - go test ./tests/integration/...
+
+  test:contract:
+    desc: Run contract/HTTP tests
+    cmds:
+      - go test ./tests/contract/...
+
+  test:postgres:
+    desc: Run Postgres integration tests (requires Docker)
+    cmds:
+      - go test -v ./tests/integration/postgres/...
+
   lint:
     desc: Run golangci-lint
     cmds:
@@ -43,7 +83,7 @@ tasks:
   check:
     desc: Run all checks (generate, build, lint, test)
     cmds:
-      - templ generate
+      - task: generate
       - go build ./...
       - golangci-lint run
       - go test ./...
@@ -52,6 +92,11 @@ tasks:
     desc: Start development server with hot reload
     cmds:
       - task --parallel tailwind templ
+
+  hooks:install:
+    desc: Install git hooks via lefthook
+    cmds:
+      - lefthook install
 
   clean:
     desc: Remove build artifacts, generated files, coverage reports, and Docker resources
