@@ -13,7 +13,7 @@ This document describes the implemented authentication architecture for BitMerch
 
 ### User
 
-`internal/domain/user.go`
+`internal/auth/domain/user/user.go`
 
 - Represents an authenticated actor.
 - Stores WebAuthn credentials (`[]webauthn.Credential`).
@@ -21,24 +21,24 @@ This document describes the implemented authentication architecture for BitMerch
 
 ### Membership
 
-`internal/domain/membership.go`
+`internal/auth/domain/membership/membership.go`
 
 - Links a `User` to a `Restaurant` with a role.
-- Supported roles:
+- Supported roles (defined in `internal/common/ids.go`):
   - `owner`
   - `kitchen_staff`
   - `customer`
 
 ### Invitation
 
-`internal/domain/invitation.go`
+`internal/auth/domain/invitation/invitation.go`
 
 - Owner can issue invitation tokens for staff onboarding.
 - Invitations are single-use and time-bound.
 
 ### Session
 
-`internal/domain/session.go`
+`internal/auth/domain/session/session.go`
 
 - Server-side session object keyed by `bitmerchant_session` cookie.
 - Can be anonymous (`UserID == nil`) or authenticated.
@@ -46,19 +46,23 @@ This document describes the implemented authentication architecture for BitMerch
 
 ## Persistence Interfaces
 
-`internal/domain/repositories.go` now includes:
+Repository interfaces are defined within each domain package:
 
-- `UserRepository`
-- `MembershipRepository`
-- `InvitationRepository`
-- `SessionRepository`
+- `internal/auth/domain/user/repository.go` -- `user.Repository`
+- `internal/auth/domain/membership/repository.go` -- `membership.Repository`
+- `internal/auth/domain/invitation/repository.go` -- `invitation.Repository`
+- `internal/auth/domain/session/repository.go` -- `session.Repository`
 
-In-memory implementations are provided under:
-`internal/infrastructure/repositories/memory/`.
+The old `internal/domain/repositories.go` is a type-alias facade for backward compatibility.
+
+Implementations:
+
+- PostgreSQL: `internal/auth/adapters/postgres_*_repository.go`
+- In-memory: `internal/auth/adapters/memory_*_repository.go`
 
 ## WebAuthn Integration
 
-`internal/infrastructure/auth/webauthn.go`
+`internal/auth/adapters/webauthn_service.go`
 
 - Wraps `go-webauthn/webauthn`.
 - Configured via RP ID / origin from `BASE_URL`.
@@ -155,7 +159,7 @@ If restaurant context is missing on protected operations, handlers now fail inst
 When `DATABASE_URL` is configured, both auth and core business repositories are backed by PostgreSQL:
 
 - auth: users, memberships, invitations, sessions
-- core: restaurants, menu categories, menu items, orders, order items, payments
+- core: restaurants, menu categories, menu items, orders, order items, payments, session restaurant visits
 
 Goose migrations are applied at startup before repository usage.
 

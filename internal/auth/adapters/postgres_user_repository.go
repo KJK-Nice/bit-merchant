@@ -25,9 +25,9 @@ func (r *PostgresUserRepository) Save(u *user.User) error {
 		return err
 	}
 	_, err = r.db.Exec(
-		`INSERT INTO auth_users (id, display_name, credentials, created_at, updated_at)
+		`INSERT INTO auth_users (id, display_name, credentials_json, created_at, updated_at)
 		 VALUES ($1, $2, $3, $4, $5)
-		 ON CONFLICT (id) DO UPDATE SET display_name=EXCLUDED.display_name, credentials=EXCLUDED.credentials, updated_at=EXCLUDED.updated_at`,
+		 ON CONFLICT (id) DO UPDATE SET display_name=EXCLUDED.display_name, credentials_json=EXCLUDED.credentials_json, updated_at=EXCLUDED.updated_at`,
 		string(u.ID), u.DisplayName, credJSON, u.CreatedAt, u.UpdatedAt)
 	return err
 }
@@ -37,7 +37,7 @@ func (r *PostgresUserRepository) FindByID(id common.UserID) (*user.User, error) 
 	var credJSON []byte
 	var createdAt, updatedAt sql.NullTime
 	err := r.db.QueryRow(
-		`SELECT id, display_name, credentials, created_at, updated_at FROM auth_users WHERE id = $1`,
+		`SELECT id, display_name, credentials_json, created_at, updated_at FROM auth_users WHERE id = $1`,
 		string(id)).Scan(&uid, &displayName, &credJSON, &createdAt, &updatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -56,7 +56,7 @@ func (r *PostgresUserRepository) FindByID(id common.UserID) (*user.User, error) 
 }
 
 func (r *PostgresUserRepository) FindByCredentialID(credentialID []byte) (*user.User, *webauthn.Credential, error) {
-	rows, err := r.db.Query(`SELECT id, display_name, credentials, created_at, updated_at FROM auth_users`)
+	rows, err := r.db.Query(`SELECT id, display_name, credentials_json, created_at, updated_at FROM auth_users`)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -91,7 +91,7 @@ func (r *PostgresUserRepository) Update(u *user.User) error {
 		return err
 	}
 	result, err := r.db.Exec(
-		`UPDATE auth_users SET display_name=$2, credentials=$3, updated_at=$4 WHERE id=$1`,
+		`UPDATE auth_users SET display_name=$2, credentials_json=$3, updated_at=$4 WHERE id=$1`,
 		string(u.ID), u.DisplayName, credJSON, u.UpdatedAt)
 	if err != nil {
 		return err

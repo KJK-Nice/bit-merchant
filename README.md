@@ -17,13 +17,86 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
 - **Templating**: Templ (Type-safe Go templates)
 - **UI Library**: Datastar (Hypermedia) + TemplUI
 - **Database**: In-memory by default, optional PostgreSQL-backed auth + core persistence via `DATABASE_URL`
+- **Events**: Watermill (in-process event bus for order lifecycle)
+
+## Architecture
+
+The project follows **DDD Lite** (Domain-Driven Design Lite) with bounded contexts, inspired by [Three Dots Labs](https://threedots.tech/post/ddd-lite-in-go-introduction/).
+
+### Bounded Contexts
+
+```
+internal/
+  common/                           Shared kernel (IDs, EventBus interface)
+
+  restaurant/                       Restaurant management
+    domain/restaurant/              Aggregate: Restaurant (open/close, table count)
+    app/command/                    CreateRestaurant, ToggleOpen, UpdateTableCount
+    app/query/                      GenerateQR
+    adapters/                       Postgres + memory repositories
+
+  menu/                             Catalog management
+    domain/menu/                    Aggregates: MenuCategory, MenuItem, PhotoStorage port
+    app/command/                    CRUD for categories, items, photos
+    app/query/                      GetMenu, GetMenuAdmin
+    adapters/                       Postgres + memory repos, S3 storage
+
+  ordering/                         Order lifecycle (cart + kitchen)
+    domain/order/                   Aggregate: Order (fulfillment state machine, events)
+    app/command/                    CreateOrder, MarkPaid, MarkPreparing, MarkReady
+    app/query/                      GetOrder, GetCustomerOrders, GetKitchenOrders
+    app/cart/                       CartService (application-level, in-memory)
+    adapters/                       Postgres + memory repos
+
+  payment/                          Payment processing
+    domain/payment/                 Aggregate: Payment, PaymentMethod port
+    adapters/                       Cash method, Postgres + memory repos
+
+  auth/                             Identity and access
+    domain/user/                    User aggregate (WebAuthn credentials)
+    domain/session/                 Session aggregate
+    domain/membership/              Membership aggregate (user-restaurant-role)
+    domain/invitation/              Invitation aggregate
+    adapters/                       WebAuthn service, Postgres + memory repos
+
+  places/                           Customer visit tracking
+    domain/visit/                   SessionRestaurantVisit aggregate
+    app/command/                    RecordVisit
+    app/query/                      ListVisited
+    adapters/                       Postgres + memory repos
+
+  dashboard/                        Reporting (query-only, no domain)
+    app/query/                      GetStats, GetHistory, GetTopItems
+
+  interfaces/                       Delivery layer (stays flat)
+    http/                           Echo HTTP handlers
+    http/middleware/                 Session, auth, CSRF, rate limiting
+    templates/                      Templ components and layouts
+```
+
+### Shared Kernel
+
+`internal/common/` contains cross-boundary value types:
+- `ids.go` -- All ID types (`RestaurantID`, `OrderID`, `UserID`, etc.), role constants, status enums
+- `events.go` -- `EventBus` and `DomainEvent` interfaces
+
+### Facade Layer
+
+The old `internal/domain/` and `internal/application/` packages remain as **type-alias facades** for backward compatibility (templates and handlers that still import them). New code should import directly from bounded context packages.
+
+### Infrastructure
+
+- `internal/infrastructure/events/` -- Watermill-based event bus (shared)
+- `internal/infrastructure/logging/` -- Structured logging
+- `internal/infrastructure/migrations/` -- Goose SQL migrations
+- `internal/infrastructure/qr/` -- QR code generation
 
 ## Getting Started
 
 ### Prerequisites
 
 - Go 1.25+
-- Make (optional)
+- Docker (for testcontainers integration tests)
 
 ### Installation
 
@@ -51,7 +124,7 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
 
 ### Environment variables
 
-Configuration is loaded from the process environment in [`cmd/server/config.go`](cmd/server/config.go). Copy [`.env.example`](.env.example) as reference; the Go binary does not load `.env` files automatically—use your shell, a tool like `direnv`, or Docker Compose.
+Configuration is loaded from the process environment in [`cmd/server/config.go`](cmd/server/config.go). Copy [`.env.example`](.env.example) as reference; the Go binary does not load `.env` files automatically--use your shell, a tool like `direnv`, or Docker Compose.
 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
@@ -112,18 +185,17 @@ The active restaurant is stored in the server-side session and enforced by role 
 
 ### Development
 
-- Run tests:
+- Run all tests (unit + integration with in-memory repos):
   ```bash
   go test ./...
   ```
 
-## Current Status
-
-- Dashboard analytics now support `today`, `week`, and `month` date ranges with unit/integration coverage.
-- CSRF protection is enabled in the Echo middleware stack, with token handling for both form submissions and Datastar-driven POST requests.
-- Dashboard and mobile footer navigation were revalidated, and menu closed-state rendering was fixed (`circle-alert` icon usage).
+- Run Postgres integration tests (requires Docker):
+  ```bash
+  go test -v ./tests/integration/postgres/...
+  ```
+  These use [testcontainers-go](https://github.com/testcontainers/testcontainers-go) to spin up a real Postgres container, run all Goose migrations, and exercise every adapter.
 
 ## License
 
 Proprietary.
-

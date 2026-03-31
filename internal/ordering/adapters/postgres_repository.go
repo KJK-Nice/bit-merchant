@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -18,72 +17,105 @@ func NewPostgresOrderRepository(db *sql.DB) *PostgresOrderRepository {
 	return &PostgresOrderRepository{db: db}
 }
 
+const orderColumns = `id, order_number, restaurant_id, session_id, total_amount, fiat_amount,
+	payment_method, payment_status, fulfillment_status,
+	created_at, updated_at, paid_at, preparing_at, ready_at, completed_at`
+
 func (r *PostgresOrderRepository) Save(o *order.Order) error {
-	itemsJSON, err := json.Marshal(o.Items)
+	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
-	_, err = r.db.Exec(
-		`INSERT INTO orders (id, order_number, restaurant_id, session_id, items, total_amount, fiat_amount, payment_method, payment_status, fulfillment_status, created_at, updated_at, paid_at, preparing_at, ready_at, completed_at)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+	defer func() { _ = tx.Rollback() }()
+
+	_, err = tx.Exec(
+		`INSERT INTO orders (id, order_number, restaurant_id, session_id, total_amount, fiat_amount,
+			payment_method, payment_status, fulfillment_status,
+			created_at, updated_at, paid_at, preparing_at, ready_at, completed_at)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
 		 ON CONFLICT (id) DO UPDATE SET
-		   order_number=EXCLUDED.order_number, items=EXCLUDED.items,
+		   order_number=EXCLUDED.order_number,
 		   total_amount=EXCLUDED.total_amount, fiat_amount=EXCLUDED.fiat_amount,
 		   payment_status=EXCLUDED.payment_status, fulfillment_status=EXCLUDED.fulfillment_status,
 		   updated_at=EXCLUDED.updated_at, paid_at=EXCLUDED.paid_at,
 		   preparing_at=EXCLUDED.preparing_at, ready_at=EXCLUDED.ready_at, completed_at=EXCLUDED.completed_at`,
 		string(o.ID), string(o.OrderNumber), string(o.RestaurantID), o.SessionID,
-		itemsJSON, o.TotalAmount, o.FiatAmount,
+		o.TotalAmount, o.FiatAmount,
 		string(o.PaymentMethod), string(o.PaymentStatus), string(o.FulfillmentStatus),
 		o.CreatedAt, o.UpdatedAt, o.PaidAt, o.PreparingAt, o.ReadyAt, o.CompletedAt)
-	return err
+	if err != nil {
+		return err
+	}
+
+	for _, item := range o.Items {
+		_, err = tx.Exec(
+			`INSERT INTO order_items (id, order_id, menu_item_id, name, quantity, unit_price, subtotal)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7)
+			 ON CONFLICT (id) DO NOTHING`,
+			string(item.ID), string(item.OrderID), string(item.MenuItemID),
+			item.Name, item.Quantity, item.UnitPrice, item.Subtotal)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *PostgresOrderRepository) FindByID(id common.OrderID) (*order.Order, error) {
 	row := r.db.QueryRow(
-		`SELECT id, order_number, restaurant_id, session_id, items, total_amount, fiat_amount, payment_method, payment_status, fulfillment_status, created_at, updated_at, paid_at, preparing_at, ready_at, completed_at
-		 FROM orders WHERE id = $1`, string(id))
-	return scanOrder(row)
+		`SELECT `+orderColumns+` FROM orders WHERE id = $1`, string(id))
+	o, err := scanOrderRow(row)
+	if err != nil {
+		return nil, err
+	}
+	items, err := r.loadItems(string(o.ID))
+	if err != nil {
+		return nil, err
+	}
+	o.Items = items
+	return o, nil
 }
 
 func (r *PostgresOrderRepository) FindByOrderNumber(restaurantID common.RestaurantID, orderNumber string) (*order.Order, error) {
 	row := r.db.QueryRow(
-		`SELECT id, order_number, restaurant_id, session_id, items, total_amount, fiat_amount, payment_method, payment_status, fulfillment_status, created_at, updated_at, paid_at, preparing_at, ready_at, completed_at
-		 FROM orders WHERE restaurant_id = $1 AND order_number = $2 ORDER BY created_at DESC LIMIT 1`,
+		`SELECT `+orderColumns+` FROM orders WHERE restaurant_id = $1 AND order_number = $2 ORDER BY created_at DESC LIMIT 1`,
 		string(restaurantID), orderNumber)
-	return scanOrder(row)
+	o, err := scanOrderRow(row)
+	if err != nil {
+		return nil, err
+	}
+	items, err := r.loadItems(string(o.ID))
+	if err != nil {
+		return nil, err
+	}
+	o.Items = items
+	return o, nil
 }
 
 func (r *PostgresOrderRepository) FindByRestaurantID(restaurantID common.RestaurantID) ([]*order.Order, error) {
 	return r.queryOrders(
-		`SELECT id, order_number, restaurant_id, session_id, items, total_amount, fiat_amount, payment_method, payment_status, fulfillment_status, created_at, updated_at, paid_at, preparing_at, ready_at, completed_at
-		 FROM orders WHERE restaurant_id = $1`, string(restaurantID))
+		`SELECT `+orderColumns+` FROM orders WHERE restaurant_id = $1`, string(restaurantID))
 }
 
 func (r *PostgresOrderRepository) FindActiveByRestaurantID(restaurantID common.RestaurantID) ([]*order.Order, error) {
 	return r.queryOrders(
-		`SELECT id, order_number, restaurant_id, session_id, items, total_amount, fiat_amount, payment_method, payment_status, fulfillment_status, created_at, updated_at, paid_at, preparing_at, ready_at, completed_at
-		 FROM orders WHERE restaurant_id = $1 AND fulfillment_status IN ('paid','preparing','ready')`,
+		`SELECT `+orderColumns+` FROM orders WHERE restaurant_id = $1 AND fulfillment_status IN ('paid','preparing','ready')`,
 		string(restaurantID))
 }
 
 func (r *PostgresOrderRepository) FindBySessionID(sessionID string) ([]*order.Order, error) {
 	return r.queryOrders(
-		`SELECT id, order_number, restaurant_id, session_id, items, total_amount, fiat_amount, payment_method, payment_status, fulfillment_status, created_at, updated_at, paid_at, preparing_at, ready_at, completed_at
-		 FROM orders WHERE session_id = $1`, sessionID)
+		`SELECT `+orderColumns+` FROM orders WHERE session_id = $1`, sessionID)
 }
 
 func (r *PostgresOrderRepository) Update(o *order.Order) error {
-	itemsJSON, err := json.Marshal(o.Items)
-	if err != nil {
-		return err
-	}
 	result, err := r.db.Exec(
-		`UPDATE orders SET order_number=$2, items=$3, total_amount=$4, fiat_amount=$5,
-		   payment_method=$6, payment_status=$7, fulfillment_status=$8,
-		   updated_at=$9, paid_at=$10, preparing_at=$11, ready_at=$12, completed_at=$13
+		`UPDATE orders SET order_number=$2, total_amount=$3, fiat_amount=$4,
+		   payment_method=$5, payment_status=$6, fulfillment_status=$7,
+		   updated_at=$8, paid_at=$9, preparing_at=$10, ready_at=$11, completed_at=$12
 		 WHERE id=$1`,
-		string(o.ID), string(o.OrderNumber), itemsJSON, o.TotalAmount, o.FiatAmount,
+		string(o.ID), string(o.OrderNumber), o.TotalAmount, o.FiatAmount,
 		string(o.PaymentMethod), string(o.PaymentStatus), string(o.FulfillmentStatus),
 		o.UpdatedAt, o.PaidAt, o.PreparingAt, o.ReadyAt, o.CompletedAt)
 	if err != nil {
@@ -102,6 +134,7 @@ func (r *PostgresOrderRepository) queryOrders(query string, args ...interface{})
 		return nil, err
 	}
 	defer rows.Close()
+
 	var result []*order.Order
 	for rows.Next() {
 		o, err := scanOrderRows(rows)
@@ -110,57 +143,108 @@ func (r *PostgresOrderRepository) queryOrders(query string, args ...interface{})
 		}
 		result = append(result, o)
 	}
-	return result, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	for _, o := range result {
+		items, err := r.loadItems(string(o.ID))
+		if err != nil {
+			return nil, err
+		}
+		o.Items = items
+	}
+
+	return result, nil
 }
 
-func scanOrder(row *sql.Row) (*order.Order, error) {
+func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, error) {
+	rows, err := r.db.Query(
+		`SELECT id, order_id, menu_item_id, name, quantity, unit_price, subtotal
+		 FROM order_items WHERE order_id = $1`, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []order.OrderItem
+	for rows.Next() {
+		var (
+			id, oid, menuItemID, name string
+			quantity                   int
+			unitPrice, subtotal        float64
+		)
+		if err := rows.Scan(&id, &oid, &menuItemID, &name, &quantity, &unitPrice, &subtotal); err != nil {
+			return nil, err
+		}
+		items = append(items, order.OrderItem{
+			ID:         common.OrderItemID(id),
+			OrderID:    common.OrderID(oid),
+			MenuItemID: common.ItemID(menuItemID),
+			Name:       name,
+			Quantity:   quantity,
+			UnitPrice:  unitPrice,
+			Subtotal:   subtotal,
+		})
+	}
+	return items, rows.Err()
+}
+
+func scanOrderRow(row *sql.Row) (*order.Order, error) {
 	var (
-		id, orderNum, restID, sessionID            string
-		itemsJSON                                  []byte
-		totalAmount                                int64
-		fiatAmount                                 float64
-		payMethod, payStatus, fulStatus            string
-		createdAt, updatedAt                       time.Time
+		id, orderNum, restID, sessionID           string
+		totalAmount                               int64
+		fiatAmount                                float64
+		payMethod, payStatus, fulStatus           string
+		createdAt, updatedAt                      time.Time
 		paidAt, preparingAt, readyAt, completedAt sql.NullTime
 	)
-	if err := row.Scan(&id, &orderNum, &restID, &sessionID, &itemsJSON, &totalAmount, &fiatAmount, &payMethod, &payStatus, &fulStatus, &createdAt, &updatedAt, &paidAt, &preparingAt, &readyAt, &completedAt); err != nil {
+	if err := row.Scan(&id, &orderNum, &restID, &sessionID, &totalAmount, &fiatAmount,
+		&payMethod, &payStatus, &fulStatus,
+		&createdAt, &updatedAt, &paidAt, &preparingAt, &readyAt, &completedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("order not found")
 		}
 		return nil, err
 	}
-	return buildOrder(id, orderNum, restID, sessionID, itemsJSON, totalAmount, fiatAmount, payMethod, payStatus, fulStatus, createdAt, updatedAt, paidAt, preparingAt, readyAt, completedAt)
+	return buildOrder(id, orderNum, restID, sessionID, totalAmount, fiatAmount,
+		payMethod, payStatus, fulStatus, createdAt, updatedAt, paidAt, preparingAt, readyAt, completedAt), nil
 }
 
 func scanOrderRows(rows *sql.Rows) (*order.Order, error) {
 	var (
-		id, orderNum, restID, sessionID            string
-		itemsJSON                                  []byte
-		totalAmount                                int64
-		fiatAmount                                 float64
-		payMethod, payStatus, fulStatus            string
-		createdAt, updatedAt                       time.Time
+		id, orderNum, restID, sessionID           string
+		totalAmount                               int64
+		fiatAmount                                float64
+		payMethod, payStatus, fulStatus           string
+		createdAt, updatedAt                      time.Time
 		paidAt, preparingAt, readyAt, completedAt sql.NullTime
 	)
-	if err := rows.Scan(&id, &orderNum, &restID, &sessionID, &itemsJSON, &totalAmount, &fiatAmount, &payMethod, &payStatus, &fulStatus, &createdAt, &updatedAt, &paidAt, &preparingAt, &readyAt, &completedAt); err != nil {
+	if err := rows.Scan(&id, &orderNum, &restID, &sessionID, &totalAmount, &fiatAmount,
+		&payMethod, &payStatus, &fulStatus,
+		&createdAt, &updatedAt, &paidAt, &preparingAt, &readyAt, &completedAt); err != nil {
 		return nil, err
 	}
-	return buildOrder(id, orderNum, restID, sessionID, itemsJSON, totalAmount, fiatAmount, payMethod, payStatus, fulStatus, createdAt, updatedAt, paidAt, preparingAt, readyAt, completedAt)
+	return buildOrder(id, orderNum, restID, sessionID, totalAmount, fiatAmount,
+		payMethod, payStatus, fulStatus, createdAt, updatedAt, paidAt, preparingAt, readyAt, completedAt), nil
 }
 
-func buildOrder(id, orderNum, restID, sessionID string, itemsJSON []byte, totalAmount int64, fiatAmount float64, payMethod, payStatus, fulStatus string, createdAt, updatedAt time.Time, paidAt, preparingAt, readyAt, completedAt sql.NullTime) (*order.Order, error) {
-	var items []order.OrderItem
-	if len(itemsJSON) > 0 {
-		_ = json.Unmarshal(itemsJSON, &items)
-	}
+func buildOrder(id, orderNum, restID, sessionID string, totalAmount int64, fiatAmount float64,
+	payMethod, payStatus, fulStatus string, createdAt, updatedAt time.Time,
+	paidAt, preparingAt, readyAt, completedAt sql.NullTime) *order.Order {
+
 	o := &order.Order{
-		ID: common.OrderID(id), OrderNumber: common.OrderNumber(orderNum),
-		RestaurantID: common.RestaurantID(restID), SessionID: sessionID,
-		Items: items, TotalAmount: totalAmount, FiatAmount: fiatAmount,
-		PaymentMethod: common.PaymentMethodType(payMethod),
-		PaymentStatus: common.PaymentStatus(payStatus),
+		ID:                common.OrderID(id),
+		OrderNumber:       common.OrderNumber(orderNum),
+		RestaurantID:      common.RestaurantID(restID),
+		SessionID:         sessionID,
+		TotalAmount:       totalAmount,
+		FiatAmount:        fiatAmount,
+		PaymentMethod:     common.PaymentMethodType(payMethod),
+		PaymentStatus:     common.PaymentStatus(payStatus),
 		FulfillmentStatus: common.FulfillmentStatus(fulStatus),
-		CreatedAt: createdAt, UpdatedAt: updatedAt,
+		CreatedAt:         createdAt,
+		UpdatedAt:         updatedAt,
 	}
 	if paidAt.Valid {
 		t := paidAt.Time
@@ -178,5 +262,5 @@ func buildOrder(id, orderNum, restID, sessionID string, itemsJSON []byte, totalA
 		t := completedAt.Time
 		o.CompletedAt = &t
 	}
-	return o, nil
+	return o
 }

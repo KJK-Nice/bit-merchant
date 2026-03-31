@@ -1,5 +1,7 @@
 # Data Model: BitMerchant v1.0
 
+> **Historical document.** This data model was written during the initial Lightning-payment spec (2025-11-08). The codebase has since been restructured into DDD Lite bounded contexts under `internal/`. See the [README](../../README.md) for the current architecture and `internal/common/ids.go` for current ID/status types.
+
 **Date**: 2025-11-08  
 **Feature**: BitMerchant v1.0 - Lightning Payment Platform for Restaurants
 

@@ -1,5 +1,7 @@
 # Data Model: Cash Payment with Hypermedia UI
 
+> **Historical document.** This data model was written during the cash-payment pivot (2025-01-27). The codebase has since been restructured into DDD Lite bounded contexts under `internal/`. See the [README](../../README.md) for the current architecture and `internal/common/ids.go` for current ID/status types.
+
 **Date**: 2025-01-27  
 **Feature**: Cash Payment with Hypermedia UI
 
