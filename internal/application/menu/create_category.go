@@ -1,37 +1,8 @@
 package menu
 
-import (
-	"bitmerchant/internal/domain"
-	"context"
-	"fmt"
-	"time"
-)
+import menuCmd "bitmerchant/internal/menu/app/command"
 
-type CreateMenuCategoryRequest struct {
-	RestaurantID domain.RestaurantID
-	Name         string
-	DisplayOrder int
-}
+type CreateMenuCategoryRequest = menuCmd.CreateMenuCategoryRequest
+type CreateMenuCategoryUseCase = menuCmd.CreateMenuCategoryUseCase
 
-type CreateMenuCategoryUseCase struct {
-	repo domain.MenuCategoryRepository
-}
-
-func NewCreateMenuCategoryUseCase(repo domain.MenuCategoryRepository) *CreateMenuCategoryUseCase {
-	return &CreateMenuCategoryUseCase{repo: repo}
-}
-
-func (uc *CreateMenuCategoryUseCase) Execute(ctx context.Context, req CreateMenuCategoryRequest) (*domain.MenuCategory, error) {
-	id := domain.CategoryID(fmt.Sprintf("cat_%d", time.Now().UnixNano()))
-
-	category, err := domain.NewMenuCategory(id, req.RestaurantID, req.Name, req.DisplayOrder)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := uc.repo.Save(category); err != nil {
-		return nil, err
-	}
-
-	return category, nil
-}
+var NewCreateMenuCategoryUseCase = menuCmd.NewCreateMenuCategoryUseCase

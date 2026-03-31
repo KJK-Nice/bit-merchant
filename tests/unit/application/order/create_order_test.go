@@ -29,12 +29,12 @@ func TestCreateOrderUseCase(t *testing.T) {
 	restaurant, _ := domain.NewRestaurant(restID, "Test Rest")
 	require.NoError(t, restRepo.Save(restaurant))
 
+	_ = paymentRepo
+	_ = paymentMethod
 	uc := order.NewCreateOrderUseCase(
 		orderRepo,
-		paymentRepo,
 		restRepo,
 		eventBus,
-		paymentMethod,
 		logger,
 	)
 

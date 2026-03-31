@@ -1,11 +1,5 @@
 package domain
 
-import "time"
+import "bitmerchant/internal/places/domain/visit"
 
-// SessionRestaurantVisit records that a browser session opened a restaurant menu (customer "stamp").
-type SessionRestaurantVisit struct {
-	SessionID      string
-	RestaurantID   RestaurantID
-	FirstVisitedAt time.Time
-	LastVisitedAt  time.Time
-}
+type SessionRestaurantVisit = visit.SessionRestaurantVisit

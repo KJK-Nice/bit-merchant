@@ -32,7 +32,9 @@ func TestOrderEndpoints(t *testing.T) {
 	rest, _ := domain.NewRestaurant("restaurant_1", "Test Restaurant")
 	require.NoError(t, restRepo.Save(rest))
 
-	createUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
+	_ = paymentRepo
+	_ = paymentMethod
+	createUC := order.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
 	getCustomerOrderUC := order.NewGetCustomerOrderByNumberUseCase(orderRepo)
 	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
 	cartService := cart.NewCartService()

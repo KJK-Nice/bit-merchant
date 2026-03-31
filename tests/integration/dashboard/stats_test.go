@@ -32,7 +32,9 @@ func TestDashboardIntegration(t *testing.T) {
 	require.NoError(t, restRepo.Save(restaurant))
 
 	// Use Cases
-	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
+	_ = paymentRepo
+	_ = paymentMethod
+	createOrderUC := order.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
 	getStatsUC := dashboard.NewGetDashboardStatsUseCase(orderRepo)
 
 	t.Run("Order Creation Reflected in Stats", func(t *testing.T) {

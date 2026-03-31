@@ -5,15 +5,15 @@ import (
 	"database/sql"
 	"time"
 
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/infrastructure/migrations"
-	s3Storage "bitmerchant/internal/infrastructure/storage/s3"
+	menuAdapters "bitmerchant/internal/menu/adapters"
+	"bitmerchant/internal/menu/domain/menu"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func initPhotoStorage(cfg serverConfig, logger *logging.Logger) (domain.PhotoStorage, error) {
+func initPhotoStorage(cfg serverConfig, logger *logging.Logger) (menu.PhotoStorage, error) {
 	if cfg.S3BucketName == "" || cfg.AWSRegion == "" {
 		logger.Info("S3 config missing, photo uploads will fail")
 		return nil, nil
@@ -24,7 +24,7 @@ func initPhotoStorage(cfg serverConfig, logger *logging.Logger) (domain.PhotoSto
 		expires = time.Hour
 	}
 
-	photoStorage, err := s3Storage.NewS3Storage(context.Background(), s3Storage.Config{
+	photoStorage, err := menuAdapters.NewS3Storage(context.Background(), menuAdapters.S3Config{
 		Bucket:            cfg.S3BucketName,
 		Region:            cfg.AWSRegion,
 		Endpoint:          cfg.S3Endpoint,

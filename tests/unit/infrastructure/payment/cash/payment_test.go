@@ -18,22 +18,17 @@ func TestCashPaymentMethod(t *testing.T) {
 	})
 
 	t.Run("ValidatePayment", func(t *testing.T) {
-		err := method.ValidatePayment(context.Background(), nil)
+		err := method.ValidatePayment(context.Background(), "o1")
 		assert.NoError(t, err)
 	})
 
 	t.Run("ProcessPayment", func(t *testing.T) {
-		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
-		order, _ := domain.NewOrder("o1", "101", "r1", "session_1", []domain.OrderItem{*item}, 1000, domain.PaymentMethodTypeCash)
-		order.FiatAmount = 10.0
-
-		payment, err := method.ProcessPayment(context.Background(), order)
+		payment, err := method.ProcessPayment(context.Background(), "o1", "r1", 10.0)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, payment)
 		assert.Equal(t, domain.PaymentMethodTypeCash, payment.Method)
 		assert.Equal(t, domain.PaymentStatusPending, payment.Status)
 		assert.Equal(t, 10.0, payment.Amount)
-		assert.Equal(t, order.ID, payment.OrderID)
 	})
 }

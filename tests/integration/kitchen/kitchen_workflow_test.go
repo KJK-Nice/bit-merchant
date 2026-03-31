@@ -58,7 +58,9 @@ func TestKitchenWorkflow(t *testing.T) {
 	_ = menuItemRepo.Save(item1)
 
 	// Use Cases
-	createOrderUC := order.NewCreateOrderUseCase(orderRepo, paymentRepo, restRepo, eventBus, paymentMethod, logger)
+	_ = paymentRepo
+	_ = paymentMethod
+	createOrderUC := order.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
 	getCustomerOrderUC := order.NewGetCustomerOrderByNumberUseCase(orderRepo)
 	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
 	getKitchenOrdersUC := kitchen.NewGetKitchenOrdersUseCase(orderRepo)

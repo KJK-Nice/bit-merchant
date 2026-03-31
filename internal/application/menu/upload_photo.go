@@ -1,60 +1,8 @@
 package menu
 
-import (
-	"bitmerchant/internal/domain"
-	"context"
-	"fmt"
-	"io"
-	"path/filepath"
-	"time"
-)
+import menuCmd "bitmerchant/internal/menu/app/command"
 
-type UploadPhotoRequest struct {
-	RestaurantID domain.RestaurantID
-	ItemID       domain.ItemID
-	File         io.Reader
-	Filename     string
-	ContentType  string
-}
+type UploadPhotoRequest = menuCmd.UploadPhotoRequest
+type UploadPhotoUseCase = menuCmd.UploadPhotoUseCase
 
-type UploadPhotoUseCase struct {
-	itemRepo domain.MenuItemRepository
-	storage  domain.PhotoStorage
-}
-
-func NewUploadPhotoUseCase(itemRepo domain.MenuItemRepository, storage domain.PhotoStorage) *UploadPhotoUseCase {
-	return &UploadPhotoUseCase{
-		itemRepo: itemRepo,
-		storage:  storage,
-	}
-}
-
-func (uc *UploadPhotoUseCase) Execute(ctx context.Context, req UploadPhotoRequest) (string, error) {
-	// 1. Validate Item ownership
-	item, err := uc.itemRepo.FindByID(req.ItemID)
-	if err != nil {
-		return "", err
-	}
-	if item.RestaurantID != req.RestaurantID {
-		return "", fmt.Errorf("item does not belong to restaurant")
-	}
-
-	// 2. Generate Key
-	ext := filepath.Ext(req.Filename)
-	key := fmt.Sprintf("restaurants/%s/items/%s_%d%s", req.RestaurantID, req.ItemID, time.Now().Unix(), ext)
-
-	// 3. Upload to Storage (returns object key for presigned GET at read time)
-	storedKey, err := uc.storage.Upload(ctx, key, req.File, req.ContentType)
-	if err != nil {
-		return "", err
-	}
-
-	// 4. Update Item — persist key in photo_url / photo_original_url
-	item.SetPhotoURLs(storedKey, storedKey)
-	if err := uc.itemRepo.Update(item); err != nil {
-		_ = uc.storage.Delete(ctx, key)
-		return "", err
-	}
-
-	return storedKey, nil
-}
+var NewUploadPhotoUseCase = menuCmd.NewUploadPhotoUseCase

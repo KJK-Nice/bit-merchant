@@ -3,50 +3,63 @@ package main
 import (
 	"database/sql"
 
-	"bitmerchant/internal/domain"
-	"bitmerchant/internal/infrastructure/repositories/memory"
-	postgresRepos "bitmerchant/internal/infrastructure/repositories/postgres"
+	"bitmerchant/internal/auth/domain/invitation"
+	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/auth/domain/session"
+	"bitmerchant/internal/auth/domain/user"
+	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/ordering/domain/order"
+	"bitmerchant/internal/payment/domain/payment"
+	"bitmerchant/internal/places/domain/visit"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+
+	authAdapters "bitmerchant/internal/auth/adapters"
+	menuAdapters "bitmerchant/internal/menu/adapters"
+	orderAdapters "bitmerchant/internal/ordering/adapters"
+	payAdapters "bitmerchant/internal/payment/adapters"
+	placesAdapters "bitmerchant/internal/places/adapters"
+	restAdapters "bitmerchant/internal/restaurant/adapters"
 )
 
 type repositories struct {
-	Restaurant              domain.RestaurantRepository
-	MenuCategory            domain.MenuCategoryRepository
-	MenuItem                domain.MenuItemRepository
-	Order                   domain.OrderRepository
-	Payment                 domain.PaymentRepository
-	User                    domain.UserRepository
-	Membership              domain.MembershipRepository
-	Invitation              domain.InvitationRepository
-	Session                 domain.SessionRepository
-	SessionRestaurantVisits domain.SessionRestaurantVisitRepository
+	Restaurant              restaurant.Repository
+	MenuCategory            menu.CategoryRepository
+	MenuItem                menu.ItemRepository
+	Order                   order.Repository
+	Payment                 payment.Repository
+	User                    user.Repository
+	Membership              membership.Repository
+	Invitation              invitation.Repository
+	Session                 session.Repository
+	SessionRestaurantVisits visit.Repository
 }
 
 func newMemoryRepositories() repositories {
 	return repositories{
-		Restaurant:              memory.NewMemoryRestaurantRepository(),
-		MenuCategory:            memory.NewMemoryMenuCategoryRepository(),
-		MenuItem:                memory.NewMemoryMenuItemRepository(),
-		Order:                   memory.NewMemoryOrderRepository(),
-		Payment:                 memory.NewMemoryPaymentRepository(),
-		User:                    memory.NewMemoryUserRepository(),
-		Membership:              memory.NewMemoryMembershipRepository(),
-		Invitation:              memory.NewMemoryInvitationRepository(),
-		Session:                 memory.NewMemorySessionRepository(),
-		SessionRestaurantVisits: memory.NewMemorySessionRestaurantVisitRepository(),
+		Restaurant:              restAdapters.NewMemoryRestaurantRepository(),
+		MenuCategory:            menuAdapters.NewMemoryCategoryRepository(),
+		MenuItem:                menuAdapters.NewMemoryItemRepository(),
+		Order:                   orderAdapters.NewMemoryOrderRepository(),
+		Payment:                 payAdapters.NewMemoryPaymentRepository(),
+		User:                    authAdapters.NewMemoryUserRepository(),
+		Membership:              authAdapters.NewMemoryMembershipRepository(),
+		Invitation:              authAdapters.NewMemoryInvitationRepository(),
+		Session:                 authAdapters.NewMemorySessionRepository(),
+		SessionRestaurantVisits: placesAdapters.NewMemoryVisitRepository(),
 	}
 }
 
 func newPostgresRepositories(db *sql.DB) repositories {
 	return repositories{
-		Restaurant:              postgresRepos.NewRestaurantRepository(db),
-		MenuCategory:            postgresRepos.NewMenuCategoryRepository(db),
-		MenuItem:                postgresRepos.NewMenuItemRepository(db),
-		Order:                   postgresRepos.NewOrderRepository(db),
-		Payment:                 postgresRepos.NewPaymentRepository(db),
-		User:                    postgresRepos.NewUserRepository(db),
-		Membership:              postgresRepos.NewMembershipRepository(db),
-		Invitation:              postgresRepos.NewInvitationRepository(db),
-		Session:                 postgresRepos.NewSessionRepository(db),
-		SessionRestaurantVisits: postgresRepos.NewSessionRestaurantVisitRepository(db),
+		Restaurant:              restAdapters.NewPostgresRestaurantRepository(db),
+		MenuCategory:            menuAdapters.NewPostgresCategoryRepository(db),
+		MenuItem:                menuAdapters.NewPostgresItemRepository(db),
+		Order:                   orderAdapters.NewPostgresOrderRepository(db),
+		Payment:                 payAdapters.NewPostgresPaymentRepository(db),
+		User:                    authAdapters.NewPostgresUserRepository(db),
+		Membership:              authAdapters.NewPostgresMembershipRepository(db),
+		Invitation:              authAdapters.NewPostgresInvitationRepository(db),
+		Session:                 authAdapters.NewPostgresSessionRepository(db),
+		SessionRestaurantVisits: placesAdapters.NewPostgresVisitRepository(db),
 	}
 }

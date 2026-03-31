@@ -6,20 +6,25 @@ import (
 	"os"
 	"time"
 
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/application/dashboard"
-	"bitmerchant/internal/application/kitchen"
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/application/order"
-	"bitmerchant/internal/application/places"
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
-	authInfra "bitmerchant/internal/infrastructure/auth"
+	"bitmerchant/internal/common"
+	dashQuery "bitmerchant/internal/dashboard/app/query"
 	"bitmerchant/internal/infrastructure/events"
 	eventHandlers "bitmerchant/internal/infrastructure/events/handlers"
 	"bitmerchant/internal/infrastructure/logging"
-	"bitmerchant/internal/infrastructure/payment/cash"
 	"bitmerchant/internal/infrastructure/qr"
+	menuCmd "bitmerchant/internal/menu/app/command"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	orderCart "bitmerchant/internal/ordering/app/cart"
+	orderCmd "bitmerchant/internal/ordering/app/command"
+	orderQuery "bitmerchant/internal/ordering/app/query"
+	"bitmerchant/internal/ordering/domain/order"
+	payAdapters "bitmerchant/internal/payment/adapters"
+	placesCmd "bitmerchant/internal/places/app/command"
+	placesQuery "bitmerchant/internal/places/app/query"
+	restCmd "bitmerchant/internal/restaurant/app/command"
+	restQuery "bitmerchant/internal/restaurant/app/query"
+
+	authInfra "bitmerchant/internal/auth/adapters"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/http/middleware"
 
@@ -63,41 +68,41 @@ func main() {
 
 	qrService := qr.NewQRCodeService()
 
-	cartService := cart.NewCartService()
-	paymentMethod := cash.NewCashPaymentMethod()
+	cartService := orderCart.NewCartService()
+	_ = payAdapters.NewCashPaymentMethod()
 	sseHandler := handler.NewSSEHandler()
 
-	getMenuUC := menu.NewGetMenuUseCase(repos.MenuCategory, repos.MenuItem, repos.Restaurant, photoStorage, menu.PhotoSignerConfig{
+	getMenuUC := menuQuery.NewGetMenuUseCase(repos.MenuCategory, repos.MenuItem, repos.Restaurant, photoStorage, menuQuery.PhotoSignerConfig{
 		Bucket:        cfg.S3BucketName,
 		Endpoint:      cfg.S3Endpoint,
 		PublicBaseURL: cfg.S3PublicBaseURL,
 	})
-	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repos.MenuCategory, repos.MenuItem, repos.Restaurant)
-	updateMenuItemUC := menu.NewUpdateMenuItemUseCase(repos.MenuItem, repos.MenuCategory)
-	updateMenuCategoryUC := menu.NewUpdateMenuCategoryUseCase(repos.MenuCategory)
-	toggleItemAvailUC := menu.NewToggleMenuItemAvailabilityUseCase(repos.MenuItem)
-	createOrderUC := order.NewCreateOrderUseCase(repos.Order, repos.Payment, repos.Restaurant, eventBus, paymentMethod, logger)
-	getCustomerOrderByNumberUC := order.NewGetCustomerOrderByNumberUseCase(repos.Order)
-	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(repos.Order)
-	recordMenuVisitUC := places.NewRecordMenuVisitUseCase(repos.Restaurant, repos.SessionRestaurantVisits)
-	listVisitedUC := places.NewListVisitedRestaurantsUseCase(repos.SessionRestaurantVisits, repos.Restaurant, repos.Order)
+	getMenuAdminUC := menuQuery.NewGetMenuForAdminUseCase(repos.MenuCategory, repos.MenuItem, repos.Restaurant)
+	updateMenuItemUC := menuCmd.NewUpdateMenuItemUseCase(repos.MenuItem, repos.MenuCategory)
+	updateMenuCategoryUC := menuCmd.NewUpdateMenuCategoryUseCase(repos.MenuCategory)
+	toggleItemAvailUC := menuCmd.NewToggleMenuItemAvailabilityUseCase(repos.MenuItem)
+	createOrderUC := orderCmd.NewCreateOrderUseCase(repos.Order, repos.Restaurant, eventBus, logger)
+	getCustomerOrderByNumberUC := orderQuery.NewGetCustomerOrderByNumberUseCase(repos.Order)
+	getCustomerOrdersUC := orderQuery.NewGetCustomerOrdersUseCase(repos.Order)
+	recordMenuVisitUC := placesCmd.NewRecordMenuVisitUseCase(repos.Restaurant, repos.SessionRestaurantVisits)
+	listVisitedUC := placesQuery.NewListVisitedRestaurantsUseCase(repos.SessionRestaurantVisits, repos.Restaurant, repos.Order)
 
-	getKitchenOrdersUC := kitchen.NewGetKitchenOrdersUseCase(repos.Order)
-	markPaidUC := kitchen.NewMarkOrderPaidUseCase(repos.Order, eventBus)
-	markPreparingUC := kitchen.NewMarkOrderPreparingUseCase(repos.Order, eventBus)
-	markReadyUC := kitchen.NewMarkOrderReadyUseCase(repos.Order, eventBus)
+	getKitchenOrdersUC := orderQuery.NewGetKitchenOrdersUseCase(repos.Order)
+	markPaidUC := orderCmd.NewMarkOrderPaidUseCase(repos.Order, eventBus)
+	markPreparingUC := orderCmd.NewMarkOrderPreparingUseCase(repos.Order, eventBus)
+	markReadyUC := orderCmd.NewMarkOrderReadyUseCase(repos.Order, eventBus)
 
-	createRestUC := restaurant.NewCreateRestaurantUseCase(repos.Restaurant)
-	createCatUC := menu.NewCreateMenuCategoryUseCase(repos.MenuCategory)
-	createItemUC := menu.NewCreateMenuItemUseCase(repos.MenuItem)
-	uploadPhotoUC := menu.NewUploadPhotoUseCase(repos.MenuItem, photoStorage)
+	createRestUC := restCmd.NewCreateRestaurantUseCase(repos.Restaurant)
+	createCatUC := menuCmd.NewCreateMenuCategoryUseCase(repos.MenuCategory)
+	createItemUC := menuCmd.NewCreateMenuItemUseCase(repos.MenuItem)
+	uploadPhotoUC := menuCmd.NewUploadPhotoUseCase(repos.MenuItem, photoStorage)
 
-	getStatsUC := dashboard.NewGetDashboardStatsUseCase(repos.Order)
-	getHistoryUC := dashboard.NewGetOrderHistoryUseCase(repos.Order)
-	getTopItemsUC := dashboard.NewGetTopSellingItemsUseCase(repos.Order)
-	toggleOpenUC := restaurant.NewToggleRestaurantOpenUseCase(repos.Restaurant)
-	updateTableCountUC := restaurant.NewUpdateRestaurantTableCountUseCase(repos.Restaurant)
-	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qrService, cfg.BaseURL, repos.Restaurant)
+	getStatsUC := dashQuery.NewGetDashboardStatsUseCase(repos.Order)
+	getHistoryUC := dashQuery.NewGetOrderHistoryUseCase(repos.Order)
+	getTopItemsUC := dashQuery.NewGetTopSellingItemsUseCase(repos.Order)
+	toggleOpenUC := restCmd.NewToggleRestaurantOpenUseCase(repos.Restaurant)
+	updateTableCountUC := restCmd.NewUpdateRestaurantTableCountUseCase(repos.Restaurant)
+	generateQRUC := restQuery.NewGenerateRestaurantQRUseCase(qrService, cfg.BaseURL, repos.Restaurant)
 
 	sessionOpts := middleware.SessionOptions{
 		SecureCookie: middleware.ShouldUseSecureCookies(cfg.BaseURL, cfg.ForceSecureCookie),
@@ -149,35 +154,35 @@ func main() {
 	e.Logger.Fatal(e.Start(":" + cfg.Port))
 }
 
-func setupEventSubscriptions(eventBus *events.EventBus, logger *logging.Logger, sseHandler *handler.SSEHandler, orderRepo domain.OrderRepository) {
+func setupEventSubscriptions(eventBus *events.EventBus, logger *logging.Logger, sseHandler *handler.SSEHandler, orderRepo order.Repository) {
 	orderCreatedHandler := eventHandlers.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
 	orderPaidHandler := eventHandlers.NewOrderPaidHandler(logger, sseHandler, orderRepo)
 	orderPreparingHandler := eventHandlers.NewOrderPreparingHandler(logger, sseHandler, orderRepo)
 	orderReadyHandler := eventHandlers.NewOrderReadyHandler(logger, sseHandler, orderRepo)
 
-	subscribe(eventBus, "OrderCreated", logger, func(msg []byte) {
-		var event domain.OrderCreated
+	subscribe(eventBus, common.EventOrderCreated, logger, func(msg []byte) {
+		var event order.OrderCreated
 		if err := json.Unmarshal(msg, &event); err == nil {
 			_ = orderCreatedHandler.Handle(context.Background(), event)
 		}
 	})
 
-	subscribe(eventBus, "OrderPaid", logger, func(msg []byte) {
-		var event domain.OrderPaid
+	subscribe(eventBus, common.EventOrderPaid, logger, func(msg []byte) {
+		var event order.OrderPaid
 		if err := json.Unmarshal(msg, &event); err == nil {
 			_ = orderPaidHandler.Handle(context.Background(), event)
 		}
 	})
 
-	subscribe(eventBus, "OrderPreparing", logger, func(msg []byte) {
-		var event domain.OrderPreparing
+	subscribe(eventBus, common.EventOrderPreparing, logger, func(msg []byte) {
+		var event order.OrderPreparing
 		if err := json.Unmarshal(msg, &event); err == nil {
 			_ = orderPreparingHandler.Handle(context.Background(), event)
 		}
 	})
 
-	subscribe(eventBus, "OrderReady", logger, func(msg []byte) {
-		var event domain.OrderReady
+	subscribe(eventBus, common.EventOrderReady, logger, func(msg []byte) {
+		var event order.OrderReady
 		if err := json.Unmarshal(msg, &event); err == nil {
 			_ = orderReadyHandler.Handle(context.Background(), event)
 		}
