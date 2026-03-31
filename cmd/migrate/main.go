@@ -3,46 +3,54 @@ package main
 import (
 	"context"
 	"database/sql"
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
+	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/infrastructure/migrations"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
+	logging.NewLogger()
+
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		log.Fatal("DATABASE_URL is required")
+		slog.Error("DATABASE_URL is required")
+		os.Exit(1)
 	}
 
 	bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	createdDB, bootstrapErr := migrations.EnsureDatabaseExists(bootstrapCtx, databaseURL)
 	bootstrapCancel()
 	if bootstrapErr != nil {
-		log.Fatalf("failed to ensure database exists: %v", bootstrapErr)
+		slog.Error("failed to ensure database exists", "err", bootstrapErr)
+		os.Exit(1)
 	}
 	if createdDB {
-		log.Println("created missing database from DATABASE_URL")
+		slog.Info("created missing database from DATABASE_URL")
 	} else {
-		log.Println("database from DATABASE_URL already exists")
+		slog.Info("database from DATABASE_URL already exists")
 	}
 
 	db, err := sql.Open("pgx", databaseURL)
 	if err != nil {
-		log.Fatalf("failed to open database: %v", err)
+		slog.Error("failed to open database", "err", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
 	if err := db.PingContext(context.Background()); err != nil {
-		log.Fatalf("failed to ping database: %v", err)
+		slog.Error("failed to ping database", "err", err)
+		os.Exit(1)
 	}
 
 	if err := migrations.Up(context.Background(), db); err != nil {
-		log.Fatalf("failed to run migrations: %v", err)
+		slog.Error("failed to run migrations", "err", err)
+		os.Exit(1)
 	}
 
-	log.Println("migrations completed successfully")
+	slog.Info("migrations completed successfully")
 }

@@ -30,7 +30,7 @@ func NewOrderHandler(
 	return &OrderHandler{
 		createOrderUseCase:         createOrderUseCase,
 		getCustomerOrderByNumberUC: getCustomerOrderByNumberUC,
-		getCustomerOrdersUseCase: getCustomerOrdersUseCase,
+		getCustomerOrdersUseCase:   getCustomerOrdersUseCase,
 		cartService:                cartService,
 	}
 }

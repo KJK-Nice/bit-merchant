@@ -171,8 +171,8 @@ func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, 
 	for rows.Next() {
 		var (
 			id, oid, menuItemID, name string
-			quantity                   int
-			unitPrice, subtotal        float64
+			quantity                  int
+			unitPrice, subtotal       float64
 		)
 		if err := rows.Scan(&id, &oid, &menuItemID, &name, &quantity, &unitPrice, &subtotal); err != nil {
 			return nil, err

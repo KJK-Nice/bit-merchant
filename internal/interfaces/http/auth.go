@@ -164,73 +164,15 @@ func (h *AuthHandler) FinishRegistration(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to save user")
 	}
 
-	var restaurantID *domain.RestaurantID
-	redirect := "/dashboard"
-
-	if pending.invitationToken != "" {
-		invitation, invErr := h.invitationRepo.FindByToken(pending.invitationToken)
-		if invErr != nil {
-			h.logger.Warn("FinishRegistration invitation not found", "error", invErr, "token", pending.invitationToken)
-			return c.String(http.StatusBadRequest, "Invitation not found")
-		}
-		if invitation.IsExpired(time.Now()) || invitation.IsUsed() {
-			return c.String(http.StatusBadRequest, "Invitation expired or already used")
-		}
-
-		membership, memErr := domain.NewMembership(
-			domain.MembershipID(uuid.NewString()),
-			pending.user.ID,
-			invitation.RestaurantID,
-			invitation.Role,
-		)
-		if memErr != nil {
-			return c.String(http.StatusBadRequest, memErr.Error())
-		}
-		if memErr = h.membershipRepo.Save(membership); memErr != nil {
-			h.logger.Error("FinishRegistration save invited membership failed", "error", memErr, "userID", pending.user.ID, "restaurantID", invitation.RestaurantID)
-			return c.String(http.StatusInternalServerError, "Failed to save membership")
-		}
-
-		now := time.Now()
-		invitation.MarkUsed(pending.user.ID, now)
-		if updateErr := h.invitationRepo.Update(invitation); updateErr != nil {
-			h.logger.Error("FinishRegistration mark invitation used failed", "error", updateErr, "token", pending.invitationToken)
-			return c.String(http.StatusInternalServerError, "Failed to finalize invitation")
-		}
-
-		restaurantID = &invitation.RestaurantID
-		if invitation.Role == domain.RoleKitchenStaff {
-			redirect = "/kitchen"
-		}
-	} else if pending.restaurantName != "" {
-		rest, restErr := h.createRestaurant.Execute(c.Request().Context(), restaurant.CreateRestaurantRequest{
-			Name: pending.restaurantName,
-		})
-		if restErr != nil {
-			h.logger.Error("FinishRegistration create restaurant failed", "error", restErr, "userID", pending.user.ID)
-			return c.String(http.StatusInternalServerError, "Failed to create restaurant")
-		}
-
-		membership, memErr := domain.NewMembership(
-			domain.MembershipID(uuid.NewString()),
-			pending.user.ID,
-			rest.ID,
-			domain.RoleOwner,
-		)
-		if memErr != nil {
-			return c.String(http.StatusBadRequest, memErr.Error())
-		}
-		if memErr = h.membershipRepo.Save(membership); memErr != nil {
-			h.logger.Error("FinishRegistration save owner membership failed", "error", memErr, "userID", pending.user.ID, "restaurantID", rest.ID)
-			return c.String(http.StatusInternalServerError, "Failed to save membership")
-		}
-		restaurantID = &rest.ID
+	outcome, err := h.resolveRegistrationOutcome(c, c.Request().Context(), pending)
+	if err != nil {
+		return nil // response already written by helper
 	}
 
 	authSession := &domain.Session{
 		ID:           middleware.NewSessionID(),
 		UserID:       &pending.user.ID,
-		RestaurantID: restaurantID,
+		RestaurantID: outcome.restaurantID,
 		CreatedAt:    time.Now(),
 		ExpiresAt:    time.Now().Add(h.sessionOpts.WithDefaults().TTL),
 	}
@@ -245,10 +187,10 @@ func (h *AuthHandler) FinishRegistration(c echo.Context) error {
 
 	setAuthenticatedContext(c, pending.user, authSession)
 	h.clearPending(oldSessionID)
-	h.logger.Info("User registered successfully", "userID", pending.user.ID, "restaurantID", restaurantID)
+	h.logger.Info("User registered successfully", "userID", pending.user.ID, "restaurantID", outcome.restaurantID)
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"redirect": redirect,
+		"redirect": outcome.redirect,
 	})
 }
 
@@ -290,26 +232,13 @@ func (h *AuthHandler) FinishLogin(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Invalid user type")
 	}
 
-	if credential != nil {
-		domainUser.UpdateCredential(*credential)
-		if updateErr := h.userRepo.Update(domainUser); updateErr != nil {
-			h.logger.Error("FinishLogin user credential update failed", "error", updateErr, "userID", domainUser.ID)
-		}
-	}
+	h.refreshCredential(domainUser, credential)
 
-	var (
-		restaurantID *domain.RestaurantID
-		redirect     = "/dashboard"
-	)
+	var restaurantID *domain.RestaurantID
+	redirect := "/dashboard"
 	memberships, memErr := h.membershipRepo.FindByUserID(domainUser.ID)
-	if memErr == nil && len(memberships) == 1 {
-		restaurantID = &memberships[0].RestaurantID
-		if memberships[0].Role == domain.RoleKitchenStaff {
-			redirect = "/kitchen"
-		}
-	}
-	if memErr == nil && len(memberships) > 1 {
-		redirect = "/auth/select-restaurant"
+	if memErr == nil {
+		restaurantID, redirect = resolveRedirectFromMemberships(memberships)
 	}
 
 	authSession := &domain.Session{
@@ -434,19 +363,13 @@ func (h *AuthHandler) GetNewRestaurant(c echo.Context) error {
 }
 
 func (h *AuthHandler) PostNewRestaurant(c echo.Context) error {
-	user, ok := getAuthenticatedUser(c)
-	if !ok || user == nil {
-		return c.String(http.StatusUnauthorized, "unauthorized")
-	}
-
-	restaurantID, err := getRestaurantIDFromContext(c)
+	user, restaurantID, err := requireAuthAndRestaurant(c)
 	if err != nil {
-		return c.String(http.StatusForbidden, "restaurant context required")
+		return err
 	}
 
-	membership, err := h.membershipRepo.FindByUserAndRestaurant(user.ID, restaurantID)
-	if err != nil || membership == nil || membership.Role != domain.RoleOwner {
-		return c.String(http.StatusForbidden, "only owners can create restaurants")
+	if err := h.assertOwner(user.ID, restaurantID); err != nil {
+		return c.String(http.StatusForbidden, err.Error())
 	}
 	if h.createRestaurant == nil {
 		return c.String(http.StatusInternalServerError, "restaurant creation unavailable")
@@ -463,30 +386,14 @@ func (h *AuthHandler) PostNewRestaurant(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "failed to create restaurant")
 	}
 
-	newMembership, memErr := domain.NewMembership(
-		domain.MembershipID(uuid.NewString()),
-		user.ID,
-		rest.ID,
-		domain.RoleOwner,
-	)
-	if memErr != nil {
-		return c.String(http.StatusBadRequest, memErr.Error())
-	}
-	if memErr = h.membershipRepo.Save(newMembership); memErr != nil {
-		h.logger.Error("PostNewRestaurant save membership failed", "error", memErr, "userID", user.ID, "restaurantID", rest.ID)
+	if err := h.saveOwnerMembership(user.ID, rest.ID); err != nil {
+		h.logger.Error("PostNewRestaurant save membership failed", "error", err, "userID", user.ID, "restaurantID", rest.ID)
 		return c.String(http.StatusInternalServerError, "failed to save membership")
 	}
 
-	sessionID, _ := c.Get("sessionID").(string)
-	if sessionID == "" {
+	session, err := h.getOrInitSession(c)
+	if err != nil {
 		return c.String(http.StatusUnauthorized, "session not found")
-	}
-	session, sessErr := h.sessionRepo.Get(sessionID)
-	if sessErr != nil || session == nil {
-		session = &domain.Session{
-			ID:        sessionID,
-			CreatedAt: time.Now(),
-		}
 	}
 	session.UserID = &user.ID
 	rid := rest.ID
@@ -631,4 +538,156 @@ func (h *AuthHandler) redirectByRole(role domain.MemberRole) string {
 		return "/kitchen"
 	}
 	return "/dashboard"
+}
+
+// registrationOutcome holds the post-registration redirect target and restaurant context.
+type registrationOutcome struct {
+	restaurantID *domain.RestaurantID
+	redirect     string
+}
+
+func (h *AuthHandler) resolveRegistrationOutcome(c echo.Context, ctx context.Context, pending pendingRegistration) (registrationOutcome, error) {
+	if pending.invitationToken != "" {
+		return h.applyInvitationRegistration(c, ctx, pending)
+	}
+	if pending.restaurantName != "" {
+		return h.applyNewRestaurantRegistration(c, ctx, pending)
+	}
+	return registrationOutcome{redirect: "/dashboard"}, nil
+}
+
+func (h *AuthHandler) applyInvitationRegistration(c echo.Context, ctx context.Context, pending pendingRegistration) (registrationOutcome, error) {
+	invitation, err := h.invitationRepo.FindByToken(pending.invitationToken)
+	if err != nil {
+		h.logger.Warn("FinishRegistration invitation not found", "error", err, "token", pending.invitationToken)
+		_ = c.String(http.StatusBadRequest, "Invitation not found")
+		return registrationOutcome{}, err
+	}
+	if invitation.IsExpired(time.Now()) || invitation.IsUsed() {
+		_ = c.String(http.StatusBadRequest, "Invitation expired or already used")
+		return registrationOutcome{}, errors.New("invitation expired or already used")
+	}
+	membership, err := domain.NewMembership(
+		domain.MembershipID(uuid.NewString()),
+		pending.user.ID,
+		invitation.RestaurantID,
+		invitation.Role,
+	)
+	if err != nil {
+		_ = c.String(http.StatusBadRequest, err.Error())
+		return registrationOutcome{}, err
+	}
+	if err = h.membershipRepo.Save(membership); err != nil {
+		h.logger.Error("FinishRegistration save invited membership failed", "error", err, "userID", pending.user.ID, "restaurantID", invitation.RestaurantID)
+		_ = c.String(http.StatusInternalServerError, "Failed to save membership")
+		return registrationOutcome{}, err
+	}
+	invitation.MarkUsed(pending.user.ID, time.Now())
+	if err := h.invitationRepo.Update(invitation); err != nil {
+		h.logger.Error("FinishRegistration mark invitation used failed", "error", err, "token", pending.invitationToken)
+		_ = c.String(http.StatusInternalServerError, "Failed to finalize invitation")
+		return registrationOutcome{}, err
+	}
+	redirect := "/dashboard"
+	if invitation.Role == domain.RoleKitchenStaff {
+		redirect = "/kitchen"
+	}
+	return registrationOutcome{restaurantID: &invitation.RestaurantID, redirect: redirect}, nil
+}
+
+func (h *AuthHandler) applyNewRestaurantRegistration(c echo.Context, ctx context.Context, pending pendingRegistration) (registrationOutcome, error) {
+	rest, err := h.createRestaurant.Execute(ctx, restaurant.CreateRestaurantRequest{Name: pending.restaurantName})
+	if err != nil {
+		h.logger.Error("FinishRegistration create restaurant failed", "error", err, "userID", pending.user.ID)
+		_ = c.String(http.StatusInternalServerError, "Failed to create restaurant")
+		return registrationOutcome{}, err
+	}
+	membership, err := domain.NewMembership(
+		domain.MembershipID(uuid.NewString()),
+		pending.user.ID,
+		rest.ID,
+		domain.RoleOwner,
+	)
+	if err != nil {
+		_ = c.String(http.StatusBadRequest, err.Error())
+		return registrationOutcome{}, err
+	}
+	if err = h.membershipRepo.Save(membership); err != nil {
+		h.logger.Error("FinishRegistration save owner membership failed", "error", err, "userID", pending.user.ID, "restaurantID", rest.ID)
+		_ = c.String(http.StatusInternalServerError, "Failed to save membership")
+		return registrationOutcome{}, err
+	}
+	return registrationOutcome{restaurantID: &rest.ID, redirect: "/dashboard"}, nil
+}
+
+func (h *AuthHandler) refreshCredential(user *domain.User, credential *webauthn.Credential) {
+	if credential == nil {
+		return
+	}
+	user.UpdateCredential(*credential)
+	if err := h.userRepo.Update(user); err != nil {
+		h.logger.Error("FinishLogin user credential update failed", "error", err, "userID", user.ID)
+	}
+}
+
+func resolveRedirectFromMemberships(memberships []*domain.Membership) (*domain.RestaurantID, string) {
+	if len(memberships) == 1 {
+		redirect := "/dashboard"
+		if memberships[0].Role == domain.RoleKitchenStaff {
+			redirect = "/kitchen"
+		}
+		return &memberships[0].RestaurantID, redirect
+	}
+	if len(memberships) > 1 {
+		return nil, "/auth/select-restaurant"
+	}
+	return nil, "/dashboard"
+}
+
+func requireAuthAndRestaurant(c echo.Context) (*domain.User, domain.RestaurantID, error) {
+	user, ok := getAuthenticatedUser(c)
+	if !ok || user == nil {
+		return nil, "", echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
+	}
+	restaurantID, err := getRestaurantIDFromContext(c)
+	if err != nil {
+		return nil, "", echo.NewHTTPError(http.StatusForbidden, "restaurant context required")
+	}
+	return user, restaurantID, nil
+}
+
+func (h *AuthHandler) assertOwner(userID domain.UserID, restaurantID domain.RestaurantID) error {
+	membership, err := h.membershipRepo.FindByUserAndRestaurant(userID, restaurantID)
+	if err != nil || membership == nil || membership.Role != domain.RoleOwner {
+		return errors.New("only owners can create restaurants")
+	}
+	return nil
+}
+
+func (h *AuthHandler) saveOwnerMembership(userID domain.UserID, restaurantID domain.RestaurantID) error {
+	membership, err := domain.NewMembership(
+		domain.MembershipID(uuid.NewString()),
+		userID,
+		restaurantID,
+		domain.RoleOwner,
+	)
+	if err != nil {
+		return err
+	}
+	return h.membershipRepo.Save(membership)
+}
+
+func (h *AuthHandler) getOrInitSession(c echo.Context) (*domain.Session, error) {
+	sessionID, _ := c.Get("sessionID").(string)
+	if sessionID == "" {
+		return nil, errors.New("session not found")
+	}
+	session, err := h.sessionRepo.Get(sessionID)
+	if err != nil || session == nil {
+		return &domain.Session{
+			ID:        sessionID,
+			CreatedAt: time.Now(),
+		}, nil
+	}
+	return session, nil
 }

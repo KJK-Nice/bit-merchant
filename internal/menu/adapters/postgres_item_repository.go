@@ -105,11 +105,11 @@ func (r *PostgresItemRepository) queryItems(query string, args ...interface{}) (
 func scanItem(row *sql.Row) (*menu.MenuItem, error) {
 	var (
 		id, catID, restID, name string
-		description              sql.NullString
-		price                    float64
-		photoURL, photoOrigURL   sql.NullString
-		isAvailable              bool
-		createdAt, updatedAt     time.Time
+		description             sql.NullString
+		price                   float64
+		photoURL, photoOrigURL  sql.NullString
+		isAvailable             bool
+		createdAt, updatedAt    time.Time
 	)
 	if err := row.Scan(&id, &catID, &restID, &name, &description, &price, &photoURL, &photoOrigURL, &isAvailable, &createdAt, &updatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -129,11 +129,11 @@ func scanItem(row *sql.Row) (*menu.MenuItem, error) {
 func scanItemRows(rows *sql.Rows) (*menu.MenuItem, error) {
 	var (
 		id, catID, restID, name string
-		description              sql.NullString
-		price                    float64
-		photoURL, photoOrigURL   sql.NullString
-		isAvailable              bool
-		createdAt, updatedAt     time.Time
+		description             sql.NullString
+		price                   float64
+		photoURL, photoOrigURL  sql.NullString
+		isAvailable             bool
+		createdAt, updatedAt    time.Time
 	)
 	if err := rows.Scan(&id, &catID, &restID, &name, &description, &price, &photoURL, &photoOrigURL, &isAvailable, &createdAt, &updatedAt); err != nil {
 		return nil, err

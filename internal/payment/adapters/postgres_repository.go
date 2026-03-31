@@ -112,7 +112,7 @@ func buildPayment(id, orderID, restID, method string, amount float64, status str
 	p := &payment.Payment{
 		ID: common.PaymentID(id), OrderID: common.OrderID(orderID),
 		RestaurantID: common.RestaurantID(restID),
-		Method: common.PaymentMethodType(method), Amount: amount,
+		Method:       common.PaymentMethodType(method), Amount: amount,
 		Status: common.PaymentStatus(status), CreatedAt: createdAt,
 		FailureReason: failureReason.String,
 	}

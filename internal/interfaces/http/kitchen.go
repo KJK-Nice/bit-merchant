@@ -11,12 +11,12 @@ import (
 )
 
 type KitchenHandler struct {
-	getOrdersUC      *kitchen.GetKitchenOrdersUseCase
-	markPaidUC       *kitchen.MarkOrderPaidUseCase
-	markPreparingUC  *kitchen.MarkOrderPreparingUseCase
-	markReadyUC      *kitchen.MarkOrderReadyUseCase
-	restaurantRepo   domain.RestaurantRepository
-	membershipRepo   domain.MembershipRepository
+	getOrdersUC     *kitchen.GetKitchenOrdersUseCase
+	markPaidUC      *kitchen.MarkOrderPaidUseCase
+	markPreparingUC *kitchen.MarkOrderPreparingUseCase
+	markReadyUC     *kitchen.MarkOrderReadyUseCase
+	restaurantRepo  domain.RestaurantRepository
+	membershipRepo  domain.MembershipRepository
 }
 
 func NewKitchenHandler(

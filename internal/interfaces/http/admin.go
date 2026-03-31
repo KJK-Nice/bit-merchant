@@ -56,7 +56,7 @@ type AdminHandler struct {
 	updateItemUC       *menu.UpdateMenuItemUseCase
 	updateCategoryUC   *menu.UpdateMenuCategoryUseCase
 	toggleItemAvailUC  *menu.ToggleMenuItemAvailabilityUseCase
-	uploadPhotoUC       *menu.UploadPhotoUseCase
+	uploadPhotoUC      *menu.UploadPhotoUseCase
 	updateTableCountUC *restaurant.UpdateRestaurantTableCountUseCase
 	generateQRUC       *restaurant.GenerateRestaurantQRUseCase
 	membershipRepo     domain.MembershipRepository
@@ -86,7 +86,7 @@ func NewAdminHandler(
 		updateItemUC:       updateItemUC,
 		updateCategoryUC:   updateCategoryUC,
 		toggleItemAvailUC:  toggleItemAvailUC,
-		uploadPhotoUC:       uploadPhotoUC,
+		uploadPhotoUC:      uploadPhotoUC,
 		updateTableCountUC: updateTableCountUC,
 		generateQRUC:       generateQRUC,
 		membershipRepo:     membershipRepo,

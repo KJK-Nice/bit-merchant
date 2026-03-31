@@ -141,11 +141,11 @@ func TestAuthHandlerPostNewRestaurant_CreatesMembershipAndSwitchesSession(t *tes
 	require.NoError(t, membershipRepo.Save(membership))
 
 	require.NoError(t, sessionRepo.Save(&domain.Session{
-		ID:             "session-new-rest",
-		UserID:         &user.ID,
-		RestaurantID:   &existingID,
-		CreatedAt:      time.Now(),
-		ExpiresAt:      time.Now().Add(time.Hour),
+		ID:           "session-new-rest",
+		UserID:       &user.ID,
+		RestaurantID: &existingID,
+		CreatedAt:    time.Now(),
+		ExpiresAt:    time.Now().Add(time.Hour),
 	}))
 
 	h := handler.NewAuthHandler(nil, userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, createUC, nil, httpMiddleware.SessionOptions{TTL: time.Hour})

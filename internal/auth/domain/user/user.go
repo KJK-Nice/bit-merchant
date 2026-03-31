@@ -26,7 +26,7 @@ func NewUser(id common.UserID, displayName string) (*User, error) {
 	return &User{
 		ID: id, DisplayName: displayName,
 		Credentials: []webauthn.Credential{},
-		CreatedAt: now, UpdatedAt: now,
+		CreatedAt:   now, UpdatedAt: now,
 	}, nil
 }
 

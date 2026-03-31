@@ -90,9 +90,9 @@ func (r *PostgresCategoryRepository) Delete(id common.CategoryID) error {
 
 func scanCategory(row *sql.Row) (*menu.MenuCategory, error) {
 	var (
-		id, restID, name string
-		displayOrder     int
-		isActive         bool
+		id, restID, name     string
+		displayOrder         int
+		isActive             bool
 		createdAt, updatedAt time.Time
 	)
 	if err := row.Scan(&id, &restID, &name, &displayOrder, &isActive, &createdAt, &updatedAt); err != nil {
@@ -110,9 +110,9 @@ func scanCategory(row *sql.Row) (*menu.MenuCategory, error) {
 
 func scanCategoryRows(rows *sql.Rows) (*menu.MenuCategory, error) {
 	var (
-		id, restID, name string
-		displayOrder     int
-		isActive         bool
+		id, restID, name     string
+		displayOrder         int
+		isActive             bool
 		createdAt, updatedAt time.Time
 	)
 	if err := rows.Scan(&id, &restID, &name, &displayOrder, &isActive, &createdAt, &updatedAt); err != nil {

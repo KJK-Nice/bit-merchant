@@ -74,46 +74,52 @@ func sessionMiddleware(sessionRepo domain.SessionRepository, userRepo domain.Use
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			cookie, err := c.Cookie(SessionCookieName)
-			var sessionID string
-			if err != nil || cookie.Value == "" {
-				// Create new session
-				sessionID = NewSessionID()
-				cookie = NewSessionCookie(sessionID, opts)
-				c.SetCookie(cookie)
-			} else {
-				sessionID = cookie.Value
-			}
-
+			sessionID := ensureSessionCookie(c, opts)
 			c.Set("sessionID", sessionID)
 
-			// Preserve legacy anonymous-only behavior when repositories are not configured.
 			if sessionRepo == nil || userRepo == nil {
 				return next(c)
 			}
 
-			session, err := sessionRepo.Get(sessionID)
-			if err != nil || session == nil || session.IsExpired(time.Now()) {
-				session = &domain.Session{
-					ID:        sessionID,
-					CreatedAt: time.Now(),
-					ExpiresAt: time.Now().Add(opts.TTL),
-				}
-				_ = sessionRepo.Save(session)
-			}
-
+			session := loadOrCreateSession(sessionRepo, sessionID, opts)
 			c.Set(ContextAuthSession, session)
-
-			if session.UserID != nil {
-				user, userErr := userRepo.FindByID(*session.UserID)
-				if userErr == nil && user != nil {
-					c.Set(ContextAuthUser, user)
-				}
-			}
-			if session.RestaurantID != nil {
-				c.Set(ContextRestaurantID, *session.RestaurantID)
-			}
+			attachIdentityFromSession(c, session, userRepo)
 			return next(c)
 		}
+	}
+}
+
+func ensureSessionCookie(c echo.Context, opts SessionOptions) string {
+	cookie, err := c.Cookie(SessionCookieName)
+	if err != nil || cookie.Value == "" {
+		sessionID := NewSessionID()
+		c.SetCookie(NewSessionCookie(sessionID, opts))
+		return sessionID
+	}
+	return cookie.Value
+}
+
+func loadOrCreateSession(sessionRepo domain.SessionRepository, sessionID string, opts SessionOptions) *domain.Session {
+	session, err := sessionRepo.Get(sessionID)
+	if err != nil || session == nil || session.IsExpired(time.Now()) {
+		session = &domain.Session{
+			ID:        sessionID,
+			CreatedAt: time.Now(),
+			ExpiresAt: time.Now().Add(opts.TTL),
+		}
+		_ = sessionRepo.Save(session)
+	}
+	return session
+}
+
+func attachIdentityFromSession(c echo.Context, session *domain.Session, userRepo domain.UserRepository) {
+	if session.UserID != nil {
+		user, err := userRepo.FindByID(*session.UserID)
+		if err == nil && user != nil {
+			c.Set(ContextAuthUser, user)
+		}
+	}
+	if session.RestaurantID != nil {
+		c.Set(ContextRestaurantID, *session.RestaurantID)
 	}
 }

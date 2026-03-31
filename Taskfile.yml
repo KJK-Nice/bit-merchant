@@ -52,3 +52,10 @@ tasks:
     desc: Start development server with hot reload
     cmds:
       - task --parallel tailwind templ
+
+  clean:
+    desc: Remove build artifacts, generated files, coverage reports, and Docker resources
+    cmds:
+      - rm -f bin/server main coverage.out
+      - find . -name "*_templ.go" -delete
+      - docker compose down --volumes --remove-orphans
