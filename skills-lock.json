@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "datastar": {
+      "source": "maragudk/skills",
+      "sourceType": "github",
+      "computedHash": "7d48128d50a8cf4b574150365d7d0f975d70a31e392766ac8880d2ba786c026c"
+    },
+    "templui": {
+      "source": "gopherguides/gopher-ai",
+      "sourceType": "github",
+      "computedHash": "6e6aa6b202dcf47bf801ea0a20da22a6541dd57e3797683fbfb0d5d5277774c1"
+    }
+  }
+}
