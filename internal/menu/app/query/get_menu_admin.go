@@ -10,16 +10,20 @@ import (
 )
 
 type GetMenuForAdminUseCase struct {
-	catRepo  menu.CategoryRepository
-	itemRepo menu.ItemRepository
-	restRepo restaurant.Repository
+	catRepo        menu.CategoryRepository
+	itemRepo       menu.ItemRepository
+	restRepo       restaurant.Repository
+	photos         menu.PhotoStorage
+	photoSignerCfg PhotoSignerConfig
 }
 
-func NewGetMenuForAdminUseCase(catRepo menu.CategoryRepository, itemRepo menu.ItemRepository, restRepo restaurant.Repository) *GetMenuForAdminUseCase {
+func NewGetMenuForAdminUseCase(catRepo menu.CategoryRepository, itemRepo menu.ItemRepository, restRepo restaurant.Repository, photos menu.PhotoStorage, photoSignerCfg PhotoSignerConfig) *GetMenuForAdminUseCase {
 	return &GetMenuForAdminUseCase{
-		catRepo:  catRepo,
-		itemRepo: itemRepo,
-		restRepo: restRepo,
+		catRepo:        catRepo,
+		itemRepo:       itemRepo,
+		restRepo:       restRepo,
+		photos:         photos,
+		photoSignerCfg: photoSignerCfg,
 	}
 }
 
@@ -59,11 +63,18 @@ func (uc *GetMenuForAdminUseCase) Execute(ctx context.Context, restaurantID comm
 	for _, cat := range categories {
 		catItems := itemsByCategory[cat.ID]
 		sort.Slice(catItems, func(i, j int) bool {
+			if catItems[i].DisplayOrder != catItems[j].DisplayOrder {
+				return catItems[i].DisplayOrder < catItems[j].DisplayOrder
+			}
 			return catItems[i].Name < catItems[j].Name
 		})
+		displayItems, err := ItemsWithPresignedPhotos(ctx, catItems, uc.photos, uc.photoSignerCfg)
+		if err != nil {
+			return nil, err
+		}
 		response.Categories = append(response.Categories, CategoryWithItems{
 			Category: cat,
-			Items:    catItems,
+			Items:    displayItems,
 		})
 	}
 

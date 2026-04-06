@@ -39,6 +39,18 @@ func (uc *CreateMenuItemUseCase) Execute(ctx context.Context, req CreateMenuItem
 	}
 	item.SetAvailable(req.Available)
 
+	maxOrder := -1
+	siblings, err := uc.repo.FindByCategoryID(req.CategoryID)
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range siblings {
+		if s.DisplayOrder > maxOrder {
+			maxOrder = s.DisplayOrder
+		}
+	}
+	_ = item.SetDisplayOrder(maxOrder + 1)
+
 	if err := uc.repo.Save(item); err != nil {
 		return nil, err
 	}

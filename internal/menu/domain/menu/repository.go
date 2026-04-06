@@ -21,4 +21,6 @@ type ItemRepository interface {
 	Update(item *MenuItem) error
 	Delete(id common.ItemID) error
 	CountByRestaurantID(restaurantID common.RestaurantID) (int, error)
+	// ReorderItemsInCategory sets display_order to index for each item ID; all must belong to category and restaurant.
+	ReorderItemsInCategory(restaurantID common.RestaurantID, categoryID common.CategoryID, orderedItemIDs []common.ItemID) error
 }

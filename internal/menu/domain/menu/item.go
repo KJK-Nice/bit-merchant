@@ -18,6 +18,7 @@ type MenuItem struct {
 	PhotoURL         string
 	PhotoOriginalURL string
 	IsAvailable      bool
+	DisplayOrder     int
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -38,9 +39,27 @@ func NewMenuItem(id common.ItemID, categoryID common.CategoryID, restaurantID co
 		Name:         name,
 		Price:        price,
 		IsAvailable:  true,
+		DisplayOrder: 0,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}, nil
+}
+
+func ValidateDisplayOrder(order int) error {
+	if order < 0 {
+		return errors.New("display order must be >= 0")
+	}
+	return nil
+}
+
+// SetDisplayOrder updates sort position within the category.
+func (m *MenuItem) SetDisplayOrder(order int) error {
+	if err := ValidateDisplayOrder(order); err != nil {
+		return err
+	}
+	m.DisplayOrder = order
+	m.UpdatedAt = time.Now()
+	return nil
 }
 
 func ValidateItemName(name string) error {

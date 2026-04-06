@@ -57,6 +57,11 @@ func (m *MockMenuItemRepository) CountByRestaurantID(restaurantID domain.Restaur
 	return args.Get(0).(int), args.Error(1)
 }
 
+func (m *MockMenuItemRepository) ReorderItemsInCategory(restaurantID domain.RestaurantID, categoryID domain.CategoryID, orderedItemIDs []domain.ItemID) error {
+	args := m.Called(restaurantID, categoryID, orderedItemIDs)
+	return args.Error(0)
+}
+
 func TestCreateMenuItemUseCase_Execute(t *testing.T) {
 	t.Run("successfully creates item", func(t *testing.T) {
 		repo := new(MockMenuItemRepository)
@@ -65,8 +70,9 @@ func TestCreateMenuItemUseCase_Execute(t *testing.T) {
 		restaurantID := domain.RestaurantID("rest-1")
 		categoryID := domain.CategoryID("cat-1")
 
+		repo.On("FindByCategoryID", categoryID).Return([]*domain.MenuItem{}, nil)
 		repo.On("Save", mock.MatchedBy(func(i *domain.MenuItem) bool {
-			return i.Name == "Burger" && i.RestaurantID == restaurantID && i.CategoryID == categoryID && i.Price == 12.50
+			return i.Name == "Burger" && i.RestaurantID == restaurantID && i.CategoryID == categoryID && i.Price == 12.50 && i.DisplayOrder == 0
 		})).Return(nil)
 
 		req := menu.CreateMenuItemRequest{

@@ -103,3 +103,34 @@ func (r *MemoryItemRepository) CountByRestaurantID(restaurantID common.Restauran
 	}
 	return count, nil
 }
+
+func (r *MemoryItemRepository) ReorderItemsInCategory(restaurantID common.RestaurantID, categoryID common.CategoryID, orderedItemIDs []common.ItemID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var inCat []*menu.MenuItem
+	for _, item := range r.items {
+		if item.RestaurantID == restaurantID && item.CategoryID == categoryID {
+			inCat = append(inCat, item)
+		}
+	}
+	if len(orderedItemIDs) != len(inCat) {
+		return errors.New("item list does not match category")
+	}
+	want := make(map[common.ItemID]struct{}, len(inCat))
+	for _, it := range inCat {
+		want[it.ID] = struct{}{}
+	}
+	for _, id := range orderedItemIDs {
+		if _, ok := want[id]; !ok {
+			return errors.New("invalid item in reorder list")
+		}
+		delete(want, id)
+	}
+	if len(want) != 0 {
+		return errors.New("item list does not match category")
+	}
+	for i, id := range orderedItemIDs {
+		r.items[id].DisplayOrder = i
+	}
+	return nil
+}

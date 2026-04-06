@@ -2,6 +2,7 @@ package menu_test
 
 import (
 	"context"
+	"io"
 	"testing"
 
 	"bitmerchant/internal/application/menu"
@@ -11,6 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type adminFakePhotoStorage struct{}
+
+func (adminFakePhotoStorage) Upload(context.Context, string, io.Reader, string) (string, error) {
+	panic("unused")
+}
+func (adminFakePhotoStorage) Delete(context.Context, string) error { return nil }
+func (adminFakePhotoStorage) PresignGet(_ context.Context, key string) (string, error) {
+	return "https://signed.example/" + key, nil
+}
 
 func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *testing.T) {
 	ctx := context.Background()
@@ -40,7 +51,7 @@ func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *te
 	unavail.SetAvailable(false)
 	require.NoError(t, repoItem.Save(unavail))
 
-	uc := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest)
+	uc := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menu.PhotoSignerConfig{})
 	resp, err := uc.Execute(ctx, rid)
 	require.NoError(t, err)
 	require.Len(t, resp.Categories, 2)
@@ -75,4 +86,32 @@ func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *te
 	assert.Equal(t, catWith.ID, pubResp.Categories[0].Category.ID)
 	require.Len(t, pubResp.Categories[0].Items, 1)
 	assert.Equal(t, "Burger", pubResp.Categories[0].Items[0].Name)
+}
+
+func TestGetMenuForAdminUseCase_PresignsPhotoURLs(t *testing.T) {
+	ctx := context.Background()
+	repoRest := memory.NewMemoryRestaurantRepository()
+	repoCat := memory.NewMemoryMenuCategoryRepository()
+	repoItem := memory.NewMemoryMenuItemRepository()
+
+	rid := domain.RestaurantID("r1")
+	rest, err := domain.NewRestaurant(rid, "Cafe")
+	require.NoError(t, err)
+	require.NoError(t, repoRest.Save(rest))
+
+	cat, err := domain.NewMenuCategory("c1", rid, "Mains", 0)
+	require.NoError(t, err)
+	require.NoError(t, repoCat.Save(cat))
+
+	it, err := domain.NewMenuItem("i1", cat.ID, rid, "Burger", 9)
+	require.NoError(t, err)
+	it.SetPhotoURLs("restaurants/r1/items/x.jpg", "restaurants/r1/items/x.jpg")
+	require.NoError(t, repoItem.Save(it))
+
+	uc := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, adminFakePhotoStorage{}, menu.PhotoSignerConfig{Bucket: "b"})
+	resp, err := uc.Execute(ctx, rid)
+	require.NoError(t, err)
+	require.Len(t, resp.Categories, 1)
+	require.Len(t, resp.Categories[0].Items, 1)
+	assert.Contains(t, resp.Categories[0].Items[0].PhotoURL, "https://signed.example/")
 }
