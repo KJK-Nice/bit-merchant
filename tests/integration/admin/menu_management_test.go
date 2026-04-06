@@ -36,10 +36,12 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 	createRestUC := restaurant.NewCreateRestaurantUseCase(repoRest)
 	createCatUC := menu.NewCreateMenuCategoryUseCase(repoCat)
 	createItemUC := menu.NewCreateMenuItemUseCase(repoItem)
-	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest)
+	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menu.PhotoSignerConfig{})
 	updateItemUC := menu.NewUpdateMenuItemUseCase(repoItem, repoCat)
 	updateCategoryUC := menu.NewUpdateMenuCategoryUseCase(repoCat)
 	toggleAvailUC := menu.NewToggleMenuItemAvailabilityUseCase(repoItem)
+	reorderCatUC := menu.NewReorderMenuCategoriesUseCase(repoCat)
+	reorderItemUC := menu.NewReorderMenuItemsUseCase(repoItem, repoCat)
 	updateTableUC := restaurant.NewUpdateRestaurantTableCountUseCase(repoRest)
 	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
 
@@ -52,6 +54,9 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 		updateCategoryUC,
 		toggleAvailUC,
 		nil,
+		reorderCatUC,
+		reorderItemUC,
+		repoItem,
 		updateTableUC,
 		generateQRUC,
 		membershipRepo,
