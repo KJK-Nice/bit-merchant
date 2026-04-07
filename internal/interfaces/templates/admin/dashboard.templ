@@ -208,13 +208,13 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 														@icon.GripVertical(icon.Props{Class: "h-4 w-4"})
 													</button>
 												}
-												@table.Cell(table.CellProps{Class: "align-middle min-w-0 w-24"}) {
+												@table.Cell(table.CellProps{Class: "align-middle min-w-0 w-20"}) {
 													if item.PhotoURL != "" {
-														<div class="h-14 w-20 overflow-hidden rounded-md border border-border bg-muted">
-															<img src={ item.PhotoURL } alt="" class="h-full w-full object-cover" loading="lazy" width="80" height="56"/>
+														<div class="h-12 w-16 overflow-hidden rounded-md border border-border bg-muted">
+															<img src={ item.PhotoURL } alt="" class="h-full w-full object-cover" loading="lazy" width="64" height="48"/>
 														</div>
 													} else {
-														<div class="flex h-14 w-20 items-center justify-center rounded-md border border-dashed border-muted-foreground/40 text-[10px] text-muted-foreground text-center px-1">
+														<div class="flex h-12 w-16 items-center justify-center rounded-md border border-dashed border-muted-foreground/40 text-[10px] text-muted-foreground text-center px-1">
 															No photo
 														</div>
 													}
@@ -264,8 +264,8 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 																			@label.Label(label.Props{}) {
 																				Current image
 																			}
-																			<div class="max-h-48 overflow-auto rounded-md border border-border">
-																				<img src={ item.PhotoURL } alt={ item.Name } class="w-full object-contain"/>
+																			<div class="flex justify-center rounded-md border border-border bg-muted/30 p-2">
+																				<img src={ item.PhotoURL } alt={ item.Name } class="max-h-40 max-w-full h-auto w-auto object-contain"/>
 																			</div>
 																		</div>
 																	}
