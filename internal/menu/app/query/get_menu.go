@@ -2,7 +2,6 @@ package query
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	"bitmerchant/internal/common"
@@ -82,8 +81,14 @@ func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID common.Resta
 		if len(catItems) == 0 {
 			continue
 		}
+		sort.Slice(catItems, func(i, j int) bool {
+			if catItems[i].DisplayOrder != catItems[j].DisplayOrder {
+				return catItems[i].DisplayOrder < catItems[j].DisplayOrder
+			}
+			return catItems[i].Name < catItems[j].Name
+		})
 
-		displayItems, err := uc.itemsWithPresignedPhotos(ctx, catItems)
+		displayItems, err := ItemsWithPresignedPhotos(ctx, catItems, uc.photos, uc.photoSignerCfg)
 		if err != nil {
 			return nil, err
 		}
@@ -95,28 +100,4 @@ func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID common.Resta
 	}
 
 	return response, nil
-}
-
-func (uc *GetMenuUseCase) itemsWithPresignedPhotos(ctx context.Context, items []*menu.MenuItem) ([]*menu.MenuItem, error) {
-	if uc.photos == nil {
-		return items, nil
-	}
-
-	out := make([]*menu.MenuItem, len(items))
-	for i, item := range items {
-		cp := *item
-		if cp.PhotoURL != "" {
-			key := PhotoObjectKeyFromStoredValue(cp.PhotoURL, uc.photoSignerCfg.Bucket, uc.photoSignerCfg.Endpoint, uc.photoSignerCfg.PublicBaseURL)
-			if key == "" {
-				key = cp.PhotoURL
-			}
-			signed, err := uc.photos.PresignGet(ctx, key)
-			if err != nil {
-				return nil, fmt.Errorf("presign menu photo: %w", err)
-			}
-			cp.PhotoURL = signed
-		}
-		out[i] = &cp
-	}
-	return out, nil
 }

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -57,6 +58,9 @@ type AdminHandler struct {
 	updateCategoryUC   *menu.UpdateMenuCategoryUseCase
 	toggleItemAvailUC  *menu.ToggleMenuItemAvailabilityUseCase
 	uploadPhotoUC      *menu.UploadPhotoUseCase
+	reorderCategoriesUC *menu.ReorderMenuCategoriesUseCase
+	reorderItemsUC      *menu.ReorderMenuItemsUseCase
+	itemRepo           domain.MenuItemRepository
 	updateTableCountUC *restaurant.UpdateRestaurantTableCountUseCase
 	generateQRUC       *restaurant.GenerateRestaurantQRUseCase
 	membershipRepo     domain.MembershipRepository
@@ -73,6 +77,9 @@ func NewAdminHandler(
 	updateCategoryUC *menu.UpdateMenuCategoryUseCase,
 	toggleItemAvailUC *menu.ToggleMenuItemAvailabilityUseCase,
 	uploadPhotoUC *menu.UploadPhotoUseCase,
+	reorderCategoriesUC *menu.ReorderMenuCategoriesUseCase,
+	reorderItemsUC *menu.ReorderMenuItemsUseCase,
+	itemRepo domain.MenuItemRepository,
 	updateTableCountUC *restaurant.UpdateRestaurantTableCountUseCase,
 	generateQRUC *restaurant.GenerateRestaurantQRUseCase,
 	membershipRepo domain.MembershipRepository,
@@ -85,8 +92,11 @@ func NewAdminHandler(
 		getMenuAdminUC:     getMenuAdminUC,
 		updateItemUC:       updateItemUC,
 		updateCategoryUC:   updateCategoryUC,
-		toggleItemAvailUC:  toggleItemAvailUC,
-		uploadPhotoUC:      uploadPhotoUC,
+		toggleItemAvailUC:   toggleItemAvailUC,
+		uploadPhotoUC:       uploadPhotoUC,
+		reorderCategoriesUC: reorderCategoriesUC,
+		reorderItemsUC:      reorderItemsUC,
+		itemRepo:            itemRepo,
 		updateTableCountUC: updateTableCountUC,
 		generateQRUC:       generateQRUC,
 		membershipRepo:     membershipRepo,
@@ -238,8 +248,19 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 	}
 	itemID := domain.ItemID(c.Param("id"))
 
+	existing, err := h.itemRepo.FindByID(itemID)
+	if err != nil {
+		return c.Redirect(http.StatusFound, adminMenuRedirect("Item not found"))
+	}
+	if existing.RestaurantID != restaurantID {
+		return c.Redirect(http.StatusFound, adminMenuRedirect("Item not found"))
+	}
+
 	file, err := c.FormFile("photo")
 	if err != nil {
+		if existing.PhotoURL != "" {
+			return c.Redirect(http.StatusFound, adminMenuDashboardPath)
+		}
 		return c.Redirect(http.StatusFound, adminMenuRedirect("Image file required"))
 	}
 	src, err := file.Open()
@@ -261,6 +282,51 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 	}
 
 	return c.Redirect(http.StatusFound, adminMenuDashboardPath)
+}
+
+// PostReorderCategories handles POST /admin/menu/reorder-categories (JSON body: { "categoryIDs": ["id1", ...] }).
+func (h *AdminHandler) PostReorderCategories(c echo.Context) error {
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+	}
+	var body struct {
+		CategoryIDs []string `json:"categoryIDs"`
+	}
+	if err := json.NewDecoder(c.Request().Body).Decode(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+	}
+	ordered := make([]domain.CategoryID, len(body.CategoryIDs))
+	for i, s := range body.CategoryIDs {
+		ordered[i] = domain.CategoryID(s)
+	}
+	if err := h.reorderCategoriesUC.Execute(c.Request().Context(), restaurantID, ordered); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
+// PostReorderItems handles POST /admin/menu/reorder-items (JSON body: { "categoryID": "...", "itemIDs": ["id1", ...] }).
+func (h *AdminHandler) PostReorderItems(c echo.Context) error {
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+	}
+	var body struct {
+		CategoryID string   `json:"categoryID"`
+		ItemIDs    []string `json:"itemIDs"`
+	}
+	if err := json.NewDecoder(c.Request().Body).Decode(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+	}
+	ordered := make([]domain.ItemID, len(body.ItemIDs))
+	for i, s := range body.ItemIDs {
+		ordered[i] = domain.ItemID(s)
+	}
+	if err := h.reorderItemsUC.Execute(c.Request().Context(), restaurantID, domain.CategoryID(body.CategoryID), ordered); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (h *AdminHandler) renderQRPage(c echo.Context, rest *domain.Restaurant, qrError string, saved bool) error {

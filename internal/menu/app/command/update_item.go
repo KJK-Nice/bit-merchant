@@ -54,12 +54,29 @@ func (uc *UpdateMenuItemUseCase) Execute(ctx context.Context, req UpdateMenuItem
 		return err
 	}
 
+	oldCat := item.CategoryID
 	item.CategoryID = req.CategoryID
 	item.Name = req.Name
 	item.Price = req.Price
 	item.SetAvailable(req.Available)
 	if err := item.SetDescription(req.Description); err != nil {
 		return err
+	}
+
+	if oldCat != req.CategoryID {
+		maxOrder := -1
+		siblings, err := uc.itemRepo.FindByCategoryID(req.CategoryID)
+		if err != nil {
+			return err
+		}
+		for _, s := range siblings {
+			if s.ID != item.ID && s.DisplayOrder > maxOrder {
+				maxOrder = s.DisplayOrder
+			}
+		}
+		if err := item.SetDisplayOrder(maxOrder + 1); err != nil {
+			return err
+		}
 	}
 
 	return uc.itemRepo.Update(item)

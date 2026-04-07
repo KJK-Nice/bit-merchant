@@ -74,10 +74,12 @@ func TestAdminEndpoints(t *testing.T) {
 	createCatUC := menu.NewCreateMenuCategoryUseCase(repoCat)
 	createItemUC := menu.NewCreateMenuItemUseCase(repoItem)
 
-	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest)
+	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menu.PhotoSignerConfig{})
 	updateItemUC := menu.NewUpdateMenuItemUseCase(repoItem, repoCat)
 	updateCategoryUC := menu.NewUpdateMenuCategoryUseCase(repoCat)
 	toggleAvailUC := menu.NewToggleMenuItemAvailabilityUseCase(repoItem)
+	reorderCatUC := menu.NewReorderMenuCategoriesUseCase(repoCat)
+	reorderItemUC := menu.NewReorderMenuItemsUseCase(repoItem, repoCat)
 	updateTableUC := restaurant.NewUpdateRestaurantTableCountUseCase(repoRest)
 	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
 
@@ -91,6 +93,9 @@ func TestAdminEndpoints(t *testing.T) {
 		updateCategoryUC,
 		toggleAvailUC,
 		nil, // uploadPhotoUC
+		reorderCatUC,
+		reorderItemUC,
+		repoItem,
 		updateTableUC,
 		generateQRUC,
 		membershipRepo,

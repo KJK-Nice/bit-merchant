@@ -11,6 +11,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
+	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"fmt"
 	"strconv"
@@ -57,17 +58,32 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 				}
 			</div>
 
-			<div class="space-y-6">
+			<p class="text-sm text-muted-foreground">Drag the grip handle on a category or item row to reorder. Changes save automatically.</p>
+
+			<div id="admin-menu-categories" class="space-y-6">
 				for _, catData := range menuData.Categories {
-					@card.Card() {
+					@card.Card(card.Props{
+						Class: "admin-menu-category-card",
+						Attributes: templ.Attributes{
+							"data-category-id": string(catData.Category.ID),
+							"draggable":        "true",
+						},
+					}) {
 						@card.Header(card.HeaderProps{Class: "flex flex-row items-center justify-between space-y-0 pb-2 gap-2 flex-wrap"}) {
-							<div class="flex items-center gap-2 flex-wrap min-w-0">
-								@card.Title() { { catData.Category.Name } }
-								if !catData.Category.IsActive {
-									@badge.Badge(badge.Props{Variant: badge.VariantOutline}) {
-										Hidden
+							<div class="flex items-start gap-2 min-w-0 flex-1">
+								<button type="button" class="admin-category-drag-handle mt-0.5 shrink-0 cursor-grab active:cursor-grabbing rounded-md p-1 text-muted-foreground hover:bg-muted" aria-label="Drag to reorder category">
+									@icon.GripVertical(icon.Props{Class: "h-5 w-5"})
+								</button>
+								<div class="min-w-0 flex-1">
+									@card.Title(card.TitleProps{Class: "whitespace-normal break-words leading-snug"}) { { catData.Category.Name } }
+									if !catData.Category.IsActive {
+										<div class="mt-1">
+											@badge.Badge(badge.Props{Variant: badge.VariantOutline}) {
+												Hidden
+											}
+										</div>
 									}
-								}
+								</div>
 							</div>
 							<div class="flex items-center gap-2 shrink-0">
 								@dialog.Dialog() {
@@ -165,16 +181,47 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 								@table.Table() {
 									@table.Header() {
 										@table.Row() {
+											@table.Head(table.HeadProps{Class: "w-10"}) {}
+											@table.Head() { Photo }
 											@table.Head() { Name }
 											@table.Head() { Price }
 											@table.Head() { Status }
 											@table.Head(table.HeadProps{Class: "text-right"}) { Actions }
 										}
 									}
-									@table.Body() {
+									@table.Body(table.BodyProps{
+										Attributes: templ.Attributes{
+											"data-category-id": string(catData.Category.ID),
+											"class":            "admin-menu-item-tbody",
+										},
+									}) {
 										for _, item := range catData.Items {
-											@table.Row() {
-												@table.Cell(table.CellProps{Class: "font-medium"}) { { item.Name } }
+											@table.Row(table.RowProps{
+												Attributes: templ.Attributes{
+													"data-item-id": string(item.ID),
+													"draggable":    "true",
+													"class":        "admin-menu-item-row",
+												},
+											}) {
+												@table.Cell(table.CellProps{Class: "w-10 align-middle"}) {
+													<button type="button" class="admin-item-drag-handle cursor-grab active:cursor-grabbing rounded-md p-1 text-muted-foreground hover:bg-muted" aria-label="Drag to reorder item">
+														@icon.GripVertical(icon.Props{Class: "h-4 w-4"})
+													</button>
+												}
+												@table.Cell(table.CellProps{Class: "align-middle min-w-0 w-24"}) {
+													if item.PhotoURL != "" {
+														<div class="h-14 w-20 overflow-hidden rounded-md border border-border bg-muted">
+															<img src={ item.PhotoURL } alt="" class="h-full w-full object-cover" loading="lazy" width="80" height="56"/>
+														</div>
+													} else {
+														<div class="flex h-14 w-20 items-center justify-center rounded-md border border-dashed border-muted-foreground/40 text-[10px] text-muted-foreground text-center px-1">
+															No photo
+														</div>
+													}
+												}
+												@table.Cell(table.CellProps{Class: "font-medium min-w-0 max-w-md align-middle"}) {
+													<span class="break-words">{ item.Name }</span>
+												}
 												@table.Cell() { { fmt.Sprintf("$%.2f", item.Price) } }
 												@table.Cell() {
 													if item.IsAvailable {
@@ -212,11 +259,29 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 																}
 																<form method="post" action={ "/admin/item/" + string(item.ID) + "/photo" } enctype="multipart/form-data" class="space-y-4">
 																	<input type="hidden" name="csrf" value={ csrfToken }/>
+																	if item.PhotoURL != "" {
+																		<div class="space-y-2">
+																			@label.Label(label.Props{}) {
+																				Current image
+																			}
+																			<div class="max-h-48 overflow-auto rounded-md border border-border">
+																				<img src={ item.PhotoURL } alt={ item.Name } class="w-full object-contain"/>
+																			</div>
+																		</div>
+																	}
 																	<div class="space-y-2">
 																		@label.Label(label.Props{For: "photo-file-" + string(item.ID)}) {
-																			Image file
+																			if item.PhotoURL != "" {
+																				Replace image
+																			} else {
+																				Image file
+																			}
 																		}
-																		<input type="file" id={ "photo-file-" + string(item.ID) } name="photo" accept="image/*" required class="block w-full text-sm"/>
+																		if item.PhotoURL != "" {
+																			<input type="file" id={ "photo-file-" + string(item.ID) } name="photo" accept="image/*" class="block w-full text-sm"/>
+																		} else {
+																			<input type="file" id={ "photo-file-" + string(item.ID) } name="photo" accept="image/*" required class="block w-full text-sm"/>
+																		}
 																	</div>
 																	@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Upload }
 																</form>
@@ -232,21 +297,52 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 																@dialog.Header() {
 																	@dialog.Title() { { "Edit " + item.Name } }
 																}
-																<form action={ "/admin/item/" + string(item.ID) + "/update" } method="post" class="space-y-4">
+																<form action={ "/admin/item/" + string(item.ID) + "/update" } method="post" class="space-y-4" id={ "edit-item-form-" + string(item.ID) }>
 																	<input type="hidden" name="csrf" value={ csrfToken }/>
+																	<input type="hidden" name="categoryID" id={ "edit-item-cat-value-" + string(item.ID) } value={ string(item.CategoryID) }/>
 																	<div class="space-y-2">
-																		@label.Label(label.Props{For: "edit-item-cat-" + string(item.ID)}) {
+																		@label.Label(label.Props{For: "edit-item-cat-trigger-" + string(item.ID)}) {
 																			Category
 																		}
-																		<select id={ "edit-item-cat-" + string(item.ID) } name="categoryID" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
-																			for _, optCat := range menuData.Categories {
-																				if optCat.Category.ID == item.CategoryID {
-																					<option value={ string(optCat.Category.ID) } selected>{ optCat.Category.Name }</option>
-																				} else {
-																					<option value={ string(optCat.Category.ID) }>{ optCat.Category.Name }</option>
+																		@dropdown.Dropdown() {
+																			@dropdown.Trigger(dropdown.TriggerProps{Class: "w-full"}) {
+																				@button.Button(button.Props{
+																					Type:    button.TypeButton,
+																					Variant: button.VariantOutline,
+																					Class:   "w-full justify-between font-normal",
+																					ID:      "edit-item-cat-trigger-" + string(item.ID),
+																				}) {
+																					{{
+																						catLabel := ""
+																						for _, oc := range menuData.Categories {
+																							if oc.Category.ID == item.CategoryID {
+																								catLabel = oc.Category.Name
+																								break
+																							}
+																						}
+																					}}
+																					<span class="edit-item-cat-label min-w-0 flex-1 text-left line-clamp-2" data-item-id={ string(item.ID) }>{ catLabel }</span>
+																					@icon.ChevronDown(icon.Props{Class: "h-4 w-4 shrink-0 opacity-60"})
 																				}
 																			}
-																		</select>
+																			@dropdown.Content(dropdown.ContentProps{Class: "min-w-[12rem] max-w-[min(100vw-2rem,28rem)]"}) {
+																				@dropdown.Group() {
+																					for _, optCat := range menuData.Categories {
+																						@dropdown.Item(dropdown.ItemProps{
+																							Class: "whitespace-normal text-left",
+																							Attributes: templ.Attributes{
+																								"type":                    "button",
+																								"data-set-category-for":   string(item.ID),
+																								"data-category-id-value":  string(optCat.Category.ID),
+																								"data-category-name-text": optCat.Category.Name,
+																							},
+																						}) {
+																							{ optCat.Category.Name }
+																						}
+																					}
+																				}
+																			}
+																		}
 																	</div>
 																	<div class="grid grid-cols-2 gap-4">
 																		<div class="space-y-2">
@@ -304,6 +400,105 @@ templ Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantL
 				}
 			</div>
 
+			<script>
+				(function () {
+					function getCookie(name) {
+						const value = '; ' + document.cookie;
+						const parts = value.split('; ' + name + '=');
+						if (parts.length === 2) return parts.pop().split(';').shift() || '';
+						return '';
+					}
+					function adminFetch(url, body) {
+						const headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': getCookie('csrf') || '' };
+						return fetch(url, { method: 'POST', headers, body: JSON.stringify(body), credentials: 'same-origin' });
+					}
+					document.querySelectorAll('[data-set-category-for]').forEach(function (el) {
+						el.addEventListener('click', function () {
+							const itemId = el.getAttribute('data-set-category-for');
+							const catId = el.getAttribute('data-category-id-value');
+							const name = el.getAttribute('data-category-name-text') || '';
+							const hidden = document.getElementById('edit-item-cat-value-' + itemId);
+							if (hidden) hidden.value = catId;
+							const label = document.querySelector('.edit-item-cat-label[data-item-id="' + itemId + '"]');
+							if (label) label.textContent = name;
+						});
+					});
+					const catRoot = document.getElementById('admin-menu-categories');
+					if (!catRoot) return;
+					let dragCat = null;
+					catRoot.querySelectorAll('.admin-menu-category-card').forEach(function (card) {
+						card.addEventListener('dragstart', function (e) {
+							dragCat = card;
+							e.dataTransfer.effectAllowed = 'move';
+							card.classList.add('opacity-50');
+						});
+						card.addEventListener('dragend', function () {
+							card.classList.remove('opacity-50');
+							dragCat = null;
+						});
+						card.addEventListener('dragover', function (e) {
+							e.preventDefault();
+							if (!dragCat || dragCat === card) return;
+							const rect = card.getBoundingClientRect();
+							const before = e.clientY < rect.top + rect.height / 2;
+							catRoot.insertBefore(dragCat, before ? card : card.nextSibling);
+						});
+					});
+					catRoot.querySelectorAll('.admin-category-drag-handle').forEach(function (h) {
+						h.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+						h.addEventListener('click', function (e) { e.preventDefault(); });
+					});
+					catRoot.addEventListener('drop', function (e) {
+						e.preventDefault();
+						if (!dragCat) return;
+						const ids = Array.from(catRoot.querySelectorAll('.admin-menu-category-card')).map(function (c) {
+							return c.getAttribute('data-category-id');
+						});
+						adminFetch('/admin/menu/reorder-categories', { categoryIDs: ids }).then(function (r) {
+							if (!r.ok) r.text().then(function (t) { console.error('reorder categories failed', t); });
+						});
+					});
+					catRoot.addEventListener('dragover', function (e) { e.preventDefault(); });
+
+					catRoot.querySelectorAll('.admin-menu-item-tbody').forEach(function (tbody) {
+						let dragRow = null;
+						const catId = tbody.getAttribute('data-category-id');
+						tbody.querySelectorAll('.admin-menu-item-row').forEach(function (row) {
+							row.addEventListener('dragstart', function (e) {
+								dragRow = row;
+								e.dataTransfer.effectAllowed = 'move';
+								row.classList.add('opacity-50');
+							});
+							row.addEventListener('dragend', function () {
+								row.classList.remove('opacity-50');
+								dragRow = null;
+							});
+							row.addEventListener('dragover', function (e) {
+								e.preventDefault();
+								if (!dragRow || dragRow === row || dragRow.parentNode !== tbody) return;
+								const rect = row.getBoundingClientRect();
+								const before = e.clientY < rect.top + rect.height / 2;
+								tbody.insertBefore(dragRow, before ? row : row.nextSibling);
+							});
+						});
+						tbody.querySelectorAll('.admin-item-drag-handle').forEach(function (h) {
+							h.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+							h.addEventListener('click', function (e) { e.preventDefault(); });
+						});
+						tbody.addEventListener('drop', function (e) {
+							e.preventDefault();
+							if (!dragRow || dragRow.parentNode !== tbody) return;
+							const ids = Array.from(tbody.querySelectorAll('.admin-menu-item-row')).map(function (r) {
+								return r.getAttribute('data-item-id');
+							});
+							adminFetch('/admin/menu/reorder-items', { categoryID: catId, itemIDs: ids }).then(function (r) {
+								if (!r.ok) r.text().then(function (t) { console.error('reorder items failed', t); });
+							});
+						});
+						tbody.addEventListener('dragover', function (e) { e.preventDefault(); });
+					});
+				})();
+			</script>
 		</div>
 	}
 }

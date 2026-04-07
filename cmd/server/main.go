@@ -77,7 +77,11 @@ func main() {
 		Endpoint:      cfg.S3Endpoint,
 		PublicBaseURL: cfg.S3PublicBaseURL,
 	})
-	getMenuAdminUC := menuQuery.NewGetMenuForAdminUseCase(repos.MenuCategory, repos.MenuItem, repos.Restaurant)
+	getMenuAdminUC := menuQuery.NewGetMenuForAdminUseCase(repos.MenuCategory, repos.MenuItem, repos.Restaurant, photoStorage, menuQuery.PhotoSignerConfig{
+		Bucket:        cfg.S3BucketName,
+		Endpoint:      cfg.S3Endpoint,
+		PublicBaseURL: cfg.S3PublicBaseURL,
+	})
 	updateMenuItemUC := menuCmd.NewUpdateMenuItemUseCase(repos.MenuItem, repos.MenuCategory)
 	updateMenuCategoryUC := menuCmd.NewUpdateMenuCategoryUseCase(repos.MenuCategory)
 	toggleItemAvailUC := menuCmd.NewToggleMenuItemAvailabilityUseCase(repos.MenuItem)
@@ -96,6 +100,8 @@ func main() {
 	createCatUC := menuCmd.NewCreateMenuCategoryUseCase(repos.MenuCategory)
 	createItemUC := menuCmd.NewCreateMenuItemUseCase(repos.MenuItem)
 	uploadPhotoUC := menuCmd.NewUploadPhotoUseCase(repos.MenuItem, photoStorage)
+	reorderCategoriesUC := menuCmd.NewReorderMenuCategoriesUseCase(repos.MenuCategory)
+	reorderItemsUC := menuCmd.NewReorderMenuItemsUseCase(repos.MenuItem, repos.MenuCategory)
 
 	getStatsUC := dashQuery.NewGetDashboardStatsUseCase(repos.Order)
 	getHistoryUC := dashQuery.NewGetOrderHistoryUseCase(repos.Order)
@@ -118,7 +124,7 @@ func main() {
 	orderHandler := handler.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, cartService)
 	placesHandler := handler.NewPlacesHandler(listVisitedUC)
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, repos.Restaurant, repos.Membership)
-	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuAdminUC, updateMenuItemUC, updateMenuCategoryUC, toggleItemAvailUC, uploadPhotoUC, updateTableCountUC, generateQRUC, repos.Membership, repos.Restaurant)
+	adminHandler := handler.NewAdminHandler(createRestUC, createCatUC, createItemUC, getMenuAdminUC, updateMenuItemUC, updateMenuCategoryUC, toggleItemAvailUC, uploadPhotoUC, reorderCategoriesUC, reorderItemsUC, repos.MenuItem, updateTableCountUC, generateQRUC, repos.Membership, repos.Restaurant)
 	ownerHandler := handler.NewOwnerHandler(createRestUC)
 	dashboardHandler := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, repos.Restaurant, repos.Membership, logger.Logger)
 	authHandler := handler.NewAuthHandler(webauthnSvc, repos.User, repos.Membership, repos.Invitation, repos.Session, repos.Restaurant, createRestUC, logger.Logger, sessionOpts)
