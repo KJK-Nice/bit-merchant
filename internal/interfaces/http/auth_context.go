@@ -1,15 +1,17 @@
 package http
 
 import (
-	"errors"
+	"bitmerchant/internal/auth/domain/session"
+	"bitmerchant/internal/auth/domain/user"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/domain"
 	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	"errors"
 
 	"github.com/labstack/echo/v4"
 )
 
-func setAuthenticatedContext(c echo.Context, user *domain.User, session *domain.Session) {
+func setAuthenticatedContext(c echo.Context, user *user.User, session *session.Session) {
 	c.Set(httpMiddleware.ContextAuthUser, user)
 	c.Set(httpMiddleware.ContextAuthSession, session)
 	if session != nil && session.RestaurantID != nil {
@@ -17,18 +19,18 @@ func setAuthenticatedContext(c echo.Context, user *domain.User, session *domain.
 	}
 }
 
-func getAuthenticatedUser(c echo.Context) (*domain.User, bool) {
-	user, ok := c.Get(httpMiddleware.ContextAuthUser).(*domain.User)
+func getAuthenticatedUser(c echo.Context) (*user.User, bool) {
+	user, ok := c.Get(httpMiddleware.ContextAuthUser).(*user.User)
 	return user, ok
 }
 
-func getSession(c echo.Context) (*domain.Session, bool) {
-	session, ok := c.Get(httpMiddleware.ContextAuthSession).(*domain.Session)
+func getSession(c echo.Context) (*session.Session, bool) {
+	session, ok := c.Get(httpMiddleware.ContextAuthSession).(*session.Session)
 	return session, ok
 }
 
-func getRestaurantIDFromContext(c echo.Context) (domain.RestaurantID, error) {
-	if restaurantID, ok := c.Get(httpMiddleware.ContextRestaurantID).(domain.RestaurantID); ok && restaurantID != "" {
+func getRestaurantIDFromContext(c echo.Context) (common.RestaurantID, error) {
+	if restaurantID, ok := c.Get(httpMiddleware.ContextRestaurantID).(common.RestaurantID); ok && restaurantID != "" {
 		return restaurantID, nil
 	}
 	if session, ok := getSession(c); ok && session.RestaurantID != nil {

@@ -1,22 +1,24 @@
 package http_test
 
 import (
+	"bitmerchant/internal/common"
+	dashboard "bitmerchant/internal/dashboard/app/query"
+
+	"bitmerchant/internal/infrastructure/repositories/memory"
+	handler "bitmerchant/internal/interfaces/http"
+	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	"bitmerchant/internal/ordering/domain/order"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
-
-	"bitmerchant/internal/application/dashboard"
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
-	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
-
-	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDashboardHandler(t *testing.T) {
@@ -25,13 +27,13 @@ func TestDashboardHandler(t *testing.T) {
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
 
 	// Seed restaurant
-	r, _ := domain.NewRestaurant("restaurant_1", "Test Cafe")
+	r, _ := restaurant.NewRestaurant("restaurant_1", "Test Cafe")
 	_ = restaurantRepo.Save(r)
 
 	// Seed orders for stats
-	items := []domain.OrderItem{{MenuItemID: "i1", Name: "Item 1", Quantity: 1, UnitPrice: 10.0, Subtotal: 10.0}}
-	o1, _ := domain.NewOrder("o1", "1001", "restaurant_1", "session_1", items, 1000, domain.PaymentMethodTypeCash)
-	o1.PaymentStatus = domain.PaymentStatusPaid
+	items := []order.OrderItem{{MenuItemID: "i1", Name: "Item 1", Quantity: 1, UnitPrice: 10.0, Subtotal: 10.0}}
+	o1, _ := order.NewOrder("o1", "1001", "restaurant_1", "session_1", items, 1000, common.PaymentMethodTypeCash)
+	o1.PaymentStatus = common.PaymentStatusPaid
 	o1.FiatAmount = 10.0
 	_ = orderRepo.Save(o1)
 
@@ -39,7 +41,7 @@ func TestDashboardHandler(t *testing.T) {
 	getStatsUC := dashboard.NewGetDashboardStatsUseCase(orderRepo)
 	getHistoryUC := dashboard.NewGetOrderHistoryUseCase(orderRepo)
 	getTopItemsUC := dashboard.NewGetTopSellingItemsUseCase(orderRepo)
-	toggleOpenUC := restaurant.NewToggleRestaurantOpenUseCase(restaurantRepo)
+	toggleOpenUC := restaurantCmd.NewToggleRestaurantOpenUseCase(restaurantRepo)
 
 	h := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, restaurantRepo, nil, slog.Default())
 
@@ -49,7 +51,7 @@ func TestDashboardHandler(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/dashboard", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		c.Set(httpMiddleware.ContextRestaurantID, domain.RestaurantID("restaurant_1"))
+		c.Set(httpMiddleware.ContextRestaurantID, common.RestaurantID("restaurant_1"))
 
 		err := h.Dashboard(c)
 		assert.NoError(t, err)
@@ -67,7 +69,7 @@ func TestDashboardHandler(t *testing.T) {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		c.Set(httpMiddleware.ContextRestaurantID, domain.RestaurantID("restaurant_1"))
+		c.Set(httpMiddleware.ContextRestaurantID, common.RestaurantID("restaurant_1"))
 
 		err := h.ToggleOpen(c)
 		assert.NoError(t, err)

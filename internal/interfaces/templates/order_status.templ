@@ -1,14 +1,15 @@
 package templates
 
 import (
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/common"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
+	"bitmerchant/internal/ordering/domain/order"
 	"fmt"
 )
 
-templ OrderStatus(order *domain.Order) {
+templ OrderStatus(order *order.Order) {
 	<div 
 		id="order-status"
 		data-init={ fmt.Sprintf("@get('/order/%s/stream')", order.OrderNumber) }
@@ -24,7 +25,7 @@ templ OrderStatus(order *domain.Order) {
 					@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-lg px-3 py-1"}) {
 						{ string(order.FulfillmentStatus) }
 					}
-					if order.PaymentStatus == domain.PaymentStatusPaid {
+					if order.PaymentStatus == common.PaymentStatusPaid {
 						@badge.Badge(badge.Props{Variant: badge.VariantDefault, Class: "text-lg px-3 py-1 bg-green-600"}) { PAID }
 					} else {
 						@badge.Badge(badge.Props{Variant: badge.VariantDestructive, Class: "text-lg px-3 py-1"}) { UNPAID }
@@ -51,7 +52,7 @@ templ OrderStatus(order *domain.Order) {
 	</div>
 }
 
-templ OrderStatusPage(order *domain.Order) {
+templ OrderStatusPage(order *order.Order) {
 	@Layout("Order Status") {
 		@OrderStatus(order)
 		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup"})

@@ -9,11 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/layouts"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 	"strconv"
 )
 
@@ -182,9 +182,9 @@ func QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName stri
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var9 string
-						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(domain.MinTableCount))
+						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(restaurant.MinTableCount))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/qr.templ`, Line: 48, Col: 83}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/qr.templ`, Line: 48, Col: 87}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 						if templ_7745c5c3_Err != nil {
@@ -195,9 +195,9 @@ func QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName stri
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var10 string
-						templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(domain.MaxTableCount))
+						templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(restaurant.MaxTableCount))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/qr.templ`, Line: 48, Col: 124}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/qr.templ`, Line: 48, Col: 132}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 						if templ_7745c5c3_Err != nil {
@@ -259,8 +259,8 @@ func QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName stri
 						Required: true,
 						Value:    strconv.Itoa(tableCountInput),
 						Attributes: templ.Attributes{
-							"min": strconv.Itoa(domain.MinTableCount),
-							"max": strconv.Itoa(domain.MaxTableCount),
+							"min": strconv.Itoa(restaurant.MinTableCount),
+							"max": strconv.Itoa(restaurant.MaxTableCount),
 						},
 					}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {

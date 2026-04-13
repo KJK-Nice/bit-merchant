@@ -1,14 +1,15 @@
 package templates
 
 import (
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/common"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
+	"bitmerchant/internal/ordering/domain/order"
 	"fmt"
 )
 
-templ OrderHistoryPage(orders []*domain.Order) {
+templ OrderHistoryPage(orders []*order.Order) {
 	@Layout("Order History") {
 		<div class="container mx-auto p-4 max-w-2xl pb-24 md:pb-8 space-y-6">
 			<div class="space-y-2">
@@ -56,16 +57,15 @@ templ OrderHistoryPage(orders []*domain.Order) {
 	}
 }
 
-func getStatusBadgeVariant(status domain.FulfillmentStatus) badge.Variant {
+func getStatusBadgeVariant(status common.FulfillmentStatus) badge.Variant {
 	switch status {
-	case domain.FulfillmentStatusCompleted:
+	case common.FulfillmentStatusCompleted:
 		return badge.VariantDefault // or a success variant if we had one
-	case domain.FulfillmentStatusReady:
+	case common.FulfillmentStatusReady:
 		return badge.VariantDefault
-	case domain.FulfillmentStatusPaid:
+	case common.FulfillmentStatusPaid:
 		return badge.VariantSecondary
 	default:
 		return badge.VariantOutline
 	}
 }
-

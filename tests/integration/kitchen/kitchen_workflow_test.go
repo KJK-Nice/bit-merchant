@@ -1,20 +1,8 @@
 package kitchen_test
 
 import (
-	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
-	"time"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/application/kitchen"
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/application/order"
-	"bitmerchant/internal/application/places"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/events"
 	eventHandlers "bitmerchant/internal/infrastructure/events/handlers"
 	"bitmerchant/internal/infrastructure/logging"
@@ -22,19 +10,33 @@ import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/http/middleware"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/ordering/app/cart"
+	orderCmd "bitmerchant/internal/ordering/app/command"
+	orderQuery "bitmerchant/internal/ordering/app/query"
+	"bitmerchant/internal/ordering/domain/order"
+	placesCmd "bitmerchant/internal/places/app/command"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
+	"encoding/json"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
 )
 
 func TestKitchenWorkflow(t *testing.T) {
-	// 1. Infrastructure Setup
+
 	logger := logging.NewLogger()
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	// Repositories
 	restRepo := memory.NewMemoryRestaurantRepository()
 	menuCatRepo := memory.NewMemoryMenuCategoryRepository()
 	menuItemRepo := memory.NewMemoryMenuItemRepository()
@@ -47,33 +49,33 @@ func TestKitchenWorkflow(t *testing.T) {
 	sseHandler := handler.NewSSEHandler()
 
 	// Seed Data
-	restaurantID := domain.RestaurantID("restaurant_1")
-	rSeed, _ := domain.NewRestaurant(restaurantID, "Test Cafe")
+	restaurantID := common.RestaurantID("restaurant_1")
+	rSeed, _ := restaurant.NewRestaurant(restaurantID, "Test Cafe")
 	_ = restRepo.Save(rSeed)
 
-	cat1, _ := domain.NewMenuCategory("cat_1", restaurantID, "Mains", 1)
+	cat1, _ := menu.NewMenuCategory("cat_1", restaurantID, "Mains", 1)
 	_ = menuCatRepo.Save(cat1)
 
-	item1, _ := domain.NewMenuItem("item_1", "cat_1", restaurantID, "Burger", 10.00)
+	item1, _ := menu.NewMenuItem("item_1", "cat_1", restaurantID, "Burger", 10.00)
 	_ = menuItemRepo.Save(item1)
 
 	// Use Cases
 	_ = paymentRepo
 	_ = paymentMethod
-	createOrderUC := order.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
-	getCustomerOrderUC := order.NewGetCustomerOrderByNumberUseCase(orderRepo)
-	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
-	getKitchenOrdersUC := kitchen.NewGetKitchenOrdersUseCase(orderRepo)
-	markPaidUC := kitchen.NewMarkOrderPaidUseCase(orderRepo, eventBus)
-	markPreparingUC := kitchen.NewMarkOrderPreparingUseCase(orderRepo, eventBus)
-	markReadyUC := kitchen.NewMarkOrderReadyUseCase(orderRepo, eventBus)
-	getMenuUC := menu.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo, nil, menu.PhotoSignerConfig{})
+	createOrderUC := orderCmd.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
+	getCustomerOrderUC := orderQuery.NewGetCustomerOrderByNumberUseCase(orderRepo)
+	getCustomerOrdersUC := orderQuery.NewGetCustomerOrdersUseCase(orderRepo)
+	getKitchenOrdersUC := orderQuery.NewGetKitchenOrdersUseCase(orderRepo)
+	markPaidUC := orderCmd.NewMarkOrderPaidUseCase(orderRepo, eventBus)
+	markPreparingUC := orderCmd.NewMarkOrderPreparingUseCase(orderRepo, eventBus)
+	markReadyUC := orderCmd.NewMarkOrderReadyUseCase(orderRepo, eventBus)
+	getMenuUC := menuQuery.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
 
 	// Handlers
 	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
 	orderHandler := handler.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
-	recordVisitUC := places.NewRecordMenuVisitUseCase(restRepo, visitRepo)
+	recordVisitUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
 	_ = handler.NewMenuHandler(getMenuUC, cartService, recordVisitUC)
 
 	// Event Handlers
@@ -84,22 +86,22 @@ func TestKitchenWorkflow(t *testing.T) {
 
 	// Subscriptions
 	subscribe(t, eventBus, "OrderCreated", func(msg []byte) {
-		var event domain.OrderCreated
+		var event order.OrderCreated
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderCreatedHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, "OrderPaid", func(msg []byte) {
-		var event domain.OrderPaid
+		var event order.OrderPaid
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderPaidHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, "OrderPreparing", func(msg []byte) {
-		var event domain.OrderPreparing
+		var event order.OrderPreparing
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderPreparingHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, "OrderReady", func(msg []byte) {
-		var event domain.OrderReady
+		var event order.OrderReady
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderReadyHandler.Handle(context.Background(), event))
 	})
@@ -145,7 +147,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Note: Kitchen handler uses hardcoded "rest-1" in GetKitchen method in previous implementation?
 	// Let's check the implementation of GetKitchen.
 	// I updated main.go to use "restaurant-1" but did I update kitchen handler logic?
-	// The handler implementation in internal/interfaces/http/kitchen.go had: restaurantID := domain.RestaurantID("rest-1")
+	// The handler implementation in internal/interfaces/http/kitchen.go had: restaurantID := common.RestaurantID("rest-1")
 	// This mismatch ("rest-1" vs "restaurant-1" in seed/tests) is likely the cause of empty list!
 
 	req = httptest.NewRequest(http.MethodGet, "/kitchen", nil)
@@ -182,7 +184,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), "PAID")
 
 	updatedOrder, _ := orderRepo.FindByID(orderID)
-	assert.Equal(t, domain.PaymentStatusPaid, updatedOrder.PaymentStatus)
+	assert.Equal(t, common.PaymentStatusPaid, updatedOrder.PaymentStatus)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -199,7 +201,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 
 	updatedOrder, _ = orderRepo.FindByID(orderID)
-	assert.Equal(t, domain.FulfillmentStatusPreparing, updatedOrder.FulfillmentStatus)
+	assert.Equal(t, common.FulfillmentStatusPreparing, updatedOrder.FulfillmentStatus)
 
 	// 5. Kitchen Marks Ready
 	req = httptest.NewRequest(http.MethodPost, "/kitchen/order/"+string(orderID)+"/mark-ready", nil)
@@ -214,7 +216,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 
 	updatedOrder, _ = orderRepo.FindByID(orderID)
-	assert.Equal(t, domain.FulfillmentStatusReady, updatedOrder.FulfillmentStatus)
+	assert.Equal(t, common.FulfillmentStatusReady, updatedOrder.FulfillmentStatus)
 }
 
 func subscribe(t *testing.T, bus *events.EventBus, topic string, handler func([]byte)) {

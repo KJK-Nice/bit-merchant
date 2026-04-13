@@ -104,7 +104,7 @@ Server starts on `http://localhost:8080` (or port specified in `.env`).
 ```templ
 package templates
 
-import "bitmerchant/internal/domain"
+import "bitmerchant/internal/payment/domain/payment"
 
 templ MenuPage(restaurant *domain.Restaurant, categories []*domain.MenuCategory) {
     <!DOCTYPE html>
@@ -129,7 +129,7 @@ templ MenuPage(restaurant *domain.Restaurant, categories []*domain.MenuCategory)
 
 ### Payment Method Development
 
-1. **Payment Method Interface**: Implement `PaymentMethod` interface in `internal/domain/payment.go`
+1. **Payment Method Interface**: Implement `PaymentMethod` interface in `internal/payment/domain/payment/payment.go`
 2. **Cash Implementation**: Create `CashPaymentMethod` in `internal/infrastructure/payment/cash/`
 3. **Future Lightning**: Create `LightningPaymentMethod` in `internal/infrastructure/payment/lightning/` (future)
 
@@ -137,7 +137,7 @@ templ MenuPage(restaurant *domain.Restaurant, categories []*domain.MenuCategory)
 ```go
 package cash
 
-import "bitmerchant/internal/domain"
+import "bitmerchant/internal/payment/domain/payment"
 
 type CashPaymentMethod struct {
     // Cash-specific fields
@@ -202,7 +202,7 @@ package order_test
 
 import (
     "testing"
-    "bitmerchant/internal/application/order"
+    orderCmd "bitmerchant/internal/ordering/app/command"
 )
 
 func TestCreateOrder(t *testing.T) {
@@ -311,4 +311,3 @@ templ generate --help
 2. **Review Data Model**: See `data-model.md` for entity structure
 3. **Check Contracts**: See `contracts/html-contracts.md` for HTML endpoint contracts
 4. **Start Development**: Begin with User Story 1 (Customer Ordering)
-

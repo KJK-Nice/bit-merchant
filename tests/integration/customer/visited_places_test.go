@@ -1,20 +1,21 @@
 package customer_test
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/application/places"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/ordering/app/cart"
+	placesCmd "bitmerchant/internal/places/app/command"
+	placesQuery "bitmerchant/internal/places/app/query"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 func TestMenuThenMyPlacesListsRestaurant(t *testing.T) {
@@ -24,16 +25,16 @@ func TestMenuThenMyPlacesListsRestaurant(t *testing.T) {
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	orderRepo := memory.NewMemoryOrderRepository()
 
-	r, _ := domain.NewRestaurant("visit-test-r", "Stamp Diner")
+	r, _ := restaurant.NewRestaurant("visit-test-r", "Stamp Diner")
 	require.NoError(t, restRepo.Save(r))
-	cat, _ := domain.NewMenuCategory("cat-v", "visit-test-r", "All", 0)
+	cat, _ := menu.NewMenuCategory("cat-v", "visit-test-r", "All", 0)
 	require.NoError(t, catRepo.Save(cat))
 
-	getMenuUC := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menu.PhotoSignerConfig{})
+	getMenuUC := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
 	cartSvc := cart.NewCartService()
-	recordUC := places.NewRecordMenuVisitUseCase(restRepo, visitRepo)
+	recordUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
 	menuH := handler.NewMenuHandler(getMenuUC, cartSvc, recordUC)
-	listUC := places.NewListVisitedRestaurantsUseCase(visitRepo, restRepo, orderRepo)
+	listUC := placesQuery.NewListVisitedRestaurantsUseCase(visitRepo, restRepo, orderRepo)
 	placesH := handler.NewPlacesHandler(listUC)
 
 	e := echo.New()

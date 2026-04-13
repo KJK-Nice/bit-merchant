@@ -1,6 +1,21 @@
 package http_test
 
 import (
+	"bitmerchant/internal/auth/domain/invitation"
+	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/auth/domain/session"
+	"bitmerchant/internal/auth/domain/user"
+	"bitmerchant/internal/common"
+
+	"bitmerchant/internal/infrastructure/repositories/memory"
+	handler "bitmerchant/internal/interfaces/http"
+	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -8,21 +23,11 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
-	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
-
-	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type failingInvitationRepo struct{}
 
-func (f *failingInvitationRepo) Save(invitation *domain.Invitation) error {
+func (f *failingInvitationRepo) Save(invitation *invitation.Invitation) error {
 	return assert.AnError
 }
 
@@ -34,20 +39,20 @@ func TestAuthHandlerPostSelectRestaurant_UpdatesSessionAndRedirectsByRole(t *tes
 	invitationRepo := memory.NewMemoryInvitationRepository()
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
 
-	user, err := domain.NewUser("staff-1", "Staff")
+	user, err := user.NewUser("staff-1", "Staff")
 	require.NoError(t, err)
 	require.NoError(t, userRepo.Save(user))
 
-	restID := domain.RestaurantID("restaurant-kitchen")
-	rest, err := domain.NewRestaurant(restID, "Kitchen Place")
+	restID := common.RestaurantID("restaurant-kitchen")
+	rest, err := restaurant.NewRestaurant(restID, "Kitchen Place")
 	require.NoError(t, err)
 	require.NoError(t, restaurantRepo.Save(rest))
 
-	membership, err := domain.NewMembership("mem-kitchen", user.ID, restID, domain.RoleKitchenStaff)
+	membership, err := membership.NewMembership("mem-kitchen", user.ID, restID, common.RoleKitchenStaff)
 	require.NoError(t, err)
 	require.NoError(t, membershipRepo.Save(membership))
 
-	require.NoError(t, sessionRepo.Save(&domain.Session{
+	require.NoError(t, sessionRepo.Save(&session.Session{
 		ID:        "session-select",
 		UserID:    &user.ID,
 		CreatedAt: time.Now(),
@@ -83,16 +88,16 @@ func TestAuthHandlerGetSelectRestaurant_RendersRestaurantOptions(t *testing.T) {
 	invitationRepo := memory.NewMemoryInvitationRepository()
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
 
-	user, err := domain.NewUser("owner-2", "Owner Two")
+	user, err := user.NewUser("owner-2", "Owner Two")
 	require.NoError(t, err)
 	require.NoError(t, userRepo.Save(user))
 
-	restID := domain.RestaurantID("restaurant-owner")
-	rest, err := domain.NewRestaurant(restID, "Owner Place")
+	restID := common.RestaurantID("restaurant-owner")
+	rest, err := restaurant.NewRestaurant(restID, "Owner Place")
 	require.NoError(t, err)
 	require.NoError(t, restaurantRepo.Save(rest))
 
-	membership, err := domain.NewMembership("mem-owner", user.ID, restID, domain.RoleOwner)
+	membership, err := membership.NewMembership("mem-owner", user.ID, restID, common.RoleOwner)
 	require.NoError(t, err)
 	require.NoError(t, membershipRepo.Save(membership))
 
@@ -102,7 +107,7 @@ func TestAuthHandlerGetSelectRestaurant_RendersRestaurantOptions(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	c.Set(httpMiddleware.ContextAuthUser, user)
-	c.Set(httpMiddleware.ContextAuthSession, &domain.Session{
+	c.Set(httpMiddleware.ContextAuthSession, &session.Session{
 		ID:           "s",
 		UserID:       &user.ID,
 		RestaurantID: &restID,
@@ -125,22 +130,22 @@ func TestAuthHandlerPostNewRestaurant_CreatesMembershipAndSwitchesSession(t *tes
 	membershipRepo := memory.NewMemoryMembershipRepository()
 	invitationRepo := memory.NewMemoryInvitationRepository()
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
-	createUC := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
+	createUC := restaurantCmd.NewCreateRestaurantUseCase(restaurantRepo)
 
-	user, err := domain.NewUser("owner-newr", "Owner NewR")
+	user, err := user.NewUser("owner-newr", "Owner NewR")
 	require.NoError(t, err)
 	require.NoError(t, userRepo.Save(user))
 
-	existingID := domain.RestaurantID("restaurant-existing")
-	existingRest, err := domain.NewRestaurant(existingID, "Existing")
+	existingID := common.RestaurantID("restaurant-existing")
+	existingRest, err := restaurant.NewRestaurant(existingID, "Existing")
 	require.NoError(t, err)
 	require.NoError(t, restaurantRepo.Save(existingRest))
 
-	membership, err := domain.NewMembership("mem-existing", user.ID, existingID, domain.RoleOwner)
+	membership, err := membership.NewMembership("mem-existing", user.ID, existingID, common.RoleOwner)
 	require.NoError(t, err)
 	require.NoError(t, membershipRepo.Save(membership))
 
-	require.NoError(t, sessionRepo.Save(&domain.Session{
+	require.NoError(t, sessionRepo.Save(&session.Session{
 		ID:           "session-new-rest",
 		UserID:       &user.ID,
 		RestaurantID: &existingID,
@@ -186,18 +191,18 @@ func TestAuthHandlerPostNewRestaurant_ForbiddenForKitchenStaff(t *testing.T) {
 	membershipRepo := memory.NewMemoryMembershipRepository()
 	invitationRepo := memory.NewMemoryInvitationRepository()
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
-	createUC := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
+	createUC := restaurantCmd.NewCreateRestaurantUseCase(restaurantRepo)
 
-	user, err := domain.NewUser("kitchen-u", "Kitchen")
+	user, err := user.NewUser("kitchen-u", "Kitchen")
 	require.NoError(t, err)
 	require.NoError(t, userRepo.Save(user))
 
-	restID := domain.RestaurantID("restaurant-k")
-	rest, err := domain.NewRestaurant(restID, "Kitchen Rest")
+	restID := common.RestaurantID("restaurant-k")
+	rest, err := restaurant.NewRestaurant(restID, "Kitchen Rest")
 	require.NoError(t, err)
 	require.NoError(t, restaurantRepo.Save(rest))
 
-	membership, err := domain.NewMembership("mem-k", user.ID, restID, domain.RoleKitchenStaff)
+	membership, err := membership.NewMembership("mem-k", user.ID, restID, common.RoleKitchenStaff)
 	require.NoError(t, err)
 	require.NoError(t, membershipRepo.Save(membership))
 
@@ -217,13 +222,13 @@ func TestAuthHandlerPostNewRestaurant_ForbiddenForKitchenStaff(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
 
-func (f *failingInvitationRepo) FindByToken(token string) (*domain.Invitation, error) {
+func (f *failingInvitationRepo) FindByToken(token string) (*invitation.Invitation, error) {
 	return nil, assert.AnError
 }
-func (f *failingInvitationRepo) FindByRestaurantID(restaurantID domain.RestaurantID) ([]*domain.Invitation, error) {
+func (f *failingInvitationRepo) FindByRestaurantID(restaurantID common.RestaurantID) ([]*invitation.Invitation, error) {
 	return nil, assert.AnError
 }
-func (f *failingInvitationRepo) Update(invitation *domain.Invitation) error {
+func (f *failingInvitationRepo) Update(invitation *invitation.Invitation) error {
 	return assert.AnError
 }
 
@@ -234,7 +239,7 @@ func TestAuthHandlerLogout_DeletesSessionAndExpiresCookie(t *testing.T) {
 	membershipRepo := memory.NewMemoryMembershipRepository()
 	invitationRepo := memory.NewMemoryInvitationRepository()
 
-	require.NoError(t, sessionRepo.Save(&domain.Session{
+	require.NoError(t, sessionRepo.Save(&session.Session{
 		ID:        "session-to-logout",
 		CreatedAt: time.Now(),
 		ExpiresAt: time.Now().Add(time.Hour),
@@ -265,10 +270,10 @@ func TestAuthHandlerCreateInvitation_SanitizesSaveErrors(t *testing.T) {
 
 	h := handler.NewAuthHandler(nil, userRepo, membershipRepo, invitationRepo, sessionRepo, nil, nil, nil, httpMiddleware.SessionOptions{})
 
-	user, err := domain.NewUser("owner-1", "Owner")
+	user, err := user.NewUser("owner-1", "Owner")
 	require.NoError(t, err)
-	restaurantID := domain.RestaurantID("restaurant-1")
-	membership, err := domain.NewMembership("mem-1", user.ID, restaurantID, domain.RoleOwner)
+	restaurantID := common.RestaurantID("restaurant-1")
+	membership, err := membership.NewMembership("mem-1", user.ID, restaurantID, common.RoleOwner)
 	require.NoError(t, err)
 	require.NoError(t, membershipRepo.Save(membership))
 

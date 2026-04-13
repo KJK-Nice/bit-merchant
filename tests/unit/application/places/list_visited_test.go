@@ -1,16 +1,19 @@
 package places_test
 
 import (
-	"context"
-	"testing"
-	"time"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/places"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	"bitmerchant/internal/ordering/domain/order"
+	placesQuery "bitmerchant/internal/places/app/query"
+	"bitmerchant/internal/places/domain/visit"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
+	"time"
 )
 
 func TestListVisitedRestaurantsUseCase(t *testing.T) {
@@ -18,35 +21,35 @@ func TestListVisitedRestaurantsUseCase(t *testing.T) {
 	visits := memory.NewMemorySessionRestaurantVisitRepository()
 	ord := memory.NewMemoryOrderRepository()
 
-	r1, _ := domain.NewRestaurant("r1", "First")
+	r1, _ := restaurant.NewRestaurant("r1", "First")
 	r1.UpdateStatus(false, "", "")
-	r2, _ := domain.NewRestaurant("r2", "Second")
+	r2, _ := restaurant.NewRestaurant("r2", "Second")
 	require.NoError(t, rest.Save(r1))
 	require.NoError(t, rest.Save(r2))
 
 	older := time.Now().Add(-2 * time.Hour)
 	newer := time.Now().Add(-1 * time.Hour)
-	require.NoError(t, visits.Upsert(&domain.SessionRestaurantVisit{
+	require.NoError(t, visits.Upsert(&visit.SessionRestaurantVisit{
 		SessionID: "s1", RestaurantID: "r1", FirstVisitedAt: older, LastVisitedAt: older,
 	}))
-	require.NoError(t, visits.Upsert(&domain.SessionRestaurantVisit{
+	require.NoError(t, visits.Upsert(&visit.SessionRestaurantVisit{
 		SessionID: "s1", RestaurantID: "r2", FirstVisitedAt: newer, LastVisitedAt: newer,
 	}))
 
-	item, _ := domain.NewOrderItem("oi", "o1", "mi", "X", 1, 1)
-	o, _ := domain.NewOrder("o1", "1001", "r1", "s1", []domain.OrderItem{*item}, 100, domain.PaymentMethodTypeCash)
+	item, _ := order.NewOrderItem("oi", "o1", "mi", "X", 1, 1)
+	o, _ := order.NewOrder("o1", "1001", "r1", "s1", []order.OrderItem{*item}, 100, common.PaymentMethodTypeCash)
 	o.FiatAmount = 1
 	require.NoError(t, ord.Save(o))
 
-	uc := places.NewListVisitedRestaurantsUseCase(visits, rest, ord)
+	uc := placesQuery.NewListVisitedRestaurantsUseCase(visits, rest, ord)
 	out, err := uc.Execute(context.Background(), "s1")
 	require.NoError(t, err)
 	require.Len(t, out, 2)
-	assert.Equal(t, domain.RestaurantID("r2"), out[0].RestaurantID)
-	assert.Equal(t, domain.RestaurantID("r1"), out[1].RestaurantID)
+	assert.Equal(t, common.RestaurantID("r2"), out[0].RestaurantID)
+	assert.Equal(t, common.RestaurantID("r1"), out[1].RestaurantID)
 	assert.True(t, out[0].IsOpen)
 	assert.False(t, out[1].IsOpen)
-	var ordered *places.VisitedPlace
+	var ordered *placesQuery.VisitedPlace
 	for i := range out {
 		if out[i].RestaurantID == "r1" {
 			ordered = &out[i]

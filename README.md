@@ -81,9 +81,9 @@ internal/
 - `ids.go` -- All ID types (`RestaurantID`, `OrderID`, `UserID`, etc.), role constants, status enums
 - `events.go` -- `EventBus` and `DomainEvent` interfaces
 
-### Facade Layer
+### Imports
 
-The old `internal/domain/` and `internal/application/` packages remain as **type-alias facades** for backward compatibility (templates and handlers that still import them). New code should import directly from bounded context packages.
+Use bounded-context packages directly, for example `bitmerchant/internal/<context>/domain/...`, `app/command`, `app/query`, and `app/cart`. Legacy facade imports under `internal/domain/` and `internal/application/` are no longer supported.
 
 ### Infrastructure
 

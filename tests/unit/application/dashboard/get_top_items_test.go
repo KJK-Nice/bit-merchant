@@ -1,44 +1,45 @@
 package dashboard_test
 
 import (
-	"context"
-	"testing"
+	"bitmerchant/internal/common"
+	dashboard "bitmerchant/internal/dashboard/app/query"
 
-	"bitmerchant/internal/application/dashboard"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	"bitmerchant/internal/ordering/domain/order"
+	"context"
 
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestGetTopSellingItemsUseCase(t *testing.T) {
 	orderRepo := memory.NewMemoryOrderRepository()
 	uc := dashboard.NewGetTopSellingItemsUseCase(orderRepo)
-	restaurantID := domain.RestaurantID("r1")
+	restaurantID := common.RestaurantID("r1")
 
 	// Order 1: 2 Burgers, 1 Soda
-	items1 := []domain.OrderItem{
+	items1 := []order.OrderItem{
 		{MenuItemID: "burger", Name: "Burger", Quantity: 2, UnitPrice: 10.0, Subtotal: 20.0},
 		{MenuItemID: "soda", Name: "Soda", Quantity: 1, UnitPrice: 3.0, Subtotal: 3.0},
 	}
-	o1, _ := domain.NewOrder("o1", "1001", restaurantID, "session_1", items1, 2300, domain.PaymentMethodTypeCash)
-	o1.PaymentStatus = domain.PaymentStatusPaid
+	o1, _ := order.NewOrder("o1", "1001", restaurantID, "session_1", items1, 2300, common.PaymentMethodTypeCash)
+	o1.PaymentStatus = common.PaymentStatusPaid
 	_ = orderRepo.Save(o1)
 
 	// Order 2: 1 Burger
-	items2 := []domain.OrderItem{
+	items2 := []order.OrderItem{
 		{MenuItemID: "burger", Name: "Burger", Quantity: 1, UnitPrice: 10.0, Subtotal: 10.0},
 	}
-	o2, _ := domain.NewOrder("o2", "1002", restaurantID, "session_1", items2, 1000, domain.PaymentMethodTypeCash)
-	o2.PaymentStatus = domain.PaymentStatusPaid
+	o2, _ := order.NewOrder("o2", "1002", restaurantID, "session_1", items2, 1000, common.PaymentMethodTypeCash)
+	o2.PaymentStatus = common.PaymentStatusPaid
 	_ = orderRepo.Save(o2)
 
 	// Order 3 (Unpaid): 10 Steaks (Should be excluded)
-	items3 := []domain.OrderItem{
+	items3 := []order.OrderItem{
 		{MenuItemID: "steak", Name: "Steak", Quantity: 10, UnitPrice: 50.0, Subtotal: 500.0},
 	}
-	o3, _ := domain.NewOrder("o3", "1003", restaurantID, "session_1", items3, 50000, domain.PaymentMethodTypeCash)
-	o3.PaymentStatus = domain.PaymentStatusPending
+	o3, _ := order.NewOrder("o3", "1003", restaurantID, "session_1", items3, 50000, common.PaymentMethodTypeCash)
+	o3.PaymentStatus = common.PaymentStatusPending
 	_ = orderRepo.Save(o3)
 
 	t.Run("Get Top Items", func(t *testing.T) {

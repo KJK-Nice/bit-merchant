@@ -1,24 +1,23 @@
 package handlers
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/logging"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components"
+	"bitmerchant/internal/ordering/domain/order"
+	"bytes"
+	"context"
+	"fmt"
 )
 
 type OrderReadyHandler struct {
 	logger *logging.Logger
 	sse    *handler.SSEHandler
-	repo   domain.OrderRepository
+	repo   order.Repository
 }
 
-func NewOrderReadyHandler(logger *logging.Logger, sse *handler.SSEHandler, repo domain.OrderRepository) *OrderReadyHandler {
+func NewOrderReadyHandler(logger *logging.Logger, sse *handler.SSEHandler, repo order.Repository) *OrderReadyHandler {
 	return &OrderReadyHandler{
 		logger: logger,
 		sse:    sse,
@@ -26,7 +25,7 @@ func NewOrderReadyHandler(logger *logging.Logger, sse *handler.SSEHandler, repo 
 	}
 }
 
-func (h *OrderReadyHandler) Handle(ctx context.Context, event domain.OrderReady) error {
+func (h *OrderReadyHandler) Handle(ctx context.Context, event order.OrderReady) error {
 	h.logger.Info("Order Ready", "orderID", event.OrderID)
 
 	order, err := h.repo.FindByID(event.OrderID)

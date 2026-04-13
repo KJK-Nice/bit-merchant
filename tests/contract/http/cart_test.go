@@ -1,27 +1,26 @@
 package http_test
 
 import (
+	"bitmerchant/internal/infrastructure/repositories/memory"
+	handler "bitmerchant/internal/interfaces/http"
+	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/ordering/app/cart"
+
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
-
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/domain"
-	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-
-	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCartEndpoints(t *testing.T) {
 	// Setup
 	cartService := cart.NewCartService()
 	itemRepo := memory.NewMemoryMenuItemRepository()
-	item, _ := domain.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
+	item, _ := menu.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
 	require.NoError(t, itemRepo.Save(item))
 
 	h := handler.NewCartHandler(cartService, itemRepo)

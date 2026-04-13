@@ -1,16 +1,18 @@
 package menu_test
 
 import (
-	"context"
-	"io"
-	"testing"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
+	"testing"
 )
 
 type adminFakePhotoStorage struct{}
@@ -29,35 +31,35 @@ func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *te
 	repoCat := memory.NewMemoryMenuCategoryRepository()
 	repoItem := memory.NewMemoryMenuItemRepository()
 
-	rid := domain.RestaurantID("r1")
-	rest, err := domain.NewRestaurant(rid, "Cafe")
+	rid := common.RestaurantID("r1")
+	rest, err := restaurant.NewRestaurant(rid, "Cafe")
 	require.NoError(t, err)
 	require.NoError(t, repoRest.Save(rest))
 
-	catEmpty, err := domain.NewMenuCategory("cat_empty", rid, "Empty Section", 0)
+	catEmpty, err := menu.NewMenuCategory("cat_empty", rid, "Empty Section", 0)
 	require.NoError(t, err)
 	require.NoError(t, repoCat.Save(catEmpty))
 
-	catWith, err := domain.NewMenuCategory("cat_items", rid, "Mains", 1)
+	catWith, err := menu.NewMenuCategory("cat_items", rid, "Mains", 1)
 	require.NoError(t, err)
 	require.NoError(t, repoCat.Save(catWith))
 
-	avail, err := domain.NewMenuItem("it1", catWith.ID, rid, "Burger", 9)
+	avail, err := menu.NewMenuItem("it1", catWith.ID, rid, "Burger", 9)
 	require.NoError(t, err)
 	require.NoError(t, repoItem.Save(avail))
 
-	unavail, err := domain.NewMenuItem("it2", catWith.ID, rid, "Soup", 5)
+	unavail, err := menu.NewMenuItem("it2", catWith.ID, rid, "Soup", 5)
 	require.NoError(t, err)
 	unavail.SetAvailable(false)
 	require.NoError(t, repoItem.Save(unavail))
 
-	uc := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menu.PhotoSignerConfig{})
+	uc := menuQuery.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{})
 	resp, err := uc.Execute(ctx, rid)
 	require.NoError(t, err)
 	require.Len(t, resp.Categories, 2)
 
 	var emptyFound bool
-	var mains *menu.CategoryWithItems
+	var mains *menuQuery.CategoryWithItems
 	for i := range resp.Categories {
 		if resp.Categories[i].Category.ID == catEmpty.ID {
 			emptyFound = true
@@ -79,7 +81,7 @@ func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *te
 	assert.False(t, names["Soup"])
 
 	// Public menu omits unavailable and empty categories
-	pub := menu.NewGetMenuUseCase(repoCat, repoItem, repoRest, nil, menu.PhotoSignerConfig{})
+	pub := menuQuery.NewGetMenuUseCase(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{})
 	pubResp, err := pub.Execute(ctx, rid)
 	require.NoError(t, err)
 	require.Len(t, pubResp.Categories, 1)
@@ -94,21 +96,21 @@ func TestGetMenuForAdminUseCase_PresignsPhotoURLs(t *testing.T) {
 	repoCat := memory.NewMemoryMenuCategoryRepository()
 	repoItem := memory.NewMemoryMenuItemRepository()
 
-	rid := domain.RestaurantID("r1")
-	rest, err := domain.NewRestaurant(rid, "Cafe")
+	rid := common.RestaurantID("r1")
+	rest, err := restaurant.NewRestaurant(rid, "Cafe")
 	require.NoError(t, err)
 	require.NoError(t, repoRest.Save(rest))
 
-	cat, err := domain.NewMenuCategory("c1", rid, "Mains", 0)
+	cat, err := menu.NewMenuCategory("c1", rid, "Mains", 0)
 	require.NoError(t, err)
 	require.NoError(t, repoCat.Save(cat))
 
-	it, err := domain.NewMenuItem("i1", cat.ID, rid, "Burger", 9)
+	it, err := menu.NewMenuItem("i1", cat.ID, rid, "Burger", 9)
 	require.NoError(t, err)
 	it.SetPhotoURLs("restaurants/r1/items/x.jpg", "restaurants/r1/items/x.jpg")
 	require.NoError(t, repoItem.Save(it))
 
-	uc := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, adminFakePhotoStorage{}, menu.PhotoSignerConfig{Bucket: "b"})
+	uc := menuQuery.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, adminFakePhotoStorage{}, menuQuery.PhotoSignerConfig{Bucket: "b"})
 	resp, err := uc.Execute(ctx, rid)
 	require.NoError(t, err)
 	require.Len(t, resp.Categories, 1)

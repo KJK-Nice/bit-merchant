@@ -1,30 +1,33 @@
 package http_test
 
 import (
-	"bitmerchant/internal/application/kitchen"
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/common"
+
 	handler "bitmerchant/internal/interfaces/http"
 	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	kitchenCmd "bitmerchant/internal/ordering/app/command"
+	kitchenQuery "bitmerchant/internal/ordering/app/query"
+	"bitmerchant/internal/ordering/domain/order"
 	"context"
+
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
 )
 
 // Mock OrderRepo for Contract Tests
 type mockKitchenOrderRepo struct {
-	orders []*domain.Order
+	orders []*order.Order
 }
 
-func (m *mockKitchenOrderRepo) FindActiveByRestaurantID(id domain.RestaurantID) ([]*domain.Order, error) {
+func (m *mockKitchenOrderRepo) FindActiveByRestaurantID(id common.RestaurantID) ([]*order.Order, error) {
 	return m.orders, nil
 }
 
-func (m *mockKitchenOrderRepo) FindByID(id domain.OrderID) (*domain.Order, error) {
+func (m *mockKitchenOrderRepo) FindByID(id common.OrderID) (*order.Order, error) {
 	for _, o := range m.orders {
 		if o.ID == id {
 			return o, nil
@@ -33,7 +36,7 @@ func (m *mockKitchenOrderRepo) FindByID(id domain.OrderID) (*domain.Order, error
 	return nil, nil
 }
 
-func (m *mockKitchenOrderRepo) Update(order *domain.Order) error {
+func (m *mockKitchenOrderRepo) Update(order *order.Order) error {
 	// Update in place
 	for i, o := range m.orders {
 		if o.ID == order.ID {
@@ -45,14 +48,14 @@ func (m *mockKitchenOrderRepo) Update(order *domain.Order) error {
 }
 
 // Stubs for other methods
-func (m *mockKitchenOrderRepo) Save(order *domain.Order) error { return nil }
-func (m *mockKitchenOrderRepo) FindByOrderNumber(rid domain.RestaurantID, on string) (*domain.Order, error) {
+func (m *mockKitchenOrderRepo) Save(order *order.Order) error { return nil }
+func (m *mockKitchenOrderRepo) FindByOrderNumber(rid common.RestaurantID, on string) (*order.Order, error) {
 	return nil, nil
 }
-func (m *mockKitchenOrderRepo) FindByRestaurantID(rid domain.RestaurantID) ([]*domain.Order, error) {
+func (m *mockKitchenOrderRepo) FindByRestaurantID(rid common.RestaurantID) ([]*order.Order, error) {
 	return nil, nil
 }
-func (m *mockKitchenOrderRepo) FindBySessionID(sessionID string) ([]*domain.Order, error) {
+func (m *mockKitchenOrderRepo) FindBySessionID(sessionID string) ([]*order.Order, error) {
 	return nil, nil
 }
 
@@ -68,15 +71,15 @@ func TestKitchenEndpoints(t *testing.T) {
 
 	// Setup Mocks
 	mockRepo := &mockKitchenOrderRepo{
-		orders: []*domain.Order{
+		orders: []*order.Order{
 			{
 				ID:                "order-1",
 				OrderNumber:       "101",
 				RestaurantID:      "rest-1",
-				PaymentStatus:     domain.PaymentStatusPending,
-				FulfillmentStatus: domain.FulfillmentStatusPaid, // Technically invalid combination but ok for init
+				PaymentStatus:     common.PaymentStatusPending,
+				FulfillmentStatus: common.FulfillmentStatusPaid, // Technically invalid combination but ok for init
 				TotalAmount:       1000,
-				Items: []domain.OrderItem{
+				Items: []order.OrderItem{
 					{MenuItemID: "burger-1", Quantity: 1},
 				},
 				CreatedAt: time.Now(),
@@ -86,10 +89,10 @@ func TestKitchenEndpoints(t *testing.T) {
 	mockBus := &mockKitchenEventBus{}
 
 	// Setup Use Cases
-	getOrdersUC := kitchen.NewGetKitchenOrdersUseCase(mockRepo)
-	markPaidUC := kitchen.NewMarkOrderPaidUseCase(mockRepo, mockBus)
-	markPreparingUC := kitchen.NewMarkOrderPreparingUseCase(mockRepo, mockBus)
-	markReadyUC := kitchen.NewMarkOrderReadyUseCase(mockRepo, mockBus)
+	getOrdersUC := kitchenQuery.NewGetKitchenOrdersUseCase(mockRepo)
+	markPaidUC := kitchenCmd.NewMarkOrderPaidUseCase(mockRepo, mockBus)
+	markPreparingUC := kitchenCmd.NewMarkOrderPreparingUseCase(mockRepo, mockBus)
+	markReadyUC := kitchenCmd.NewMarkOrderReadyUseCase(mockRepo, mockBus)
 
 	// Setup Handler
 	h := handler.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
@@ -104,7 +107,7 @@ func TestKitchenEndpoints(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/kitchen", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		c.Set(httpMiddleware.ContextRestaurantID, domain.RestaurantID("rest-1"))
+		c.Set(httpMiddleware.ContextRestaurantID, common.RestaurantID("rest-1"))
 
 		if assert.NoError(t, h.GetKitchen(c)) {
 			assert.Equal(t, http.StatusOK, rec.Code)
@@ -124,7 +127,7 @@ func TestKitchenEndpoints(t *testing.T) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 			// Verify repo update
 			order, _ := mockRepo.FindByID("order-1")
-			assert.Equal(t, domain.PaymentStatusPaid, order.PaymentStatus)
+			assert.Equal(t, common.PaymentStatusPaid, order.PaymentStatus)
 		}
 	})
 }

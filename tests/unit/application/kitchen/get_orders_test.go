@@ -1,34 +1,36 @@
 package kitchen_test
 
 import (
-	"bitmerchant/internal/application/kitchen"
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/common"
+	kitchenQuery "bitmerchant/internal/ordering/app/query"
+	"bitmerchant/internal/ordering/domain/order"
+
 	"context"
-	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
 )
 
 func TestGetKitchenOrdersUseCase_Execute(t *testing.T) {
 	t.Run("returns orders sorted chronologically", func(t *testing.T) {
-		restaurantID := domain.RestaurantID("rest-1")
+		restaurantID := common.RestaurantID("rest-1")
 
-		order1 := createTestOrder("o1", domain.FulfillmentStatusPaid, domain.PaymentStatusPaid)
+		order1 := createTestOrder("o1", common.FulfillmentStatusPaid, common.PaymentStatusPaid)
 		order1.CreatedAt = time.Now().Add(-1 * time.Hour)
 
-		order2 := createTestOrder("o2", domain.FulfillmentStatusPreparing, domain.PaymentStatusPaid)
+		order2 := createTestOrder("o2", common.FulfillmentStatusPreparing, common.PaymentStatusPaid)
 		order2.CreatedAt = time.Now().Add(-30 * time.Minute)
 
 		mockOrderRepo := &mockOrderRepo{
-			findActiveByRestaurantIDFn: func(id domain.RestaurantID) ([]*domain.Order, error) {
+			findActiveByRestaurantIDFn: func(id common.RestaurantID) ([]*order.Order, error) {
 				// Return unsorted or pre-sorted, use case should ensure sort?
 				// Usually repo returns sorted, but let's assume use case ensures it or passes through.
-				return []*domain.Order{order1, order2}, nil
+				return []*order.Order{order1, order2}, nil
 			},
 		}
 
-		uc := kitchen.NewGetKitchenOrdersUseCase(mockOrderRepo)
+		uc := kitchenQuery.NewGetKitchenOrdersUseCase(mockOrderRepo)
 		orders, err := uc.Execute(context.Background(), restaurantID)
 
 		assert.NoError(t, err)
@@ -39,13 +41,13 @@ func TestGetKitchenOrdersUseCase_Execute(t *testing.T) {
 
 	t.Run("returns empty list when no orders", func(t *testing.T) {
 		mockOrderRepo := &mockOrderRepo{
-			findActiveByRestaurantIDFn: func(id domain.RestaurantID) ([]*domain.Order, error) {
-				return []*domain.Order{}, nil
+			findActiveByRestaurantIDFn: func(id common.RestaurantID) ([]*order.Order, error) {
+				return []*order.Order{}, nil
 			},
 		}
 
-		uc := kitchen.NewGetKitchenOrdersUseCase(mockOrderRepo)
-		orders, err := uc.Execute(context.Background(), domain.RestaurantID("rest-1"))
+		uc := kitchenQuery.NewGetKitchenOrdersUseCase(mockOrderRepo)
+		orders, err := uc.Execute(context.Background(), common.RestaurantID("rest-1"))
 
 		assert.NoError(t, err)
 		assert.Empty(t, orders)

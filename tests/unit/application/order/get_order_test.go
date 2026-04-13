@@ -1,32 +1,33 @@
 package order_test
 
 import (
-	"context"
-	"testing"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/order"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	orderQuery "bitmerchant/internal/ordering/app/query"
+	"bitmerchant/internal/ordering/domain/order"
+	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestGetOrderByNumberUseCase(t *testing.T) {
 	repo := memory.NewMemoryOrderRepository()
-	uc := order.NewGetOrderByNumberUseCase(repo)
+	uc := orderQuery.NewGetOrderByNumberUseCase(repo)
 
 	t.Run("Execute Success", func(t *testing.T) {
 		// Setup order
-		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
-		existingOrder, _ := domain.NewOrder(
+		item, _ := order.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
+		existingOrder, _ := order.NewOrder(
 			"o1",
 			"1234",
 			"r1",
 			"session_1",
-			[]domain.OrderItem{*item},
+			[]order.OrderItem{*item},
 			1000,
-			domain.PaymentMethodTypeCash,
+			common.PaymentMethodTypeCash,
 		)
 		require.NoError(t, repo.Save(existingOrder))
 

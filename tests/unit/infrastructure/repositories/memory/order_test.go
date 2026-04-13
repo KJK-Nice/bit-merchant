@@ -1,21 +1,22 @@
 package memory_test
 
 import (
-	"testing"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	"bitmerchant/internal/ordering/domain/order"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestMemoryOrderRepository(t *testing.T) {
 	repo := memory.NewMemoryOrderRepository()
 
 	t.Run("Save and FindByID", func(t *testing.T) {
-		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
-		order, _ := domain.NewOrder("o1", "101", "r1", "session_1", []domain.OrderItem{*item}, 100, domain.PaymentMethodTypeCash)
+		item, _ := order.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
+		order, _ := order.NewOrder("o1", "101", "r1", "session_1", []order.OrderItem{*item}, 100, common.PaymentMethodTypeCash)
 
 		err := repo.Save(order)
 		assert.NoError(t, err)
@@ -26,8 +27,8 @@ func TestMemoryOrderRepository(t *testing.T) {
 	})
 
 	t.Run("FindByOrderNumber", func(t *testing.T) {
-		item, _ := domain.NewOrderItem("oi2", "o2", "mi1", "Burger", 1, 10.0)
-		order, _ := domain.NewOrder("o2", "102", "r1", "session_1", []domain.OrderItem{*item}, 100, domain.PaymentMethodTypeCash)
+		item, _ := order.NewOrderItem("oi2", "o2", "mi1", "Burger", 1, 10.0)
+		order, _ := order.NewOrder("o2", "102", "r1", "session_1", []order.OrderItem{*item}, 100, common.PaymentMethodTypeCash)
 		require.NoError(t, repo.Save(order))
 
 		found, err := repo.FindByOrderNumber("r1", "102")
@@ -40,15 +41,15 @@ func TestMemoryOrderRepository(t *testing.T) {
 
 	t.Run("FindActiveByRestaurantID", func(t *testing.T) {
 		// Active
-		item1, _ := domain.NewOrderItem("oi3", "o3", "mi1", "Burger", 1, 10.0)
-		order1, _ := domain.NewOrder("o3", "103", "r2", "session_1", []domain.OrderItem{*item1}, 100, domain.PaymentMethodTypeCash)
+		item1, _ := order.NewOrderItem("oi3", "o3", "mi1", "Burger", 1, 10.0)
+		order1, _ := order.NewOrder("o3", "103", "r2", "session_1", []order.OrderItem{*item1}, 100, common.PaymentMethodTypeCash)
 
 		// Completed (not active)
-		item2, _ := domain.NewOrderItem("oi4", "o4", "mi1", "Burger", 1, 10.0)
-		order2, _ := domain.NewOrder("o4", "104", "r2", "session_1", []domain.OrderItem{*item2}, 100, domain.PaymentMethodTypeCash)
-		require.NoError(t, order2.UpdateFulfillmentStatus(domain.FulfillmentStatusPreparing))
-		require.NoError(t, order2.UpdateFulfillmentStatus(domain.FulfillmentStatusReady))
-		require.NoError(t, order2.UpdateFulfillmentStatus(domain.FulfillmentStatusCompleted))
+		item2, _ := order.NewOrderItem("oi4", "o4", "mi1", "Burger", 1, 10.0)
+		order2, _ := order.NewOrder("o4", "104", "r2", "session_1", []order.OrderItem{*item2}, 100, common.PaymentMethodTypeCash)
+		require.NoError(t, order2.UpdateFulfillmentStatus(common.FulfillmentStatusPreparing))
+		require.NoError(t, order2.UpdateFulfillmentStatus(common.FulfillmentStatusReady))
+		require.NoError(t, order2.UpdateFulfillmentStatus(common.FulfillmentStatusCompleted))
 
 		require.NoError(t, repo.Save(order1))
 		require.NoError(t, repo.Save(order2))

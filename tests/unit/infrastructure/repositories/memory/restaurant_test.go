@@ -1,20 +1,19 @@
 package memory_test
 
 import (
-	"testing"
-
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestMemoryRestaurantRepository(t *testing.T) {
 	repo := memory.NewMemoryRestaurantRepository()
 
 	t.Run("Save and FindByID", func(t *testing.T) {
-		rest, _ := domain.NewRestaurant("r1", "Test Rest")
+		rest, _ := restaurant.NewRestaurant("r1", "Test Rest")
 		err := repo.Save(rest)
 		assert.NoError(t, err)
 
@@ -31,7 +30,7 @@ func TestMemoryRestaurantRepository(t *testing.T) {
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		rest, _ := domain.NewRestaurant("r2", "Rest 2")
+		rest, _ := restaurant.NewRestaurant("r2", "Rest 2")
 		require.NoError(t, repo.Save(rest))
 
 		rest.UpdateStatus(false, "Closed", "Tomorrow")
@@ -44,7 +43,7 @@ func TestMemoryRestaurantRepository(t *testing.T) {
 	})
 
 	t.Run("Update Not Found", func(t *testing.T) {
-		rest, _ := domain.NewRestaurant("r3", "Rest 3")
+		rest, _ := restaurant.NewRestaurant("r3", "Rest 3")
 		err := repo.Update(rest)
 		assert.Error(t, err)
 	})

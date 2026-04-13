@@ -1,15 +1,14 @@
 package restaurant_test
 
 import (
-	"context"
-	"testing"
-
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	restaurantQuery "bitmerchant/internal/restaurant/app/query"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 type stubQR struct{}
@@ -19,7 +18,7 @@ func (stubQR) GeneratePNG(url string, size int) ([]byte, error) {
 }
 
 func TestGenerateRestaurantQRUseCase_MenuURLForTable(t *testing.T) {
-	u := restaurant.MenuURLForTable("http://localhost:8080", "rest_1", 5)
+	u := restaurantQuery.MenuURLForTable("http://localhost:8080", "rest_1", 5)
 	assert.Contains(t, u, "restaurantID=rest_1")
 	assert.Contains(t, u, "table=5")
 	assert.Contains(t, u, "/menu")
@@ -27,12 +26,12 @@ func TestGenerateRestaurantQRUseCase_MenuURLForTable(t *testing.T) {
 
 func TestGenerateRestaurantQRUseCase_Execute(t *testing.T) {
 	repo := memory.NewMemoryRestaurantRepository()
-	r, err := domain.NewRestaurant("r1", "Cafe")
+	r, err := restaurant.NewRestaurant("r1", "Cafe")
 	require.NoError(t, err)
 	r.TableCount = 3
 	require.NoError(t, repo.Save(r))
 
-	uc := restaurant.NewGenerateRestaurantQRUseCase(stubQR{}, "http://host", repo)
+	uc := restaurantQuery.NewGenerateRestaurantQRUseCase(stubQR{}, "http://host", repo)
 
 	t.Run("table in range", func(t *testing.T) {
 		b, err := uc.Execute(context.Background(), "r1", 2)
@@ -41,7 +40,7 @@ func TestGenerateRestaurantQRUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("coerces low table count when loading", func(t *testing.T) {
-		r2, _ := domain.NewRestaurant("r2", "Low")
+		r2, _ := restaurant.NewRestaurant("r2", "Low")
 		r2.TableCount = 0
 		require.NoError(t, repo.Save(r2))
 		b, err := uc.Execute(context.Background(), "r2", 1)

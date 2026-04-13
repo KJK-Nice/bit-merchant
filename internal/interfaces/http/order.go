@@ -1,30 +1,32 @@
 package http
 
 import (
-	"fmt"
-	"net/http"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/application/order"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates"
+	"bitmerchant/internal/ordering/app/cart"
+
+	// OrderHandler handles order-related HTTP requests
+	orderCmd "bitmerchant/internal/ordering/app/command"
+	orderQuery "bitmerchant/internal/ordering/app/query"
+	"fmt"
 
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
-// OrderHandler handles order-related HTTP requests
 type OrderHandler struct {
-	createOrderUseCase         *order.CreateOrderUseCase
-	getCustomerOrderByNumberUC *order.GetCustomerOrderByNumberUseCase
-	getCustomerOrdersUseCase   *order.GetCustomerOrdersUseCase
+	createOrderUseCase         *orderCmd.CreateOrderUseCase
+	getCustomerOrderByNumberUC *orderQuery.GetCustomerOrderByNumberUseCase
+	getCustomerOrdersUseCase   *orderQuery.GetCustomerOrdersUseCase
 	cartService                *cart.CartService
 }
 
 // NewOrderHandler creates a new OrderHandler
 func NewOrderHandler(
-	createOrderUseCase *order.CreateOrderUseCase,
-	getCustomerOrderByNumberUC *order.GetCustomerOrderByNumberUseCase,
-	getCustomerOrdersUseCase *order.GetCustomerOrdersUseCase,
+	createOrderUseCase *orderCmd.CreateOrderUseCase,
+	getCustomerOrderByNumberUC *orderQuery.GetCustomerOrderByNumberUseCase,
+	getCustomerOrdersUseCase *orderQuery.GetCustomerOrdersUseCase,
 	cartService *cart.CartService,
 ) *OrderHandler {
 	return &OrderHandler{
@@ -60,22 +62,22 @@ func (h *OrderHandler) CreateOrder(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/menu")
 	}
 
-	restaurantID := domain.RestaurantID(c.FormValue("restaurantID"))
+	restaurantID := common.RestaurantID(c.FormValue("restaurantID"))
 	if restaurantID == "" || cart.RestaurantID != restaurantID {
 		return c.String(http.StatusBadRequest, "Invalid restaurant for this order")
 	}
 
 	// Get payment method from form
 	paymentMethodVal := c.FormValue("paymentMethod")
-	var paymentMethod domain.PaymentMethodType
+	var paymentMethod common.PaymentMethodType
 	if paymentMethodVal == "cash" {
-		paymentMethod = domain.PaymentMethodTypeCash
+		paymentMethod = common.PaymentMethodTypeCash
 	} else {
 		// Default or Error
-		paymentMethod = domain.PaymentMethodTypeCash
+		paymentMethod = common.PaymentMethodTypeCash
 	}
 
-	req := order.CreateOrderRequest{
+	req := orderCmd.CreateOrderRequest{
 		RestaurantID:  restaurantID,
 		SessionID:     sessionID,
 		Cart:          cart,

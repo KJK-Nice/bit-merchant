@@ -1,13 +1,14 @@
 package main
 
 import (
-	"net/http"
+	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/domain"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/http/middleware"
 
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 type routeHandlers struct {
@@ -23,7 +24,7 @@ type routeHandlers struct {
 	SSE       *handler.SSEHandler
 }
 
-func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo domain.MembershipRepository) {
+func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo membership.Repository) {
 	e.GET("/", func(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/menu")
 	})
@@ -43,7 +44,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo domain.
 	e.GET("/order/:orderNumber/stream", handlers.SSE.OrderStatusStream)
 
 	kitchenGroup := e.Group("/kitchen")
-	kitchenGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, domain.RoleOwner, domain.RoleKitchenStaff))
+	kitchenGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, common.RoleOwner, common.RoleKitchenStaff))
 	kitchenGroup.GET("", handlers.Kitchen.GetKitchen)
 	kitchenGroup.GET("/stream", handlers.SSE.KitchenStream)
 	kitchenGroup.POST("/order/:id/mark-paid", handlers.Kitchen.MarkPaid)
@@ -51,7 +52,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo domain.
 	kitchenGroup.POST("/order/:id/mark-ready", handlers.Kitchen.MarkReady)
 
 	adminGroup := e.Group("/admin")
-	adminGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, domain.RoleOwner))
+	adminGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, common.RoleOwner))
 	adminGroup.GET("/dashboard", handlers.Admin.Dashboard)
 	adminGroup.POST("/category", handlers.Admin.CreateCategory)
 	adminGroup.POST("/category/:id/update", handlers.Admin.UpdateCategory)
@@ -87,7 +88,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo domain.
 	authSelectionGroup.POST("/select-restaurant", handlers.Auth.PostSelectRestaurant)
 
 	dashboardGroup := e.Group("/dashboard")
-	dashboardGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, domain.RoleOwner))
+	dashboardGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, common.RoleOwner))
 	dashboardGroup.GET("", handlers.Dashboard.Dashboard)
 	dashboardGroup.GET("/menu", handlers.Admin.GetMenu)
 	dashboardGroup.GET("/qr-code", handlers.Admin.GetQRCode)

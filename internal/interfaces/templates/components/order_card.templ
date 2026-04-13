@@ -1,14 +1,15 @@
 package components
 
 import (
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/common"
+	"bitmerchant/internal/ordering/domain/order"
 	"fmt"
 )
 
-templ OrderCard(order *domain.Order) {
+templ OrderCard(order *order.Order) {
 	@card.Card(card.Props{ID: fmt.Sprintf("order-%s", order.ID), Class: "mb-4"}) {
 		@card.Header(card.HeaderProps{Class: "flex-row justify-between items-center space-y-0 pb-2"}) {
 			@card.Title() { Order #{ string(order.OrderNumber) } }
@@ -28,14 +29,14 @@ templ OrderCard(order *domain.Order) {
 				<div class="text-sm font-medium">
 					Total: { fmt.Sprintf("$%.2f", order.FiatAmount) }
 				</div>
-				if order.PaymentStatus == domain.PaymentStatusPaid {
+				if order.PaymentStatus == common.PaymentStatusPaid {
 					@badge.Badge(badge.Props{Variant: badge.VariantDefault, Class: "bg-green-600 hover:bg-green-700"}) { PAID }
 				} else {
 					@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { UNPAID }
 				}
 			</div>
 			<div class="w-full flex justify-end">
-				if order.PaymentStatus == domain.PaymentStatusPending {
+				if order.PaymentStatus == common.PaymentStatusPending {
 					@button.Button(button.Props{
 						Variant: button.VariantDefault,
 						Class: "bg-green-600 hover:bg-green-700",
@@ -43,7 +44,7 @@ templ OrderCard(order *domain.Order) {
 					}) {
 						Mark Paid
 					}
-				} else if order.FulfillmentStatus == domain.FulfillmentStatusPaid {
+				} else if order.FulfillmentStatus == common.FulfillmentStatusPaid {
 					@button.Button(button.Props{
 						Variant: button.VariantDefault,
 						Class: "bg-blue-600 hover:bg-blue-700",
@@ -51,7 +52,7 @@ templ OrderCard(order *domain.Order) {
 					}) {
 						Start Preparing
 					}
-				} else if order.FulfillmentStatus == domain.FulfillmentStatusPreparing {
+				} else if order.FulfillmentStatus == common.FulfillmentStatusPreparing {
 					@button.Button(button.Props{
 						Variant: button.VariantDefault,
 						Class: "bg-purple-600 hover:bg-purple-700",
@@ -64,4 +65,3 @@ templ OrderCard(order *domain.Order) {
 		}
 	}
 }
-

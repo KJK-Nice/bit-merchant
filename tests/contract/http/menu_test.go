@@ -1,38 +1,40 @@
 package http_test
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/application/places"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/ordering/app/cart"
+	placesCmd "bitmerchant/internal/places/app/command"
+
+	// Setup Dependencies
+	"bitmerchant/internal/restaurant/domain/restaurant"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 func TestGetMenu(t *testing.T) {
-	// Setup Dependencies
+
 	catRepo := memory.NewMemoryMenuCategoryRepository()
 	itemRepo := memory.NewMemoryMenuItemRepository()
 	restRepo := memory.NewMemoryRestaurantRepository()
 	cartService := cart.NewCartService()
 
 	// Add some data
-	rest, _ := domain.NewRestaurant("r1", "Test Restaurant")
+	rest, _ := restaurant.NewRestaurant("r1", "Test Restaurant")
 	require.NoError(t, restRepo.Save(rest))
-	cat, _ := domain.NewMenuCategory("c1", "r1", "Starters", 1)
+	cat, _ := menu.NewMenuCategory("c1", "r1", "Starters", 1)
 	require.NoError(t, catRepo.Save(cat))
 
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
-	recordVisitUC := places.NewRecordMenuVisitUseCase(restRepo, visitRepo)
-	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menu.PhotoSignerConfig{})
+	recordVisitUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
+	uc := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
 	h := handler.NewMenuHandler(uc, cartService, recordVisitUC)
 
 	// Setup Echo

@@ -53,7 +53,7 @@ Repository interfaces are defined within each domain package:
 - `internal/auth/domain/invitation/repository.go` -- `invitation.Repository`
 - `internal/auth/domain/session/repository.go` -- `session.Repository`
 
-The old `internal/domain/repositories.go` is a type-alias facade for backward compatibility.
+Repository interfaces are imported directly from their auth or bounded-context domain packages.
 
 Implementations:
 

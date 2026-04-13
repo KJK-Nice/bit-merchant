@@ -1,17 +1,18 @@
 package http
 
 import (
+	"bitmerchant/internal/auth/domain/user"
+	"bitmerchant/internal/common"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 	"context"
-	"strings"
-	"unicode/utf8"
-
-	"bitmerchant/internal/domain"
 
 	"github.com/labstack/echo/v4"
+	"strings"
+	"unicode/utf8"
 )
 
 // LayoutUserStrings returns display values for the dashboard sidebar from the authenticated user.
-func LayoutUserStrings(user *domain.User) (displayName, subtitle, initials string) {
+func LayoutUserStrings(user *user.User) (displayName, subtitle, initials string) {
 	if user == nil {
 		return "Guest", "", "?"
 	}
@@ -51,7 +52,7 @@ func userInitials(displayName string) string {
 }
 
 // ActiveRestaurantLabel returns the restaurant name when available, otherwise the raw ID.
-func ActiveRestaurantLabel(ctx context.Context, id domain.RestaurantID, repo domain.RestaurantRepository) string {
+func ActiveRestaurantLabel(ctx context.Context, id common.RestaurantID, repo restaurant.Repository) string {
 	if id == "" {
 		return ""
 	}

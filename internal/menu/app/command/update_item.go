@@ -32,25 +32,16 @@ func (uc *UpdateMenuItemUseCase) Execute(ctx context.Context, req UpdateMenuItem
 	if err != nil {
 		return err
 	}
-	if item.RestaurantID != req.RestaurantID {
-		return fmt.Errorf("item does not belong to restaurant")
-	}
 
 	cat, err := uc.catRepo.FindByID(req.CategoryID)
 	if err != nil {
 		return err
 	}
-	if cat.RestaurantID != req.RestaurantID {
-		return fmt.Errorf("category does not belong to restaurant")
-	}
 
-	if err := menu.ValidateItemName(req.Name); err != nil {
+	if err := validateItemAndCategoryOwnership(item, cat, req.RestaurantID); err != nil {
 		return err
 	}
-	if err := menu.ValidatePrice(req.Price); err != nil {
-		return err
-	}
-	if err := menu.ValidateDescription(req.Description); err != nil {
+	if err := validateUpdateMenuItemRequest(req); err != nil {
 		return err
 	}
 
@@ -64,20 +55,55 @@ func (uc *UpdateMenuItemUseCase) Execute(ctx context.Context, req UpdateMenuItem
 	}
 
 	if oldCat != req.CategoryID {
-		maxOrder := -1
-		siblings, err := uc.itemRepo.FindByCategoryID(req.CategoryID)
-		if err != nil {
-			return err
-		}
-		for _, s := range siblings {
-			if s.ID != item.ID && s.DisplayOrder > maxOrder {
-				maxOrder = s.DisplayOrder
-			}
-		}
-		if err := item.SetDisplayOrder(maxOrder + 1); err != nil {
+		if err := uc.moveItemToCategoryEnd(item, req.CategoryID); err != nil {
 			return err
 		}
 	}
 
 	return uc.itemRepo.Update(item)
+}
+
+func validateItemAndCategoryOwnership(item *menu.MenuItem, cat *menu.MenuCategory, restaurantID common.RestaurantID) error {
+	if item.RestaurantID != restaurantID {
+		return fmt.Errorf("item does not belong to restaurant")
+	}
+	if cat.RestaurantID != restaurantID {
+		return fmt.Errorf("category does not belong to restaurant")
+	}
+	return nil
+}
+
+func validateUpdateMenuItemRequest(req UpdateMenuItemRequest) error {
+	if err := menu.ValidateItemName(req.Name); err != nil {
+		return err
+	}
+	if err := menu.ValidatePrice(req.Price); err != nil {
+		return err
+	}
+	if err := menu.ValidateDescription(req.Description); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (uc *UpdateMenuItemUseCase) moveItemToCategoryEnd(item *menu.MenuItem, categoryID common.CategoryID) error {
+	maxOrder, err := uc.maxDisplayOrderInCategoryExcluding(categoryID, item.ID)
+	if err != nil {
+		return err
+	}
+	return item.SetDisplayOrder(maxOrder + 1)
+}
+
+func (uc *UpdateMenuItemUseCase) maxDisplayOrderInCategoryExcluding(categoryID common.CategoryID, excludeItemID common.ItemID) (int, error) {
+	maxOrder := -1
+	siblings, err := uc.itemRepo.FindByCategoryID(categoryID)
+	if err != nil {
+		return 0, err
+	}
+	for _, s := range siblings {
+		if s.ID != excludeItemID && s.DisplayOrder > maxOrder {
+			maxOrder = s.DisplayOrder
+		}
+	}
+	return maxOrder, nil
 }

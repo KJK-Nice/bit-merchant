@@ -21,29 +21,17 @@ func (uc *ReorderMenuCategoriesUseCase) Execute(ctx context.Context, restaurantI
 	if len(orderedCategoryIDs) == 0 {
 		return nil
 	}
-	seen := make(map[common.CategoryID]struct{})
-	for _, id := range orderedCategoryIDs {
-		if _, dup := seen[id]; dup {
-			return fmt.Errorf("duplicate category id in order")
-		}
-		seen[id] = struct{}{}
+	if err := validateUniqueCategoryOrder(orderedCategoryIDs); err != nil {
+		return err
 	}
 
 	cats, err := uc.catRepo.FindByRestaurantID(restaurantID)
 	if err != nil {
 		return err
 	}
-	if len(orderedCategoryIDs) != len(cats) {
-		return fmt.Errorf("category count mismatch")
-	}
-	byID := make(map[common.CategoryID]*menu.MenuCategory)
-	for _, c := range cats {
-		byID[c.ID] = c
-	}
-	for _, id := range orderedCategoryIDs {
-		if _, ok := byID[id]; !ok {
-			return fmt.Errorf("category does not belong to restaurant")
-		}
+	byID, err := validateAndMapCategories(cats, orderedCategoryIDs)
+	if err != nil {
+		return err
 	}
 
 	for i, id := range orderedCategoryIDs {
@@ -55,4 +43,32 @@ func (uc *ReorderMenuCategoriesUseCase) Execute(ctx context.Context, restaurantI
 		}
 	}
 	return nil
+}
+
+func validateUniqueCategoryOrder(orderedCategoryIDs []common.CategoryID) error {
+	seen := make(map[common.CategoryID]struct{}, len(orderedCategoryIDs))
+	for _, id := range orderedCategoryIDs {
+		if _, dup := seen[id]; dup {
+			return fmt.Errorf("duplicate category id in order")
+		}
+		seen[id] = struct{}{}
+	}
+	return nil
+}
+
+func validateAndMapCategories(cats []*menu.MenuCategory, orderedCategoryIDs []common.CategoryID) (map[common.CategoryID]*menu.MenuCategory, error) {
+	if len(orderedCategoryIDs) != len(cats) {
+		return nil, fmt.Errorf("category count mismatch")
+	}
+
+	byID := make(map[common.CategoryID]*menu.MenuCategory, len(cats))
+	for _, c := range cats {
+		byID[c.ID] = c
+	}
+	for _, id := range orderedCategoryIDs {
+		if _, ok := byID[id]; !ok {
+			return nil, fmt.Errorf("category does not belong to restaurant")
+		}
+	}
+	return byID, nil
 }

@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
@@ -45,7 +45,7 @@ templ QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName str
 						Number of tables
 					}
 					@card.Description() {
-						We generate one QR code per table (range { strconv.Itoa(domain.MinTableCount) }–{ strconv.Itoa(domain.MaxTableCount) }).
+						We generate one QR code per table (range { strconv.Itoa(restaurant.MinTableCount) }–{ strconv.Itoa(restaurant.MaxTableCount) }).
 					}
 				}
 				@card.Content() {
@@ -60,8 +60,8 @@ templ QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName str
 								Required: true,
 								Value:    strconv.Itoa(tableCountInput),
 								Attributes: templ.Attributes{
-									"min": strconv.Itoa(domain.MinTableCount),
-									"max": strconv.Itoa(domain.MaxTableCount),
+									"min": strconv.Itoa(restaurant.MinTableCount),
+									"max": strconv.Itoa(restaurant.MaxTableCount),
 								},
 							})
 						</div>

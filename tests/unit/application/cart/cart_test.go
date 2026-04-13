@@ -1,13 +1,13 @@
 package cart_test
 
 import (
-	"testing"
-
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/common"
+	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/ordering/app/cart"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestCartService(t *testing.T) {
@@ -17,9 +17,9 @@ func TestCartService(t *testing.T) {
 	// Setup mocks/repos if needed but CartService is mostly self-contained for basic ops
 	// except when adding items we pass full item struct, not ID lookup inside service?
 	// Wait, checking implementation of AddItem:
-	// func (s *CartService) AddItem(sessionID string, item *domain.MenuItem, quantity int) error
+	// func (s *CartService) AddItem(sessionID string, item *menu.MenuItem, quantity int) error
 
-	item, _ := domain.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
+	item, _ := menu.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
 
 	t.Run("AddItem", func(t *testing.T) {
 		err := s.AddItem(sessionID, item, 2)
@@ -62,15 +62,15 @@ func TestCartService(t *testing.T) {
 	t.Run("switch restaurant clears cart", func(t *testing.T) {
 		s2 := cart.NewCartService()
 		sid := "session_switch"
-		a, _ := domain.NewMenuItem("ia", "c1", "ra", "A", 5)
-		b, _ := domain.NewMenuItem("ib", "c2", "rb", "B", 7)
+		a, _ := menu.NewMenuItem("ia", "c1", "ra", "A", 5)
+		b, _ := menu.NewMenuItem("ib", "c2", "rb", "B", 7)
 		require.NoError(t, s2.AddItem(sid, a, 1))
 		c := s2.GetCart(sid)
-		assert.Equal(t, domain.RestaurantID("ra"), c.RestaurantID)
+		assert.Equal(t, common.RestaurantID("ra"), c.RestaurantID)
 		require.NoError(t, s2.AddItem(sid, b, 2))
 		c = s2.GetCart(sid)
 		assert.Len(t, c.Items, 1)
-		assert.Equal(t, domain.RestaurantID("rb"), c.RestaurantID)
+		assert.Equal(t, common.RestaurantID("rb"), c.RestaurantID)
 		assert.Equal(t, "B", c.Items[0].Name)
 		assert.Equal(t, 2, c.Items[0].Quantity)
 	})

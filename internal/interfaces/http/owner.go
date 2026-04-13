@@ -1,18 +1,18 @@
 package http
 
 import (
-	"bitmerchant/internal/application/restaurant"
 	"bitmerchant/internal/interfaces/templates"
-	"net/http"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
 
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 type OwnerHandler struct {
-	createRestaurantUC *restaurant.CreateRestaurantUseCase
+	createRestaurantUC *restaurantCmd.CreateRestaurantUseCase
 }
 
-func NewOwnerHandler(createRestaurantUC *restaurant.CreateRestaurantUseCase) *OwnerHandler {
+func NewOwnerHandler(createRestaurantUC *restaurantCmd.CreateRestaurantUseCase) *OwnerHandler {
 	return &OwnerHandler{
 		createRestaurantUC: createRestaurantUC,
 	}
@@ -30,7 +30,7 @@ func (h *OwnerHandler) PostSignup(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Restaurant name is required")
 	}
 
-	req := restaurant.CreateRestaurantRequest{
+	req := restaurantCmd.CreateRestaurantRequest{
 		Name: name,
 	}
 

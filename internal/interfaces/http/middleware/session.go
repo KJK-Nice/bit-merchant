@@ -1,13 +1,14 @@
 package middleware
 
 import (
-	"bitmerchant/internal/domain"
-	"net/http"
-	"strings"
-	"time"
+	"bitmerchant/internal/auth/domain/session"
+	"bitmerchant/internal/auth/domain/user"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"net/http"
+	"strings"
+	"time"
 )
 
 const SessionCookieName = "bitmerchant_session"
@@ -60,16 +61,16 @@ func SessionMiddleware() echo.MiddlewareFunc {
 }
 
 // SessionMiddlewareWithRepos enables authenticated session loading from repositories.
-func SessionMiddlewareWithRepos(sessionRepo domain.SessionRepository, userRepo domain.UserRepository) echo.MiddlewareFunc {
+func SessionMiddlewareWithRepos(sessionRepo session.Repository, userRepo user.Repository) echo.MiddlewareFunc {
 	return sessionMiddleware(sessionRepo, userRepo, SessionOptions{})
 }
 
 // SessionMiddlewareWithReposAndOptions enables authenticated session loading with explicit options.
-func SessionMiddlewareWithReposAndOptions(sessionRepo domain.SessionRepository, userRepo domain.UserRepository, opts SessionOptions) echo.MiddlewareFunc {
+func SessionMiddlewareWithReposAndOptions(sessionRepo session.Repository, userRepo user.Repository, opts SessionOptions) echo.MiddlewareFunc {
 	return sessionMiddleware(sessionRepo, userRepo, opts)
 }
 
-func sessionMiddleware(sessionRepo domain.SessionRepository, userRepo domain.UserRepository, opts SessionOptions) echo.MiddlewareFunc {
+func sessionMiddleware(sessionRepo session.Repository, userRepo user.Repository, opts SessionOptions) echo.MiddlewareFunc {
 	opts = opts.WithDefaults()
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -99,20 +100,20 @@ func ensureSessionCookie(c echo.Context, opts SessionOptions) string {
 	return cookie.Value
 }
 
-func loadOrCreateSession(sessionRepo domain.SessionRepository, sessionID string, opts SessionOptions) *domain.Session {
-	session, err := sessionRepo.Get(sessionID)
-	if err != nil || session == nil || session.IsExpired(time.Now()) {
-		session = &domain.Session{
+func loadOrCreateSession(sessionRepo session.Repository, sessionID string, opts SessionOptions) *session.Session {
+	currentSession, err := sessionRepo.Get(sessionID)
+	if err != nil || currentSession == nil || currentSession.IsExpired(time.Now()) {
+		currentSession = &session.Session{
 			ID:        sessionID,
 			CreatedAt: time.Now(),
 			ExpiresAt: time.Now().Add(opts.TTL),
 		}
-		_ = sessionRepo.Save(session)
+		_ = sessionRepo.Save(currentSession)
 	}
-	return session
+	return currentSession
 }
 
-func attachIdentityFromSession(c echo.Context, session *domain.Session, userRepo domain.UserRepository) {
+func attachIdentityFromSession(c echo.Context, session *session.Session, userRepo user.Repository) {
 	if session.UserID != nil {
 		user, err := userRepo.FindByID(*session.UserID)
 		if err == nil && user != nil {
