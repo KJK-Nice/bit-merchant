@@ -55,3 +55,51 @@ func TestGetMenu(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Contains(t, rec.Body.String(), "Menu")
 }
+
+func TestGetMenu_MissingRestaurantIDRedirectsToEntry(t *testing.T) {
+	catRepo := memory.NewMemoryMenuCategoryRepository()
+	itemRepo := memory.NewMemoryMenuItemRepository()
+	restRepo := memory.NewMemoryRestaurantRepository()
+	cartService := cart.NewCartService()
+
+	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
+	recordVisitUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
+	uc := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
+	h := handler.NewMenuHandler(uc, cartService, recordVisitUC)
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/menu", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("sessionID", "session-missing")
+
+	err := h.GetMenu(c)
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, "/?reason=restaurant_required", rec.Header().Get(echo.HeaderLocation))
+}
+
+func TestGetMenu_UnknownRestaurantIDRedirectsToEntry(t *testing.T) {
+	catRepo := memory.NewMemoryMenuCategoryRepository()
+	itemRepo := memory.NewMemoryMenuItemRepository()
+	restRepo := memory.NewMemoryRestaurantRepository()
+	cartService := cart.NewCartService()
+
+	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
+	recordVisitUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
+	uc := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
+	h := handler.NewMenuHandler(uc, cartService, recordVisitUC)
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/menu?restaurantID=unknown", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("sessionID", "session-unknown")
+
+	err := h.GetMenu(c)
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, "/?reason=restaurant_not_found", rec.Header().Get(echo.HeaderLocation))
+}

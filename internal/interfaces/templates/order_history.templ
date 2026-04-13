@@ -21,7 +21,7 @@ templ OrderHistoryPage(orders []*order.Order) {
 				@card.Card() {
 					@card.Content(card.ContentProps{Class: "py-12 text-center space-y-4"}) {
 						<p class="text-muted-foreground">You haven't placed any orders yet.</p>
-						<a href="/menu" class="text-primary hover:underline font-medium">Browse Menu</a>
+						<a href="/my-places" class="text-primary hover:underline font-medium">Browse My Places</a>
 					}
 				}
 			} else {

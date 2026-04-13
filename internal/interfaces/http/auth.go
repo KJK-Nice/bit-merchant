@@ -467,7 +467,7 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 	})
-	return c.Redirect(http.StatusFound, "/menu")
+	return c.Redirect(http.StatusFound, "/")
 }
 
 func (h *AuthHandler) CreateInvitation(c echo.Context) error {

@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
+	"net/url"
 )
 
 type MenuHandler struct {
@@ -30,12 +31,15 @@ func NewMenuHandler(getMenuUseCase *menuQuery.GetMenuUseCase, cartService *cart.
 func (h *MenuHandler) GetMenu(c echo.Context) error {
 	restaurantID := c.QueryParam("restaurantID")
 	if restaurantID == "" {
-		restaurantID = "restaurant_1" // Default for MVP
+		return c.Redirect(http.StatusFound, "/?reason="+url.QueryEscape("restaurant_required"))
 	}
 
 	// Get Menu Data
 	menuData, err := h.getMenuUseCase.Execute(c.Request().Context(), common.RestaurantID(restaurantID))
 	if err != nil {
+		if err.Error() == "restaurant not found" {
+			return c.Redirect(http.StatusFound, "/?reason="+url.QueryEscape("restaurant_not_found"))
+		}
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 

@@ -254,7 +254,7 @@ func TestAuthHandlerLogout_DeletesSessionAndExpiresCookie(t *testing.T) {
 
 	require.NoError(t, h.Logout(c))
 	assert.Equal(t, http.StatusFound, rec.Code)
-	assert.Equal(t, "/menu", rec.Header().Get(echo.HeaderLocation))
+	assert.Equal(t, "/", rec.Header().Get(echo.HeaderLocation))
 
 	_, err := sessionRepo.Get("session-to-logout")
 	assert.Error(t, err)

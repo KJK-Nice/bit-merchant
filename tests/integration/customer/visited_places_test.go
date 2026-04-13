@@ -57,3 +57,21 @@ func TestMenuThenMyPlacesListsRestaurant(t *testing.T) {
 	assert.Contains(t, body, "visit-test-r")
 	assert.Contains(t, body, "Open")
 }
+
+func TestMyPlacesEmptyStateLinksToHome(t *testing.T) {
+	restRepo := memory.NewMemoryRestaurantRepository()
+	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
+	orderRepo := memory.NewMemoryOrderRepository()
+	listUC := placesQuery.NewListVisitedRestaurantsUseCase(visitRepo, restRepo, orderRepo)
+	placesH := handler.NewPlacesHandler(listUC)
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/my-places", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("sessionID", "sess-empty")
+
+	require.NoError(t, placesH.GetMyPlaces(c))
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Contains(t, rec.Body.String(), "href=\"/\"")
+}

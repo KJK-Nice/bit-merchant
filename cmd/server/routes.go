@@ -6,9 +6,9 @@ import (
 
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/http/middleware"
+	"bitmerchant/internal/interfaces/templates"
 
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 type routeHandlers struct {
@@ -26,7 +26,7 @@ type routeHandlers struct {
 
 func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo membership.Repository) {
 	e.GET("/", func(c echo.Context) error {
-		return c.Redirect(http.StatusFound, "/menu")
+		return templates.EntryPage(c.QueryParam("reason")).Render(c.Request().Context(), c.Response())
 	})
 
 	e.GET("/menu", handlers.Menu.GetMenu)

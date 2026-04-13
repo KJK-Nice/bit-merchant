@@ -79,7 +79,7 @@ func OrderHistoryPage(orders []*order.Order) templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-muted-foreground\">You haven't placed any orders yet.</p><a href=\"/menu\" class=\"text-primary hover:underline font-medium\">Browse Menu</a>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-muted-foreground\">You haven't placed any orders yet.</p><a href=\"/my-places\" class=\"text-primary hover:underline font-medium\">Browse My Places</a>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}

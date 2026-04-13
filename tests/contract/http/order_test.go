@@ -76,4 +76,16 @@ func TestOrderEndpoints(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), "Order #1234")
 	})
+
+	t.Run("Order History EmptyStateLinksToMyPlaces", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/order/lookup", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.Set("sessionID", "session-empty")
+
+		err := h.GetLookup(c)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "href=\"/my-places\"")
+	})
 }

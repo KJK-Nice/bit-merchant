@@ -24,6 +24,9 @@ Launch a paid, operable product with:
 - [ ] Add clear CTA: `Start Free Trial` / `Book Demo`
 - [ ] Add lead capture form and save submissions (email + restaurant name + country)
 
+Progress note (2026-04-13):
+- `GET /` now serves a lightweight entry page to prevent `/menu` redirect loops. Full marketing landing is still pending.
+
 Current code touchpoints:
 
 - `cmd/server/routes.go` (`GET /` currently redirects)
@@ -31,8 +34,8 @@ Current code touchpoints:
 
 ### 2) Production-Safe Tenant Onboarding
 
-- [ ] Remove default restaurant fallback from customer menu flow
-- [ ] Gate access by valid `restaurantID` or QR table link only
+- [x] Remove default restaurant fallback from customer menu flow
+- [x] Gate access by valid `restaurantID` or QR table link only
 - [ ] Make owner signup + first restaurant setup a guided flow
 - [ ] Add onboarding completion checks:
   - Menu has at least 1 category
@@ -160,7 +163,7 @@ Do not onboard paid customers until all are `PASS`.
 
 - [ ] Marketing site + legal pages are live
 - [ ] Owner can self-onboard without manual DB edits
-- [ ] No production fallback to demo tenant (`restaurant_1`)
+- [x] No production fallback to demo tenant (`restaurant_1`)
 - [ ] Backups + restore drill completed
 - [ ] Monitoring + alerting active
 - [ ] Support inbox and response workflow live
@@ -193,7 +196,7 @@ Effort scale:
 | ID | Task | Effort | ETA | Definition of Done |
 |---|---|---:|---:|---|
 | P0-1 | Build public landing + pricing + CTA flow | L | 3-5 days | `/` is a real marketing page, includes pricing, FAQ, contact, legal links, and lead capture works |
-| P0-2 | Remove demo/default tenant fallback | M | 1-2 days | No `restaurant_1` fallback path for production traffic; invalid tenant requests fail safely |
+| P0-2 | Remove demo/default tenant fallback | M | 1-2 days | No `restaurant_1` fallback path for production traffic; invalid tenant requests fail safely | ✅ Done (2026-04-13) |
 | P0-3 | Harden onboarding path | M | 1-2 days | Owner can sign up and complete setup without manual data fixes |
 | P0-4 | Enforce production DB + backup workflow | M | 1-2 days | App fails fast without `DATABASE_URL` in production; daily backups and restore test documented |
 | P0-5 | Add monitoring + error tracking | M | 1-2 days | Uptime + 5xx + DB alerts configured; exceptions visible in one dashboard |
