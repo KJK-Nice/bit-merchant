@@ -11,19 +11,37 @@ import (
 	"time"
 )
 
-const SessionCookieName = "bitmerchant_session"
+const SessionCookieName = "bitmerchant_session" // legacy/default cookie name
+const MerchantSessionCookieName = "bitmerchant_merchant_session"
+const CustomerSessionCookieName = "bitmerchant_customer_session"
 
 const defaultSessionTTL = 24 * time.Hour
 
 // SessionOptions configures cookie and persistence behavior.
 type SessionOptions struct {
-	TTL          time.Duration
-	SecureCookie bool
+	TTL                time.Duration
+	SecureCookie       bool
+	CookieName         string
+	MerchantCookieName string
+	CustomerCookieName string
+	LegacyCookieName   string
 }
 
 func (o SessionOptions) WithDefaults() SessionOptions {
 	if o.TTL <= 0 {
 		o.TTL = defaultSessionTTL
+	}
+	if o.CookieName == "" {
+		o.CookieName = SessionCookieName
+	}
+	if o.MerchantCookieName == "" {
+		o.MerchantCookieName = MerchantSessionCookieName
+	}
+	if o.CustomerCookieName == "" {
+		o.CustomerCookieName = CustomerSessionCookieName
+	}
+	if o.LegacyCookieName == "" {
+		o.LegacyCookieName = SessionCookieName
 	}
 	return o
 }
@@ -36,8 +54,13 @@ func NewSessionID() string {
 // NewSessionCookie builds the session cookie with safe defaults.
 func NewSessionCookie(sessionID string, opts SessionOptions) *http.Cookie {
 	opts = opts.WithDefaults()
+	return NewSessionCookieWithName(opts.CookieName, sessionID, opts)
+}
+
+func NewSessionCookieWithName(cookieName, sessionID string, opts SessionOptions) *http.Cookie {
+	opts = opts.WithDefaults()
 	return &http.Cookie{
-		Name:     SessionCookieName,
+		Name:     cookieName,
 		Value:    sessionID,
 		Path:     "/",
 		HttpOnly: true,
@@ -91,13 +114,45 @@ func sessionMiddleware(sessionRepo session.Repository, userRepo user.Repository,
 }
 
 func ensureSessionCookie(c echo.Context, opts SessionOptions) string {
-	cookie, err := c.Cookie(SessionCookieName)
+	cookieName := resolveSessionCookieName(c, opts)
+	cookie, err := c.Cookie(cookieName)
 	if err != nil || cookie.Value == "" {
+		if opts.LegacyCookieName != "" && opts.LegacyCookieName != cookieName {
+			legacyCookie, legacyErr := c.Cookie(opts.LegacyCookieName)
+			if legacyErr == nil && legacyCookie != nil && legacyCookie.Value != "" {
+				c.SetCookie(NewSessionCookieWithName(cookieName, legacyCookie.Value, opts))
+				return legacyCookie.Value
+			}
+		}
 		sessionID := NewSessionID()
-		c.SetCookie(NewSessionCookie(sessionID, opts))
+		c.SetCookie(NewSessionCookieWithName(cookieName, sessionID, opts))
 		return sessionID
 	}
 	return cookie.Value
+}
+
+func resolveSessionCookieName(c echo.Context, opts SessionOptions) string {
+	opts = opts.WithDefaults()
+
+	if routeSurface, ok := c.Get(ContextRouteSurface).(AppSurface); ok {
+		switch routeSurface {
+		case AppSurfaceMerchant:
+			return opts.MerchantCookieName
+		case AppSurfaceCustomer:
+			return opts.CustomerCookieName
+		}
+	}
+
+	if hostSurface, ok := c.Get(ContextHostSurface).(AppSurface); ok {
+		switch hostSurface {
+		case AppSurfaceMerchant:
+			return opts.MerchantCookieName
+		case AppSurfaceCustomer:
+			return opts.CustomerCookieName
+		}
+	}
+
+	return opts.CookieName
 }
 
 func loadOrCreateSession(sessionRepo session.Repository, sessionID string, opts SessionOptions) *session.Session {

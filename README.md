@@ -131,7 +131,10 @@ Configuration is loaded from the process environment in [`cmd/server/config.go`]
 |---|---|---|---|
 | `APP_ENV` | No | *(empty)* | Set to `production` for JSON log output. Any other value (including unset) uses [humanslog](https://github.com/ThreeDotsLabs/humanslog) pretty output for development. |
 | `PORT` | No | `8080` | HTTP listen port. |
-| `BASE_URL` | No | `http://localhost:8080` | Public site URL (scheme + host [+ port]). Used for WebAuthn RP ID (hostname), absolute menu URLs in QR codes, and secure-cookie heuristics. Set correctly in every deployed environment. |
+| `BASE_URL` | No | `http://localhost:8080` | Backward-compatible base URL fallback used when surface-specific URLs are not set. |
+| `PUBLIC_BASE_URL` | No | `BASE_URL` | Public/marketing host URL (for `/` landing surface). |
+| `CUSTOMER_BASE_URL` | No | `BASE_URL` | Customer app host URL (`/menu`, `/order/*`, `/cart/*`, `/my-places`) and QR menu link base. |
+| `MERCHANT_BASE_URL` | No | `BASE_URL` | Merchant app host URL (`/dashboard/*`, `/admin/*`, `/kitchen/*`, `/auth/*`). Also used for WebAuthn RP origin/RPID derivation. |
 | `COOKIE_SECURE` | No | (off) | If `true`, session cookies are marked `Secure` (use behind HTTPS). |
 | `DATABASE_URL` | No | *(empty)* | Postgres connection string. If unset, the app uses **in-memory** repositories only (no persistence). If set, **Goose migrations run automatically on startup** after the DB is reachable. |
 | `AWS_S3_BUCKET_NAME` | No | *(empty)* | S3 bucket for menu item photos. If missing (with region), photo uploads are disabled. Alias: `S3_BUCKET_NAME`. |
@@ -169,7 +172,7 @@ Goose migration files live under `internal/infrastructure/migrations/sql/`.
 docker compose up --build
 ```
 
-Adjust `.env.docker` for passwords, `BASE_URL` if you expose the app on another host, or optional S3 variables. If you change `POSTGRES_*`, update the Postgres `healthcheck` in `docker-compose.yml` to use the same user and database name.
+Adjust `.env.docker` for passwords and host URLs (`BASE_URL` and/or `PUBLIC_BASE_URL` / `CUSTOMER_BASE_URL` / `MERCHANT_BASE_URL`) if you expose the app on another host, or optional S3 variables. If you change `POSTGRES_*`, update the Postgres `healthcheck` in `docker-compose.yml` to use the same user and database name.
 
 ### Multi-restaurant context switcher
 

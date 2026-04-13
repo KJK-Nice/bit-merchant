@@ -459,14 +459,25 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 	if sessionID != "" {
 		_ = h.sessionRepo.Delete(sessionID)
 	}
+	opts := h.sessionOpts.WithDefaults()
 	c.SetCookie(&http.Cookie{
-		Name:     middleware.SessionCookieName,
+		Name:     opts.CookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 	})
+	if opts.CookieName != opts.LegacyCookieName {
+		c.SetCookie(&http.Cookie{
+			Name:     opts.LegacyCookieName,
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			Expires:  time.Unix(0, 0),
+			MaxAge:   -1,
+		})
+	}
 	return c.Redirect(http.StatusFound, "/")
 }
 
