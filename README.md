@@ -207,6 +207,32 @@ The active restaurant is stored in the server-side session and enforced by role 
   ```
   These use [testcontainers-go](https://github.com/testcontainers/testcontainers-go) to spin up a real Postgres container, run all Goose migrations, and exercise every adapter.
 
+### E2E tests (Playwright)
+
+Host-surface routing tests run with `*.localhost` domains:
+- public: `http://localhost:8080`
+- customer: `http://order.localhost:8080`
+- merchant: `http://merchant.localhost:8080`
+
+No `/etc/hosts` edits are required.
+
+Install dependencies and browser:
+```bash
+npm install
+npx playwright install --with-deps chromium
+```
+
+Run E2E smoke tests:
+```bash
+npm run e2e:test
+```
+
+Debug/UI modes:
+```bash
+npm run e2e:test:ui
+npm run e2e:test:debug
+```
+
 ## License
 
 Proprietary.
