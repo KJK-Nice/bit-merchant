@@ -25,6 +25,7 @@ type serverConfig struct {
 	MerchantBaseURL   string
 	RPID              string
 	ForceSecureCookie bool
+	DisableRateLimit  bool
 	DatabaseURL       string
 	S3BucketName      string
 	AWSRegion         string
@@ -97,6 +98,7 @@ func loadConfig() (serverConfig, error) {
 		CustomerBaseURL:        strings.TrimSpace(firstEnv("CUSTOMER_BASE_URL", "BASE_URL", "PUBLIC_BASE_URL")),
 		MerchantBaseURL:        strings.TrimSpace(firstEnv("MERCHANT_BASE_URL", "BASE_URL", "PUBLIC_BASE_URL")),
 		ForceSecureCookie:      os.Getenv("COOKIE_SECURE") == "true",
+		DisableRateLimit:       os.Getenv("DISABLE_RATE_LIMIT") == "true",
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
 		S3BucketName:           firstEnv("AWS_S3_BUCKET_NAME", "S3_BUCKET_NAME"),
 		AWSRegion:              firstEnv("AWS_DEFAULT_REGION", "AWS_REGION"),

@@ -39,7 +39,7 @@ test.describe("Host-based routing", () => {
     const visitor = await PublicVisitor(context);
 
     await visitor.attemptsTo(OpenRoute("public", "/"));
-    await expect(visitor.page.getByText("Scan a table QR")).toBeVisible();
+    await expect(visitor.page.getByText("Scan a table QR to open a menu")).toBeVisible();
 
     const current = await visitor.asks(CurrentURL());
     expect(current.host).toBe("localhost:8080");

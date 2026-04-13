@@ -209,7 +209,13 @@ The active restaurant is stored in the server-side session and enforced by role 
 
 ### E2E tests (Playwright)
 
-Host-surface routing tests run with `*.localhost` domains:
+The Playwright suite includes:
+- host-surface routing/canonical redirect checks
+- session cookie isolation checks
+- full customer journey (menu -> cart -> checkout -> order status)
+- full merchant core journey with real passkey flow (signup + dashboard/admin/qr/kitchen access + logout)
+
+Host-surface tests run with `*.localhost` domains:
 - public: `http://localhost:8080`
 - customer: `http://order.localhost:8080`
 - merchant: `http://merchant.localhost:8080`
@@ -227,10 +233,20 @@ Run E2E smoke tests:
 npm run e2e:test
 ```
 
+Run E2E with mobile viewport emulation:
+```bash
+npm run e2e:test:mobile
+```
+
+Passkey note:
+- Merchant journey uses Playwright Chromium CDP virtual authenticator (no backend bypass endpoints).
+
 Debug/UI modes:
 ```bash
 npm run e2e:test:ui
 npm run e2e:test:debug
+npm run e2e:test:mobile:ui
+npm run e2e:test:mobile:debug
 ```
 
 ## License

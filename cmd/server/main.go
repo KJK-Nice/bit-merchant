@@ -148,7 +148,9 @@ func main() {
 	}))
 	e.Use(middleware.SessionMiddlewareWithReposAndOptions(repos.Session, repos.User, sessionOpts))
 	e.Use(middleware.PerformanceMiddleware(logger, 200*time.Millisecond))
-	e.Use(middleware.RateLimitMiddleware())
+	if !cfg.DisableRateLimit {
+		e.Use(middleware.RateLimitMiddleware())
+	}
 	e.Use(middleware.CSRFMiddleware())
 
 	e.Static("/static", "static")

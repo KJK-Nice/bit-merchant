@@ -20,6 +20,20 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "mobile-chrome-android",
+      use: {
+        ...devices["Pixel 7"],
+        browserName: "chromium",
+      },
+    },
+    {
+      name: "mobile-chrome-iphone",
+      use: {
+        ...devices["iPhone 13"],
+        browserName: "chromium",
+      },
+    },
   ],
   webServer: {
     command: "go run ./cmd/server",
@@ -31,6 +45,7 @@ export default defineConfig({
       PUBLIC_BASE_URL: "http://localhost:8080",
       CUSTOMER_BASE_URL: "http://order.localhost:8080",
       MERCHANT_BASE_URL: "http://merchant.localhost:8080",
+      DISABLE_RATE_LIMIT: "true",
     },
   },
 });
