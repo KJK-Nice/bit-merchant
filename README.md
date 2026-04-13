@@ -215,6 +215,8 @@ The Playwright suite includes:
 - full customer journey (menu -> cart -> checkout -> order status)
 - full merchant core journey with real passkey flow (signup + dashboard/admin/qr/kitchen access + logout)
 
+Planned and covered E2E journeys are tracked in [`docs/e2e-user-story-checklist.md`](docs/e2e-user-story-checklist.md).
+
 Host-surface tests run with `*.localhost` domains:
 - public: `http://localhost:8080`
 - customer: `http://order.localhost:8080`
