@@ -12,12 +12,12 @@ import (
 	"fmt"
 	"net/url"
 
-	"bitmerchant/internal/application/cart"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/ordering/app/cart"
 )
 
 func OrderConfirmationPage(cart *cart.Cart, restaurantID string, csrfToken string) templ.Component {

@@ -92,28 +92,46 @@ func (r *PostgresItemRepository) ReorderItemsInCategory(restaurantID common.Rest
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	existing, err := r.loadCategoryItemIDs(tx, restaurantID, categoryID)
+	if err != nil {
+		return err
+	}
+
+	if err := validateReorderItemList(existing, orderedItemIDs); err != nil {
+		return err
+	}
+
+	if err := applyCategoryItemOrder(tx, restaurantID, categoryID, orderedItemIDs); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *PostgresItemRepository) loadCategoryItemIDs(tx *sql.Tx, restaurantID common.RestaurantID, categoryID common.CategoryID) ([]common.ItemID, error) {
 	rows, err := tx.Query(
 		`SELECT id FROM menu_items WHERE restaurant_id = $1 AND category_id = $2`,
 		string(restaurantID), string(categoryID))
 	if err != nil {
-		return err
+		return nil, err
 	}
-	var existing []common.ItemID
+	defer rows.Close()
+
+	var ids []common.ItemID
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
-			rows.Close()
-			return err
+			return nil, err
 		}
-		existing = append(existing, common.ItemID(id))
+		ids = append(ids, common.ItemID(id))
 	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return err
-	}
+	return ids, rows.Err()
+}
+
+func validateReorderItemList(existing []common.ItemID, orderedItemIDs []common.ItemID) error {
 	if len(orderedItemIDs) != len(existing) {
 		return errors.New("item list does not match category")
 	}
+
 	want := make(map[common.ItemID]struct{}, len(existing))
 	for _, id := range existing {
 		want[id] = struct{}{}
@@ -127,7 +145,10 @@ func (r *PostgresItemRepository) ReorderItemsInCategory(restaurantID common.Rest
 	if len(want) != 0 {
 		return errors.New("item list does not match category")
 	}
+	return nil
+}
 
+func applyCategoryItemOrder(tx *sql.Tx, restaurantID common.RestaurantID, categoryID common.CategoryID, orderedItemIDs []common.ItemID) error {
 	for i, id := range orderedItemIDs {
 		res, err := tx.Exec(
 			`UPDATE menu_items SET display_order = $2, updated_at = $3 WHERE id = $1 AND restaurant_id = $4 AND category_id = $5`,
@@ -140,7 +161,7 @@ func (r *PostgresItemRepository) ReorderItemsInCategory(restaurantID common.Rest
 			return errors.New("menu item not found")
 		}
 	}
-	return tx.Commit()
+	return nil
 }
 
 func (r *PostgresItemRepository) queryItems(query string, args ...interface{}) ([]*menu.MenuItem, error) {

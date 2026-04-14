@@ -1,22 +1,21 @@
 package handlers
 
 import (
-	"bytes"
-	"context"
-
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/logging"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/templates/components"
+	"bitmerchant/internal/ordering/domain/order"
+	"bytes"
+	"context"
 )
 
 type OrderCreatedHandler struct {
 	logger *logging.Logger
 	sse    *handler.SSEHandler
-	repo   domain.OrderRepository
+	repo   order.Repository
 }
 
-func NewOrderCreatedHandler(logger *logging.Logger, sse *handler.SSEHandler, repo domain.OrderRepository) *OrderCreatedHandler {
+func NewOrderCreatedHandler(logger *logging.Logger, sse *handler.SSEHandler, repo order.Repository) *OrderCreatedHandler {
 	return &OrderCreatedHandler{
 		logger: logger,
 		sse:    sse,
@@ -24,7 +23,7 @@ func NewOrderCreatedHandler(logger *logging.Logger, sse *handler.SSEHandler, rep
 	}
 }
 
-func (h *OrderCreatedHandler) Handle(ctx context.Context, event domain.OrderCreated) error {
+func (h *OrderCreatedHandler) Handle(ctx context.Context, event order.OrderCreated) error {
 	h.logger.Info("New Order Created", "orderID", event.OrderID, "amount", event.TotalAmount)
 
 	// Fetch full order to render card

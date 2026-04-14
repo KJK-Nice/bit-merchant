@@ -1,26 +1,31 @@
 package http_test
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/application/order"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/events"
 	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/infrastructure/payment/cash"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
+	"bitmerchant/internal/ordering/app/cart"
+	orderCmd "bitmerchant/internal/ordering/app/command"
+	orderQuery "bitmerchant/internal/ordering/app/query"
+	"bitmerchant/internal/ordering/domain/order"
+
+	// Setup Dependencies
+	"bitmerchant/internal/restaurant/domain/restaurant"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 func TestOrderEndpoints(t *testing.T) {
-	// Setup Dependencies
+
 	orderRepo := memory.NewMemoryOrderRepository()
 	paymentRepo := memory.NewMemoryPaymentRepository()
 	restRepo := memory.NewMemoryRestaurantRepository()
@@ -29,14 +34,14 @@ func TestOrderEndpoints(t *testing.T) {
 	logger := logging.NewLogger()
 
 	// Seed restaurant
-	rest, _ := domain.NewRestaurant("restaurant_1", "Test Restaurant")
+	rest, _ := restaurant.NewRestaurant("restaurant_1", "Test Restaurant")
 	require.NoError(t, restRepo.Save(rest))
 
 	_ = paymentRepo
 	_ = paymentMethod
-	createUC := order.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
-	getCustomerOrderUC := order.NewGetCustomerOrderByNumberUseCase(orderRepo)
-	getCustomerOrdersUC := order.NewGetCustomerOrdersUseCase(orderRepo)
+	createUC := orderCmd.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
+	getCustomerOrderUC := orderQuery.NewGetCustomerOrderByNumberUseCase(orderRepo)
+	getCustomerOrdersUC := orderQuery.NewGetCustomerOrdersUseCase(orderRepo)
 	cartService := cart.NewCartService()
 
 	h := handler.NewOrderHandler(createUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
@@ -45,15 +50,15 @@ func TestOrderEndpoints(t *testing.T) {
 
 	t.Run("Get Order", func(t *testing.T) {
 		// Setup existing order
-		item, _ := domain.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
-		existingOrder, _ := domain.NewOrder(
+		item, _ := order.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
+		existingOrder, _ := order.NewOrder(
 			"o1",
 			"1234",
 			"restaurant_1",
 			"session_1",
-			[]domain.OrderItem{*item},
+			[]order.OrderItem{*item},
 			1000,
-			domain.PaymentMethodTypeCash,
+			common.PaymentMethodTypeCash,
 		)
 		existingOrder.FiatAmount = 10.0
 		require.NoError(t, orderRepo.Save(existingOrder))
@@ -70,5 +75,17 @@ func TestOrderEndpoints(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), "Order #1234")
+	})
+
+	t.Run("Order History EmptyStateLinksToMyPlaces", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/order/lookup", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.Set("sessionID", "session-empty")
+
+		err := h.GetLookup(c)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "href=\"/my-places\"")
 	})
 }

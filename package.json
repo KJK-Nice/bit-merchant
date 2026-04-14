@@ -1,0 +1,19 @@
+{
+  "name": "bit-merchant-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Playwright E2E tests for BitMerchant host-based routing",
+  "scripts": {
+    "e2e:test": "playwright test --config=playwright.config.ts",
+    "e2e:test:mobile": "playwright test --config=playwright.config.ts --project=mobile-chrome-android --project=mobile-chrome-iphone",
+    "e2e:test:ui": "playwright test --config=playwright.config.ts --ui",
+    "e2e:test:mobile:ui": "playwright test --config=playwright.config.ts --ui --project=mobile-chrome-android --project=mobile-chrome-iphone",
+    "e2e:test:debug": "playwright test --config=playwright.config.ts --debug",
+    "e2e:test:mobile:debug": "playwright test --config=playwright.config.ts --debug --project=mobile-chrome-android --project=mobile-chrome-iphone"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^22.13.4",
+    "typescript": "^5.8.2"
+  }
+}

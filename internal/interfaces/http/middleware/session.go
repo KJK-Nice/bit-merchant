@@ -1,28 +1,47 @@
 package middleware
 
 import (
-	"bitmerchant/internal/domain"
-	"net/http"
-	"strings"
-	"time"
+	"bitmerchant/internal/auth/domain/session"
+	"bitmerchant/internal/auth/domain/user"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"net/http"
+	"strings"
+	"time"
 )
 
-const SessionCookieName = "bitmerchant_session"
+const SessionCookieName = "bitmerchant_session" // legacy/default cookie name
+const MerchantSessionCookieName = "bitmerchant_merchant_session"
+const CustomerSessionCookieName = "bitmerchant_customer_session"
 
 const defaultSessionTTL = 24 * time.Hour
 
 // SessionOptions configures cookie and persistence behavior.
 type SessionOptions struct {
-	TTL          time.Duration
-	SecureCookie bool
+	TTL                time.Duration
+	SecureCookie       bool
+	CookieName         string
+	MerchantCookieName string
+	CustomerCookieName string
+	LegacyCookieName   string
 }
 
 func (o SessionOptions) WithDefaults() SessionOptions {
 	if o.TTL <= 0 {
 		o.TTL = defaultSessionTTL
+	}
+	if o.CookieName == "" {
+		o.CookieName = SessionCookieName
+	}
+	if o.MerchantCookieName == "" {
+		o.MerchantCookieName = MerchantSessionCookieName
+	}
+	if o.CustomerCookieName == "" {
+		o.CustomerCookieName = CustomerSessionCookieName
+	}
+	if o.LegacyCookieName == "" {
+		o.LegacyCookieName = SessionCookieName
 	}
 	return o
 }
@@ -35,8 +54,13 @@ func NewSessionID() string {
 // NewSessionCookie builds the session cookie with safe defaults.
 func NewSessionCookie(sessionID string, opts SessionOptions) *http.Cookie {
 	opts = opts.WithDefaults()
+	return NewSessionCookieWithName(opts.CookieName, sessionID, opts)
+}
+
+func NewSessionCookieWithName(cookieName, sessionID string, opts SessionOptions) *http.Cookie {
+	opts = opts.WithDefaults()
 	return &http.Cookie{
-		Name:     SessionCookieName,
+		Name:     cookieName,
 		Value:    sessionID,
 		Path:     "/",
 		HttpOnly: true,
@@ -60,16 +84,16 @@ func SessionMiddleware() echo.MiddlewareFunc {
 }
 
 // SessionMiddlewareWithRepos enables authenticated session loading from repositories.
-func SessionMiddlewareWithRepos(sessionRepo domain.SessionRepository, userRepo domain.UserRepository) echo.MiddlewareFunc {
+func SessionMiddlewareWithRepos(sessionRepo session.Repository, userRepo user.Repository) echo.MiddlewareFunc {
 	return sessionMiddleware(sessionRepo, userRepo, SessionOptions{})
 }
 
 // SessionMiddlewareWithReposAndOptions enables authenticated session loading with explicit options.
-func SessionMiddlewareWithReposAndOptions(sessionRepo domain.SessionRepository, userRepo domain.UserRepository, opts SessionOptions) echo.MiddlewareFunc {
+func SessionMiddlewareWithReposAndOptions(sessionRepo session.Repository, userRepo user.Repository, opts SessionOptions) echo.MiddlewareFunc {
 	return sessionMiddleware(sessionRepo, userRepo, opts)
 }
 
-func sessionMiddleware(sessionRepo domain.SessionRepository, userRepo domain.UserRepository, opts SessionOptions) echo.MiddlewareFunc {
+func sessionMiddleware(sessionRepo session.Repository, userRepo user.Repository, opts SessionOptions) echo.MiddlewareFunc {
 	opts = opts.WithDefaults()
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -90,29 +114,61 @@ func sessionMiddleware(sessionRepo domain.SessionRepository, userRepo domain.Use
 }
 
 func ensureSessionCookie(c echo.Context, opts SessionOptions) string {
-	cookie, err := c.Cookie(SessionCookieName)
+	cookieName := resolveSessionCookieName(c, opts)
+	cookie, err := c.Cookie(cookieName)
 	if err != nil || cookie.Value == "" {
+		if opts.LegacyCookieName != "" && opts.LegacyCookieName != cookieName {
+			legacyCookie, legacyErr := c.Cookie(opts.LegacyCookieName)
+			if legacyErr == nil && legacyCookie != nil && legacyCookie.Value != "" {
+				c.SetCookie(NewSessionCookieWithName(cookieName, legacyCookie.Value, opts))
+				return legacyCookie.Value
+			}
+		}
 		sessionID := NewSessionID()
-		c.SetCookie(NewSessionCookie(sessionID, opts))
+		c.SetCookie(NewSessionCookieWithName(cookieName, sessionID, opts))
 		return sessionID
 	}
 	return cookie.Value
 }
 
-func loadOrCreateSession(sessionRepo domain.SessionRepository, sessionID string, opts SessionOptions) *domain.Session {
-	session, err := sessionRepo.Get(sessionID)
-	if err != nil || session == nil || session.IsExpired(time.Now()) {
-		session = &domain.Session{
+func resolveSessionCookieName(c echo.Context, opts SessionOptions) string {
+	opts = opts.WithDefaults()
+
+	if routeSurface, ok := c.Get(ContextRouteSurface).(AppSurface); ok {
+		switch routeSurface {
+		case AppSurfaceMerchant:
+			return opts.MerchantCookieName
+		case AppSurfaceCustomer:
+			return opts.CustomerCookieName
+		}
+	}
+
+	if hostSurface, ok := c.Get(ContextHostSurface).(AppSurface); ok {
+		switch hostSurface {
+		case AppSurfaceMerchant:
+			return opts.MerchantCookieName
+		case AppSurfaceCustomer:
+			return opts.CustomerCookieName
+		}
+	}
+
+	return opts.CookieName
+}
+
+func loadOrCreateSession(sessionRepo session.Repository, sessionID string, opts SessionOptions) *session.Session {
+	currentSession, err := sessionRepo.Get(sessionID)
+	if err != nil || currentSession == nil || currentSession.IsExpired(time.Now()) {
+		currentSession = &session.Session{
 			ID:        sessionID,
 			CreatedAt: time.Now(),
 			ExpiresAt: time.Now().Add(opts.TTL),
 		}
-		_ = sessionRepo.Save(session)
+		_ = sessionRepo.Save(currentSession)
 	}
-	return session
+	return currentSession
 }
 
-func attachIdentityFromSession(c echo.Context, session *domain.Session, userRepo domain.UserRepository) {
+func attachIdentityFromSession(c echo.Context, session *session.Session, userRepo user.Repository) {
 	if session.UserID != nil {
 		user, err := userRepo.FindByID(*session.UserID)
 		if err == nil && user != nil {

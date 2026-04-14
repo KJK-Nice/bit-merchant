@@ -75,6 +75,42 @@ tasks:
     cmds:
       - go test -v ./tests/integration/postgres/...
 
+  e2e:install:
+    desc: Install Playwright dependencies and Chromium browser
+    cmds:
+      - npm install
+      - npx playwright install --with-deps chromium
+
+  e2e:test:
+    desc: Run Playwright E2E smoke tests
+    cmds:
+      - npm run e2e:test
+
+  e2e:test:mobile:
+    desc: Run Playwright E2E tests with mobile emulation projects
+    cmds:
+      - npm run e2e:test:mobile
+
+  e2e:test:ui:
+    desc: Run Playwright E2E tests in UI mode
+    cmds:
+      - npm run e2e:test:ui
+
+  e2e:test:mobile:ui:
+    desc: Run Playwright E2E mobile tests in UI mode
+    cmds:
+      - npm run e2e:test:mobile:ui
+
+  e2e:test:debug:
+    desc: Run Playwright E2E tests in debug mode
+    cmds:
+      - npm run e2e:test:debug
+
+  e2e:test:mobile:debug:
+    desc: Run Playwright E2E mobile tests in debug mode
+    cmds:
+      - npm run e2e:test:mobile:debug
+
   lint:
     desc: Run golangci-lint
     cmds:

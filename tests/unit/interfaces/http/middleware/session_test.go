@@ -1,19 +1,21 @@
 package middleware_test
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
-	"time"
+	"bitmerchant/internal/auth/domain/session"
+	"bitmerchant/internal/auth/domain/user"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
 )
 
 func TestSessionMiddlewareWithReposAndOptions_SetsSecureCookie(t *testing.T) {
@@ -51,7 +53,7 @@ func TestSessionMiddlewareWithReposAndOptions_ReplacesExpiredSession(t *testing.
 	userRepo := memory.NewMemoryUserRepository()
 	expiredID := "expired-session-id"
 
-	require.NoError(t, sessionRepo.Save(&domain.Session{
+	require.NoError(t, sessionRepo.Save(&session.Session{
 		ID:        expiredID,
 		CreatedAt: time.Now().Add(-48 * time.Hour),
 		ExpiresAt: time.Now().Add(-1 * time.Hour),
@@ -83,13 +85,13 @@ func TestSessionMiddlewareWithReposAndOptions_LoadsAuthenticatedContext(t *testi
 	sessionRepo := memory.NewMemorySessionRepository()
 	userRepo := memory.NewMemoryUserRepository()
 
-	user, err := domain.NewUser("user-1", "Jane")
+	authUser, err := user.NewUser("user-1", "Jane")
 	require.NoError(t, err)
-	require.NoError(t, userRepo.Save(user))
+	require.NoError(t, userRepo.Save(authUser))
 
-	restaurantID := domain.RestaurantID("restaurant-1")
-	userID := user.ID
-	require.NoError(t, sessionRepo.Save(&domain.Session{
+	restaurantID := common.RestaurantID("restaurant-1")
+	userID := authUser.ID
+	require.NoError(t, sessionRepo.Save(&session.Session{
 		ID:           "auth-session",
 		UserID:       &userID,
 		RestaurantID: &restaurantID,
@@ -107,11 +109,11 @@ func TestSessionMiddlewareWithReposAndOptions_LoadsAuthenticatedContext(t *testi
 		userRepo,
 		httpMiddleware.SessionOptions{TTL: time.Hour},
 	)(func(c echo.Context) error {
-		authUser, ok := c.Get(httpMiddleware.ContextAuthUser).(*domain.User)
+		authUser, ok := c.Get(httpMiddleware.ContextAuthUser).(*user.User)
 		require.True(t, ok)
-		require.Equal(t, user.ID, authUser.ID)
+		require.Equal(t, userID, authUser.ID)
 
-		ctxRestaurantID, ok := c.Get(httpMiddleware.ContextRestaurantID).(domain.RestaurantID)
+		ctxRestaurantID, ok := c.Get(httpMiddleware.ContextRestaurantID).(common.RestaurantID)
 		require.True(t, ok)
 		require.Equal(t, restaurantID, ctxRestaurantID)
 		return c.NoContent(http.StatusOK)

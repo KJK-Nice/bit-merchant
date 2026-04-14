@@ -51,3 +51,9 @@ coverage/
 .env
 .env.local
 .env.*.local
+.gitnexus
+
+# Node / Playwright
+node_modules/
+playwright-report/
+test-results/

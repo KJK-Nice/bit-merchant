@@ -9,14 +9,14 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/auth/domain/user"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/separator"
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-func AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, user *domain.User, memberships []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) templ.Component {
+func AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, user *user.User, memberships []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

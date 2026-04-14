@@ -1,25 +1,26 @@
 package http
 
 import (
+	"bitmerchant/internal/auth/domain/membership"
+	dashboard "bitmerchant/internal/dashboard/app/query"
+
+	"bitmerchant/internal/interfaces/templates"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+
+	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
 	"net/url"
-
-	"bitmerchant/internal/application/dashboard"
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
-	"bitmerchant/internal/interfaces/templates"
-
-	"github.com/labstack/echo/v4"
 )
 
 type DashboardHandler struct {
 	getStatsUC     *dashboard.GetDashboardStatsUseCase
 	getHistoryUC   *dashboard.GetOrderHistoryUseCase
 	getTopItemsUC  *dashboard.GetTopSellingItemsUseCase
-	toggleOpenUC   *restaurant.ToggleRestaurantOpenUseCase
-	restaurantRepo domain.RestaurantRepository
-	membershipRepo domain.MembershipRepository
+	toggleOpenUC   *restaurantCmd.ToggleRestaurantOpenUseCase
+	restaurantRepo restaurant.Repository
+	membershipRepo membership.Repository
 	logger         *slog.Logger
 }
 
@@ -27,9 +28,9 @@ func NewDashboardHandler(
 	getStatsUC *dashboard.GetDashboardStatsUseCase,
 	getHistoryUC *dashboard.GetOrderHistoryUseCase,
 	getTopItemsUC *dashboard.GetTopSellingItemsUseCase,
-	toggleOpenUC *restaurant.ToggleRestaurantOpenUseCase,
-	restaurantRepo domain.RestaurantRepository,
-	membershipRepo domain.MembershipRepository,
+	toggleOpenUC *restaurantCmd.ToggleRestaurantOpenUseCase,
+	restaurantRepo restaurant.Repository,
+	membershipRepo membership.Repository,
 	logger *slog.Logger,
 ) *DashboardHandler {
 	if logger == nil {

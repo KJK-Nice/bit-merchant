@@ -9,14 +9,15 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/common"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
+	"bitmerchant/internal/ordering/domain/order"
 	"fmt"
 )
 
-func OrderHistoryPage(orders []*domain.Order) templ.Component {
+func OrderHistoryPage(orders []*order.Order) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -78,7 +79,7 @@ func OrderHistoryPage(orders []*domain.Order) templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-muted-foreground\">You haven't placed any orders yet.</p><a href=\"/menu\" class=\"text-primary hover:underline font-medium\">Browse Menu</a>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-muted-foreground\">You haven't placed any orders yet.</p><a href=\"/my-places\" class=\"text-primary hover:underline font-medium\">Browse My Places</a>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -107,7 +108,7 @@ func OrderHistoryPage(orders []*domain.Order) templ.Component {
 					var templ_7745c5c3_Var5 templ.SafeURL
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/order/%s", order.OrderNumber)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 29, Col: 74}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 30, Col: 74}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -148,7 +149,7 @@ func OrderHistoryPage(orders []*domain.Order) templ.Component {
 							var templ_7745c5c3_Var8 string
 							templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(string(order.OrderNumber))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 34, Col: 79}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 35, Col: 79}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 							if templ_7745c5c3_Err != nil {
@@ -161,7 +162,7 @@ func OrderHistoryPage(orders []*domain.Order) templ.Component {
 							var templ_7745c5c3_Var9 string
 							templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(order.CreatedAt.Format("Jan 02, 3:04 PM"))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 35, Col: 95}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 36, Col: 95}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 							if templ_7745c5c3_Err != nil {
@@ -186,7 +187,7 @@ func OrderHistoryPage(orders []*domain.Order) templ.Component {
 								var templ_7745c5c3_Var11 string
 								templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(string(order.FulfillmentStatus))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 40, Col: 44}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 41, Col: 44}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 								if templ_7745c5c3_Err != nil {
@@ -207,7 +208,7 @@ func OrderHistoryPage(orders []*domain.Order) templ.Component {
 							var templ_7745c5c3_Var12 string
 							templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d items", len(order.Items)))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 44, Col: 89}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 45, Col: 89}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 							if templ_7745c5c3_Err != nil {
@@ -220,7 +221,7 @@ func OrderHistoryPage(orders []*domain.Order) templ.Component {
 							var templ_7745c5c3_Var13 string
 							templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", order.FiatAmount))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 45, Col: 84}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 46, Col: 84}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 							if templ_7745c5c3_Err != nil {
@@ -270,13 +271,13 @@ func OrderHistoryPage(orders []*domain.Order) templ.Component {
 	})
 }
 
-func getStatusBadgeVariant(status domain.FulfillmentStatus) badge.Variant {
+func getStatusBadgeVariant(status common.FulfillmentStatus) badge.Variant {
 	switch status {
-	case domain.FulfillmentStatusCompleted:
+	case common.FulfillmentStatusCompleted:
 		return badge.VariantDefault // or a success variant if we had one
-	case domain.FulfillmentStatusReady:
+	case common.FulfillmentStatusReady:
 		return badge.VariantDefault
-	case domain.FulfillmentStatusPaid:
+	case common.FulfillmentStatusPaid:
 		return badge.VariantSecondary
 	default:
 		return badge.VariantOutline

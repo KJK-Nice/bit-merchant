@@ -1,26 +1,31 @@
 package admin_test
 
 import (
-	"context"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
+	"bitmerchant/internal/auth/domain/user"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/qr"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
 	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	menuCmd "bitmerchant/internal/menu/app/command"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+
+	// Regression: admin menu HTML must list unavailable items and empty categories (not only public menu).
+	restaurantQuery "bitmerchant/internal/restaurant/app/query"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
 )
 
-// Regression: admin menu HTML must list unavailable items and empty categories (not only public menu).
 func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) {
 	e := echo.New()
 	repoRest := memory.NewMemoryRestaurantRepository()
@@ -28,22 +33,22 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 	repoItem := memory.NewMemoryMenuItemRepository()
 	membershipRepo := memory.NewMemoryMembershipRepository()
 
-	restID := domain.RestaurantID("restaurant-admin-ui")
-	rest, err := domain.NewRestaurant(restID, "Test Bistro")
+	restID := common.RestaurantID("restaurant-admin-ui")
+	rest, err := restaurant.NewRestaurant(restID, "Test Bistro")
 	require.NoError(t, err)
 	require.NoError(t, repoRest.Save(rest))
 
-	createRestUC := restaurant.NewCreateRestaurantUseCase(repoRest)
-	createCatUC := menu.NewCreateMenuCategoryUseCase(repoCat)
-	createItemUC := menu.NewCreateMenuItemUseCase(repoItem)
-	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menu.PhotoSignerConfig{})
-	updateItemUC := menu.NewUpdateMenuItemUseCase(repoItem, repoCat)
-	updateCategoryUC := menu.NewUpdateMenuCategoryUseCase(repoCat)
-	toggleAvailUC := menu.NewToggleMenuItemAvailabilityUseCase(repoItem)
-	reorderCatUC := menu.NewReorderMenuCategoriesUseCase(repoCat)
-	reorderItemUC := menu.NewReorderMenuItemsUseCase(repoItem, repoCat)
-	updateTableUC := restaurant.NewUpdateRestaurantTableCountUseCase(repoRest)
-	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
+	createRestUC := restaurantCmd.NewCreateRestaurantUseCase(repoRest)
+	createCatUC := menuCmd.NewCreateMenuCategoryUseCase(repoCat)
+	createItemUC := menuCmd.NewCreateMenuItemUseCase(repoItem)
+	getMenuAdminUC := menuQuery.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{})
+	updateItemUC := menuCmd.NewUpdateMenuItemUseCase(repoItem, repoCat)
+	updateCategoryUC := menuCmd.NewUpdateMenuCategoryUseCase(repoCat)
+	toggleAvailUC := menuCmd.NewToggleMenuItemAvailabilityUseCase(repoItem)
+	reorderCatUC := menuCmd.NewReorderMenuCategoriesUseCase(repoCat)
+	reorderItemUC := menuCmd.NewReorderMenuItemsUseCase(repoItem, repoCat)
+	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountUseCase(repoRest)
+	generateQRUC := restaurantQuery.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
 
 	adminHandler := handler.NewAdminHandler(
 		createRestUC,
@@ -63,21 +68,21 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 		repoRest,
 	)
 
-	_, err = createCatUC.Execute(context.Background(), menu.CreateMenuCategoryRequest{
+	_, err = createCatUC.Execute(context.Background(), menuCmd.CreateMenuCategoryRequest{
 		RestaurantID: restID,
 		Name:         "Soon",
 		DisplayOrder: 0,
 	})
 	require.NoError(t, err)
 
-	cat2, err := createCatUC.Execute(context.Background(), menu.CreateMenuCategoryRequest{
+	cat2, err := createCatUC.Execute(context.Background(), menuCmd.CreateMenuCategoryRequest{
 		RestaurantID: restID,
 		Name:         "Today",
 		DisplayOrder: 1,
 	})
 	require.NoError(t, err)
 
-	_, err = createItemUC.Execute(context.Background(), menu.CreateMenuItemRequest{
+	_, err = createItemUC.Execute(context.Background(), menuCmd.CreateMenuItemRequest{
 		RestaurantID: restID,
 		CategoryID:   cat2.ID,
 		Name:         "Special",
@@ -87,7 +92,7 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 	})
 	require.NoError(t, err)
 
-	user, err := domain.NewUser("owner-menu", "Owner")
+	user, err := user.NewUser("owner-menu", "Owner")
 	require.NoError(t, err)
 	req := httptest.NewRequest(http.MethodGet, "/admin/dashboard", nil)
 	rec := httptest.NewRecorder()

@@ -1,21 +1,20 @@
 package http
 
 import (
-	"net/http"
-
-	"bitmerchant/internal/application/places"
 	"bitmerchant/internal/interfaces/templates"
+	placesQuery "bitmerchant/internal/places/app/query"
 
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 // PlacesHandler serves customer "My places" (visited restaurants for this session).
 type PlacesHandler struct {
-	listVisitedUC *places.ListVisitedRestaurantsUseCase
+	listVisitedUC *placesQuery.ListVisitedRestaurantsUseCase
 }
 
 // NewPlacesHandler constructs the handler.
-func NewPlacesHandler(listVisitedUC *places.ListVisitedRestaurantsUseCase) *PlacesHandler {
+func NewPlacesHandler(listVisitedUC *placesQuery.ListVisitedRestaurantsUseCase) *PlacesHandler {
 	return &PlacesHandler{listVisitedUC: listVisitedUC}
 }
 

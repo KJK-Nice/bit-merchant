@@ -1,20 +1,19 @@
 package memory_test
 
 import (
-	"testing"
-
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	"bitmerchant/internal/menu/domain/menu"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestMemoryMenuCategoryRepository(t *testing.T) {
 	repo := memory.NewMemoryMenuCategoryRepository()
 
 	t.Run("Save and FindByID", func(t *testing.T) {
-		cat, _ := domain.NewMenuCategory("c1", "r1", "Cat 1", 1)
+		cat, _ := menu.NewMenuCategory("c1", "r1", "Cat 1", 1)
 		err := repo.Save(cat)
 		assert.NoError(t, err)
 
@@ -24,9 +23,9 @@ func TestMemoryMenuCategoryRepository(t *testing.T) {
 	})
 
 	t.Run("FindByRestaurantID", func(t *testing.T) {
-		cat1, _ := domain.NewMenuCategory("c2", "r2", "Cat 1", 1)
-		cat2, _ := domain.NewMenuCategory("c3", "r2", "Cat 2", 2)
-		cat3, _ := domain.NewMenuCategory("c4", "r3", "Cat 3", 1)
+		cat1, _ := menu.NewMenuCategory("c2", "r2", "Cat 1", 1)
+		cat2, _ := menu.NewMenuCategory("c3", "r2", "Cat 2", 2)
+		cat3, _ := menu.NewMenuCategory("c4", "r3", "Cat 3", 1)
 
 		require.NoError(t, repo.Save(cat1))
 		require.NoError(t, repo.Save(cat2))
@@ -42,7 +41,7 @@ func TestMemoryMenuItemRepository(t *testing.T) {
 	repo := memory.NewMemoryMenuItemRepository()
 
 	t.Run("Save and FindByID", func(t *testing.T) {
-		item, _ := domain.NewMenuItem("i1", "c1", "r1", "Item 1", 10.0)
+		item, _ := menu.NewMenuItem("i1", "c1", "r1", "Item 1", 10.0)
 		err := repo.Save(item)
 		assert.NoError(t, err)
 
@@ -52,9 +51,9 @@ func TestMemoryMenuItemRepository(t *testing.T) {
 	})
 
 	t.Run("FindByRestaurantID", func(t *testing.T) {
-		item1, _ := domain.NewMenuItem("i2", "c1", "r2", "Item 1", 10.0)
-		item2, _ := domain.NewMenuItem("i3", "c2", "r2", "Item 2", 12.0)
-		item3, _ := domain.NewMenuItem("i4", "c3", "r3", "Item 3", 15.0)
+		item1, _ := menu.NewMenuItem("i2", "c1", "r2", "Item 1", 10.0)
+		item2, _ := menu.NewMenuItem("i3", "c2", "r2", "Item 2", 12.0)
+		item3, _ := menu.NewMenuItem("i4", "c3", "r3", "Item 3", 15.0)
 
 		require.NoError(t, repo.Save(item1))
 		require.NoError(t, repo.Save(item2))
@@ -66,8 +65,8 @@ func TestMemoryMenuItemRepository(t *testing.T) {
 	})
 
 	t.Run("FindAvailableByRestaurantID", func(t *testing.T) {
-		item1, _ := domain.NewMenuItem("i5", "c1", "r4", "Item 1", 10.0)
-		item2, _ := domain.NewMenuItem("i6", "c2", "r4", "Item 2", 12.0)
+		item1, _ := menu.NewMenuItem("i5", "c1", "r4", "Item 1", 10.0)
+		item2, _ := menu.NewMenuItem("i6", "c2", "r4", "Item 2", 12.0)
 		item2.SetAvailable(false)
 
 		require.NoError(t, repo.Save(item1))

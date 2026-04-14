@@ -1,31 +1,35 @@
 package http
 
 import (
-	"bitmerchant/internal/application/kitchen"
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/common"
+
 	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components"
-	"net/http"
+	kitchenCmd "bitmerchant/internal/ordering/app/command"
+	kitchenQuery "bitmerchant/internal/ordering/app/query"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 type KitchenHandler struct {
-	getOrdersUC     *kitchen.GetKitchenOrdersUseCase
-	markPaidUC      *kitchen.MarkOrderPaidUseCase
-	markPreparingUC *kitchen.MarkOrderPreparingUseCase
-	markReadyUC     *kitchen.MarkOrderReadyUseCase
-	restaurantRepo  domain.RestaurantRepository
-	membershipRepo  domain.MembershipRepository
+	getOrdersUC     *kitchenQuery.GetKitchenOrdersUseCase
+	markPaidUC      *kitchenCmd.MarkOrderPaidUseCase
+	markPreparingUC *kitchenCmd.MarkOrderPreparingUseCase
+	markReadyUC     *kitchenCmd.MarkOrderReadyUseCase
+	restaurantRepo  restaurant.Repository
+	membershipRepo  membership.Repository
 }
 
 func NewKitchenHandler(
-	getOrdersUC *kitchen.GetKitchenOrdersUseCase,
-	markPaidUC *kitchen.MarkOrderPaidUseCase,
-	markPreparingUC *kitchen.MarkOrderPreparingUseCase,
-	markReadyUC *kitchen.MarkOrderReadyUseCase,
-	restaurantRepo domain.RestaurantRepository,
-	membershipRepo domain.MembershipRepository,
+	getOrdersUC *kitchenQuery.GetKitchenOrdersUseCase,
+	markPaidUC *kitchenCmd.MarkOrderPaidUseCase,
+	markPreparingUC *kitchenCmd.MarkOrderPreparingUseCase,
+	markReadyUC *kitchenCmd.MarkOrderReadyUseCase,
+	restaurantRepo restaurant.Repository,
+	membershipRepo membership.Repository,
 ) *KitchenHandler {
 	return &KitchenHandler{
 		getOrdersUC:     getOrdersUC,
@@ -57,7 +61,7 @@ func (h *KitchenHandler) GetKitchen(c echo.Context) error {
 
 func (h *KitchenHandler) MarkPaid(c echo.Context) error {
 	id := c.Param("id")
-	order, err := h.markPaidUC.Execute(c.Request().Context(), domain.OrderID(id))
+	order, err := h.markPaidUC.Execute(c.Request().Context(), common.OrderID(id))
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -66,7 +70,7 @@ func (h *KitchenHandler) MarkPaid(c echo.Context) error {
 
 func (h *KitchenHandler) MarkPreparing(c echo.Context) error {
 	id := c.Param("id")
-	order, err := h.markPreparingUC.Execute(c.Request().Context(), domain.OrderID(id))
+	order, err := h.markPreparingUC.Execute(c.Request().Context(), common.OrderID(id))
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -75,7 +79,7 @@ func (h *KitchenHandler) MarkPreparing(c echo.Context) error {
 
 func (h *KitchenHandler) MarkReady(c echo.Context) error {
 	id := c.Param("id")
-	order, err := h.markReadyUC.Execute(c.Request().Context(), domain.OrderID(id))
+	order, err := h.markReadyUC.Execute(c.Request().Context(), common.OrderID(id))
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}

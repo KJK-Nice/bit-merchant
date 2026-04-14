@@ -1,17 +1,16 @@
 package admin_test
 
 import (
+	"bitmerchant/internal/infrastructure/repositories/memory"
+	menuCmd "bitmerchant/internal/menu/app/command"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
 	"bytes"
 	"context"
-	"io"
-	"testing"
-
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/infrastructure/repositories/memory"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
+	"testing"
 )
 
 type stubPhotoStorage struct{}
@@ -33,19 +32,19 @@ func TestMenuSetupWorkflow(t *testing.T) {
 	repoItem := memory.NewMemoryMenuItemRepository()
 	var mockStorage stubPhotoStorage
 
-	createRestUC := restaurant.NewCreateRestaurantUseCase(repoRest)
-	createCatUC := menu.NewCreateMenuCategoryUseCase(repoCat)
-	createItemUC := menu.NewCreateMenuItemUseCase(repoItem)
-	uploadPhotoUC := menu.NewUploadPhotoUseCase(repoItem, mockStorage)
+	createRestUC := restaurantCmd.NewCreateRestaurantUseCase(repoRest)
+	createCatUC := menuCmd.NewCreateMenuCategoryUseCase(repoCat)
+	createItemUC := menuCmd.NewCreateMenuItemUseCase(repoItem)
+	uploadPhotoUC := menuCmd.NewUploadPhotoUseCase(repoItem, mockStorage)
 
 	// 1. Create Restaurant
-	restReq := restaurant.CreateRestaurantRequest{Name: "Burger King"}
+	restReq := restaurantCmd.CreateRestaurantRequest{Name: "Burger King"}
 	rest, err := createRestUC.Execute(context.Background(), restReq)
 	require.NoError(t, err)
 	require.NotEmpty(t, rest.ID)
 
 	// 2. Create Category
-	catReq := menu.CreateMenuCategoryRequest{
+	catReq := menuCmd.CreateMenuCategoryRequest{
 		RestaurantID: rest.ID,
 		Name:         "Burgers",
 		DisplayOrder: 1,
@@ -55,7 +54,7 @@ func TestMenuSetupWorkflow(t *testing.T) {
 	require.NotEmpty(t, cat.ID)
 
 	// 3. Create Item
-	itemReq := menu.CreateMenuItemRequest{
+	itemReq := menuCmd.CreateMenuItemRequest{
 		RestaurantID: rest.ID,
 		CategoryID:   cat.ID,
 		Name:         "Whopper",
@@ -67,7 +66,7 @@ func TestMenuSetupWorkflow(t *testing.T) {
 	require.NotEmpty(t, item.ID)
 
 	// 4. Upload Photo
-	photoReq := menu.UploadPhotoRequest{
+	photoReq := menuCmd.UploadPhotoRequest{
 		RestaurantID: rest.ID,
 		ItemID:       item.ID,
 		File:         bytes.NewBufferString("fake image data"),

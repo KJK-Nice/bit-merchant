@@ -1,11 +1,12 @@
 package middleware
 
 import (
-	"net/http"
-
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/auth/domain/user"
+	"bitmerchant/internal/common"
 
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 const (
@@ -28,20 +29,20 @@ func RequireAuth() echo.MiddlewareFunc {
 
 // RequireRole ensures the authenticated user has one of the required roles
 // in the active restaurant context.
-func RequireRole(membershipRepo domain.MembershipRepository, roles ...domain.MemberRole) echo.MiddlewareFunc {
-	allowed := make(map[domain.MemberRole]struct{}, len(roles))
+func RequireRole(membershipRepo membership.Repository, roles ...common.MemberRole) echo.MiddlewareFunc {
+	allowed := make(map[common.MemberRole]struct{}, len(roles))
 	for _, role := range roles {
 		allowed[role] = struct{}{}
 	}
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			user, ok := c.Get(ContextAuthUser).(*domain.User)
+			user, ok := c.Get(ContextAuthUser).(*user.User)
 			if !ok || user == nil {
 				return c.Redirect(http.StatusFound, "/auth/login")
 			}
 
-			restaurantID, ok := c.Get(ContextRestaurantID).(domain.RestaurantID)
+			restaurantID, ok := c.Get(ContextRestaurantID).(common.RestaurantID)
 			if !ok || restaurantID == "" {
 				return c.String(http.StatusForbidden, "restaurant context missing")
 			}

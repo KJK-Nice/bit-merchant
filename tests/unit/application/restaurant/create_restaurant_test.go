@@ -1,34 +1,35 @@
 package restaurant_test
 
 import (
+	"bitmerchant/internal/common"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 	"context"
 	"errors"
-	"testing"
 
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"testing"
 )
 
 type MockRestaurantRepository struct {
 	mock.Mock
 }
 
-func (m *MockRestaurantRepository) Save(r *domain.Restaurant) error {
+func (m *MockRestaurantRepository) Save(r *restaurant.Restaurant) error {
 	args := m.Called(r)
 	return args.Error(0)
 }
 
-func (m *MockRestaurantRepository) FindByID(id domain.RestaurantID) (*domain.Restaurant, error) {
+func (m *MockRestaurantRepository) FindByID(id common.RestaurantID) (*restaurant.Restaurant, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.Restaurant), args.Error(1)
+	return args.Get(0).(*restaurant.Restaurant), args.Error(1)
 }
 
-func (m *MockRestaurantRepository) Update(r *domain.Restaurant) error {
+func (m *MockRestaurantRepository) Update(r *restaurant.Restaurant) error {
 	args := m.Called(r)
 	return args.Error(0)
 }
@@ -36,13 +37,13 @@ func (m *MockRestaurantRepository) Update(r *domain.Restaurant) error {
 func TestCreateRestaurantUseCase_Execute(t *testing.T) {
 	t.Run("successfully creates restaurant", func(t *testing.T) {
 		repo := new(MockRestaurantRepository)
-		useCase := restaurant.NewCreateRestaurantUseCase(repo)
+		useCase := restaurantCmd.NewCreateRestaurantUseCase(repo)
 
-		repo.On("Save", mock.MatchedBy(func(r *domain.Restaurant) bool {
-			return r.Name == "My Tasty Place" && r.ID != "" && r.TableCount == domain.MinTableCount
+		repo.On("Save", mock.MatchedBy(func(r *restaurant.Restaurant) bool {
+			return r.Name == "My Tasty Place" && r.ID != "" && r.TableCount == restaurant.MinTableCount
 		})).Return(nil)
 
-		req := restaurant.CreateRestaurantRequest{
+		req := restaurantCmd.CreateRestaurantRequest{
 			Name: "My Tasty Place",
 		}
 
@@ -57,9 +58,9 @@ func TestCreateRestaurantUseCase_Execute(t *testing.T) {
 
 	t.Run("fails with empty name", func(t *testing.T) {
 		repo := new(MockRestaurantRepository)
-		useCase := restaurant.NewCreateRestaurantUseCase(repo)
+		useCase := restaurantCmd.NewCreateRestaurantUseCase(repo)
 
-		req := restaurant.CreateRestaurantRequest{
+		req := restaurantCmd.CreateRestaurantRequest{
 			Name: "",
 		}
 
@@ -73,11 +74,11 @@ func TestCreateRestaurantUseCase_Execute(t *testing.T) {
 
 	t.Run("fails when repository error", func(t *testing.T) {
 		repo := new(MockRestaurantRepository)
-		useCase := restaurant.NewCreateRestaurantUseCase(repo)
+		useCase := restaurantCmd.NewCreateRestaurantUseCase(repo)
 
 		repo.On("Save", mock.Anything).Return(errors.New("db error"))
 
-		req := restaurant.CreateRestaurantRequest{
+		req := restaurantCmd.CreateRestaurantRequest{
 			Name: "My Tasty Place",
 		}
 

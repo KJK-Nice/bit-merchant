@@ -1,18 +1,18 @@
 package http_test
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
-	"bitmerchant/internal/application/places"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
+	placesQuery "bitmerchant/internal/places/app/query"
+	"bitmerchant/internal/places/domain/visit"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 func TestGetMyPlaces(t *testing.T) {
@@ -20,14 +20,14 @@ func TestGetMyPlaces(t *testing.T) {
 	visits := memory.NewMemorySessionRestaurantVisitRepository()
 	orders := memory.NewMemoryOrderRepository()
 
-	r, _ := domain.NewRestaurant("pr-contract", "Contract Cafe")
+	r, _ := restaurant.NewRestaurant("pr-contract", "Contract Cafe")
 	require.NoError(t, rest.Save(r))
-	require.NoError(t, visits.Upsert(&domain.SessionRestaurantVisit{
+	require.NoError(t, visits.Upsert(&visit.SessionRestaurantVisit{
 		SessionID:    "sess-p",
 		RestaurantID: "pr-contract",
 	}))
 
-	uc := places.NewListVisitedRestaurantsUseCase(visits, rest, orders)
+	uc := placesQuery.NewListVisitedRestaurantsUseCase(visits, rest, orders)
 	h := handler.NewPlacesHandler(uc)
 
 	e := echo.New()

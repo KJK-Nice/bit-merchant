@@ -1,24 +1,26 @@
 package http
 
 import (
-	"net/http"
-	"strconv"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates/components"
+	"bitmerchant/internal/menu/domain/menu"
+
+	// CartHandler handles cart-related HTTP requests
+	"bitmerchant/internal/ordering/app/cart"
 
 	"github.com/labstack/echo/v4"
+	"net/http"
+	"strconv"
 )
 
-// CartHandler handles cart-related HTTP requests
 type CartHandler struct {
 	cartService *cart.CartService
-	itemRepo    domain.MenuItemRepository // Need item repo to get item details for AddItem
+	itemRepo    menu.ItemRepository // Need item repo to get item details for AddItem
 }
 
 // NewCartHandler creates a new CartHandler
-func NewCartHandler(cartService *cart.CartService, itemRepo domain.MenuItemRepository) *CartHandler {
+func NewCartHandler(cartService *cart.CartService, itemRepo menu.ItemRepository) *CartHandler {
 	return &CartHandler{
 		cartService: cartService,
 		itemRepo:    itemRepo,
@@ -59,7 +61,7 @@ func (h *CartHandler) AddToCart(c echo.Context) error {
 
 	sessionID := c.Get("sessionID").(string)
 
-	item, err := h.itemRepo.FindByID(domain.ItemID(req.ItemID))
+	item, err := h.itemRepo.FindByID(common.ItemID(req.ItemID))
 	if err != nil {
 		return c.String(http.StatusBadRequest, "Item not found")
 	}
@@ -95,7 +97,7 @@ func (h *CartHandler) RemoveFromCart(c echo.Context) error {
 
 	sessionID := c.Get("sessionID").(string)
 
-	if err := h.cartService.RemoveItem(sessionID, domain.ItemID(req.ItemID)); err != nil {
+	if err := h.cartService.RemoveItem(sessionID, common.ItemID(req.ItemID)); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 

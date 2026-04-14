@@ -1,14 +1,14 @@
 package templates
 
 import (
-	"bitmerchant/internal/domain"
+	"bitmerchant/internal/auth/domain/user"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/separator"
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
 
-templ AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, user *domain.User, memberships []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
+templ AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, user *user.User, memberships []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
 	@layouts.Dashboard("Profile", currentPath, activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, memberships, activeRestaurantRole, canCreateRestaurant) {
 		<div class="space-y-8 mt-4 max-w-2xl">
 			<div>

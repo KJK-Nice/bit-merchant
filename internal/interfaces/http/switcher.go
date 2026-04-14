@@ -1,16 +1,18 @@
 package http
 
 import (
-	"context"
+	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates/layouts"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/labstack/echo/v4"
 )
 
 // RestaurantSwitchOptionsFromMemberships builds switcher rows using the same display rules as the restaurant picker.
-func RestaurantSwitchOptionsFromMemberships(ctx context.Context, memberships []*domain.Membership, restaurantRepo domain.RestaurantRepository) []layouts.RestaurantSwitchOption {
+func RestaurantSwitchOptionsFromMemberships(ctx context.Context, memberships []*membership.Membership, restaurantRepo restaurant.Repository) []layouts.RestaurantSwitchOption {
 	options := make([]layouts.RestaurantSwitchOption, 0, len(memberships))
 	for _, membership := range memberships {
 		option := layouts.RestaurantSwitchOption{
@@ -29,7 +31,7 @@ func RestaurantSwitchOptionsFromMemberships(ctx context.Context, memberships []*
 }
 
 // ActiveRestaurantRoleForMemberships returns the member role for the active restaurant ID, or "".
-func ActiveRestaurantRoleForMemberships(activeRestaurantID string, memberships []*domain.Membership) string {
+func ActiveRestaurantRoleForMemberships(activeRestaurantID string, memberships []*membership.Membership) string {
 	if activeRestaurantID == "" {
 		return ""
 	}
@@ -43,7 +45,7 @@ func ActiveRestaurantRoleForMemberships(activeRestaurantID string, memberships [
 
 // RestaurantSwitcherData loads memberships for the current user and returns switcher options, active role,
 // and whether the user may create a restaurant (owner of the active restaurant).
-func RestaurantSwitcherData(c echo.Context, membershipRepo domain.MembershipRepository, restaurantRepo domain.RestaurantRepository) ([]layouts.RestaurantSwitchOption, string, bool, error) {
+func RestaurantSwitcherData(c echo.Context, membershipRepo membership.Repository, restaurantRepo restaurant.Repository) ([]layouts.RestaurantSwitchOption, string, bool, error) {
 	user, ok := getAuthenticatedUser(c)
 	if !ok || user == nil || membershipRepo == nil {
 		return nil, "", false, nil
@@ -57,6 +59,6 @@ func RestaurantSwitcherData(c echo.Context, membershipRepo domain.MembershipRepo
 	if rid, rerr := getRestaurantIDFromContext(c); rerr == nil {
 		activeRole = ActiveRestaurantRoleForMemberships(string(rid), memberships)
 	}
-	canCreate := activeRole == string(domain.RoleOwner)
+	canCreate := activeRole == string(common.RoleOwner)
 	return opts, activeRole, canCreate, nil
 }

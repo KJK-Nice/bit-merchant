@@ -1,23 +1,26 @@
 package admin_test
 
 import (
-	"context"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/qr"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	handler "bitmerchant/internal/interfaces/http"
 	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	menuCmd "bitmerchant/internal/menu/app/command"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	restaurantQuery "bitmerchant/internal/restaurant/app/query"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
 )
 
 func TestAdminQR_TableCountAndPrint(t *testing.T) {
@@ -27,22 +30,22 @@ func TestAdminQR_TableCountAndPrint(t *testing.T) {
 	repoItem := memory.NewMemoryMenuItemRepository()
 	membershipRepo := memory.NewMemoryMembershipRepository()
 
-	restID := domain.RestaurantID("restaurant-qr")
-	rest, err := domain.NewRestaurant(restID, "QR Bistro")
+	restID := common.RestaurantID("restaurant-qr")
+	rest, err := restaurant.NewRestaurant(restID, "QR Bistro")
 	require.NoError(t, err)
 	require.NoError(t, repoRest.Save(rest))
 
-	createRestUC := restaurant.NewCreateRestaurantUseCase(repoRest)
-	createCatUC := menu.NewCreateMenuCategoryUseCase(repoCat)
-	createItemUC := menu.NewCreateMenuItemUseCase(repoItem)
-	getMenuAdminUC := menu.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menu.PhotoSignerConfig{})
-	updateItemUC := menu.NewUpdateMenuItemUseCase(repoItem, repoCat)
-	updateCategoryUC := menu.NewUpdateMenuCategoryUseCase(repoCat)
-	toggleAvailUC := menu.NewToggleMenuItemAvailabilityUseCase(repoItem)
-	reorderCatUC := menu.NewReorderMenuCategoriesUseCase(repoCat)
-	reorderItemUC := menu.NewReorderMenuItemsUseCase(repoItem, repoCat)
-	updateTableUC := restaurant.NewUpdateRestaurantTableCountUseCase(repoRest)
-	generateQRUC := restaurant.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
+	createRestUC := restaurantCmd.NewCreateRestaurantUseCase(repoRest)
+	createCatUC := menuCmd.NewCreateMenuCategoryUseCase(repoCat)
+	createItemUC := menuCmd.NewCreateMenuItemUseCase(repoItem)
+	getMenuAdminUC := menuQuery.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{})
+	updateItemUC := menuCmd.NewUpdateMenuItemUseCase(repoItem, repoCat)
+	updateCategoryUC := menuCmd.NewUpdateMenuCategoryUseCase(repoCat)
+	toggleAvailUC := menuCmd.NewToggleMenuItemAvailabilityUseCase(repoItem)
+	reorderCatUC := menuCmd.NewReorderMenuCategoriesUseCase(repoCat)
+	reorderItemUC := menuCmd.NewReorderMenuItemsUseCase(repoItem, repoCat)
+	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountUseCase(repoRest)
+	generateQRUC := restaurantQuery.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
 
 	adminHandler := handler.NewAdminHandler(
 		createRestUC, createCatUC, createItemUC, getMenuAdminUC,

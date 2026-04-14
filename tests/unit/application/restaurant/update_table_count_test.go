@@ -1,24 +1,23 @@
 package restaurant_test
 
 import (
-	"context"
-	"testing"
-
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestUpdateRestaurantTableCountUseCase(t *testing.T) {
 	repo := memory.NewMemoryRestaurantRepository()
-	r, err := domain.NewRestaurant("r1", "Diner")
+	r, err := restaurant.NewRestaurant("r1", "Diner")
 	require.NoError(t, err)
 	require.NoError(t, repo.Save(r))
 
-	uc := restaurant.NewUpdateRestaurantTableCountUseCase(repo)
+	uc := restaurantCmd.NewUpdateRestaurantTableCountUseCase(repo)
 
 	t.Run("valid update", func(t *testing.T) {
 		require.NoError(t, uc.Execute(context.Background(), "r1", 12))

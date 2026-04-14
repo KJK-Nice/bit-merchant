@@ -1,17 +1,22 @@
 package http
 
 import (
+	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/common"
+
+	"bitmerchant/internal/interfaces/templates/admin"
+	menuCmd "bitmerchant/internal/menu/app/command"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	"bitmerchant/internal/menu/domain/menu"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	restaurantQuery "bitmerchant/internal/restaurant/app/query"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 	"encoding/json"
+
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"net/url"
 	"strconv"
-
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
-	"bitmerchant/internal/interfaces/templates/admin"
-
-	"github.com/labstack/echo/v4"
 )
 
 const adminMenuDashboardPath = "/admin/dashboard"
@@ -31,11 +36,11 @@ func adminQRRedirect(errMsg string) string {
 	return adminQRPath + "?error=" + url.QueryEscape(errMsg)
 }
 
-func (h *AdminHandler) restaurantID(c echo.Context) (domain.RestaurantID, error) {
+func (h *AdminHandler) restaurantID(c echo.Context) (common.RestaurantID, error) {
 	return getRestaurantIDFromContext(c)
 }
 
-func (h *AdminHandler) renderAdminDashboard(c echo.Context, menuData *menu.MenuResponse, restaurantID domain.RestaurantID) error {
+func (h *AdminHandler) renderAdminDashboard(c echo.Context, menuData *menuQuery.MenuResponse, restaurantID common.RestaurantID) error {
 	activeLabel := string(restaurantID)
 	if menuData != nil && menuData.Restaurant != nil && menuData.Restaurant.Name != "" {
 		activeLabel = menuData.Restaurant.Name
@@ -50,57 +55,57 @@ func (h *AdminHandler) renderAdminDashboard(c echo.Context, menuData *menu.MenuR
 }
 
 type AdminHandler struct {
-	createRestaurantUC *restaurant.CreateRestaurantUseCase
-	createCategoryUC   *menu.CreateMenuCategoryUseCase
-	createItemUC       *menu.CreateMenuItemUseCase
-	getMenuAdminUC     *menu.GetMenuForAdminUseCase
-	updateItemUC       *menu.UpdateMenuItemUseCase
-	updateCategoryUC   *menu.UpdateMenuCategoryUseCase
-	toggleItemAvailUC  *menu.ToggleMenuItemAvailabilityUseCase
-	uploadPhotoUC      *menu.UploadPhotoUseCase
-	reorderCategoriesUC *menu.ReorderMenuCategoriesUseCase
-	reorderItemsUC      *menu.ReorderMenuItemsUseCase
-	itemRepo           domain.MenuItemRepository
-	updateTableCountUC *restaurant.UpdateRestaurantTableCountUseCase
-	generateQRUC       *restaurant.GenerateRestaurantQRUseCase
-	membershipRepo     domain.MembershipRepository
-	restaurantRepo     domain.RestaurantRepository
+	createRestaurantUC  *restaurantCmd.CreateRestaurantUseCase
+	createCategoryUC    *menuCmd.CreateMenuCategoryUseCase
+	createItemUC        *menuCmd.CreateMenuItemUseCase
+	getMenuAdminUC      *menuQuery.GetMenuForAdminUseCase
+	updateItemUC        *menuCmd.UpdateMenuItemUseCase
+	updateCategoryUC    *menuCmd.UpdateMenuCategoryUseCase
+	toggleItemAvailUC   *menuCmd.ToggleMenuItemAvailabilityUseCase
+	uploadPhotoUC       *menuCmd.UploadPhotoUseCase
+	reorderCategoriesUC *menuCmd.ReorderMenuCategoriesUseCase
+	reorderItemsUC      *menuCmd.ReorderMenuItemsUseCase
+	itemRepo            menu.ItemRepository
+	updateTableCountUC  *restaurantCmd.UpdateRestaurantTableCountUseCase
+	generateQRUC        *restaurantQuery.GenerateRestaurantQRUseCase
+	membershipRepo      membership.Repository
+	restaurantRepo      restaurant.Repository
 }
 
 // NewAdminHandler constructs the admin HTTP handler.
 func NewAdminHandler(
-	createRestaurantUC *restaurant.CreateRestaurantUseCase,
-	createCategoryUC *menu.CreateMenuCategoryUseCase,
-	createItemUC *menu.CreateMenuItemUseCase,
-	getMenuAdminUC *menu.GetMenuForAdminUseCase,
-	updateItemUC *menu.UpdateMenuItemUseCase,
-	updateCategoryUC *menu.UpdateMenuCategoryUseCase,
-	toggleItemAvailUC *menu.ToggleMenuItemAvailabilityUseCase,
-	uploadPhotoUC *menu.UploadPhotoUseCase,
-	reorderCategoriesUC *menu.ReorderMenuCategoriesUseCase,
-	reorderItemsUC *menu.ReorderMenuItemsUseCase,
-	itemRepo domain.MenuItemRepository,
-	updateTableCountUC *restaurant.UpdateRestaurantTableCountUseCase,
-	generateQRUC *restaurant.GenerateRestaurantQRUseCase,
-	membershipRepo domain.MembershipRepository,
-	restaurantRepo domain.RestaurantRepository,
+	createRestaurantUC *restaurantCmd.CreateRestaurantUseCase,
+	createCategoryUC *menuCmd.CreateMenuCategoryUseCase,
+	createItemUC *menuCmd.CreateMenuItemUseCase,
+	getMenuAdminUC *menuQuery.GetMenuForAdminUseCase,
+	updateItemUC *menuCmd.UpdateMenuItemUseCase,
+	updateCategoryUC *menuCmd.UpdateMenuCategoryUseCase,
+	toggleItemAvailUC *menuCmd.ToggleMenuItemAvailabilityUseCase,
+	uploadPhotoUC *menuCmd.UploadPhotoUseCase,
+	reorderCategoriesUC *menuCmd.ReorderMenuCategoriesUseCase,
+	reorderItemsUC *menuCmd.ReorderMenuItemsUseCase,
+	itemRepo menu.ItemRepository,
+	updateTableCountUC *restaurantCmd.UpdateRestaurantTableCountUseCase,
+	generateQRUC *restaurantQuery.GenerateRestaurantQRUseCase,
+	membershipRepo membership.Repository,
+	restaurantRepo restaurant.Repository,
 ) *AdminHandler {
 	return &AdminHandler{
-		createRestaurantUC: createRestaurantUC,
-		createCategoryUC:   createCategoryUC,
-		createItemUC:       createItemUC,
-		getMenuAdminUC:     getMenuAdminUC,
-		updateItemUC:       updateItemUC,
-		updateCategoryUC:   updateCategoryUC,
+		createRestaurantUC:  createRestaurantUC,
+		createCategoryUC:    createCategoryUC,
+		createItemUC:        createItemUC,
+		getMenuAdminUC:      getMenuAdminUC,
+		updateItemUC:        updateItemUC,
+		updateCategoryUC:    updateCategoryUC,
 		toggleItemAvailUC:   toggleItemAvailUC,
 		uploadPhotoUC:       uploadPhotoUC,
 		reorderCategoriesUC: reorderCategoriesUC,
 		reorderItemsUC:      reorderItemsUC,
 		itemRepo:            itemRepo,
-		updateTableCountUC: updateTableCountUC,
-		generateQRUC:       generateQRUC,
-		membershipRepo:     membershipRepo,
-		restaurantRepo:     restaurantRepo,
+		updateTableCountUC:  updateTableCountUC,
+		generateQRUC:        generateQRUC,
+		membershipRepo:      membershipRepo,
+		restaurantRepo:      restaurantRepo,
 	}
 }
 
@@ -133,7 +138,7 @@ func (h *AdminHandler) CreateCategory(c echo.Context) error {
 	name := c.FormValue("name")
 	displayOrder, _ := strconv.Atoi(c.FormValue("displayOrder"))
 
-	req := menu.CreateMenuCategoryRequest{
+	req := menuCmd.CreateMenuCategoryRequest{
 		RestaurantID: restaurantID,
 		Name:         name,
 		DisplayOrder: displayOrder,
@@ -152,12 +157,12 @@ func (h *AdminHandler) UpdateCategory(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
-	categoryID := domain.CategoryID(c.Param("id"))
+	categoryID := common.CategoryID(c.Param("id"))
 	name := c.FormValue("name")
 	displayOrder, _ := strconv.Atoi(c.FormValue("displayOrder"))
 	isActive := c.FormValue("isActive") == "on"
 
-	req := menu.UpdateMenuCategoryRequest{
+	req := menuCmd.UpdateMenuCategoryRequest{
 		RestaurantID: restaurantID,
 		CategoryID:   categoryID,
 		Name:         name,
@@ -176,14 +181,14 @@ func (h *AdminHandler) CreateItem(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
-	categoryID := domain.CategoryID(c.FormValue("categoryID"))
+	categoryID := common.CategoryID(c.FormValue("categoryID"))
 	name := c.FormValue("name")
 	description := c.FormValue("description")
 	price, _ := strconv.ParseFloat(c.FormValue("price"), 64)
 
 	available := c.FormValue("available") == "on"
 
-	req := menu.CreateMenuItemRequest{
+	req := menuCmd.CreateMenuItemRequest{
 		RestaurantID: restaurantID,
 		CategoryID:   categoryID,
 		Name:         name,
@@ -205,14 +210,14 @@ func (h *AdminHandler) UpdateItem(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
-	itemID := domain.ItemID(c.Param("id"))
-	categoryID := domain.CategoryID(c.FormValue("categoryID"))
+	itemID := common.ItemID(c.Param("id"))
+	categoryID := common.CategoryID(c.FormValue("categoryID"))
 	name := c.FormValue("name")
 	description := c.FormValue("description")
 	price, _ := strconv.ParseFloat(c.FormValue("price"), 64)
 	available := c.FormValue("available") == "on"
 
-	req := menu.UpdateMenuItemRequest{
+	req := menuCmd.UpdateMenuItemRequest{
 		RestaurantID: restaurantID,
 		ItemID:       itemID,
 		CategoryID:   categoryID,
@@ -233,7 +238,7 @@ func (h *AdminHandler) ToggleItemAvailability(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
-	itemID := domain.ItemID(c.Param("id"))
+	itemID := common.ItemID(c.Param("id"))
 	if err := h.toggleItemAvailUC.Execute(c.Request().Context(), restaurantID, itemID); err != nil {
 		return c.Redirect(http.StatusFound, adminMenuRedirect(err.Error()))
 	}
@@ -246,7 +251,7 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
-	itemID := domain.ItemID(c.Param("id"))
+	itemID := common.ItemID(c.Param("id"))
 
 	existing, err := h.itemRepo.FindByID(itemID)
 	if err != nil {
@@ -269,7 +274,7 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 	}
 	defer src.Close()
 
-	req := menu.UploadPhotoRequest{
+	req := menuCmd.UploadPhotoRequest{
 		RestaurantID: restaurantID,
 		ItemID:       itemID,
 		File:         src,
@@ -296,9 +301,9 @@ func (h *AdminHandler) PostReorderCategories(c echo.Context) error {
 	if err := json.NewDecoder(c.Request().Body).Decode(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 	}
-	ordered := make([]domain.CategoryID, len(body.CategoryIDs))
+	ordered := make([]common.CategoryID, len(body.CategoryIDs))
 	for i, s := range body.CategoryIDs {
-		ordered[i] = domain.CategoryID(s)
+		ordered[i] = common.CategoryID(s)
 	}
 	if err := h.reorderCategoriesUC.Execute(c.Request().Context(), restaurantID, ordered); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -319,17 +324,17 @@ func (h *AdminHandler) PostReorderItems(c echo.Context) error {
 	if err := json.NewDecoder(c.Request().Body).Decode(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 	}
-	ordered := make([]domain.ItemID, len(body.ItemIDs))
+	ordered := make([]common.ItemID, len(body.ItemIDs))
 	for i, s := range body.ItemIDs {
-		ordered[i] = domain.ItemID(s)
+		ordered[i] = common.ItemID(s)
 	}
-	if err := h.reorderItemsUC.Execute(c.Request().Context(), restaurantID, domain.CategoryID(body.CategoryID), ordered); err != nil {
+	if err := h.reorderItemsUC.Execute(c.Request().Context(), restaurantID, common.CategoryID(body.CategoryID), ordered); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	return c.NoContent(http.StatusNoContent)
 }
 
-func (h *AdminHandler) renderQRPage(c echo.Context, rest *domain.Restaurant, qrError string, saved bool) error {
+func (h *AdminHandler) renderQRPage(c echo.Context, rest *restaurant.Restaurant, qrError string, saved bool) error {
 	dn, st, ini := LayoutUserStringsFromContext(c)
 	switchOpts, activeRole, canCreate, sErr := RestaurantSwitcherData(c, h.membershipRepo, h.restaurantRepo)
 	if sErr != nil {
@@ -337,8 +342,8 @@ func (h *AdminHandler) renderQRPage(c echo.Context, rest *domain.Restaurant, qrE
 	}
 	label := ActiveRestaurantLabel(c.Request().Context(), rest.ID, h.restaurantRepo)
 	tc := rest.TableCount
-	if tc < domain.MinTableCount {
-		tc = domain.MinTableCount
+	if tc < restaurant.MinTableCount {
+		tc = restaurant.MinTableCount
 	}
 	tables := make([]int, tc)
 	for i := range tables {
@@ -380,7 +385,7 @@ func (h *AdminHandler) GetQRTablePNG(c echo.Context) error {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
 	n, err := strconv.Atoi(c.Param("table"))
-	if err != nil || n < domain.MinTableCount {
+	if err != nil || n < restaurant.MinTableCount {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid table")
 	}
 	png, err := h.generateQRUC.Execute(c.Request().Context(), restaurantID, n)
@@ -401,8 +406,8 @@ func (h *AdminHandler) GetQRPrint(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to load restaurant")
 	}
 	n := rest.TableCount
-	if n < domain.MinTableCount {
-		n = domain.MinTableCount
+	if n < restaurant.MinTableCount {
+		n = restaurant.MinTableCount
 	}
 	tables := make([]int, n)
 	for i := range tables {

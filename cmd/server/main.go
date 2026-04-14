@@ -108,12 +108,19 @@ func main() {
 	getTopItemsUC := dashQuery.NewGetTopSellingItemsUseCase(repos.Order)
 	toggleOpenUC := restCmd.NewToggleRestaurantOpenUseCase(repos.Restaurant)
 	updateTableCountUC := restCmd.NewUpdateRestaurantTableCountUseCase(repos.Restaurant)
-	generateQRUC := restQuery.NewGenerateRestaurantQRUseCase(qrService, cfg.BaseURL, repos.Restaurant)
+	generateQRUC := restQuery.NewGenerateRestaurantQRUseCase(qrService, cfg.CustomerBaseURL, repos.Restaurant)
 
+	secureCookie := middleware.ShouldUseSecureCookies(cfg.PublicBaseURL, cfg.ForceSecureCookie) ||
+		middleware.ShouldUseSecureCookies(cfg.CustomerBaseURL, cfg.ForceSecureCookie) ||
+		middleware.ShouldUseSecureCookies(cfg.MerchantBaseURL, cfg.ForceSecureCookie)
 	sessionOpts := middleware.SessionOptions{
-		SecureCookie: middleware.ShouldUseSecureCookies(cfg.BaseURL, cfg.ForceSecureCookie),
+		SecureCookie:       secureCookie,
+		CookieName:         middleware.MerchantSessionCookieName,
+		MerchantCookieName: middleware.MerchantSessionCookieName,
+		CustomerCookieName: middleware.CustomerSessionCookieName,
+		LegacyCookieName:   middleware.SessionCookieName,
 	}
-	webauthnSvc, err := authInfra.NewWebAuthnService(cfg.RPID, "BitMerchant", []string{cfg.BaseURL})
+	webauthnSvc, err := authInfra.NewWebAuthnService(cfg.RPID, "BitMerchant", []string{cfg.MerchantBaseURL})
 	if err != nil {
 		logger.Error("Failed to initialize WebAuthn service", "error", err)
 		os.Exit(1)
@@ -134,9 +141,16 @@ func main() {
 	e := echo.New()
 
 	e.Use(echoMiddleware.Recover())
+	e.Use(middleware.SurfaceRoutingMiddleware(middleware.SurfaceConfig{
+		PublicBaseURL:   cfg.PublicBaseURL,
+		CustomerBaseURL: cfg.CustomerBaseURL,
+		MerchantBaseURL: cfg.MerchantBaseURL,
+	}))
 	e.Use(middleware.SessionMiddlewareWithReposAndOptions(repos.Session, repos.User, sessionOpts))
 	e.Use(middleware.PerformanceMiddleware(logger, 200*time.Millisecond))
-	e.Use(middleware.RateLimitMiddleware())
+	if !cfg.DisableRateLimit {
+		e.Use(middleware.RateLimitMiddleware())
+	}
 	e.Use(middleware.CSRFMiddleware())
 
 	e.Static("/static", "static")

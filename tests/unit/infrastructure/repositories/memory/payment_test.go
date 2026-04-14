@@ -1,20 +1,21 @@
 package memory_test
 
 import (
-	"testing"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	"bitmerchant/internal/payment/domain/payment"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestMemoryPaymentRepository(t *testing.T) {
 	repo := memory.NewMemoryPaymentRepository()
 
 	t.Run("Save and FindByID", func(t *testing.T) {
-		p, _ := domain.NewPayment("p1", "o1", "r1", domain.PaymentMethodTypeCash, 10.0)
+		p, _ := payment.NewPayment("p1", "o1", "r1", common.PaymentMethodTypeCash, 10.0)
 		err := repo.Save(p)
 		assert.NoError(t, err)
 
@@ -24,7 +25,7 @@ func TestMemoryPaymentRepository(t *testing.T) {
 	})
 
 	t.Run("FindByOrderID", func(t *testing.T) {
-		p, _ := domain.NewPayment("p2", "o2", "r1", domain.PaymentMethodTypeCash, 10.0)
+		p, _ := payment.NewPayment("p2", "o2", "r1", common.PaymentMethodTypeCash, 10.0)
 		require.NoError(t, repo.Save(p))
 
 		found, err := repo.FindByOrderID("o2")
@@ -36,9 +37,9 @@ func TestMemoryPaymentRepository(t *testing.T) {
 	})
 
 	t.Run("FindByRestaurantID", func(t *testing.T) {
-		p1, _ := domain.NewPayment("p3", "o3", "r2", domain.PaymentMethodTypeCash, 10.0)
-		p2, _ := domain.NewPayment("p4", "o4", "r2", domain.PaymentMethodTypeCash, 10.0)
-		p3, _ := domain.NewPayment("p5", "o5", "r3", domain.PaymentMethodTypeCash, 10.0)
+		p1, _ := payment.NewPayment("p3", "o3", "r2", common.PaymentMethodTypeCash, 10.0)
+		p2, _ := payment.NewPayment("p4", "o4", "r2", common.PaymentMethodTypeCash, 10.0)
+		p3, _ := payment.NewPayment("p5", "o5", "r3", common.PaymentMethodTypeCash, 10.0)
 
 		require.NoError(t, repo.Save(p1))
 		require.NoError(t, repo.Save(p2))

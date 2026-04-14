@@ -1,18 +1,19 @@
 package auth_test
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
+	"bitmerchant/internal/auth/domain/session"
+	"bitmerchant/internal/auth/domain/user"
 
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
 )
 
 func TestRequireAuthRouteProtection(t *testing.T) {
@@ -42,12 +43,12 @@ func TestRequireAuthRouteProtection(t *testing.T) {
 		sessionRepo := memory.NewMemorySessionRepository()
 		userRepo := memory.NewMemoryUserRepository()
 
-		user, err := domain.NewUser("user-1", "Owner")
+		user, err := user.NewUser("user-1", "Owner")
 		require.NoError(t, err)
 		require.NoError(t, userRepo.Save(user))
 
 		userID := user.ID
-		require.NoError(t, sessionRepo.Save(&domain.Session{
+		require.NoError(t, sessionRepo.Save(&session.Session{
 			ID:        "authenticated-session",
 			UserID:    &userID,
 			CreatedAt: time.Now(),

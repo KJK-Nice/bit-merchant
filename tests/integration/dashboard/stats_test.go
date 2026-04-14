@@ -1,25 +1,30 @@
 package dashboard_test
 
 import (
-	"context"
-	"testing"
-	"time"
+	"bitmerchant/internal/common"
+	dashboard "bitmerchant/internal/dashboard/app/query"
 
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/application/dashboard"
-	"bitmerchant/internal/application/order"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/events"
 	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/infrastructure/payment/cash"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/ordering/app/cart"
+	orderCmd "bitmerchant/internal/ordering/app/command"
+
+	// Infrastructure
+	"bitmerchant/internal/ordering/domain/order"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
+	"time"
 )
 
 func TestDashboardIntegration(t *testing.T) {
-	// Infrastructure
+
 	orderRepo := memory.NewMemoryOrderRepository()
 	paymentRepo := memory.NewMemoryPaymentRepository()
 	restRepo := memory.NewMemoryRestaurantRepository()
@@ -28,28 +33,28 @@ func TestDashboardIntegration(t *testing.T) {
 	logger := logging.NewLogger()
 
 	// Setup restaurant for order creation check
-	restaurant, _ := domain.NewRestaurant("restaurant_1", "Integration Cafe")
+	restaurant, _ := restaurant.NewRestaurant("restaurant_1", "Integration Cafe")
 	require.NoError(t, restRepo.Save(restaurant))
 
 	// Use Cases
 	_ = paymentRepo
 	_ = paymentMethod
-	createOrderUC := order.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
+	createOrderUC := orderCmd.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
 	getStatsUC := dashboard.NewGetDashboardStatsUseCase(orderRepo)
 
 	t.Run("Order Creation Reflected in Stats", func(t *testing.T) {
 		// 1. Create an Order
 		cartSvc := cart.NewCartService()
 		sessionID := "sess_integration"
-		item, _ := domain.NewMenuItem("i1", "c1", "r1", "Burger", 15.0)
+		item, _ := menu.NewMenuItem("i1", "c1", "r1", "Burger", 15.0)
 		require.NoError(t, cartSvc.AddItem(sessionID, item, 2)) // 2 Burgers = $30
 		userCart := cartSvc.GetCart(sessionID)
 
-		req := order.CreateOrderRequest{
+		req := orderCmd.CreateOrderRequest{
 			RestaurantID:  "restaurant_1", // Must match dashboard default
 			SessionID:     sessionID,
 			Cart:          userCart,
-			PaymentMethod: domain.PaymentMethodTypeCash,
+			PaymentMethod: common.PaymentMethodTypeCash,
 		}
 
 		resp, err := createOrderUC.Execute(context.Background(), req)
@@ -58,7 +63,7 @@ func TestDashboardIntegration(t *testing.T) {
 		// 2. Mark Order as Paid (since stats only count paid orders)
 		// We can use repo directly or kitchen use case. Using repo for simplicity here.
 		savedOrder, _ := orderRepo.FindByID(resp.OrderID)
-		savedOrder.PaymentStatus = domain.PaymentStatusPaid
+		savedOrder.PaymentStatus = common.PaymentStatusPaid
 		savedOrder.CreatedAt = time.Now() // Ensure it's today
 		_ = orderRepo.Save(savedOrder)
 
@@ -72,20 +77,20 @@ func TestDashboardIntegration(t *testing.T) {
 	})
 
 	t.Run("Weekly Stats Include Recent Paid Orders", func(t *testing.T) {
-		items := []domain.OrderItem{
+		items := []order.OrderItem{
 			{MenuItemID: "i2", Name: "Fries", Quantity: 1, UnitPrice: 12.0, Subtotal: 12.0},
 		}
 
-		recentPaid, err := domain.NewOrder("recent_paid", "2001", "restaurant_1", "sess_week", items, 1200, domain.PaymentMethodTypeCash)
+		recentPaid, err := order.NewOrder("recent_paid", "2001", "restaurant_1", "sess_week", items, 1200, common.PaymentMethodTypeCash)
 		assert.NoError(t, err)
-		recentPaid.PaymentStatus = domain.PaymentStatusPaid
+		recentPaid.PaymentStatus = common.PaymentStatusPaid
 		recentPaid.FiatAmount = 12.0
 		recentPaid.CreatedAt = time.Now().AddDate(0, 0, -3)
 		_ = orderRepo.Save(recentPaid)
 
-		oldPaid, err := domain.NewOrder("old_paid", "2002", "restaurant_1", "sess_week", items, 900, domain.PaymentMethodTypeCash)
+		oldPaid, err := order.NewOrder("old_paid", "2002", "restaurant_1", "sess_week", items, 900, common.PaymentMethodTypeCash)
 		assert.NoError(t, err)
-		oldPaid.PaymentStatus = domain.PaymentStatusPaid
+		oldPaid.PaymentStatus = common.PaymentStatusPaid
 		oldPaid.FiatAmount = 9.0
 		oldPaid.CreatedAt = time.Now().AddDate(0, 0, -10)
 		_ = orderRepo.Save(oldPaid)

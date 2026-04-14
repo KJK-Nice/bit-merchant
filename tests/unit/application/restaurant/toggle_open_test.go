@@ -1,23 +1,22 @@
 package restaurant_test
 
 import (
-	"context"
-	"strings"
-	"testing"
-
-	"bitmerchant/internal/application/restaurant"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"strings"
+	"testing"
 )
 
 func TestToggleRestaurantOpenUseCase(t *testing.T) {
 	repo := memory.NewMemoryRestaurantRepository()
-	uc := restaurant.NewToggleRestaurantOpenUseCase(repo)
+	uc := restaurantCmd.NewToggleRestaurantOpenUseCase(repo)
 
-	r, _ := domain.NewRestaurant("r1", "Test Cafe")
+	r, _ := restaurant.NewRestaurant("r1", "Test Cafe")
 	r.IsOpen = true
 	_ = repo.Save(r)
 
@@ -42,10 +41,10 @@ func TestToggleRestaurantOpenUseCase(t *testing.T) {
 
 func TestToggleRestaurantOpenUseCase_ClosedMessageAndClearOnReopen(t *testing.T) {
 	repo := memory.NewMemoryRestaurantRepository()
-	uc := restaurant.NewToggleRestaurantOpenUseCase(repo)
+	uc := restaurantCmd.NewToggleRestaurantOpenUseCase(repo)
 	ctx := context.Background()
 
-	r, _ := domain.NewRestaurant("r2", "Bistro")
+	r, _ := restaurant.NewRestaurant("r2", "Bistro")
 	require.NoError(t, repo.Save(r))
 
 	_, err := uc.Execute(ctx, "r2", "Private party tonight", "Tomorrow 11:00")
@@ -65,8 +64,8 @@ func TestToggleRestaurantOpenUseCase_ClosedMessageAndClearOnReopen(t *testing.T)
 
 func TestToggleRestaurantOpenUseCase_LongMessageRejected(t *testing.T) {
 	repo := memory.NewMemoryRestaurantRepository()
-	uc := restaurant.NewToggleRestaurantOpenUseCase(repo)
-	r, _ := domain.NewRestaurant("r3", "X")
+	uc := restaurantCmd.NewToggleRestaurantOpenUseCase(repo)
+	r, _ := restaurant.NewRestaurant("r3", "X")
 	require.NoError(t, repo.Save(r))
 
 	long := strings.Repeat("a", 501)

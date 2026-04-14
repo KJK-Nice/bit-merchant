@@ -1,15 +1,16 @@
 package menu_test
 
 import (
-	"context"
-	"testing"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	menuCmd "bitmerchant/internal/menu/app/command"
+	"bitmerchant/internal/menu/domain/menu"
+	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestUpdateMenuItemUseCase_Execute(t *testing.T) {
@@ -17,20 +18,20 @@ func TestUpdateMenuItemUseCase_Execute(t *testing.T) {
 	repoCat := memory.NewMemoryMenuCategoryRepository()
 	repoItem := memory.NewMemoryMenuItemRepository()
 
-	rid := domain.RestaurantID("r1")
-	cat1, err := domain.NewMenuCategory("c1", rid, "Drinks", 0)
+	rid := common.RestaurantID("r1")
+	cat1, err := menu.NewMenuCategory("c1", rid, "Drinks", 0)
 	require.NoError(t, err)
 	require.NoError(t, repoCat.Save(cat1))
-	cat2, err := domain.NewMenuCategory("c2", rid, "Food", 1)
+	cat2, err := menu.NewMenuCategory("c2", rid, "Food", 1)
 	require.NoError(t, err)
 	require.NoError(t, repoCat.Save(cat2))
 
-	item, err := domain.NewMenuItem("i1", cat1.ID, rid, "Cola", 2)
+	item, err := menu.NewMenuItem("i1", cat1.ID, rid, "Cola", 2)
 	require.NoError(t, err)
 	require.NoError(t, repoItem.Save(item))
 
-	uc := menu.NewUpdateMenuItemUseCase(repoItem, repoCat)
-	err = uc.Execute(ctx, menu.UpdateMenuItemRequest{
+	uc := menuCmd.NewUpdateMenuItemUseCase(repoItem, repoCat)
+	err = uc.Execute(ctx, menuCmd.UpdateMenuItemRequest{
 		RestaurantID: rid,
 		ItemID:       item.ID,
 		CategoryID:   cat2.ID,
@@ -55,17 +56,17 @@ func TestUpdateMenuItemUseCase_WrongRestaurant(t *testing.T) {
 	repoCat := memory.NewMemoryMenuCategoryRepository()
 	repoItem := memory.NewMemoryMenuItemRepository()
 
-	r1 := domain.RestaurantID("r1")
-	r2 := domain.RestaurantID("r2")
-	cat, err := domain.NewMenuCategory("c1", r1, "X", 0)
+	r1 := common.RestaurantID("r1")
+	r2 := common.RestaurantID("r2")
+	cat, err := menu.NewMenuCategory("c1", r1, "X", 0)
 	require.NoError(t, err)
 	require.NoError(t, repoCat.Save(cat))
-	item, err := domain.NewMenuItem("i1", cat.ID, r1, "A", 1)
+	item, err := menu.NewMenuItem("i1", cat.ID, r1, "A", 1)
 	require.NoError(t, err)
 	require.NoError(t, repoItem.Save(item))
 
-	uc := menu.NewUpdateMenuItemUseCase(repoItem, repoCat)
-	err = uc.Execute(ctx, menu.UpdateMenuItemRequest{
+	uc := menuCmd.NewUpdateMenuItemUseCase(repoItem, repoCat)
+	err = uc.Execute(ctx, menuCmd.UpdateMenuItemRequest{
 		RestaurantID: r2,
 		ItemID:       item.ID,
 		CategoryID:   cat.ID,

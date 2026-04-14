@@ -1,20 +1,20 @@
 package cash_test
 
 import (
-	"context"
-	"testing"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/payment/cash"
+	"context"
 
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestCashPaymentMethod(t *testing.T) {
 	method := cash.NewCashPaymentMethod()
 
 	t.Run("GetPaymentMethodType", func(t *testing.T) {
-		assert.Equal(t, domain.PaymentMethodTypeCash, method.GetPaymentMethodType())
+		assert.Equal(t, common.PaymentMethodTypeCash, method.GetPaymentMethodType())
 	})
 
 	t.Run("ValidatePayment", func(t *testing.T) {
@@ -27,8 +27,8 @@ func TestCashPaymentMethod(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, payment)
-		assert.Equal(t, domain.PaymentMethodTypeCash, payment.Method)
-		assert.Equal(t, domain.PaymentStatusPending, payment.Status)
+		assert.Equal(t, common.PaymentMethodTypeCash, payment.Method)
+		assert.Equal(t, common.PaymentStatusPending, payment.Status)
 		assert.Equal(t, 10.0, payment.Amount)
 	})
 }

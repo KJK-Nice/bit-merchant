@@ -1,21 +1,25 @@
 package auth_test
 
 import (
+	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/auth/domain/session"
+	"bitmerchant/internal/auth/domain/user"
+	"bitmerchant/internal/common"
+
+	"bitmerchant/internal/infrastructure/repositories/memory"
+	handler "bitmerchant/internal/interfaces/http"
+	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
-
-	"bitmerchant/internal/domain"
-	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
-
-	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSelectRestaurantUpdatesActiveContext(t *testing.T) {
@@ -26,26 +30,26 @@ func TestSelectRestaurantUpdatesActiveContext(t *testing.T) {
 	invitationRepo := memory.NewMemoryInvitationRepository()
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
 
-	user, err := domain.NewUser("switch-user-1", "Switcher")
+	user, err := user.NewUser("switch-user-1", "Switcher")
 	require.NoError(t, err)
 	require.NoError(t, userRepo.Save(user))
 
-	restA, err := domain.NewRestaurant("restaurant-a", "Restaurant A")
+	restA, err := restaurant.NewRestaurant("restaurant-a", "Restaurant A")
 	require.NoError(t, err)
-	restB, err := domain.NewRestaurant("restaurant-b", "Restaurant B")
+	restB, err := restaurant.NewRestaurant("restaurant-b", "Restaurant B")
 	require.NoError(t, err)
 	require.NoError(t, restaurantRepo.Save(restA))
 	require.NoError(t, restaurantRepo.Save(restB))
 
-	memA, err := domain.NewMembership("mem-a", user.ID, restA.ID, domain.RoleOwner)
+	memA, err := membership.NewMembership("mem-a", user.ID, restA.ID, common.RoleOwner)
 	require.NoError(t, err)
-	memB, err := domain.NewMembership("mem-b", user.ID, restB.ID, domain.RoleOwner)
+	memB, err := membership.NewMembership("mem-b", user.ID, restB.ID, common.RoleOwner)
 	require.NoError(t, err)
 	require.NoError(t, membershipRepo.Save(memA))
 	require.NoError(t, membershipRepo.Save(memB))
 
 	userID := user.ID
-	require.NoError(t, sessionRepo.Save(&domain.Session{
+	require.NoError(t, sessionRepo.Save(&session.Session{
 		ID:           "switch-session",
 		UserID:       &userID,
 		RestaurantID: &restA.ID,

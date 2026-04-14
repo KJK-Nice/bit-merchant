@@ -1,24 +1,23 @@
 package handlers
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/logging"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components"
+	"bitmerchant/internal/ordering/domain/order"
+	"bytes"
+	"context"
+	"fmt"
 )
 
 type OrderPaidHandler struct {
 	logger *logging.Logger
 	sse    *handler.SSEHandler
-	repo   domain.OrderRepository
+	repo   order.Repository
 }
 
-func NewOrderPaidHandler(logger *logging.Logger, sse *handler.SSEHandler, repo domain.OrderRepository) *OrderPaidHandler {
+func NewOrderPaidHandler(logger *logging.Logger, sse *handler.SSEHandler, repo order.Repository) *OrderPaidHandler {
 	return &OrderPaidHandler{
 		logger: logger,
 		sse:    sse,
@@ -26,7 +25,7 @@ func NewOrderPaidHandler(logger *logging.Logger, sse *handler.SSEHandler, repo d
 	}
 }
 
-func (h *OrderPaidHandler) Handle(ctx context.Context, event domain.OrderPaid) error {
+func (h *OrderPaidHandler) Handle(ctx context.Context, event order.OrderPaid) error {
 	h.logger.Info("Order Paid", "orderID", event.OrderID)
 
 	order, err := h.repo.FindByID(event.OrderID)

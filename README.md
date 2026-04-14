@@ -81,9 +81,9 @@ internal/
 - `ids.go` -- All ID types (`RestaurantID`, `OrderID`, `UserID`, etc.), role constants, status enums
 - `events.go` -- `EventBus` and `DomainEvent` interfaces
 
-### Facade Layer
+### Imports
 
-The old `internal/domain/` and `internal/application/` packages remain as **type-alias facades** for backward compatibility (templates and handlers that still import them). New code should import directly from bounded context packages.
+Use bounded-context packages directly, for example `bitmerchant/internal/<context>/domain/...`, `app/command`, `app/query`, and `app/cart`. Legacy facade imports under `internal/domain/` and `internal/application/` are no longer supported.
 
 ### Infrastructure
 
@@ -131,7 +131,10 @@ Configuration is loaded from the process environment in [`cmd/server/config.go`]
 |---|---|---|---|
 | `APP_ENV` | No | *(empty)* | Set to `production` for JSON log output. Any other value (including unset) uses [humanslog](https://github.com/ThreeDotsLabs/humanslog) pretty output for development. |
 | `PORT` | No | `8080` | HTTP listen port. |
-| `BASE_URL` | No | `http://localhost:8080` | Public site URL (scheme + host [+ port]). Used for WebAuthn RP ID (hostname), absolute menu URLs in QR codes, and secure-cookie heuristics. Set correctly in every deployed environment. |
+| `BASE_URL` | No | `http://localhost:8080` | Backward-compatible base URL fallback used when surface-specific URLs are not set. |
+| `PUBLIC_BASE_URL` | No | `BASE_URL` | Public/marketing host URL (for `/` landing surface). |
+| `CUSTOMER_BASE_URL` | No | `BASE_URL` | Customer app host URL (`/menu`, `/order/*`, `/cart/*`, `/my-places`) and QR menu link base. |
+| `MERCHANT_BASE_URL` | No | `BASE_URL` | Merchant app host URL (`/dashboard/*`, `/admin/*`, `/kitchen/*`, `/auth/*`). Also used for WebAuthn RP origin/RPID derivation. |
 | `COOKIE_SECURE` | No | (off) | If `true`, session cookies are marked `Secure` (use behind HTTPS). |
 | `DATABASE_URL` | No | *(empty)* | Postgres connection string. If unset, the app uses **in-memory** repositories only (no persistence). If set, **Goose migrations run automatically on startup** after the DB is reachable. |
 | `AWS_S3_BUCKET_NAME` | No | *(empty)* | S3 bucket for menu item photos. If missing (with region), photo uploads are disabled. Alias: `S3_BUCKET_NAME`. |
@@ -169,7 +172,7 @@ Goose migration files live under `internal/infrastructure/migrations/sql/`.
 docker compose up --build
 ```
 
-Adjust `.env.docker` for passwords, `BASE_URL` if you expose the app on another host, or optional S3 variables. If you change `POSTGRES_*`, update the Postgres `healthcheck` in `docker-compose.yml` to use the same user and database name.
+Adjust `.env.docker` for passwords and host URLs (`BASE_URL` and/or `PUBLIC_BASE_URL` / `CUSTOMER_BASE_URL` / `MERCHANT_BASE_URL`) if you expose the app on another host, or optional S3 variables. If you change `POSTGRES_*`, update the Postgres `healthcheck` in `docker-compose.yml` to use the same user and database name.
 
 ### Multi-restaurant context switcher
 
@@ -203,6 +206,50 @@ The active restaurant is stored in the server-side session and enforced by role 
   go test -v ./tests/integration/postgres/...
   ```
   These use [testcontainers-go](https://github.com/testcontainers/testcontainers-go) to spin up a real Postgres container, run all Goose migrations, and exercise every adapter.
+
+### E2E tests (Playwright)
+
+The Playwright suite includes:
+- host-surface routing/canonical redirect checks
+- session cookie isolation checks
+- full customer journey (menu -> cart -> checkout -> order status)
+- full merchant core journey with real passkey flow (signup + dashboard/admin/qr/kitchen access + logout)
+
+Planned and covered E2E journeys are tracked in [`docs/e2e-user-story-checklist.md`](docs/e2e-user-story-checklist.md).
+
+Host-surface tests run with `*.localhost` domains:
+- public: `http://localhost:8080`
+- customer: `http://order.localhost:8080`
+- merchant: `http://merchant.localhost:8080`
+
+No `/etc/hosts` edits are required.
+
+Install dependencies and browser:
+```bash
+npm install
+npx playwright install --with-deps chromium
+```
+
+Run E2E smoke tests:
+```bash
+npm run e2e:test
+```
+
+Run E2E with mobile viewport emulation:
+```bash
+npm run e2e:test:mobile
+```
+
+Passkey note:
+- Merchant journey uses Playwright Chromium CDP virtual authenticator (no backend bypass endpoints).
+
+Debug/UI modes:
+```bash
+npm run e2e:test:ui
+npm run e2e:test:debug
+npm run e2e:test:mobile:ui
+npm run e2e:test:mobile:debug
+```
 
 ## License
 

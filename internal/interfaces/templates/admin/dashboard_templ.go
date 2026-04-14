@@ -9,7 +9,6 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"bitmerchant/internal/application/menu"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
@@ -21,11 +20,12 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 	"bitmerchant/internal/interfaces/templates/layouts"
+	menuQuery "bitmerchant/internal/menu/app/query"
 	"fmt"
 	"strconv"
 )
 
-func Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, menuError string) templ.Component {
+func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, menuError string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1328,7 +1328,7 @@ func Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantLa
 												}
 												ctx = templ.InitializeContext(ctx)
 												if item.PhotoURL != "" {
-													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<div class=\"h-12 w-16 overflow-hidden rounded-md border border-border bg-muted\"><img src=\"")
+													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<div class=\"h-14 w-20 overflow-hidden rounded-md border border-border bg-muted\"><img src=\"")
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
@@ -1341,19 +1341,19 @@ func Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantLa
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
-													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\" alt=\"\" class=\"h-full w-full object-cover\" loading=\"lazy\" width=\"64\" height=\"48\"></div>")
+													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\" alt=\"\" class=\"h-full w-full object-cover\" loading=\"lazy\" width=\"80\" height=\"56\"></div>")
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
 												} else {
-													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<div class=\"flex h-12 w-16 items-center justify-center rounded-md border border-dashed border-muted-foreground/40 text-[10px] text-muted-foreground text-center px-1\">No photo</div>")
+													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<div class=\"flex h-14 w-20 items-center justify-center rounded-md border border-dashed border-muted-foreground/40 text-[10px] text-muted-foreground text-center px-1\">No photo</div>")
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
 												}
 												return nil
 											})
-											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "align-middle min-w-0 w-20"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var61), templ_7745c5c3_Buffer)
+											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "align-middle min-w-0 w-24"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var61), templ_7745c5c3_Buffer)
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
@@ -1749,7 +1749,7 @@ func Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantLa
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "<div class=\"flex justify-center rounded-md border border-border bg-muted/30 p-2\"><img src=\"")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "<div class=\"max-h-48 overflow-auto rounded-md border border-border\"><img src=\"")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
@@ -1775,7 +1775,7 @@ func Dashboard(menuData *menu.MenuResponse, csrfToken string, activeRestaurantLa
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "\" class=\"max-h-40 max-w-full h-auto w-auto object-contain\"></div></div>")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "\" class=\"w-full object-contain\"></div></div>")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}

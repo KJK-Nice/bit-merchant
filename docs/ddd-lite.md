@@ -71,12 +71,13 @@ The **composition root** (`cmd/server`) is allowed to import every adapter and w
 
 This keeps the domain aware of *what happened* without coupling it to Watermill’s concrete router implementation.
 
-## Legacy facade packages
+## Imports
 
-Historically, much of the app imported `internal/domain`, `internal/application`, and `internal/infrastructure/repositories`. Those trees are now **thin facades**: type aliases and re-exports that point at the bounded-context packages.
+Import bounded-context packages directly from `bitmerchant/internal/<context>/...`.
 
-- **New code** should import directly from `bitmerchant/internal/<context>/...`.
-- **Templates and handlers** may still use old import paths during migration; facades exist to avoid a single huge mechanical rewrite of every file.
+- Use `domain/<aggregate>` packages for aggregates and repository interfaces.
+- Use `app/command`, `app/query`, and `app/cart` packages directly from the owning context.
+- Do not add compatibility facades under `internal/domain` or `internal/application`.
 
 ## Adding a feature (checklist)
 

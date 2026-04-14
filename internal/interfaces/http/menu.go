@@ -1,25 +1,26 @@
 package http
 
 import (
-	"log/slog"
-	"net/http"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/cart"
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/application/places"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/interfaces/templates"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	"bitmerchant/internal/ordering/app/cart"
+	placesCmd "bitmerchant/internal/places/app/command"
 
 	"github.com/labstack/echo/v4"
+	"log/slog"
+	"net/http"
+	"net/url"
 )
 
 type MenuHandler struct {
-	getMenuUseCase *menu.GetMenuUseCase
+	getMenuUseCase *menuQuery.GetMenuUseCase
 	cartService    *cart.CartService
-	recordVisitUC  *places.RecordMenuVisitUseCase
+	recordVisitUC  *placesCmd.RecordMenuVisitUseCase
 }
 
-func NewMenuHandler(getMenuUseCase *menu.GetMenuUseCase, cartService *cart.CartService, recordVisitUC *places.RecordMenuVisitUseCase) *MenuHandler {
+func NewMenuHandler(getMenuUseCase *menuQuery.GetMenuUseCase, cartService *cart.CartService, recordVisitUC *placesCmd.RecordMenuVisitUseCase) *MenuHandler {
 	return &MenuHandler{
 		getMenuUseCase: getMenuUseCase,
 		cartService:    cartService,
@@ -30,12 +31,15 @@ func NewMenuHandler(getMenuUseCase *menu.GetMenuUseCase, cartService *cart.CartS
 func (h *MenuHandler) GetMenu(c echo.Context) error {
 	restaurantID := c.QueryParam("restaurantID")
 	if restaurantID == "" {
-		restaurantID = "restaurant_1" // Default for MVP
+		return c.Redirect(http.StatusFound, "/?reason="+url.QueryEscape("restaurant_required"))
 	}
 
 	// Get Menu Data
-	menuData, err := h.getMenuUseCase.Execute(c.Request().Context(), domain.RestaurantID(restaurantID))
+	menuData, err := h.getMenuUseCase.Execute(c.Request().Context(), common.RestaurantID(restaurantID))
 	if err != nil {
+		if err.Error() == "restaurant not found" {
+			return c.Redirect(http.StatusFound, "/?reason="+url.QueryEscape("restaurant_not_found"))
+		}
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -44,7 +48,7 @@ func (h *MenuHandler) GetMenu(c echo.Context) error {
 	cart := h.cartService.GetCart(sessionID)
 
 	if h.recordVisitUC != nil {
-		if err := h.recordVisitUC.Execute(c.Request().Context(), sessionID, domain.RestaurantID(restaurantID)); err != nil {
+		if err := h.recordVisitUC.Execute(c.Request().Context(), sessionID, common.RestaurantID(restaurantID)); err != nil {
 			slog.Warn("record menu visit failed", "error", err, "restaurantID", restaurantID)
 		}
 	}

@@ -1,16 +1,18 @@
 package menu_test
 
 import (
-	"context"
-	"io"
-	"testing"
+	"bitmerchant/internal/common"
 
-	"bitmerchant/internal/application/menu"
-	"bitmerchant/internal/domain"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
+	"testing"
 )
 
 type fakePhotoStorage struct{}
@@ -29,20 +31,20 @@ func TestGetMenuUseCase(t *testing.T) {
 	catRepo := memory.NewMemoryMenuCategoryRepository()
 	itemRepo := memory.NewMemoryMenuItemRepository()
 	restRepo := memory.NewMemoryRestaurantRepository()
-	uc := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menu.PhotoSignerConfig{})
+	uc := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
 
-	restID := domain.RestaurantID("r1")
-	restaurant, _ := domain.NewRestaurant(restID, "Test Restaurant")
+	restID := common.RestaurantID("r1")
+	restaurant, _ := restaurant.NewRestaurant(restID, "Test Restaurant")
 	require.NoError(t, restRepo.Save(restaurant))
 
 	// Setup data
-	cat1, _ := domain.NewMenuCategory("c1", restID, "Starters", 1)
-	cat2, _ := domain.NewMenuCategory("c2", restID, "Mains", 2)
+	cat1, _ := menu.NewMenuCategory("c1", restID, "Starters", 1)
+	cat2, _ := menu.NewMenuCategory("c2", restID, "Mains", 2)
 	require.NoError(t, catRepo.Save(cat1))
 	require.NoError(t, catRepo.Save(cat2))
 
-	item1, _ := domain.NewMenuItem("i1", "c1", restID, "Salad", 10.0)
-	item2, _ := domain.NewMenuItem("i2", "c2", restID, "Steak", 20.0)
+	item1, _ := menu.NewMenuItem("i1", "c1", restID, "Salad", 10.0)
+	item2, _ := menu.NewMenuItem("i2", "c2", restID, "Steak", 20.0)
 	require.NoError(t, itemRepo.Save(item1))
 	require.NoError(t, itemRepo.Save(item2))
 
@@ -64,10 +66,10 @@ func TestGetMenuUseCase(t *testing.T) {
 	})
 
 	t.Run("presigned_photo_urls", func(t *testing.T) {
-		ucPhoto := menu.NewGetMenuUseCase(catRepo, itemRepo, restRepo, fakePhotoStorage{}, menu.PhotoSignerConfig{
+		ucPhoto := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, fakePhotoStorage{}, menuQuery.PhotoSignerConfig{
 			Bucket: "mybucket",
 		})
-		itemPhoto, _ := domain.NewMenuItem("iphoto", "c1", restID, "With Pix", 10.0)
+		itemPhoto, _ := menu.NewMenuItem("iphoto", "c1", restID, "With Pix", 10.0)
 		itemPhoto.SetPhotoURLs("restaurants/r1/items/x.jpg", "restaurants/r1/items/x.jpg")
 		require.NoError(t, itemRepo.Save(itemPhoto))
 
