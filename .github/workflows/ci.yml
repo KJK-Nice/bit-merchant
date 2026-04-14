@@ -23,7 +23,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.64
+          version: v2.11.4
 
   e2e-routing-smoke:
     name: E2E Routing Smoke (Playwright)
