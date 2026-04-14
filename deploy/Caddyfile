@@ -1,0 +1,18 @@
+{
+	auto_https disable_redirects
+}
+
+https://bitmerchant.local:8080 {
+	tls internal
+	reverse_proxy app:8081
+}
+
+https://merchant.bitmerchant.local:8080 {
+	tls internal
+	reverse_proxy app:8081
+}
+
+https://order.bitmerchant.local:8080 {
+	tls internal
+	reverse_proxy app:8081
+}

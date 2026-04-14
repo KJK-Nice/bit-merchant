@@ -1,4 +1,7 @@
 (function () {
+	const defaultSupportMessage =
+		"Passkeys are not available in this browser/context. Use a supported browser over a secure connection.";
+
 	function toBase64Url(buffer) {
 		const bytes = new Uint8Array(buffer);
 		let binary = "";
@@ -87,7 +90,83 @@
 		return response.json();
 	}
 
+	function formatSupportMessage(reason) {
+		switch (reason) {
+			case "insecure_context":
+				return `${defaultSupportMessage} This page must be served over HTTPS or localhost.`;
+			case "missing_public_key_credential":
+				return `${defaultSupportMessage} WebAuthn is not supported in this browser.`;
+			case "missing_credentials_api":
+				return `${defaultSupportMessage} Browser Credentials API is unavailable.`;
+			case "missing_create":
+				return `${defaultSupportMessage} This browser cannot create passkeys.`;
+			case "missing_get":
+				return `${defaultSupportMessage} This browser cannot use existing passkeys.`;
+			default:
+				return defaultSupportMessage;
+		}
+	}
+
+	function getWebAuthnSupport(operation) {
+		if (window.__BITMERCHANT_FORCE_PASSKEY_UNSUPPORTED === true) {
+			return { supported: false, message: defaultSupportMessage };
+		}
+		if (window.isSecureContext !== true) {
+			return { supported: false, message: formatSupportMessage("insecure_context") };
+		}
+		if (typeof window.PublicKeyCredential === "undefined") {
+			return { supported: false, message: formatSupportMessage("missing_public_key_credential") };
+		}
+		if (!navigator.credentials) {
+			return { supported: false, message: formatSupportMessage("missing_credentials_api") };
+		}
+		if (operation === "create" && typeof navigator.credentials.create !== "function") {
+			return { supported: false, message: formatSupportMessage("missing_create") };
+		}
+		if (operation === "get" && typeof navigator.credentials.get !== "function") {
+			return { supported: false, message: formatSupportMessage("missing_get") };
+		}
+		return { supported: true, message: "" };
+	}
+
+	function ensureFormErrorNode(form) {
+		let node = form.querySelector("[data-passkey-error]");
+		if (node) {
+			return node;
+		}
+
+		node = document.createElement("p");
+		node.setAttribute("data-passkey-error", "true");
+		node.setAttribute("role", "alert");
+		node.setAttribute("aria-live", "polite");
+		node.className = "text-sm text-red-600 mt-2";
+		form.appendChild(node);
+		return node;
+	}
+
+	function setFormError(form, message) {
+		if (!message) {
+			return false;
+		}
+		const node = ensureFormErrorNode(form);
+		node.textContent = message;
+		return true;
+	}
+
+	function disableSubmit(form) {
+		const submit = form.querySelector("button[type='submit'], input[type='submit']");
+		if (!submit) {
+			return;
+		}
+		submit.disabled = true;
+		submit.setAttribute("aria-disabled", "true");
+	}
+
 	async function handleSignup(form) {
+		const support = getWebAuthnSupport("create");
+		if (!support.supported) {
+			throw new Error(support.message);
+		}
 		const displayName = form.querySelector("[name='displayName']").value;
 		const restaurantName = form.querySelector("[name='restaurantName']").value;
 		const csrf = form.dataset.csrf || "";
@@ -102,6 +181,10 @@
 	}
 
 	async function handleInvite(form) {
+		const support = getWebAuthnSupport("create");
+		if (!support.supported) {
+			throw new Error(support.message);
+		}
 		const displayName = form.querySelector("[name='displayName']").value;
 		const invitationToken = form.dataset.invitationToken;
 		const csrf = form.dataset.csrf || "";
@@ -116,6 +199,10 @@
 	}
 
 	async function handleLogin(form) {
+		const support = getWebAuthnSupport("get");
+		if (!support.supported) {
+			throw new Error(support.message);
+		}
 		const csrf = form.dataset.csrf || "";
 		const begin = await postJSON("/auth/login/begin", {}, csrf);
 		const requestOptions = begin.publicKey || begin.response || begin;
@@ -126,23 +213,32 @@
 		window.location.href = finish.redirect || "/dashboard";
 	}
 
-	function bind(formId, handler) {
+	function bind(formId, handler, operation) {
 		const form = document.getElementById(formId);
 		if (!form) {
 			return;
+		}
+		const support = getWebAuthnSupport(operation);
+		if (!support.supported) {
+			disableSubmit(form);
+			setFormError(form, support.message);
 		}
 		form.addEventListener("submit", async (event) => {
 			event.preventDefault();
 			try {
 				await handler(form);
 			} catch (error) {
-				// Keep UX simple for now and rely on browser alert for errors.
-				alert(error.message || "Authentication failed");
+				const message = error instanceof Error ? error.message : "Authentication failed";
+				const rendered = setFormError(form, message);
+				if (!rendered) {
+					// Fallback only when inline rendering is unavailable.
+					alert(message);
+				}
 			}
 		});
 	}
 
-	bind("passkey-signup-form", handleSignup);
-	bind("passkey-login-form", handleLogin);
-	bind("passkey-invite-form", handleInvite);
+	bind("passkey-signup-form", handleSignup, "create");
+	bind("passkey-login-form", handleLogin, "get");
+	bind("passkey-invite-form", handleInvite, "create");
 })();
