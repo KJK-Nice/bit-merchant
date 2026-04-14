@@ -1,9 +1,62 @@
 import { expect, test } from "@playwright/test";
 import { MerchantActor } from "../actors/MerchantActor";
+import { LoginWithPasskey } from "../tasks/LoginWithPasskey";
+import { Logout } from "../tasks/Logout";
 import { OpenRoute } from "../tasks/OpenRoute";
 import { RegisterOwnerWithPasskey } from "../tasks/RegisterOwnerWithPasskey";
 
 test.describe("Merchant multi-restaurant selection", () => {
+  test.skip("multi-membership user is prompted to select restaurant after login", async ({ browser }) => {
+    // TODO: Depends on passkey re-login, currently stalls at WebAuthn assertion in Playwright.
+    const context = await browser.newContext();
+    const merchant = await MerchantActor(context);
+
+    const suffix = Date.now().toString();
+    const firstRestaurantName = `First Cafe ${suffix}`;
+    const secondRestaurantName = `Second Cafe ${suffix}`;
+
+    await merchant.attemptsTo(RegisterOwnerWithPasskey(`Owner ${suffix}`, firstRestaurantName));
+    await expect(merchant.page).toHaveURL(/\/dashboard$/);
+
+    await merchant.attemptsTo(OpenRoute("merchant", "/auth/restaurants/new"));
+    await merchant.page.getByLabel("Restaurant name").fill(secondRestaurantName);
+    await Promise.all([
+      merchant.page.waitForURL("**/dashboard", { waitUntil: "domcontentloaded" }),
+      merchant.page.getByRole("button", { name: "Create restaurant" }).click(),
+    ]);
+
+    await merchant.attemptsTo(Logout(), LoginWithPasskey());
+    await expect(merchant.page).toHaveURL(/\/auth\/select-restaurant$/);
+    await expect(merchant.page.getByRole("heading", { name: "Choose active restaurant" })).toBeVisible();
+
+    await context.close();
+  });
+
+  test("owner creating a new restaurant switches active context to the new restaurant", async ({ browser }) => {
+    const context = await browser.newContext();
+    const merchant = await MerchantActor(context);
+
+    const suffix = `${Date.now()}-active`;
+    const firstRestaurantName = `First Cafe ${suffix}`;
+    const secondRestaurantName = `Second Cafe ${suffix}`;
+
+    await merchant.attemptsTo(RegisterOwnerWithPasskey(`Owner ${suffix}`, firstRestaurantName));
+    await expect(merchant.page).toHaveURL(/\/dashboard$/);
+
+    await merchant.attemptsTo(OpenRoute("merchant", "/auth/restaurants/new"));
+    await merchant.page.getByLabel("Restaurant name").fill(secondRestaurantName);
+    await Promise.all([
+      merchant.page.waitForURL("**/dashboard", { waitUntil: "domcontentloaded" }),
+      merchant.page.getByRole("button", { name: "Create restaurant" }).click(),
+    ]);
+
+    await merchant.attemptsTo(OpenRoute("merchant", "/auth/select-restaurant"));
+    const selectedOption = merchant.page.locator("#restaurantID option[selected]");
+    await expect(selectedOption).toContainText(secondRestaurantName);
+
+    await context.close();
+  });
+
   test("user with multiple memberships can switch active restaurant from selection screen", async ({
     browser,
   }) => {
@@ -21,7 +74,7 @@ test.describe("Merchant multi-restaurant selection", () => {
     await expect(merchant.page.getByRole("heading", { name: "New restaurant" })).toBeVisible();
     await merchant.page.getByLabel("Restaurant name").fill(secondRestaurantName);
     await Promise.all([
-      merchant.page.waitForURL("**/dashboard"),
+      merchant.page.waitForURL("**/dashboard", { waitUntil: "domcontentloaded" }),
       merchant.page.getByRole("button", { name: "Create restaurant" }).click(),
     ]);
 
@@ -49,7 +102,7 @@ test.describe("Merchant multi-restaurant selection", () => {
 
     await merchant.page.selectOption("#restaurantID", selectedValue ?? "");
     await Promise.all([
-      merchant.page.waitForURL("**/dashboard"),
+      merchant.page.waitForURL("**/dashboard", { waitUntil: "domcontentloaded" }),
       merchant.page.getByRole("button", { name: "Use this restaurant" }).click(),
     ]);
     await expect(merchant.page).toHaveURL(/\/dashboard$/);

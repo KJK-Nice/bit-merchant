@@ -22,20 +22,20 @@ This checklist tracks end-to-end user journeys for Playwright coverage.
 
 - [ ] As a user with multiple restaurant memberships, I am prompted to select a restaurant after login.
 - [x] As a multi-restaurant user, selecting a restaurant updates active session context and routes me by role.
-- [ ] As an owner, I can create a new restaurant and my active context switches to the new restaurant.
+- [x] As an owner, I can create a new restaurant and my active context switches to the new restaurant.
 
 ### Customer Ordering Resilience
 
-- [ ] As a customer, I can recover my order via order lookup when returning later.
-- [ ] As a customer, I can remove an item from cart and totals update before checkout.
-- [ ] As a customer, I cannot place an order when cart is empty and I see a clear validation message.
+- [x] As a customer, I can recover my order via order lookup when returning later.
+- [x] As a customer, I can remove an item from cart and totals update before checkout.
+- [x] As a customer, I cannot place an order when cart is empty and I see a clear validation message.
 
 ### Kitchen Operations
 
-- [ ] As kitchen staff, I can mark an order paid -> preparing -> ready from the kitchen screen.
-- [ ] As a customer, I can observe order status updates while kitchen transitions the order state.
+- [x] As kitchen staff, I can mark an order paid -> preparing -> ready from the kitchen screen.
+- [x] As a customer, I can observe order status updates while kitchen transitions the order state.
 
 ### Admin & Menu Management
 
-- [ ] As an owner, I can toggle menu item availability and customers immediately see the availability state.
-- [ ] As an owner, I can update QR/table settings and generated QR links remain valid for customer menu access.
+- [x] As an owner, I can toggle menu item availability and customers cannot order unavailable items.
+- [x] As an owner, I can update QR/table settings and generated QR links remain valid for customer menu access.
