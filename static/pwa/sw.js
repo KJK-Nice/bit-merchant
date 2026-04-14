@@ -1,7 +1,6 @@
-const CACHE_NAME = 'bitmerchant-v2';
+const CACHE_NAME = 'bitmerchant-v3';
 const URLS_TO_CACHE = [
   '/',
-  '/menu',
   '/static/pwa/manifest.json',
   '/static/pwa/icon.svg',
   '/assets/js/input.min.js',
@@ -41,6 +40,13 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Let the browser handle document navigations so 302 canonical-host redirects
+  // (surface routing) are not wrapped by the SW — Chromium rejects redirected
+  // navigation responses from service workers.
+  if (event.request.mode === 'navigate') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
