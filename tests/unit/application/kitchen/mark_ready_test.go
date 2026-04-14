@@ -42,7 +42,7 @@ func TestMarkOrderReadyUseCase_Execute(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, common.FulfillmentStatusReady, savedOrder.FulfillmentStatus)
 		assert.NotNil(t, savedOrder.ReadyAt)
-		assert.Equal(t, "OrderReady", publishedEvent)
+		assert.Equal(t, "order.ready", publishedEvent)
 	})
 
 	t.Run("fails if status transition is invalid", func(t *testing.T) {

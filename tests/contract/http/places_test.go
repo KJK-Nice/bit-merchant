@@ -6,6 +6,8 @@ import (
 	placesQuery "bitmerchant/internal/places/app/query"
 	"bitmerchant/internal/places/domain/visit"
 	"bitmerchant/internal/restaurant/domain/restaurant"
+	"context"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -22,10 +24,7 @@ func TestGetMyPlaces(t *testing.T) {
 
 	r, _ := restaurant.NewRestaurant("pr-contract", "Contract Cafe")
 	require.NoError(t, rest.Save(r))
-	require.NoError(t, visits.Upsert(&visit.SessionRestaurantVisit{
-		SessionID:    "sess-p",
-		RestaurantID: "pr-contract",
-	}))
+	require.NoError(t, visits.Upsert(context.Background(), visit.NewSessionRestaurantVisit("sess-p", "pr-contract", time.Time{}, time.Time{})))
 
 	uc := placesQuery.NewListVisitedRestaurantsUseCase(visits, rest, orders)
 	h := handler.NewPlacesHandler(uc)

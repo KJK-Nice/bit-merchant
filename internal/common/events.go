@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	EventOrderCreated   = "OrderCreated"
-	EventOrderPaid      = "OrderPaid"
-	EventOrderPreparing = "OrderPreparing"
-	EventOrderReady     = "OrderReady"
-	EventOrderCompleted = "OrderCompleted"
+	EventOrderCreated   = "order.created"
+	EventOrderPaid      = "order.paid"
+	EventOrderPreparing = "order.preparing"
+	EventOrderReady     = "order.ready"
+	EventOrderCompleted = "order.completed"
 )
 
 // DomainEvent represents a domain event interface.

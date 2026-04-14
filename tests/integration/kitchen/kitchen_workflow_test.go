@@ -4,10 +4,11 @@ import (
 	"bitmerchant/internal/common"
 
 	"bitmerchant/internal/infrastructure/events"
-	eventHandlers "bitmerchant/internal/infrastructure/events/handlers"
 	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/infrastructure/payment/cash"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	interfaceEvents "bitmerchant/internal/interfaces/events"
+	eventHandlers "bitmerchant/internal/interfaces/events/handlers"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/http/middleware"
 	menuQuery "bitmerchant/internal/menu/app/query"
@@ -15,7 +16,6 @@ import (
 	"bitmerchant/internal/ordering/app/cart"
 	orderCmd "bitmerchant/internal/ordering/app/command"
 	orderQuery "bitmerchant/internal/ordering/app/query"
-	"bitmerchant/internal/ordering/domain/order"
 	placesCmd "bitmerchant/internal/places/app/command"
 	"bitmerchant/internal/restaurant/domain/restaurant"
 	"context"
@@ -85,23 +85,23 @@ func TestKitchenWorkflow(t *testing.T) {
 	orderReadyHandler := eventHandlers.NewOrderReadyHandler(logger, sseHandler, orderRepo)
 
 	// Subscriptions
-	subscribe(t, eventBus, "OrderCreated", func(msg []byte) {
-		var event order.OrderCreated
+	subscribe(t, eventBus, common.EventOrderCreated, func(msg []byte) {
+		var event interfaceEvents.OrderCreated
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderCreatedHandler.Handle(context.Background(), event))
 	})
-	subscribe(t, eventBus, "OrderPaid", func(msg []byte) {
-		var event order.OrderPaid
+	subscribe(t, eventBus, common.EventOrderPaid, func(msg []byte) {
+		var event interfaceEvents.OrderPaid
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderPaidHandler.Handle(context.Background(), event))
 	})
-	subscribe(t, eventBus, "OrderPreparing", func(msg []byte) {
-		var event order.OrderPreparing
+	subscribe(t, eventBus, common.EventOrderPreparing, func(msg []byte) {
+		var event interfaceEvents.OrderPreparing
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderPreparingHandler.Handle(context.Background(), event))
 	})
-	subscribe(t, eventBus, "OrderReady", func(msg []byte) {
-		var event order.OrderReady
+	subscribe(t, eventBus, common.EventOrderReady, func(msg []byte) {
+		var event interfaceEvents.OrderReady
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderReadyHandler.Handle(context.Background(), event))
 	})

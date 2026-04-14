@@ -7,8 +7,7 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
-	"bitmerchant/internal/infrastructure/events"
-	"bitmerchant/internal/infrastructure/logging"
+	ifaceevents "bitmerchant/internal/interfaces/events"
 	"bitmerchant/internal/ordering/app/cart"
 	"bitmerchant/internal/ordering/domain/order"
 	"bitmerchant/internal/restaurant/domain/restaurant"
@@ -29,15 +28,20 @@ type CreateOrderResponse struct {
 type CreateOrderUseCase struct {
 	orderRepo order.Repository
 	restRepo  restaurant.Repository
-	eventBus  *events.EventBus
-	logger    *logging.Logger
+	eventBus  common.EventBus
+	logger    Logger
+}
+
+type Logger interface {
+	Info(msg string, args ...any)
+	Warn(msg string, args ...any)
 }
 
 func NewCreateOrderUseCase(
 	orderRepo order.Repository,
 	restRepo restaurant.Repository,
-	eventBus *events.EventBus,
-	logger *logging.Logger,
+	eventBus common.EventBus,
+	logger Logger,
 ) *CreateOrderUseCase {
 	return &CreateOrderUseCase{
 		orderRepo: orderRepo,
@@ -100,7 +104,7 @@ func (uc *CreateOrderUseCase) createOrderItems(cartItems []cart.CartItem, orderI
 }
 
 func (uc *CreateOrderUseCase) publishOrderCreatedEvent(ctx context.Context, o *order.Order) {
-	event := order.OrderCreated{
+	event := ifaceevents.OrderCreated{
 		OrderID:      o.ID,
 		RestaurantID: o.RestaurantID,
 		CreatedAt:    o.CreatedAt,

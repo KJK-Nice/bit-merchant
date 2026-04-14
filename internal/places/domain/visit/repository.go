@@ -1,7 +1,9 @@
 package visit
 
+import "context"
+
 // Repository defines operations for SessionRestaurantVisit persistence.
 type Repository interface {
-	Upsert(visit *SessionRestaurantVisit) error
-	FindBySessionID(sessionID string) ([]*SessionRestaurantVisit, error)
+	Upsert(ctx context.Context, visit *SessionRestaurantVisit) error
+	FindBySessionID(ctx context.Context, sessionID string) ([]*SessionRestaurantVisit, error)
 }

@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -473,38 +474,28 @@ func TestVisitRepository(t *testing.T) {
 	now := time.Now().Truncate(time.Microsecond)
 
 	t.Run("Upsert and FindBySessionID", func(t *testing.T) {
-		v := &visit.SessionRestaurantVisit{
-			SessionID:      "sess-visit-1",
-			RestaurantID:   restID,
-			FirstVisitedAt: now,
-			LastVisitedAt:  now,
-		}
-		require.NoError(t, repo.Upsert(v))
+		v := visit.NewSessionRestaurantVisit("sess-visit-1", restID, now, now)
+		require.NoError(t, repo.Upsert(context.Background(), v))
 
-		found, err := repo.FindBySessionID("sess-visit-1")
+		found, err := repo.FindBySessionID(context.Background(), "sess-visit-1")
 		require.NoError(t, err)
 		require.Len(t, found, 1)
-		assert.Equal(t, restID, found[0].RestaurantID)
+		assert.Equal(t, restID, found[0].RestaurantID())
 	})
 
 	t.Run("Upsert updates last_visited_at", func(t *testing.T) {
 		later := now.Add(time.Hour)
-		v := &visit.SessionRestaurantVisit{
-			SessionID:      "sess-visit-1",
-			RestaurantID:   restID,
-			FirstVisitedAt: now,
-			LastVisitedAt:  later,
-		}
-		require.NoError(t, repo.Upsert(v))
+		v := visit.NewSessionRestaurantVisit("sess-visit-1", restID, now, later)
+		require.NoError(t, repo.Upsert(context.Background(), v))
 
-		found, err := repo.FindBySessionID("sess-visit-1")
+		found, err := repo.FindBySessionID(context.Background(), "sess-visit-1")
 		require.NoError(t, err)
 		require.Len(t, found, 1)
-		assert.True(t, found[0].LastVisitedAt.After(now) || found[0].LastVisitedAt.Equal(later))
+		assert.True(t, found[0].LastVisitedAt().After(now) || found[0].LastVisitedAt().Equal(later))
 	})
 
 	t.Run("FindBySessionID empty", func(t *testing.T) {
-		found, err := repo.FindBySessionID("nonexistent")
+		found, err := repo.FindBySessionID(context.Background(), "nonexistent")
 		require.NoError(t, err)
 		assert.Empty(t, found)
 	})

@@ -26,8 +26,5 @@ func (uc *RecordMenuVisitUseCase) Execute(ctx context.Context, sessionID string,
 		return err
 	}
 	now := time.Now()
-	return uc.visits.Upsert(&visit.SessionRestaurantVisit{
-		SessionID: sessionID, RestaurantID: restaurantID,
-		FirstVisitedAt: now, LastVisitedAt: now,
-	})
+	return uc.visits.Upsert(ctx, visit.NewSessionRestaurantVisit(sessionID, restaurantID, now, now))
 }

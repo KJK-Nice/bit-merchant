@@ -47,7 +47,7 @@ func TestMarkOrderPaidUseCase_Execute(t *testing.T) {
 		assert.NotNil(t, savedOrder)
 		assert.Equal(t, common.PaymentStatusPaid, savedOrder.PaymentStatus)
 		assert.NotNil(t, savedOrder.PaidAt)
-		assert.Equal(t, "OrderPaid", publishedEvent)
+		assert.Equal(t, "order.paid", publishedEvent)
 	})
 
 	t.Run("returns error when order not found", func(t *testing.T) {

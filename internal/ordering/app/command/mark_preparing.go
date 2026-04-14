@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	ifaceevents "bitmerchant/internal/interfaces/events"
 	"bitmerchant/internal/ordering/domain/order"
 )
 
@@ -35,7 +36,7 @@ func (uc *MarkOrderPreparingUseCase) Execute(ctx context.Context, orderID common
 		return nil, err
 	}
 
-	event := order.OrderPreparing{
+	event := ifaceevents.OrderPreparing{
 		OrderID:      o.ID,
 		RestaurantID: o.RestaurantID,
 		OrderNumber:  o.OrderNumber,

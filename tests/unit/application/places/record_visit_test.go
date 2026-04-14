@@ -26,10 +26,10 @@ func TestRecordMenuVisitUseCase(t *testing.T) {
 	require.NoError(t, uc.Execute(ctx, "sess-a", "r1"))
 	require.NoError(t, uc.Execute(ctx, "sess-a", "r1"))
 
-	got, err := visits.FindBySessionID("sess-a")
+	got, err := visits.FindBySessionID(ctx, "sess-a")
 	require.NoError(t, err)
 	require.Len(t, got, 1)
-	assert.Equal(t, common.RestaurantID("r1"), got[0].RestaurantID)
-	assert.True(t, got[0].LastVisitedAt.After(got[0].FirstVisitedAt) || got[0].LastVisitedAt.Equal(got[0].FirstVisitedAt))
-	assert.WithinDuration(t, time.Now(), got[0].LastVisitedAt, 2*time.Second)
+	assert.Equal(t, common.RestaurantID("r1"), got[0].RestaurantID())
+	assert.True(t, got[0].LastVisitedAt().After(got[0].FirstVisitedAt()) || got[0].LastVisitedAt().Equal(got[0].FirstVisitedAt()))
+	assert.WithinDuration(t, time.Now(), got[0].LastVisitedAt(), 2*time.Second)
 }

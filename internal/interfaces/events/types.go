@@ -1,4 +1,4 @@
-package order
+package events
 
 import (
 	"time"
@@ -6,7 +6,6 @@ import (
 	"bitmerchant/internal/common"
 )
 
-// OrderCreated event is triggered when order is created.
 type OrderCreated struct {
 	OrderID      common.OrderID
 	RestaurantID common.RestaurantID
@@ -18,7 +17,6 @@ type OrderCreated struct {
 func (e OrderCreated) EventName() string     { return common.EventOrderCreated }
 func (e OrderCreated) OccurredAt() time.Time { return e.CreatedAt }
 
-// OrderPaid event is triggered when payment is confirmed.
 type OrderPaid struct {
 	OrderID      common.OrderID
 	RestaurantID common.RestaurantID
@@ -30,7 +28,6 @@ type OrderPaid struct {
 func (e OrderPaid) EventName() string     { return common.EventOrderPaid }
 func (e OrderPaid) OccurredAt() time.Time { return e.PaidAt }
 
-// OrderPreparing event is triggered when order starts preparing.
 type OrderPreparing struct {
 	OrderID      common.OrderID
 	RestaurantID common.RestaurantID
@@ -41,7 +38,6 @@ type OrderPreparing struct {
 func (e OrderPreparing) EventName() string     { return common.EventOrderPreparing }
 func (e OrderPreparing) OccurredAt() time.Time { return e.PreparingAt }
 
-// OrderReady event is triggered when order is ready.
 type OrderReady struct {
 	OrderID      common.OrderID
 	RestaurantID common.RestaurantID
@@ -52,7 +48,6 @@ type OrderReady struct {
 func (e OrderReady) EventName() string     { return common.EventOrderReady }
 func (e OrderReady) OccurredAt() time.Time { return e.ReadyAt }
 
-// OrderCompleted event is triggered when order is completed.
 type OrderCompleted struct {
 	OrderID      common.OrderID
 	RestaurantID common.RestaurantID

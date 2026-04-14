@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bitmerchant/internal/infrastructure/logging"
+	ifaceevents "bitmerchant/internal/interfaces/events"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/ordering/domain/order"
@@ -23,7 +24,7 @@ func NewOrderCreatedHandler(logger *logging.Logger, sse *handler.SSEHandler, rep
 	}
 }
 
-func (h *OrderCreatedHandler) Handle(ctx context.Context, event order.OrderCreated) error {
+func (h *OrderCreatedHandler) Handle(ctx context.Context, event ifaceevents.OrderCreated) error {
 	h.logger.Info("New Order Created", "orderID", event.OrderID, "amount", event.TotalAmount)
 
 	// Fetch full order to render card

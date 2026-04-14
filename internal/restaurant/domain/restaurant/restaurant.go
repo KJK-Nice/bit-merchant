@@ -2,7 +2,6 @@ package restaurant
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"bitmerchant/internal/common"
@@ -12,6 +11,8 @@ const (
 	MinTableCount = 1
 	MaxTableCount = 200
 )
+
+var ErrInvalidTableCount = errors.New("invalid table count")
 
 // Restaurant represents a single restaurant tenant.
 type Restaurant struct {
@@ -51,7 +52,7 @@ func ValidateRestaurantName(name string) error {
 
 func ValidateTableCount(n int) error {
 	if n < MinTableCount || n > MaxTableCount {
-		return fmt.Errorf("table count must be between %d and %d", MinTableCount, MaxTableCount)
+		return ErrInvalidTableCount
 	}
 	return nil
 }
