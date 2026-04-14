@@ -29,12 +29,8 @@ func TestListVisitedRestaurantsUseCase(t *testing.T) {
 
 	older := time.Now().Add(-2 * time.Hour)
 	newer := time.Now().Add(-1 * time.Hour)
-	require.NoError(t, visits.Upsert(&visit.SessionRestaurantVisit{
-		SessionID: "s1", RestaurantID: "r1", FirstVisitedAt: older, LastVisitedAt: older,
-	}))
-	require.NoError(t, visits.Upsert(&visit.SessionRestaurantVisit{
-		SessionID: "s1", RestaurantID: "r2", FirstVisitedAt: newer, LastVisitedAt: newer,
-	}))
+	require.NoError(t, visits.Upsert(context.Background(), visit.NewSessionRestaurantVisit("s1", "r1", older, older)))
+	require.NoError(t, visits.Upsert(context.Background(), visit.NewSessionRestaurantVisit("s1", "r2", newer, newer)))
 
 	item, _ := order.NewOrderItem("oi", "o1", "mi", "X", 1, 1)
 	o, _ := order.NewOrder("o1", "1001", "r1", "s1", []order.OrderItem{*item}, 100, common.PaymentMethodTypeCash)

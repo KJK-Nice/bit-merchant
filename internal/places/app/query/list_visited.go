@@ -32,7 +32,7 @@ func (uc *ListVisitedRestaurantsUseCase) Execute(ctx context.Context, sessionID 
 	if sessionID == "" {
 		return nil, nil
 	}
-	visitRows, err := uc.visits.FindBySessionID(sessionID)
+	visitRows, err := uc.visits.FindBySessionID(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -47,14 +47,14 @@ func (uc *ListVisitedRestaurantsUseCase) Execute(ctx context.Context, sessionID 
 	}
 	out := make([]VisitedPlace, 0, len(visitRows))
 	for _, v := range visitRows {
-		rest, err := uc.restaurants.FindByID(v.RestaurantID)
+		rest, err := uc.restaurants.FindByID(v.RestaurantID())
 		if err != nil || rest == nil {
 			continue
 		}
-		_, hasOrdered := ordered[v.RestaurantID]
+		_, hasOrdered := ordered[v.RestaurantID()]
 		out = append(out, VisitedPlace{
-			RestaurantID: v.RestaurantID, Name: rest.Name,
-			LastVisitedAt: v.LastVisitedAt, HasOrderedHere: hasOrdered,
+			RestaurantID: v.RestaurantID(), Name: rest.Name,
+			LastVisitedAt: v.LastVisitedAt(), HasOrderedHere: hasOrdered,
 			IsOpen: rest.IsOpen,
 		})
 	}

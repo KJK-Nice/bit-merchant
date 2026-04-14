@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func initPhotoStorage(cfg serverConfig, logger *logging.Logger) (menu.PhotoStorage, error) {
+func initPhotoStorage(cfg Config, logger *logging.Logger) (menu.PhotoStorage, error) {
 	if cfg.S3BucketName == "" || cfg.AWSRegion == "" {
 		logger.Info("S3 config missing, photo uploads will fail")
 		return nil, nil
@@ -38,7 +38,7 @@ func initPhotoStorage(cfg serverConfig, logger *logging.Logger) (menu.PhotoStora
 	return photoStorage, nil
 }
 
-func connectDatabase(cfg serverConfig, logger *logging.Logger) (*sql.DB, error) {
+func connectDatabase(cfg Config, logger *logging.Logger) (*sql.DB, error) {
 	if cfg.DatabaseURL == "" {
 		return nil, nil
 	}

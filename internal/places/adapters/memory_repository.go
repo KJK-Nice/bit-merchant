@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"context"
 	"sort"
 	"sync"
 	"time"
@@ -19,34 +20,35 @@ func NewMemoryVisitRepository() *MemoryVisitRepository {
 	}
 }
 
-func (r *MemoryVisitRepository) Upsert(v *visit.SessionRestaurantVisit) error {
+func (r *MemoryVisitRepository) Upsert(_ context.Context, v *visit.SessionRestaurantVisit) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if v == nil || v.SessionID == "" || v.RestaurantID == "" {
+	if v == nil || v.SessionID() == "" || v.RestaurantID() == "" {
 		return nil
 	}
-	key := string(v.RestaurantID)
+	key := string(v.RestaurantID())
 	now := time.Now()
-	if r.visits[v.SessionID] == nil {
-		r.visits[v.SessionID] = make(map[string]*visit.SessionRestaurantVisit)
+	sessionID := v.SessionID()
+	if r.visits[sessionID] == nil {
+		r.visits[sessionID] = make(map[string]*visit.SessionRestaurantVisit)
 	}
-	existing := r.visits[v.SessionID][key]
+	existing := r.visits[sessionID][key]
 	if existing == nil {
-		cp := *v
-		if cp.FirstVisitedAt.IsZero() {
-			cp.FirstVisitedAt = now
+		cp := v.Clone()
+		if cp.FirstVisitedAt().IsZero() {
+			cp.Touch(now)
 		}
-		if cp.LastVisitedAt.IsZero() {
-			cp.LastVisitedAt = now
+		if cp.LastVisitedAt().IsZero() {
+			cp.Touch(now)
 		}
-		r.visits[v.SessionID][key] = &cp
+		r.visits[sessionID][key] = cp
 		return nil
 	}
-	existing.LastVisitedAt = now
+	existing.Touch(now)
 	return nil
 }
 
-func (r *MemoryVisitRepository) FindBySessionID(sessionID string) ([]*visit.SessionRestaurantVisit, error) {
+func (r *MemoryVisitRepository) FindBySessionID(_ context.Context, sessionID string) ([]*visit.SessionRestaurantVisit, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	m := r.visits[sessionID]
@@ -55,11 +57,10 @@ func (r *MemoryVisitRepository) FindBySessionID(sessionID string) ([]*visit.Sess
 	}
 	out := make([]*visit.SessionRestaurantVisit, 0, len(m))
 	for _, v := range m {
-		cp := *v
-		out = append(out, &cp)
+		out = append(out, v.Clone())
 	}
 	sort.Slice(out, func(i, j int) bool {
-		return out[i].LastVisitedAt.After(out[j].LastVisitedAt)
+		return out[i].LastVisitedAt().After(out[j].LastVisitedAt())
 	})
 	return out, nil
 }

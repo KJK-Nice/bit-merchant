@@ -43,7 +43,7 @@ func TestMarkOrderPreparingUseCase_Execute(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, common.FulfillmentStatusPreparing, savedOrder.FulfillmentStatus)
 		assert.NotNil(t, savedOrder.PreparingAt)
-		assert.Equal(t, "OrderPreparing", publishedEvent)
+		assert.Equal(t, "order.preparing", publishedEvent)
 	})
 
 	t.Run("fails if order is not paid", func(t *testing.T) {

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bitmerchant/internal/infrastructure/logging"
+	ifaceevents "bitmerchant/internal/interfaces/events"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components"
@@ -11,22 +12,22 @@ import (
 	"fmt"
 )
 
-type OrderPaidHandler struct {
+type OrderReadyHandler struct {
 	logger *logging.Logger
 	sse    *handler.SSEHandler
 	repo   order.Repository
 }
 
-func NewOrderPaidHandler(logger *logging.Logger, sse *handler.SSEHandler, repo order.Repository) *OrderPaidHandler {
-	return &OrderPaidHandler{
+func NewOrderReadyHandler(logger *logging.Logger, sse *handler.SSEHandler, repo order.Repository) *OrderReadyHandler {
+	return &OrderReadyHandler{
 		logger: logger,
 		sse:    sse,
 		repo:   repo,
 	}
 }
 
-func (h *OrderPaidHandler) Handle(ctx context.Context, event order.OrderPaid) error {
-	h.logger.Info("Order Paid", "orderID", event.OrderID)
+func (h *OrderReadyHandler) Handle(ctx context.Context, event ifaceevents.OrderReady) error {
+	h.logger.Info("Order Ready", "orderID", event.OrderID)
 
 	order, err := h.repo.FindByID(event.OrderID)
 	if err != nil || order == nil {

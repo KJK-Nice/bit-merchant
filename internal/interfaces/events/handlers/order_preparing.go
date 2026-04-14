@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bitmerchant/internal/infrastructure/logging"
+	ifaceevents "bitmerchant/internal/interfaces/events"
 	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components"
@@ -25,7 +26,7 @@ func NewOrderPreparingHandler(logger *logging.Logger, sse *handler.SSEHandler, r
 	}
 }
 
-func (h *OrderPreparingHandler) Handle(ctx context.Context, event order.OrderPreparing) error {
+func (h *OrderPreparingHandler) Handle(ctx context.Context, event ifaceevents.OrderPreparing) error {
 	h.logger.Info("Order Preparing", "orderID", event.OrderID)
 
 	order, err := h.repo.FindByID(event.OrderID)
