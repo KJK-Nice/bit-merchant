@@ -15,6 +15,12 @@ const csrfTokenForMerchantHost = async (actor: Awaited<ReturnType<typeof Merchan
   return csrfCookie?.value ?? "";
 };
 
+const selectedRestaurantID = async (actor: Awaited<ReturnType<typeof MerchantActor>>): Promise<string> => {
+  const hiddenInput = actor.page.locator("button#restaurantID input[data-tui-selectbox-hidden-input]");
+  await expect(hiddenInput).toHaveAttribute("value", /.+/);
+  return (await hiddenInput.getAttribute("value")) ?? "";
+};
+
 const createKitchenInviteURL = async (
   actor: Awaited<ReturnType<typeof MerchantActor>>,
   csrf: string,
@@ -106,7 +112,7 @@ test.describe("Kitchen order lifecycle", () => {
     await expect(owner.page).toHaveURL(/\/dashboard$/);
 
     await owner.attemptsTo(OpenRoute("merchant", "/auth/select-restaurant"));
-    const restaurantID = await owner.page.locator("#restaurantID option[selected]").getAttribute("value");
+    const restaurantID = await selectedRestaurantID(owner);
     expect(restaurantID).toBeTruthy();
 
     const csrf = await csrfTokenForMerchantHost(owner);

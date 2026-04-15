@@ -5,6 +5,8 @@ import { Logout } from "../tasks/Logout";
 import { OpenRoute } from "../tasks/OpenRoute";
 import { RegisterOwnerWithPasskey } from "../tasks/RegisterOwnerWithPasskey";
 
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 test.describe("Merchant multi-restaurant selection", () => {
   test.skip("multi-membership user is prompted to select restaurant after login", async ({ browser }) => {
     // TODO: Depends on passkey re-login, currently stalls at WebAuthn assertion in Playwright.
@@ -51,8 +53,8 @@ test.describe("Merchant multi-restaurant selection", () => {
     ]);
 
     await merchant.attemptsTo(OpenRoute("merchant", "/auth/select-restaurant"));
-    const selectedOption = merchant.page.locator("#restaurantID option[selected]");
-    await expect(selectedOption).toContainText(secondRestaurantName);
+    const selectedLabel = merchant.page.locator("button#restaurantID .select-value");
+    await expect(selectedLabel).toContainText(secondRestaurantName);
 
     await context.close();
   });
@@ -81,7 +83,8 @@ test.describe("Merchant multi-restaurant selection", () => {
     await merchant.attemptsTo(OpenRoute("merchant", "/auth/select-restaurant"));
     await expect(merchant.page.getByRole("heading", { name: "Choose active restaurant" })).toBeVisible();
 
-    const allOptions = merchant.page.locator("#restaurantID option");
+    const listbox = merchant.page.locator("[data-tui-selectbox-content='true']");
+    const allOptions = listbox.locator("[data-tui-selectbox-value]");
     await expect(allOptions).toHaveCount(2);
     const firstOptionText = await allOptions.nth(0).textContent();
     const secondOptionText = await allOptions.nth(1).textContent();
@@ -93,14 +96,21 @@ test.describe("Merchant multi-restaurant selection", () => {
     for (let i = 0; i < optionCount; i += 1) {
       const option = allOptions.nth(i);
       const text = (await option.textContent()) ?? "";
-      if (text.includes(secondRestaurantName)) {
-        selectedValue = await option.getAttribute("value");
+      if (new RegExp(escapeRegExp(secondRestaurantName), "i").test(text)) {
+        selectedValue = await option.getAttribute("data-tui-selectbox-value");
         break;
       }
     }
     expect(selectedValue).toBeTruthy();
 
-    await merchant.page.selectOption("#restaurantID", selectedValue ?? "");
+    const hiddenInput = merchant.page.locator("button#restaurantID input[data-tui-selectbox-hidden-input]");
+    await hiddenInput.evaluate(
+      (node, value) => {
+        const input = node as HTMLInputElement;
+        input.value = value ?? "";
+      },
+      selectedValue,
+    );
     await Promise.all([
       merchant.page.waitForURL("**/dashboard", { waitUntil: "domcontentloaded" }),
       merchant.page.getByRole("button", { name: "Use this restaurant" }).click(),
@@ -108,8 +118,8 @@ test.describe("Merchant multi-restaurant selection", () => {
     await expect(merchant.page).toHaveURL(/\/dashboard$/);
 
     await merchant.attemptsTo(OpenRoute("merchant", "/auth/select-restaurant"));
-    const selectedOption = merchant.page.locator("#restaurantID option[selected]");
-    await expect(selectedOption).toContainText(secondRestaurantName);
+    const selectedLabel = merchant.page.locator("button#restaurantID .select-value");
+    await expect(selectedLabel).toContainText(secondRestaurantName);
 
     await context.close();
   });
