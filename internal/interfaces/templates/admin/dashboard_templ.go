@@ -12,11 +12,13 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/checkbox"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 	"bitmerchant/internal/interfaces/templates/layouts"
@@ -58,34 +60,24 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-8 mt-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-6 mt-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if menuError != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive\" role=\"alert\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(menuError)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 25, Col: 16}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div>")
+				templ_7745c5c3_Err = primitives.InlineAlert(primitives.InlineAlertProps{
+					Variant:     primitives.InlineAlertError,
+					Description: menuError,
+				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"flex justify-between items-center\"><h2 class=\"text-3xl font-bold tracking-tight\">Menu Management</h2>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"flex justify-between items-center\"><h2 class=\"text-3xl font-bold tracking-tight\">Menu Management</h2>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Var4 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_Var3 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 				if !templ_7745c5c3_IsBuffer {
@@ -97,7 +89,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Var5 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_Var4 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 					if !templ_7745c5c3_IsBuffer {
@@ -109,7 +101,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Var6 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+					templ_7745c5c3_Var5 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 						if !templ_7745c5c3_IsBuffer {
@@ -125,27 +117,27 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, " Add Category")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " Add Category")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = button.Button(button.Props{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = button.Button(button.Props{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Var7 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_Var6 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 					if !templ_7745c5c3_IsBuffer {
@@ -157,7 +149,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+					templ_7745c5c3_Var7 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 						if !templ_7745c5c3_IsBuffer {
@@ -169,7 +161,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Var9 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 							if !templ_7745c5c3_IsBuffer {
@@ -181,36 +173,66 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 								}()
 							}
 							ctx = templ.InitializeContext(ctx)
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "Add Category ")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "Add Category ")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 							return nil
 						})
-						templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " <form action=\"/admin/category\" method=\"post\" class=\"space-y-4\"><input type=\"hidden\" name=\"csrf\" value=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " <form action=\"/admin/category\" method=\"post\" class=\"space-y-4\"><input type=\"hidden\" name=\"csrf\" value=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var10 string
-					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
+					var templ_7745c5c3_Var9 string
+					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 42, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 45, Col: 57}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"><div class=\"space-y-2\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><div class=\"space-y-2\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Var10 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+						if !templ_7745c5c3_IsBuffer {
+							defer func() {
+								templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err == nil {
+									templ_7745c5c3_Err = templ_7745c5c3_BufErr
+								}
+							}()
+						}
+						ctx = templ.InitializeContext(ctx)
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "Name")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						return nil
+					})
+					templ_7745c5c3_Err = label.Label(label.Props{For: "new-category-name"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = input.Input(input.Props{Type: "text", ID: "new-category-name", Name: "name", Required: true, Placeholder: "e.g. Appetizers"}).Render(ctx, templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><div class=\"space-y-2\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -226,21 +248,21 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "Name")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "Display Order")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = label.Label(label.Props{For: "new-category-name"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = label.Label(label.Props{For: "new-category-display-order"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = input.Input(input.Props{Type: "text", ID: "new-category-name", Name: "name", Required: true, Placeholder: "e.g. Appetizers"}).Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = input.Input(input.Props{Type: "number", ID: "new-category-display-order", Name: "displayOrder", Value: "1"}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div><div class=\"space-y-2\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -256,68 +278,38 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "Display Order")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "Add Category ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = label.Label(label.Props{For: "new-category-display-order"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = input.Input(input.Props{Type: "number", ID: "new-category-display-order", Name: "displayOrder", Value: "1"}).Render(ctx, templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Var13 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-						if !templ_7745c5c3_IsBuffer {
-							defer func() {
-								templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-								if templ_7745c5c3_Err == nil {
-									templ_7745c5c3_Err = templ_7745c5c3_BufErr
-								}
-							}()
-						}
-						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "Add Category ")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						return nil
-					})
-					templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</form>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</form>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><p class=\"text-sm text-muted-foreground\">Drag the grip handle on a category or item row to reorder. Changes save automatically.</p><div id=\"admin-menu-categories\" class=\"space-y-6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div><p class=\"text-sm text-muted-foreground\">Drag the grip handle on a category or item row to reorder. Changes save automatically.</p><div id=\"admin-menu-categories\" class=\"space-y-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, catData := range menuData.Categories {
-				templ_7745c5c3_Var14 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_Var13 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 					if !templ_7745c5c3_IsBuffer {
@@ -329,7 +321,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					templ_7745c5c3_Var15 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+					templ_7745c5c3_Var14 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 						if !templ_7745c5c3_IsBuffer {
@@ -341,7 +333,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"flex items-start gap-2 min-w-0 flex-1\"><button type=\"button\" class=\"admin-category-drag-handle mt-0.5 shrink-0 cursor-grab active:cursor-grabbing rounded-md p-1 text-muted-foreground hover:bg-muted\" aria-label=\"Drag to reorder category\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"flex items-start gap-2 min-w-0 flex-1\"><button type=\"button\" class=\"admin-category-drag-handle mt-0.5 shrink-0 cursor-grab active:cursor-grabbing rounded-md p-1 text-muted-foreground hover:bg-muted\" aria-label=\"Drag to reorder category\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -349,11 +341,11 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</button><div class=\"min-w-0 flex-1\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</button><div class=\"min-w-0 flex-1\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Var16 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_Var15 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 							if !templ_7745c5c3_IsBuffer {
@@ -365,27 +357,27 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 								}()
 							}
 							ctx = templ.InitializeContext(ctx)
-							var templ_7745c5c3_Var17 string
-							templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(catData.Category.Name)
+							var templ_7745c5c3_Var16 string
+							templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(catData.Category.Name)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 78, Col: 116}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 81, Col: 116}
 							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 							return nil
 						})
-						templ_7745c5c3_Err = card.Title(card.TitleProps{Class: "whitespace-normal break-words leading-snug"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = card.Title(card.TitleProps{Class: "whitespace-normal break-words leading-snug"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						if !catData.Category.IsActive {
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"mt-1\">")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"mt-1\">")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Var18 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+							templ_7745c5c3_Var17 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 								if !templ_7745c5c3_IsBuffer {
@@ -397,26 +389,26 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "Hidden")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "Hidden")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								return nil
 							})
-							templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantOutline}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantOutline}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div>")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</div>")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</div></div><div class=\"flex items-center gap-2 shrink-0\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div></div><div class=\"flex items-center gap-2 shrink-0\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_Var18 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 							if !templ_7745c5c3_IsBuffer {
@@ -428,7 +420,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 								}()
 							}
 							ctx = templ.InitializeContext(ctx)
-							templ_7745c5c3_Var20 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+							templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 								if !templ_7745c5c3_IsBuffer {
@@ -440,7 +432,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Var21 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var20 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -456,27 +448,27 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, " Edit category")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, " Edit category")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								return nil
 							})
-							templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, " ")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, " ")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Var22 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+							templ_7745c5c3_Var21 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 								if !templ_7745c5c3_IsBuffer {
@@ -488,7 +480,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Var23 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var22 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -500,7 +492,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Var24 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_Var23 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 										if !templ_7745c5c3_IsBuffer {
@@ -512,54 +504,84 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 											}()
 										}
 										ctx = templ.InitializeContext(ctx)
-										var templ_7745c5c3_Var25 string
-										templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs("Edit " + catData.Category.Name)
+										var templ_7745c5c3_Var24 string
+										templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs("Edit " + catData.Category.Name)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 98, Col: 62}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 101, Col: 62}
 										}
-										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 										return nil
 									})
-									templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var23), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var23), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var22), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, " <form action=\"")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, " <form action=\"")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								var templ_7745c5c3_Var26 templ.SafeURL
-								templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/category/" + string(catData.Category.ID) + "/update")
+								var templ_7745c5c3_Var25 templ.SafeURL
+								templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/category/" + string(catData.Category.ID) + "/update")
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 100, Col: 85}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 103, Col: 85}
+								}
+								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" method=\"post\" class=\"space-y-4\"><input type=\"hidden\" name=\"csrf\" value=\"")
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								var templ_7745c5c3_Var26 string
+								templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
+								if templ_7745c5c3_Err != nil {
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 104, Col: 61}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" method=\"post\" class=\"space-y-4\"><input type=\"hidden\" name=\"csrf\" value=\"")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\"><div class=\"space-y-2\">")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								var templ_7745c5c3_Var27 string
-								templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
-								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 101, Col: 61}
-								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+								templ_7745c5c3_Var27 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+									if !templ_7745c5c3_IsBuffer {
+										defer func() {
+											templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+											if templ_7745c5c3_Err == nil {
+												templ_7745c5c3_Err = templ_7745c5c3_BufErr
+											}
+										}()
+									}
+									ctx = templ.InitializeContext(ctx)
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "Name")
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+									return nil
+								})
+								templ_7745c5c3_Err = label.Label(label.Props{For: "edit-cat-name-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\"><div class=\"space-y-2\">")
+								templ_7745c5c3_Err = input.Input(input.Props{Type: "text", ID: "edit-cat-name-" + string(catData.Category.ID), Name: "name", Required: true, Value: catData.Category.Name}).Render(ctx, templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</div><div class=\"space-y-2\">")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
@@ -575,21 +597,29 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "Name")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "Display Order")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = label.Label(label.Props{For: "edit-cat-name-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = label.Label(label.Props{For: "edit-cat-order-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = input.Input(input.Props{Type: "text", ID: "edit-cat-name-" + string(catData.Category.ID), Name: "name", Required: true, Value: catData.Category.Name}).Render(ctx, templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = input.Input(input.Props{Type: "number", ID: "edit-cat-order-" + string(catData.Category.ID), Name: "displayOrder", Value: strconv.Itoa(catData.Category.DisplayOrder)}).Render(ctx, templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</div><div class=\"space-y-2\">")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</div><div class=\"flex items-center space-x-2\">")
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
+									ID:      "edit-cat-active-" + string(catData.Category.ID),
+									Name:    "isActive",
+									Checked: catData.Category.IsActive,
+								}).Render(ctx, templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
@@ -605,62 +635,21 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "Display Order")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "Category visible on customer menu")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = label.Label(label.Props{For: "edit-cat-order-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var29), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = label.Label(label.Props{For: "edit-cat-active-" + string(catData.Category.ID), Class: "cursor-pointer"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var29), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = input.Input(input.Props{Type: "number", ID: "edit-cat-order-" + string(catData.Category.ID), Name: "displayOrder", Value: strconv.Itoa(catData.Category.DisplayOrder)}).Render(ctx, templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</div>")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</div><div class=\"flex items-center space-x-2\">")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								if catData.Category.IsActive {
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<input type=\"checkbox\" id=\"")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									var templ_7745c5c3_Var30 string
-									templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs("edit-cat-active-" + string(catData.Category.ID))
-									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 116, Col: 89}
-									}
-									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "\" name=\"isActive\" checked class=\"h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring\">")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-								} else {
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<input type=\"checkbox\" id=\"")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									var templ_7745c5c3_Var31 string
-									templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs("edit-cat-active-" + string(catData.Category.ID))
-									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 118, Col: 89}
-									}
-									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\" name=\"isActive\" class=\"h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring\">")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-								}
-								templ_7745c5c3_Var32 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var30 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -672,59 +661,33 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "Category visible on customer menu")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "Save category ")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = label.Label(label.Props{For: "edit-cat-active-" + string(catData.Category.ID), Class: "cursor-pointer"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</div>")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Var33 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-									if !templ_7745c5c3_IsBuffer {
-										defer func() {
-											templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-											if templ_7745c5c3_Err == nil {
-												templ_7745c5c3_Err = templ_7745c5c3_BufErr
-											}
-										}()
-									}
-									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "Save category ")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									return nil
-								})
-								templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</form>")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</form>")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								return nil
 							})
-							templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var22), templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 							return nil
 						})
-						templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Var34 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_Var31 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 							if !templ_7745c5c3_IsBuffer {
@@ -736,7 +699,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 								}()
 							}
 							ctx = templ.InitializeContext(ctx)
-							templ_7745c5c3_Var35 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+							templ_7745c5c3_Var32 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 								if !templ_7745c5c3_IsBuffer {
@@ -748,7 +711,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Var36 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var33 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -764,27 +727,27 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, " Add Item")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, " Add Item")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								return nil
 							})
-							templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var35), templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, " ")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, " ")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Var37 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+							templ_7745c5c3_Var34 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 								if !templ_7745c5c3_IsBuffer {
@@ -796,7 +759,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Var38 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var35 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -808,7 +771,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Var39 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_Var36 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 										if !templ_7745c5c3_IsBuffer {
@@ -820,54 +783,157 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 											}()
 										}
 										ctx = templ.InitializeContext(ctx)
-										var templ_7745c5c3_Var40 string
-										templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs("Add Item to " + catData.Category.Name)
+										var templ_7745c5c3_Var37 string
+										templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs("Add Item to " + catData.Category.Name)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 137, Col: 69}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 140, Col: 69}
 										}
-										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
+										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 										return nil
 									})
-									templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var38), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var35), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, " <form action=\"/admin/item\" method=\"post\" class=\"space-y-4\"><input type=\"hidden\" name=\"csrf\" value=\"")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, " <form action=\"/admin/item\" method=\"post\" class=\"space-y-4\"><input type=\"hidden\" name=\"csrf\" value=\"")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								var templ_7745c5c3_Var41 string
-								templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
+								var templ_7745c5c3_Var38 string
+								templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 140, Col: 61}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 143, Col: 61}
 								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\"> <input type=\"hidden\" name=\"categoryID\" value=\"")
+								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								var templ_7745c5c3_Var42 string
-								templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(string(catData.Category.ID))
-								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 141, Col: 85}
-								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\"> <input type=\"hidden\" name=\"categoryID\" value=\"")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "\"><div class=\"grid grid-cols-2 gap-4\"><div class=\"space-y-2\">")
+								var templ_7745c5c3_Var39 string
+								templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(string(catData.Category.ID))
+								if templ_7745c5c3_Err != nil {
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 144, Col: 85}
+								}
+								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\"><div class=\"grid grid-cols-2 gap-4\"><div class=\"space-y-2\">")
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Var40 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+									if !templ_7745c5c3_IsBuffer {
+										defer func() {
+											templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+											if templ_7745c5c3_Err == nil {
+												templ_7745c5c3_Err = templ_7745c5c3_BufErr
+											}
+										}()
+									}
+									ctx = templ.InitializeContext(ctx)
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "Name")
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+									return nil
+								})
+								templ_7745c5c3_Err = label.Label(label.Props{For: "add-item-name-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var40), templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = input.Input(input.Props{Type: "text", ID: "add-item-name-" + string(catData.Category.ID), Name: "name", Placeholder: "Item Name", Required: true}).Render(ctx, templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</div><div class=\"space-y-2\">")
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Var41 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+									if !templ_7745c5c3_IsBuffer {
+										defer func() {
+											templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+											if templ_7745c5c3_Err == nil {
+												templ_7745c5c3_Err = templ_7745c5c3_BufErr
+											}
+										}()
+									}
+									ctx = templ.InitializeContext(ctx)
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "Price")
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+									return nil
+								})
+								templ_7745c5c3_Err = label.Label(label.Props{For: "add-item-price-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var41), templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = input.Input(input.Props{Type: "number", Step: "0.01", ID: "add-item-price-" + string(catData.Category.ID), Name: "price", Placeholder: "Price", Required: true}).Render(ctx, templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</div></div><div class=\"space-y-2\">")
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Var42 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+									if !templ_7745c5c3_IsBuffer {
+										defer func() {
+											templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+											if templ_7745c5c3_Err == nil {
+												templ_7745c5c3_Err = templ_7745c5c3_BufErr
+											}
+										}()
+									}
+									ctx = templ.InitializeContext(ctx)
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "Description")
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+									return nil
+								})
+								templ_7745c5c3_Err = label.Label(label.Props{For: "add-item-desc-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var42), templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = textarea.Textarea(textarea.Props{
+									ID:          "add-item-desc-" + string(catData.Category.ID),
+									Name:        "description",
+									Placeholder: "Description",
+									Rows:        4,
+								}).Render(ctx, templ_7745c5c3_Buffer)
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</div><div class=\"flex items-center space-x-2\">")
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
+									ID:      "add-item-available-" + string(catData.Category.ID),
+									Name:    "available",
+									Checked: true,
+								}).Render(ctx, templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
@@ -883,21 +949,17 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "Name")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "Available")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = label.Label(label.Props{For: "add-item-name-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var43), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = label.Label(label.Props{For: "add-item-available-" + string(catData.Category.ID), Class: "cursor-pointer"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var43), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = input.Input(input.Props{Type: "text", ID: "add-item-name-" + string(catData.Category.ID), Name: "name", Placeholder: "Item Name", Required: true}).Render(ctx, templ_7745c5c3_Buffer)
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "</div><div class=\"space-y-2\">")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "</div>")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
@@ -913,151 +975,47 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "Price")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "Add Item ")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = label.Label(label.Props{For: "add-item-price-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var44), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var44), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = input.Input(input.Props{Type: "number", Step: "0.01", ID: "add-item-price-" + string(catData.Category.ID), Name: "price", Placeholder: "Price", Required: true}).Render(ctx, templ_7745c5c3_Buffer)
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</div></div><div class=\"space-y-2\">")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Var45 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-									if !templ_7745c5c3_IsBuffer {
-										defer func() {
-											templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-											if templ_7745c5c3_Err == nil {
-												templ_7745c5c3_Err = templ_7745c5c3_BufErr
-											}
-										}()
-									}
-									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "Description")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									return nil
-								})
-								templ_7745c5c3_Err = label.Label(label.Props{For: "add-item-desc-" + string(catData.Category.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = textarea.Textarea(textarea.Props{
-									ID:          "add-item-desc-" + string(catData.Category.ID),
-									Name:        "description",
-									Placeholder: "Description",
-									Rows:        4,
-								}).Render(ctx, templ_7745c5c3_Buffer)
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</div><div class=\"flex items-center space-x-2\"><input type=\"checkbox\" id=\"")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								var templ_7745c5c3_Var46 string
-								templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs("add-item-available-" + string(catData.Category.ID))
-								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 168, Col: 91}
-								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "\" name=\"available\" checked class=\"h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring\">")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Var47 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-									if !templ_7745c5c3_IsBuffer {
-										defer func() {
-											templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-											if templ_7745c5c3_Err == nil {
-												templ_7745c5c3_Err = templ_7745c5c3_BufErr
-											}
-										}()
-									}
-									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "Available")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									return nil
-								})
-								templ_7745c5c3_Err = label.Label(label.Props{For: "add-item-available-" + string(catData.Category.ID), Class: "cursor-pointer"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var47), templ_7745c5c3_Buffer)
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</div>")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Var48 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-									if !templ_7745c5c3_IsBuffer {
-										defer func() {
-											templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-											if templ_7745c5c3_Err == nil {
-												templ_7745c5c3_Err = templ_7745c5c3_BufErr
-											}
-										}()
-									}
-									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "Add Item ")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									return nil
-								})
-								templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</form>")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</form>")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								return nil
 							})
-							templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var37), templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var34), templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 							return nil
 						})
-						templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var34), templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var31), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</div>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "</div>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = card.Header(card.HeaderProps{Class: "flex flex-row items-center justify-between space-y-0 pb-2 gap-2 flex-wrap"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = card.Header(card.HeaderProps{Class: "flex flex-row items-center justify-between space-y-0 pb-2 gap-2 flex-wrap"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, " ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, " ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Var49 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+					templ_7745c5c3_Var45 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 						if !templ_7745c5c3_IsBuffer {
@@ -1070,7 +1028,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 						}
 						ctx = templ.InitializeContext(ctx)
 						if len(catData.Items) > 0 {
-							templ_7745c5c3_Var50 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+							templ_7745c5c3_Var46 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 								if !templ_7745c5c3_IsBuffer {
@@ -1082,7 +1040,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Var51 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var47 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -1094,7 +1052,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Var52 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_Var48 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 										if !templ_7745c5c3_IsBuffer {
@@ -1110,7 +1068,111 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, " ")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, " ")
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Var49 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+											if !templ_7745c5c3_IsBuffer {
+												defer func() {
+													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+													if templ_7745c5c3_Err == nil {
+														templ_7745c5c3_Err = templ_7745c5c3_BufErr
+													}
+												}()
+											}
+											ctx = templ.InitializeContext(ctx)
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "Photo ")
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											return nil
+										})
+										templ_7745c5c3_Err = table.Head().Render(templ.WithChildren(ctx, templ_7745c5c3_Var49), templ_7745c5c3_Buffer)
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, " ")
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Var50 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+											if !templ_7745c5c3_IsBuffer {
+												defer func() {
+													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+													if templ_7745c5c3_Err == nil {
+														templ_7745c5c3_Err = templ_7745c5c3_BufErr
+													}
+												}()
+											}
+											ctx = templ.InitializeContext(ctx)
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "Name ")
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											return nil
+										})
+										templ_7745c5c3_Err = table.Head().Render(templ.WithChildren(ctx, templ_7745c5c3_Var50), templ_7745c5c3_Buffer)
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, " ")
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Var51 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+											if !templ_7745c5c3_IsBuffer {
+												defer func() {
+													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+													if templ_7745c5c3_Err == nil {
+														templ_7745c5c3_Err = templ_7745c5c3_BufErr
+													}
+												}()
+											}
+											ctx = templ.InitializeContext(ctx)
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "Price ")
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											return nil
+										})
+										templ_7745c5c3_Err = table.Head().Render(templ.WithChildren(ctx, templ_7745c5c3_Var51), templ_7745c5c3_Buffer)
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, " ")
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Var52 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+											if !templ_7745c5c3_IsBuffer {
+												defer func() {
+													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+													if templ_7745c5c3_Err == nil {
+														templ_7745c5c3_Err = templ_7745c5c3_BufErr
+													}
+												}()
+											}
+											ctx = templ.InitializeContext(ctx)
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "Status ")
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											return nil
+										})
+										templ_7745c5c3_Err = table.Head().Render(templ.WithChildren(ctx, templ_7745c5c3_Var52), templ_7745c5c3_Buffer)
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, " ")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
@@ -1126,137 +1188,33 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 												}()
 											}
 											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "Photo ")
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "Actions ")
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
 											return nil
 										})
-										templ_7745c5c3_Err = table.Head().Render(templ.WithChildren(ctx, templ_7745c5c3_Var53), templ_7745c5c3_Buffer)
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, " ")
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										templ_7745c5c3_Var54 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-											if !templ_7745c5c3_IsBuffer {
-												defer func() {
-													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-													if templ_7745c5c3_Err == nil {
-														templ_7745c5c3_Err = templ_7745c5c3_BufErr
-													}
-												}()
-											}
-											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "Name ")
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											return nil
-										})
-										templ_7745c5c3_Err = table.Head().Render(templ.WithChildren(ctx, templ_7745c5c3_Var54), templ_7745c5c3_Buffer)
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, " ")
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										templ_7745c5c3_Var55 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-											if !templ_7745c5c3_IsBuffer {
-												defer func() {
-													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-													if templ_7745c5c3_Err == nil {
-														templ_7745c5c3_Err = templ_7745c5c3_BufErr
-													}
-												}()
-											}
-											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "Price ")
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											return nil
-										})
-										templ_7745c5c3_Err = table.Head().Render(templ.WithChildren(ctx, templ_7745c5c3_Var55), templ_7745c5c3_Buffer)
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, " ")
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										templ_7745c5c3_Var56 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-											if !templ_7745c5c3_IsBuffer {
-												defer func() {
-													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-													if templ_7745c5c3_Err == nil {
-														templ_7745c5c3_Err = templ_7745c5c3_BufErr
-													}
-												}()
-											}
-											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "Status ")
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											return nil
-										})
-										templ_7745c5c3_Err = table.Head().Render(templ.WithChildren(ctx, templ_7745c5c3_Var56), templ_7745c5c3_Buffer)
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, " ")
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										templ_7745c5c3_Var57 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-											if !templ_7745c5c3_IsBuffer {
-												defer func() {
-													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-													if templ_7745c5c3_Err == nil {
-														templ_7745c5c3_Err = templ_7745c5c3_BufErr
-													}
-												}()
-											}
-											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "Actions ")
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											return nil
-										})
-										templ_7745c5c3_Err = table.Head(table.HeadProps{Class: "text-right"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var57), templ_7745c5c3_Buffer)
+										templ_7745c5c3_Err = table.Head(table.HeadProps{Class: "text-right"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var53), templ_7745c5c3_Buffer)
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 										return nil
 									})
-									templ_7745c5c3_Err = table.Row().Render(templ.WithChildren(ctx, templ_7745c5c3_Var52), templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = table.Row().Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = table.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var51), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = table.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var47), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, " ")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, " ")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Var58 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var54 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -1269,7 +1227,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 									}
 									ctx = templ.InitializeContext(ctx)
 									for _, item := range catData.Items {
-										templ_7745c5c3_Var59 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+										templ_7745c5c3_Var55 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 											if !templ_7745c5c3_IsBuffer {
@@ -1281,7 +1239,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 												}()
 											}
 											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Var60 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+											templ_7745c5c3_Var56 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 												templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 												templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 												if !templ_7745c5c3_IsBuffer {
@@ -1293,7 +1251,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 													}()
 												}
 												ctx = templ.InitializeContext(ctx)
-												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<button type=\"button\" class=\"admin-item-drag-handle cursor-grab active:cursor-grabbing rounded-md p-1 text-muted-foreground hover:bg-muted\" aria-label=\"Drag to reorder item\">")
+												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "<button type=\"button\" class=\"admin-item-drag-handle cursor-grab active:cursor-grabbing rounded-md p-1 text-muted-foreground hover:bg-muted\" aria-label=\"Drag to reorder item\">")
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
@@ -1301,13 +1259,98 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
-												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "</button>")
+												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</button>")
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
 												return nil
 											})
-											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "w-10 align-middle"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var60), templ_7745c5c3_Buffer)
+											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "w-10 align-middle"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var56), templ_7745c5c3_Buffer)
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, " ")
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											templ_7745c5c3_Var57 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+												templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+												templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+												if !templ_7745c5c3_IsBuffer {
+													defer func() {
+														templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err == nil {
+															templ_7745c5c3_Err = templ_7745c5c3_BufErr
+														}
+													}()
+												}
+												ctx = templ.InitializeContext(ctx)
+												if item.PhotoURL != "" {
+													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<div class=\"h-14 w-20 overflow-hidden rounded-md border border-border bg-muted\"><img src=\"")
+													if templ_7745c5c3_Err != nil {
+														return templ_7745c5c3_Err
+													}
+													var templ_7745c5c3_Var58 string
+													templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
+													if templ_7745c5c3_Err != nil {
+														return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 221, Col: 39}
+													}
+													_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
+													if templ_7745c5c3_Err != nil {
+														return templ_7745c5c3_Err
+													}
+													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "\" alt=\"\" class=\"h-full w-full object-cover\" loading=\"lazy\" width=\"80\" height=\"56\"></div>")
+													if templ_7745c5c3_Err != nil {
+														return templ_7745c5c3_Err
+													}
+												} else {
+													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<div class=\"flex h-14 w-20 items-center justify-center rounded-md border border-dashed border-muted-foreground/40 text-[10px] text-muted-foreground text-center px-1\">No photo</div>")
+													if templ_7745c5c3_Err != nil {
+														return templ_7745c5c3_Err
+													}
+												}
+												return nil
+											})
+											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "align-middle min-w-0 w-24"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var57), templ_7745c5c3_Buffer)
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, " ")
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											templ_7745c5c3_Var59 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+												templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+												templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+												if !templ_7745c5c3_IsBuffer {
+													defer func() {
+														templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err == nil {
+															templ_7745c5c3_Err = templ_7745c5c3_BufErr
+														}
+													}()
+												}
+												ctx = templ.InitializeContext(ctx)
+												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<span class=\"break-words\">")
+												if templ_7745c5c3_Err != nil {
+													return templ_7745c5c3_Err
+												}
+												var templ_7745c5c3_Var60 string
+												templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
+												if templ_7745c5c3_Err != nil {
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 230, Col: 50}
+												}
+												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
+												if templ_7745c5c3_Err != nil {
+													return templ_7745c5c3_Err
+												}
+												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "</span>")
+												if templ_7745c5c3_Err != nil {
+													return templ_7745c5c3_Err
+												}
+												return nil
+											})
+											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "font-medium min-w-0 max-w-md align-middle"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var59), templ_7745c5c3_Buffer)
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
@@ -1327,37 +1370,22 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 													}()
 												}
 												ctx = templ.InitializeContext(ctx)
-												if item.PhotoURL != "" {
-													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<div class=\"h-14 w-20 overflow-hidden rounded-md border border-border bg-muted\"><img src=\"")
-													if templ_7745c5c3_Err != nil {
-														return templ_7745c5c3_Err
-													}
-													var templ_7745c5c3_Var62 string
-													templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
-													if templ_7745c5c3_Err != nil {
-														return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 214, Col: 39}
-													}
-													_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
-													if templ_7745c5c3_Err != nil {
-														return templ_7745c5c3_Err
-													}
-													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\" alt=\"\" class=\"h-full w-full object-cover\" loading=\"lazy\" width=\"80\" height=\"56\"></div>")
-													if templ_7745c5c3_Err != nil {
-														return templ_7745c5c3_Err
-													}
-												} else {
-													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<div class=\"flex h-14 w-20 items-center justify-center rounded-md border border-dashed border-muted-foreground/40 text-[10px] text-muted-foreground text-center px-1\">No photo</div>")
-													if templ_7745c5c3_Err != nil {
-														return templ_7745c5c3_Err
-													}
+												var templ_7745c5c3_Var62 string
+												templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", item.Price))
+												if templ_7745c5c3_Err != nil {
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 232, Col: 62}
+												}
+												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
+												if templ_7745c5c3_Err != nil {
+													return templ_7745c5c3_Err
 												}
 												return nil
 											})
-											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "align-middle min-w-0 w-24"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var61), templ_7745c5c3_Buffer)
+											templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var61), templ_7745c5c3_Buffer)
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, " ")
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, " ")
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
@@ -1373,78 +1401,8 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 													}()
 												}
 												ctx = templ.InitializeContext(ctx)
-												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<span class=\"break-words\">")
-												if templ_7745c5c3_Err != nil {
-													return templ_7745c5c3_Err
-												}
-												var templ_7745c5c3_Var64 string
-												templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
-												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 223, Col: 50}
-												}
-												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
-												if templ_7745c5c3_Err != nil {
-													return templ_7745c5c3_Err
-												}
-												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "</span>")
-												if templ_7745c5c3_Err != nil {
-													return templ_7745c5c3_Err
-												}
-												return nil
-											})
-											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "font-medium min-w-0 max-w-md align-middle"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var63), templ_7745c5c3_Buffer)
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, " ")
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											templ_7745c5c3_Var65 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-												templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-												templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-												if !templ_7745c5c3_IsBuffer {
-													defer func() {
-														templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-														if templ_7745c5c3_Err == nil {
-															templ_7745c5c3_Err = templ_7745c5c3_BufErr
-														}
-													}()
-												}
-												ctx = templ.InitializeContext(ctx)
-												var templ_7745c5c3_Var66 string
-												templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", item.Price))
-												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 225, Col: 62}
-												}
-												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
-												if templ_7745c5c3_Err != nil {
-													return templ_7745c5c3_Err
-												}
-												return nil
-											})
-											templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var65), templ_7745c5c3_Buffer)
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, " ")
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											templ_7745c5c3_Var67 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-												templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-												templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-												if !templ_7745c5c3_IsBuffer {
-													defer func() {
-														templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-														if templ_7745c5c3_Err == nil {
-															templ_7745c5c3_Err = templ_7745c5c3_BufErr
-														}
-													}()
-												}
-												ctx = templ.InitializeContext(ctx)
 												if item.IsAvailable {
-													templ_7745c5c3_Var68 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+													templ_7745c5c3_Var64 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 														templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 														templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 														if !templ_7745c5c3_IsBuffer {
@@ -1456,18 +1414,18 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															}()
 														}
 														ctx = templ.InitializeContext(ctx)
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "Available")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "Available")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
 														return nil
 													})
-													templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var68), templ_7745c5c3_Buffer)
+													templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var64), templ_7745c5c3_Buffer)
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
 												} else {
-													templ_7745c5c3_Var69 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+													templ_7745c5c3_Var65 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 														templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 														templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 														if !templ_7745c5c3_IsBuffer {
@@ -1479,28 +1437,28 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															}()
 														}
 														ctx = templ.InitializeContext(ctx)
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "Unavailable")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "Unavailable")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
 														return nil
 													})
-													templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantOutline}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var69), templ_7745c5c3_Buffer)
+													templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantOutline}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var65), templ_7745c5c3_Buffer)
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
 												}
 												return nil
 											})
-											templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var67), templ_7745c5c3_Buffer)
+											templ_7745c5c3_Err = table.Cell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var63), templ_7745c5c3_Buffer)
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, " ")
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, " ")
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
-											templ_7745c5c3_Var70 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+											templ_7745c5c3_Var66 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 												templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 												templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 												if !templ_7745c5c3_IsBuffer {
@@ -1512,37 +1470,37 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 													}()
 												}
 												ctx = templ.InitializeContext(ctx)
-												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "<div class=\"flex flex-wrap items-center justify-end gap-2\"><form method=\"post\" action=\"")
+												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<div class=\"flex flex-wrap items-center justify-end gap-2\"><form method=\"post\" action=\"")
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
-												var templ_7745c5c3_Var71 templ.SafeURL
-												templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/item/" + string(item.ID) + "/toggle-availability")
+												var templ_7745c5c3_Var67 templ.SafeURL
+												templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/item/" + string(item.ID) + "/toggle-availability")
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 239, Col: 100}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 246, Col: 100}
 												}
-												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
-												if templ_7745c5c3_Err != nil {
-													return templ_7745c5c3_Err
-												}
-												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "\" class=\"inline\"><input type=\"hidden\" name=\"csrf\" value=\"")
+												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
-												var templ_7745c5c3_Var72 string
-												templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
-												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 240, Col: 65}
-												}
-												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
+												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "\" class=\"inline\"><input type=\"hidden\" name=\"csrf\" value=\"")
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
-												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "\">")
+												var templ_7745c5c3_Var68 string
+												templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
+												if templ_7745c5c3_Err != nil {
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 247, Col: 65}
+												}
+												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
-												templ_7745c5c3_Var73 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "\">")
+												if templ_7745c5c3_Err != nil {
+													return templ_7745c5c3_Err
+												}
+												templ_7745c5c3_Var69 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 													templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 													templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 													if !templ_7745c5c3_IsBuffer {
@@ -1555,27 +1513,27 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 													}
 													ctx = templ.InitializeContext(ctx)
 													if item.IsAvailable {
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "Mark unavailable")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "Mark unavailable")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
 													} else {
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "Mark available")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "Mark available")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
 													}
 													return nil
 												})
-												templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Variant: button.VariantOutline, Size: button.SizeSm}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var73), templ_7745c5c3_Buffer)
+												templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Variant: button.VariantOutline, Size: button.SizeSm}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var69), templ_7745c5c3_Buffer)
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
-												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "</form>")
+												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "</form>")
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
-												templ_7745c5c3_Var74 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+												templ_7745c5c3_Var70 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 													templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 													templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 													if !templ_7745c5c3_IsBuffer {
@@ -1587,7 +1545,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 														}()
 													}
 													ctx = templ.InitializeContext(ctx)
-													templ_7745c5c3_Var75 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+													templ_7745c5c3_Var71 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 														templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 														templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 														if !templ_7745c5c3_IsBuffer {
@@ -1599,7 +1557,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															}()
 														}
 														ctx = templ.InitializeContext(ctx)
-														templ_7745c5c3_Var76 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+														templ_7745c5c3_Var72 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 															if !templ_7745c5c3_IsBuffer {
@@ -1615,27 +1573,27 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, " Photo")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, " Photo")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
 															return nil
 														})
-														templ_7745c5c3_Err = button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var76), templ_7745c5c3_Buffer)
+														templ_7745c5c3_Err = button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var72), templ_7745c5c3_Buffer)
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
 														return nil
 													})
-													templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var75), templ_7745c5c3_Buffer)
+													templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var71), templ_7745c5c3_Buffer)
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
-													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, " ")
+													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, " ")
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
-													templ_7745c5c3_Var77 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+													templ_7745c5c3_Var73 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 														templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 														templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 														if !templ_7745c5c3_IsBuffer {
@@ -1647,7 +1605,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															}()
 														}
 														ctx = templ.InitializeContext(ctx)
-														templ_7745c5c3_Var78 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+														templ_7745c5c3_Var74 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 															if !templ_7745c5c3_IsBuffer {
@@ -1659,6 +1617,74 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																}()
 															}
 															ctx = templ.InitializeContext(ctx)
+															templ_7745c5c3_Var75 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+																templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+																templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+																if !templ_7745c5c3_IsBuffer {
+																	defer func() {
+																		templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+																		if templ_7745c5c3_Err == nil {
+																			templ_7745c5c3_Err = templ_7745c5c3_BufErr
+																		}
+																	}()
+																}
+																ctx = templ.InitializeContext(ctx)
+																var templ_7745c5c3_Var76 string
+																templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs("Photo — " + item.Name)
+																if templ_7745c5c3_Err != nil {
+																	return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 265, Col: 61}
+																}
+																_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
+																if templ_7745c5c3_Err != nil {
+																	return templ_7745c5c3_Err
+																}
+																return nil
+															})
+															templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var75), templ_7745c5c3_Buffer)
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															return nil
+														})
+														templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var74), templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, " <form method=\"post\" action=\"")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														var templ_7745c5c3_Var77 templ.SafeURL
+														templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/item/" + string(item.ID) + "/photo")
+														if templ_7745c5c3_Err != nil {
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 267, Col: 88}
+														}
+														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "\" enctype=\"multipart/form-data\" class=\"space-y-4\"><input type=\"hidden\" name=\"csrf\" value=\"")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														var templ_7745c5c3_Var78 string
+														templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
+														if templ_7745c5c3_Err != nil {
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 268, Col: 67}
+														}
+														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "\"> ")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														if item.PhotoURL != "" {
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "<div class=\"space-y-2\">")
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
 															templ_7745c5c3_Var79 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 																templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 																templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -1671,120 +1697,52 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																	}()
 																}
 																ctx = templ.InitializeContext(ctx)
-																var templ_7745c5c3_Var80 string
-																templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs("Photo — " + item.Name)
-																if templ_7745c5c3_Err != nil {
-																	return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 258, Col: 61}
-																}
-																_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
+																templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "Current image")
 																if templ_7745c5c3_Err != nil {
 																	return templ_7745c5c3_Err
 																}
 																return nil
 															})
-															templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var79), templ_7745c5c3_Buffer)
+															templ_7745c5c3_Err = label.Label(label.Props{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var79), templ_7745c5c3_Buffer)
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
-															return nil
-														})
-														templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var78), templ_7745c5c3_Buffer)
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "<div class=\"max-h-48 overflow-auto rounded-md border border-border\"><img src=\"")
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															var templ_7745c5c3_Var80 string
+															templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
+															if templ_7745c5c3_Err != nil {
+																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 275, Col: 44}
+															}
+															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "\" alt=\"")
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															var templ_7745c5c3_Var81 string
+															templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
+															if templ_7745c5c3_Err != nil {
+																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 275, Col: 62}
+															}
+															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "\" class=\"w-full object-contain\"></div></div>")
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "<div class=\"space-y-2\">")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, " <form method=\"post\" action=\"")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														var templ_7745c5c3_Var81 templ.SafeURL
-														templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/item/" + string(item.ID) + "/photo")
-														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 260, Col: 88}
-														}
-														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "\" enctype=\"multipart/form-data\" class=\"space-y-4\"><input type=\"hidden\" name=\"csrf\" value=\"")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														var templ_7745c5c3_Var82 string
-														templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
-														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 261, Col: 67}
-														}
-														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "\"> ")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														if item.PhotoURL != "" {
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "<div class=\"space-y-2\">")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															templ_7745c5c3_Var83 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-																templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-																templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-																if !templ_7745c5c3_IsBuffer {
-																	defer func() {
-																		templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-																		if templ_7745c5c3_Err == nil {
-																			templ_7745c5c3_Err = templ_7745c5c3_BufErr
-																		}
-																	}()
-																}
-																ctx = templ.InitializeContext(ctx)
-																templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "Current image")
-																if templ_7745c5c3_Err != nil {
-																	return templ_7745c5c3_Err
-																}
-																return nil
-															})
-															templ_7745c5c3_Err = label.Label(label.Props{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var83), templ_7745c5c3_Buffer)
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "<div class=\"max-h-48 overflow-auto rounded-md border border-border\"><img src=\"")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															var templ_7745c5c3_Var84 string
-															templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
-															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 268, Col: 44}
-															}
-															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "\" alt=\"")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															var templ_7745c5c3_Var85 string
-															templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
-															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 268, Col: 62}
-															}
-															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var85))
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "\" class=\"w-full object-contain\"></div></div>")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 99, "<div class=\"space-y-2\">")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Var86 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+														templ_7745c5c3_Var82 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 															if !templ_7745c5c3_IsBuffer {
@@ -1797,64 +1755,64 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															}
 															ctx = templ.InitializeContext(ctx)
 															if item.PhotoURL != "" {
-																templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "Replace image")
+																templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "Replace image")
 																if templ_7745c5c3_Err != nil {
 																	return templ_7745c5c3_Err
 																}
 															} else {
-																templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 101, "Image file")
+																templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "Image file")
 																if templ_7745c5c3_Err != nil {
 																	return templ_7745c5c3_Err
 																}
 															}
 															return nil
 														})
-														templ_7745c5c3_Err = label.Label(label.Props{For: "photo-file-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var86), templ_7745c5c3_Buffer)
+														templ_7745c5c3_Err = label.Label(label.Props{For: "photo-file-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var82), templ_7745c5c3_Buffer)
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
 														if item.PhotoURL != "" {
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 102, "<input type=\"file\" id=\"")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "<input type=\"file\" id=\"")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
-															var templ_7745c5c3_Var87 string
-															templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.JoinStringErrs("photo-file-" + string(item.ID))
+															var templ_7745c5c3_Var83 string
+															templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs("photo-file-" + string(item.ID))
 															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 281, Col: 74}
+																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 288, Col: 74}
 															}
-															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var87))
+															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, "\" name=\"photo\" accept=\"image/*\" class=\"block w-full text-sm\">")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "\" name=\"photo\" accept=\"image/*\" class=\"block w-full text-sm\">")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
 														} else {
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "<input type=\"file\" id=\"")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<input type=\"file\" id=\"")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
-															var templ_7745c5c3_Var88 string
-															templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.JoinStringErrs("photo-file-" + string(item.ID))
+															var templ_7745c5c3_Var84 string
+															templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs("photo-file-" + string(item.ID))
 															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 283, Col: 74}
+																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 290, Col: 74}
 															}
-															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
+															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 105, "\" name=\"photo\" accept=\"image/*\" required class=\"block w-full text-sm\">")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "\" name=\"photo\" accept=\"image/*\" required class=\"block w-full text-sm\">")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
 														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "</div>")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 99, "</div>")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														templ_7745c5c3_Var89 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+														templ_7745c5c3_Var85 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 															if !templ_7745c5c3_IsBuffer {
@@ -1866,33 +1824,33 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																}()
 															}
 															ctx = templ.InitializeContext(ctx)
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 107, "Upload ")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "Upload ")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
 															return nil
 														})
-														templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var89), templ_7745c5c3_Buffer)
+														templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var85), templ_7745c5c3_Buffer)
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 108, "</form>")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 101, "</form>")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
 														return nil
 													})
-													templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var77), templ_7745c5c3_Buffer)
+													templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var73), templ_7745c5c3_Buffer)
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
 													return nil
 												})
-												templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var74), templ_7745c5c3_Buffer)
+												templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var70), templ_7745c5c3_Buffer)
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
-												templ_7745c5c3_Var90 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+												templ_7745c5c3_Var86 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 													templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 													templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 													if !templ_7745c5c3_IsBuffer {
@@ -1904,7 +1862,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 														}()
 													}
 													ctx = templ.InitializeContext(ctx)
-													templ_7745c5c3_Var91 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+													templ_7745c5c3_Var87 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 														templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 														templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 														if !templ_7745c5c3_IsBuffer {
@@ -1916,7 +1874,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															}()
 														}
 														ctx = templ.InitializeContext(ctx)
-														templ_7745c5c3_Var92 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+														templ_7745c5c3_Var88 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 															if !templ_7745c5c3_IsBuffer {
@@ -1934,21 +1892,21 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															}
 															return nil
 														})
-														templ_7745c5c3_Err = button.Button(button.Props{Variant: button.VariantGhost, Size: button.SizeIcon}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var92), templ_7745c5c3_Buffer)
+														templ_7745c5c3_Err = button.Button(button.Props{Variant: button.VariantGhost, Size: button.SizeIcon}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var88), templ_7745c5c3_Buffer)
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
 														return nil
 													})
-													templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var91), templ_7745c5c3_Buffer)
+													templ_7745c5c3_Err = dialog.Trigger(dialog.TriggerProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var87), templ_7745c5c3_Buffer)
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
-													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, " ")
+													templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 102, " ")
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
-													templ_7745c5c3_Var93 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+													templ_7745c5c3_Var89 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 														templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 														templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 														if !templ_7745c5c3_IsBuffer {
@@ -1960,7 +1918,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															}()
 														}
 														ctx = templ.InitializeContext(ctx)
-														templ_7745c5c3_Var94 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+														templ_7745c5c3_Var90 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 															if !templ_7745c5c3_IsBuffer {
@@ -1972,7 +1930,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																}()
 															}
 															ctx = templ.InitializeContext(ctx)
-															templ_7745c5c3_Var95 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+															templ_7745c5c3_Var91 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 																templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 																templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 																if !templ_7745c5c3_IsBuffer {
@@ -1984,97 +1942,97 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																	}()
 																}
 																ctx = templ.InitializeContext(ctx)
-																var templ_7745c5c3_Var96 string
-																templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs("Edit " + item.Name)
+																var templ_7745c5c3_Var92 string
+																templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.JoinStringErrs("Edit " + item.Name)
 																if templ_7745c5c3_Err != nil {
-																	return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 298, Col: 56}
+																	return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 305, Col: 56}
 																}
-																_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
+																_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var92))
 																if templ_7745c5c3_Err != nil {
 																	return templ_7745c5c3_Err
 																}
 																return nil
 															})
-															templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var95), templ_7745c5c3_Buffer)
+															templ_7745c5c3_Err = dialog.Title().Render(templ.WithChildren(ctx, templ_7745c5c3_Var91), templ_7745c5c3_Buffer)
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
 															return nil
 														})
-														templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var94), templ_7745c5c3_Buffer)
+														templ_7745c5c3_Err = dialog.Header().Render(templ.WithChildren(ctx, templ_7745c5c3_Var90), templ_7745c5c3_Buffer)
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 110, " <form action=\"")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, " <form action=\"")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														var templ_7745c5c3_Var97 templ.SafeURL
-														templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/item/" + string(item.ID) + "/update")
+														var templ_7745c5c3_Var93 templ.SafeURL
+														templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/item/" + string(item.ID) + "/update")
 														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 300, Col: 75}
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 307, Col: 75}
+														}
+														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var93))
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "\" method=\"post\" class=\"space-y-4\" id=\"")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														var templ_7745c5c3_Var94 string
+														templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.JoinStringErrs("edit-item-form-" + string(item.ID))
+														if templ_7745c5c3_Err != nil {
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 307, Col: 150}
+														}
+														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 105, "\"><input type=\"hidden\" name=\"csrf\" value=\"")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														var templ_7745c5c3_Var95 string
+														templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
+														if templ_7745c5c3_Err != nil {
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 308, Col: 67}
+														}
+														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var95))
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "\"> <input type=\"hidden\" name=\"categoryID\" id=\"")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														var templ_7745c5c3_Var96 string
+														templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs("edit-item-cat-value-" + string(item.ID))
+														if templ_7745c5c3_Err != nil {
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 309, Col: 101}
+														}
+														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 107, "\" value=\"")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														var templ_7745c5c3_Var97 string
+														templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(string(item.CategoryID))
+														if templ_7745c5c3_Err != nil {
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 309, Col: 135}
 														}
 														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 111, "\" method=\"post\" class=\"space-y-4\" id=\"")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 108, "\"><div class=\"space-y-2\">")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														var templ_7745c5c3_Var98 string
-														templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.JoinStringErrs("edit-item-form-" + string(item.ID))
-														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 300, Col: 150}
-														}
-														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 112, "\"><input type=\"hidden\" name=\"csrf\" value=\"")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														var templ_7745c5c3_Var99 string
-														templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
-														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 301, Col: 67}
-														}
-														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var99))
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, "\"> <input type=\"hidden\" name=\"categoryID\" id=\"")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														var templ_7745c5c3_Var100 string
-														templ_7745c5c3_Var100, templ_7745c5c3_Err = templ.JoinStringErrs("edit-item-cat-value-" + string(item.ID))
-														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 302, Col: 101}
-														}
-														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var100))
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 114, "\" value=\"")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														var templ_7745c5c3_Var101 string
-														templ_7745c5c3_Var101, templ_7745c5c3_Err = templ.JoinStringErrs(string(item.CategoryID))
-														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 302, Col: 135}
-														}
-														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 115, "\"><div class=\"space-y-2\">")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Var102 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+														templ_7745c5c3_Var98 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 															if !templ_7745c5c3_IsBuffer {
@@ -2086,17 +2044,17 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																}()
 															}
 															ctx = templ.InitializeContext(ctx)
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "Category")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "Category")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
 															return nil
 														})
-														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-cat-trigger-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var102), templ_7745c5c3_Buffer)
+														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-cat-trigger-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var98), templ_7745c5c3_Buffer)
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														templ_7745c5c3_Var103 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+														templ_7745c5c3_Var99 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 															if !templ_7745c5c3_IsBuffer {
@@ -2108,6 +2066,92 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																}()
 															}
 															ctx = templ.InitializeContext(ctx)
+															templ_7745c5c3_Var100 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+																templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+																templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+																if !templ_7745c5c3_IsBuffer {
+																	defer func() {
+																		templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+																		if templ_7745c5c3_Err == nil {
+																			templ_7745c5c3_Err = templ_7745c5c3_BufErr
+																		}
+																	}()
+																}
+																ctx = templ.InitializeContext(ctx)
+																templ_7745c5c3_Var101 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+																	templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+																	templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+																	if !templ_7745c5c3_IsBuffer {
+																		defer func() {
+																			templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+																			if templ_7745c5c3_Err == nil {
+																				templ_7745c5c3_Err = templ_7745c5c3_BufErr
+																			}
+																		}()
+																	}
+																	ctx = templ.InitializeContext(ctx)
+																	catLabel := ""
+																	for _, oc := range menuData.Categories {
+																		if oc.Category.ID == item.CategoryID {
+																			catLabel = oc.Category.Name
+																			break
+																		}
+																	}
+																	templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 110, "<span class=\"edit-item-cat-label min-w-0 flex-1 text-left line-clamp-2\" data-item-id=\"")
+																	if templ_7745c5c3_Err != nil {
+																		return templ_7745c5c3_Err
+																	}
+																	var templ_7745c5c3_Var102 string
+																	templ_7745c5c3_Var102, templ_7745c5c3_Err = templ.JoinStringErrs(string(item.ID))
+																	if templ_7745c5c3_Err != nil {
+																		return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 331, Col: 123}
+																	}
+																	_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var102))
+																	if templ_7745c5c3_Err != nil {
+																		return templ_7745c5c3_Err
+																	}
+																	templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 111, "\">")
+																	if templ_7745c5c3_Err != nil {
+																		return templ_7745c5c3_Err
+																	}
+																	var templ_7745c5c3_Var103 string
+																	templ_7745c5c3_Var103, templ_7745c5c3_Err = templ.JoinStringErrs(catLabel)
+																	if templ_7745c5c3_Err != nil {
+																		return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 331, Col: 136}
+																	}
+																	_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var103))
+																	if templ_7745c5c3_Err != nil {
+																		return templ_7745c5c3_Err
+																	}
+																	templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 112, "</span>")
+																	if templ_7745c5c3_Err != nil {
+																		return templ_7745c5c3_Err
+																	}
+																	templ_7745c5c3_Err = icon.ChevronDown(icon.Props{Class: "h-4 w-4 shrink-0 opacity-60"}).Render(ctx, templ_7745c5c3_Buffer)
+																	if templ_7745c5c3_Err != nil {
+																		return templ_7745c5c3_Err
+																	}
+																	return nil
+																})
+																templ_7745c5c3_Err = button.Button(button.Props{
+																	Type:    button.TypeButton,
+																	Variant: button.VariantOutline,
+																	Class:   "w-full justify-between font-normal",
+																	ID:      "edit-item-cat-trigger-" + string(item.ID),
+																}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var101), templ_7745c5c3_Buffer)
+																if templ_7745c5c3_Err != nil {
+																	return templ_7745c5c3_Err
+																}
+																return nil
+															})
+															templ_7745c5c3_Err = dropdown.Trigger(dropdown.TriggerProps{Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var100), templ_7745c5c3_Buffer)
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, " ")
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
 															templ_7745c5c3_Var104 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 																templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 																templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -2132,94 +2176,8 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																		}()
 																	}
 																	ctx = templ.InitializeContext(ctx)
-																	catLabel := ""
-																	for _, oc := range menuData.Categories {
-																		if oc.Category.ID == item.CategoryID {
-																			catLabel = oc.Category.Name
-																			break
-																		}
-																	}
-																	templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "<span class=\"edit-item-cat-label min-w-0 flex-1 text-left line-clamp-2\" data-item-id=\"")
-																	if templ_7745c5c3_Err != nil {
-																		return templ_7745c5c3_Err
-																	}
-																	var templ_7745c5c3_Var106 string
-																	templ_7745c5c3_Var106, templ_7745c5c3_Err = templ.JoinStringErrs(string(item.ID))
-																	if templ_7745c5c3_Err != nil {
-																		return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 324, Col: 123}
-																	}
-																	_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var106))
-																	if templ_7745c5c3_Err != nil {
-																		return templ_7745c5c3_Err
-																	}
-																	templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "\">")
-																	if templ_7745c5c3_Err != nil {
-																		return templ_7745c5c3_Err
-																	}
-																	var templ_7745c5c3_Var107 string
-																	templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(catLabel)
-																	if templ_7745c5c3_Err != nil {
-																		return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 324, Col: 136}
-																	}
-																	_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
-																	if templ_7745c5c3_Err != nil {
-																		return templ_7745c5c3_Err
-																	}
-																	templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "</span>")
-																	if templ_7745c5c3_Err != nil {
-																		return templ_7745c5c3_Err
-																	}
-																	templ_7745c5c3_Err = icon.ChevronDown(icon.Props{Class: "h-4 w-4 shrink-0 opacity-60"}).Render(ctx, templ_7745c5c3_Buffer)
-																	if templ_7745c5c3_Err != nil {
-																		return templ_7745c5c3_Err
-																	}
-																	return nil
-																})
-																templ_7745c5c3_Err = button.Button(button.Props{
-																	Type:    button.TypeButton,
-																	Variant: button.VariantOutline,
-																	Class:   "w-full justify-between font-normal",
-																	ID:      "edit-item-cat-trigger-" + string(item.ID),
-																}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var105), templ_7745c5c3_Buffer)
-																if templ_7745c5c3_Err != nil {
-																	return templ_7745c5c3_Err
-																}
-																return nil
-															})
-															templ_7745c5c3_Err = dropdown.Trigger(dropdown.TriggerProps{Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var104), templ_7745c5c3_Buffer)
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, " ")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															templ_7745c5c3_Var108 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-																templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-																templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-																if !templ_7745c5c3_IsBuffer {
-																	defer func() {
-																		templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-																		if templ_7745c5c3_Err == nil {
-																			templ_7745c5c3_Err = templ_7745c5c3_BufErr
-																		}
-																	}()
-																}
-																ctx = templ.InitializeContext(ctx)
-																templ_7745c5c3_Var109 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-																	templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-																	templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-																	if !templ_7745c5c3_IsBuffer {
-																		defer func() {
-																			templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-																			if templ_7745c5c3_Err == nil {
-																				templ_7745c5c3_Err = templ_7745c5c3_BufErr
-																			}
-																		}()
-																	}
-																	ctx = templ.InitializeContext(ctx)
 																	for _, optCat := range menuData.Categories {
-																		templ_7745c5c3_Var110 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+																		templ_7745c5c3_Var106 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 																			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 																			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 																			if !templ_7745c5c3_IsBuffer {
@@ -2231,12 +2189,12 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																				}()
 																			}
 																			ctx = templ.InitializeContext(ctx)
-																			var templ_7745c5c3_Var111 string
-																			templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.JoinStringErrs(optCat.Category.Name)
+																			var templ_7745c5c3_Var107 string
+																			templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(optCat.Category.Name)
 																			if templ_7745c5c3_Err != nil {
-																				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 340, Col: 45}
+																				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 347, Col: 45}
 																			}
-																			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var111))
+																			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
 																			if templ_7745c5c3_Err != nil {
 																				return templ_7745c5c3_Err
 																			}
@@ -2250,30 +2208,160 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																				"data-category-id-value":  string(optCat.Category.ID),
 																				"data-category-name-text": optCat.Category.Name,
 																			},
-																		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var110), templ_7745c5c3_Buffer)
+																		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var106), templ_7745c5c3_Buffer)
 																		if templ_7745c5c3_Err != nil {
 																			return templ_7745c5c3_Err
 																		}
 																	}
 																	return nil
 																})
-																templ_7745c5c3_Err = dropdown.Group().Render(templ.WithChildren(ctx, templ_7745c5c3_Var109), templ_7745c5c3_Buffer)
+																templ_7745c5c3_Err = dropdown.Group().Render(templ.WithChildren(ctx, templ_7745c5c3_Var105), templ_7745c5c3_Buffer)
 																if templ_7745c5c3_Err != nil {
 																	return templ_7745c5c3_Err
 																}
 																return nil
 															})
-															templ_7745c5c3_Err = dropdown.Content(dropdown.ContentProps{Class: "min-w-[12rem] max-w-[min(100vw-2rem,28rem)]"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var108), templ_7745c5c3_Buffer)
+															templ_7745c5c3_Err = dropdown.Content(dropdown.ContentProps{Class: "min-w-[12rem] max-w-[min(100vw-2rem,28rem)]"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var104), templ_7745c5c3_Buffer)
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
 															return nil
 														})
-														templ_7745c5c3_Err = dropdown.Dropdown().Render(templ.WithChildren(ctx, templ_7745c5c3_Var103), templ_7745c5c3_Buffer)
+														templ_7745c5c3_Err = dropdown.Dropdown().Render(templ.WithChildren(ctx, templ_7745c5c3_Var99), templ_7745c5c3_Buffer)
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 121, "</div><div class=\"grid grid-cols-2 gap-4\"><div class=\"space-y-2\">")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 114, "</div><div class=\"grid grid-cols-2 gap-4\"><div class=\"space-y-2\">")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Var108 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+															if !templ_7745c5c3_IsBuffer {
+																defer func() {
+																	templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+																	if templ_7745c5c3_Err == nil {
+																		templ_7745c5c3_Err = templ_7745c5c3_BufErr
+																	}
+																}()
+															}
+															ctx = templ.InitializeContext(ctx)
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 115, "Name")
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															return nil
+														})
+														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-name-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var108), templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = input.Input(input.Props{Type: "text", ID: "edit-item-name-" + string(item.ID), Name: "name", Required: true, Value: item.Name}).Render(ctx, templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "</div><div class=\"space-y-2\">")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Var109 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+															if !templ_7745c5c3_IsBuffer {
+																defer func() {
+																	templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+																	if templ_7745c5c3_Err == nil {
+																		templ_7745c5c3_Err = templ_7745c5c3_BufErr
+																	}
+																}()
+															}
+															ctx = templ.InitializeContext(ctx)
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "Price")
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															return nil
+														})
+														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-price-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var109), templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = input.Input(input.Props{Type: "number", Step: "0.01", ID: "edit-item-price-" + string(item.ID), Name: "price", Required: true, Value: strconv.FormatFloat(item.Price, 'f', 2, 64)}).Render(ctx, templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "</div></div><div class=\"space-y-2\">")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Var110 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+															if !templ_7745c5c3_IsBuffer {
+																defer func() {
+																	templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+																	if templ_7745c5c3_Err == nil {
+																		templ_7745c5c3_Err = templ_7745c5c3_BufErr
+																	}
+																}()
+															}
+															ctx = templ.InitializeContext(ctx)
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "Description")
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															return nil
+														})
+														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-desc-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var110), templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = textarea.Textarea(textarea.Props{
+															ID:          "edit-item-desc-" + string(item.ID),
+															Name:        "description",
+															Placeholder: "Description",
+															Rows:        4,
+															Value:       item.Description,
+														}).Render(ctx, templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, "</div><div class=\"flex items-center space-x-2\">")
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = checkbox.Checkbox(checkbox.Props{
+															ID:      "edit-item-avail-" + string(item.ID),
+															Name:    "available",
+															Checked: item.IsAvailable,
+														}).Render(ctx, templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Var111 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+															if !templ_7745c5c3_IsBuffer {
+																defer func() {
+																	templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+																	if templ_7745c5c3_Err == nil {
+																		templ_7745c5c3_Err = templ_7745c5c3_BufErr
+																	}
+																}()
+															}
+															ctx = templ.InitializeContext(ctx)
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 121, "Available")
+															if templ_7745c5c3_Err != nil {
+																return templ_7745c5c3_Err
+															}
+															return nil
+														})
+														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-avail-" + string(item.ID), Class: "cursor-pointer"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var111), templ_7745c5c3_Buffer)
+														if templ_7745c5c3_Err != nil {
+															return templ_7745c5c3_Err
+														}
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "</div>")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
@@ -2289,198 +2377,39 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																}()
 															}
 															ctx = templ.InitializeContext(ctx)
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "Name")
+															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 123, "Save item ")
 															if templ_7745c5c3_Err != nil {
 																return templ_7745c5c3_Err
 															}
 															return nil
 														})
-														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-name-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var112), templ_7745c5c3_Buffer)
+														templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var112), templ_7745c5c3_Buffer)
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
-														templ_7745c5c3_Err = input.Input(input.Props{Type: "text", ID: "edit-item-name-" + string(item.ID), Name: "name", Required: true, Value: item.Name}).Render(ctx, templ_7745c5c3_Buffer)
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 123, "</div><div class=\"space-y-2\">")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Var113 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-															if !templ_7745c5c3_IsBuffer {
-																defer func() {
-																	templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-																	if templ_7745c5c3_Err == nil {
-																		templ_7745c5c3_Err = templ_7745c5c3_BufErr
-																	}
-																}()
-															}
-															ctx = templ.InitializeContext(ctx)
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 124, "Price")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															return nil
-														})
-														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-price-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var113), templ_7745c5c3_Buffer)
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = input.Input(input.Props{Type: "number", Step: "0.01", ID: "edit-item-price-" + string(item.ID), Name: "price", Required: true, Value: strconv.FormatFloat(item.Price, 'f', 2, 64)}).Render(ctx, templ_7745c5c3_Buffer)
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 125, "</div></div><div class=\"space-y-2\">")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Var114 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-															if !templ_7745c5c3_IsBuffer {
-																defer func() {
-																	templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-																	if templ_7745c5c3_Err == nil {
-																		templ_7745c5c3_Err = templ_7745c5c3_BufErr
-																	}
-																}()
-															}
-															ctx = templ.InitializeContext(ctx)
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 126, "Description")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															return nil
-														})
-														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-desc-" + string(item.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var114), templ_7745c5c3_Buffer)
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = textarea.Textarea(textarea.Props{
-															ID:          "edit-item-desc-" + string(item.ID),
-															Name:        "description",
-															Placeholder: "Description",
-															Rows:        4,
-															Value:       item.Description,
-														}).Render(ctx, templ_7745c5c3_Buffer)
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 127, "</div><div class=\"flex items-center space-x-2\">")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														if item.IsAvailable {
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 128, "<input type=\"checkbox\" id=\"")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															var templ_7745c5c3_Var115 string
-															templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.JoinStringErrs("edit-item-avail-" + string(item.ID))
-															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 375, Col: 83}
-															}
-															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var115))
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 129, "\" name=\"available\" checked class=\"h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring\">")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-														} else {
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 130, "<input type=\"checkbox\" id=\"")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															var templ_7745c5c3_Var116 string
-															templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs("edit-item-avail-" + string(item.ID))
-															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 377, Col: 83}
-															}
-															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 131, "\" name=\"available\" class=\"h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring\">")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-														}
-														templ_7745c5c3_Var117 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-															if !templ_7745c5c3_IsBuffer {
-																defer func() {
-																	templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-																	if templ_7745c5c3_Err == nil {
-																		templ_7745c5c3_Err = templ_7745c5c3_BufErr
-																	}
-																}()
-															}
-															ctx = templ.InitializeContext(ctx)
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 132, "Available")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															return nil
-														})
-														templ_7745c5c3_Err = label.Label(label.Props{For: "edit-item-avail-" + string(item.ID), Class: "cursor-pointer"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var117), templ_7745c5c3_Buffer)
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 133, "</div>")
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Var118 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-															templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-															templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-															if !templ_7745c5c3_IsBuffer {
-																defer func() {
-																	templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-																	if templ_7745c5c3_Err == nil {
-																		templ_7745c5c3_Err = templ_7745c5c3_BufErr
-																	}
-																}()
-															}
-															ctx = templ.InitializeContext(ctx)
-															templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 134, "Save item ")
-															if templ_7745c5c3_Err != nil {
-																return templ_7745c5c3_Err
-															}
-															return nil
-														})
-														templ_7745c5c3_Err = button.Button(button.Props{Type: "submit", Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var118), templ_7745c5c3_Buffer)
-														if templ_7745c5c3_Err != nil {
-															return templ_7745c5c3_Err
-														}
-														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 135, "</form>")
+														templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 124, "</form>")
 														if templ_7745c5c3_Err != nil {
 															return templ_7745c5c3_Err
 														}
 														return nil
 													})
-													templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var93), templ_7745c5c3_Buffer)
+													templ_7745c5c3_Err = dialog.Content(dialog.ContentProps{}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var89), templ_7745c5c3_Buffer)
 													if templ_7745c5c3_Err != nil {
 														return templ_7745c5c3_Err
 													}
 													return nil
 												})
-												templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var90), templ_7745c5c3_Buffer)
+												templ_7745c5c3_Err = dialog.Dialog().Render(templ.WithChildren(ctx, templ_7745c5c3_Var86), templ_7745c5c3_Buffer)
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
-												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 136, "</div>")
+												templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 125, "</div>")
 												if templ_7745c5c3_Err != nil {
 													return templ_7745c5c3_Err
 												}
 												return nil
 											})
-											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "text-right"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var70), templ_7745c5c3_Buffer)
+											templ_7745c5c3_Err = table.Cell(table.CellProps{Class: "text-right"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var66), templ_7745c5c3_Buffer)
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
@@ -2492,7 +2421,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 												"draggable":    "true",
 												"class":        "admin-menu-item-row",
 											},
-										}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var59), templ_7745c5c3_Buffer)
+										}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var55), templ_7745c5c3_Buffer)
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
@@ -2504,25 +2433,25 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										"data-category-id": string(catData.Category.ID),
 										"class":            "admin-menu-item-tbody",
 									},
-								}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var58), templ_7745c5c3_Buffer)
+								}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var54), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								return nil
 							})
-							templ_7745c5c3_Err = table.Table().Render(templ.WithChildren(ctx, templ_7745c5c3_Var50), templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = table.Table().Render(templ.WithChildren(ctx, templ_7745c5c3_Var46), templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 						} else {
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 137, "<div class=\"text-center py-6 text-muted-foreground\">No items in this category</div>")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 126, "<div class=\"text-center py-6 text-muted-foreground\">No items in this category</div>")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = card.Content().Render(templ.WithChildren(ctx, templ_7745c5c3_Var49), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = card.Content().Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -2534,12 +2463,12 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 						"data-category-id": string(catData.Category.ID),
 						"draggable":        "true",
 					},
-				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 138, "</div><script>\n\t\t\t\t(function () {\n\t\t\t\t\tfunction getCookie(name) {\n\t\t\t\t\t\tconst value = '; ' + document.cookie;\n\t\t\t\t\t\tconst parts = value.split('; ' + name + '=');\n\t\t\t\t\t\tif (parts.length === 2) return parts.pop().split(';').shift() || '';\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\t\t\t\t\tfunction adminFetch(url, body) {\n\t\t\t\t\t\tconst headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': getCookie('csrf') || '' };\n\t\t\t\t\t\treturn fetch(url, { method: 'POST', headers, body: JSON.stringify(body), credentials: 'same-origin' });\n\t\t\t\t\t}\n\t\t\t\t\tdocument.querySelectorAll('[data-set-category-for]').forEach(function (el) {\n\t\t\t\t\t\tel.addEventListener('click', function () {\n\t\t\t\t\t\t\tconst itemId = el.getAttribute('data-set-category-for');\n\t\t\t\t\t\t\tconst catId = el.getAttribute('data-category-id-value');\n\t\t\t\t\t\t\tconst name = el.getAttribute('data-category-name-text') || '';\n\t\t\t\t\t\t\tconst hidden = document.getElementById('edit-item-cat-value-' + itemId);\n\t\t\t\t\t\t\tif (hidden) hidden.value = catId;\n\t\t\t\t\t\t\tconst label = document.querySelector('.edit-item-cat-label[data-item-id=\"' + itemId + '\"]');\n\t\t\t\t\t\t\tif (label) label.textContent = name;\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t\tconst catRoot = document.getElementById('admin-menu-categories');\n\t\t\t\t\tif (!catRoot) return;\n\t\t\t\t\tlet dragCat = null;\n\t\t\t\t\tcatRoot.querySelectorAll('.admin-menu-category-card').forEach(function (card) {\n\t\t\t\t\t\tcard.addEventListener('dragstart', function (e) {\n\t\t\t\t\t\t\tdragCat = card;\n\t\t\t\t\t\t\te.dataTransfer.effectAllowed = 'move';\n\t\t\t\t\t\t\tcard.classList.add('opacity-50');\n\t\t\t\t\t\t});\n\t\t\t\t\t\tcard.addEventListener('dragend', function () {\n\t\t\t\t\t\t\tcard.classList.remove('opacity-50');\n\t\t\t\t\t\t\tdragCat = null;\n\t\t\t\t\t\t});\n\t\t\t\t\t\tcard.addEventListener('dragover', function (e) {\n\t\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\t\tif (!dragCat || dragCat === card) return;\n\t\t\t\t\t\t\tconst rect = card.getBoundingClientRect();\n\t\t\t\t\t\t\tconst before = e.clientY < rect.top + rect.height / 2;\n\t\t\t\t\t\t\tcatRoot.insertBefore(dragCat, before ? card : card.nextSibling);\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t\tcatRoot.querySelectorAll('.admin-category-drag-handle').forEach(function (h) {\n\t\t\t\t\t\th.addEventListener('mousedown', function (e) { e.stopPropagation(); });\n\t\t\t\t\t\th.addEventListener('click', function (e) { e.preventDefault(); });\n\t\t\t\t\t});\n\t\t\t\t\tcatRoot.addEventListener('drop', function (e) {\n\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\tif (!dragCat) return;\n\t\t\t\t\t\tconst ids = Array.from(catRoot.querySelectorAll('.admin-menu-category-card')).map(function (c) {\n\t\t\t\t\t\t\treturn c.getAttribute('data-category-id');\n\t\t\t\t\t\t});\n\t\t\t\t\t\tadminFetch('/admin/menu/reorder-categories', { categoryIDs: ids }).then(function (r) {\n\t\t\t\t\t\t\tif (!r.ok) r.text().then(function (t) { console.error('reorder categories failed', t); });\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t\tcatRoot.addEventListener('dragover', function (e) { e.preventDefault(); });\n\n\t\t\t\t\tcatRoot.querySelectorAll('.admin-menu-item-tbody').forEach(function (tbody) {\n\t\t\t\t\t\tlet dragRow = null;\n\t\t\t\t\t\tconst catId = tbody.getAttribute('data-category-id');\n\t\t\t\t\t\ttbody.querySelectorAll('.admin-menu-item-row').forEach(function (row) {\n\t\t\t\t\t\t\trow.addEventListener('dragstart', function (e) {\n\t\t\t\t\t\t\t\tdragRow = row;\n\t\t\t\t\t\t\t\te.dataTransfer.effectAllowed = 'move';\n\t\t\t\t\t\t\t\trow.classList.add('opacity-50');\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\trow.addEventListener('dragend', function () {\n\t\t\t\t\t\t\t\trow.classList.remove('opacity-50');\n\t\t\t\t\t\t\t\tdragRow = null;\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\trow.addEventListener('dragover', function (e) {\n\t\t\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\t\t\tif (!dragRow || dragRow === row || dragRow.parentNode !== tbody) return;\n\t\t\t\t\t\t\t\tconst rect = row.getBoundingClientRect();\n\t\t\t\t\t\t\t\tconst before = e.clientY < rect.top + rect.height / 2;\n\t\t\t\t\t\t\t\ttbody.insertBefore(dragRow, before ? row : row.nextSibling);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t\t\ttbody.querySelectorAll('.admin-item-drag-handle').forEach(function (h) {\n\t\t\t\t\t\t\th.addEventListener('mousedown', function (e) { e.stopPropagation(); });\n\t\t\t\t\t\t\th.addEventListener('click', function (e) { e.preventDefault(); });\n\t\t\t\t\t\t});\n\t\t\t\t\t\ttbody.addEventListener('drop', function (e) {\n\t\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\t\tif (!dragRow || dragRow.parentNode !== tbody) return;\n\t\t\t\t\t\t\tconst ids = Array.from(tbody.querySelectorAll('.admin-menu-item-row')).map(function (r) {\n\t\t\t\t\t\t\t\treturn r.getAttribute('data-item-id');\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\tadminFetch('/admin/menu/reorder-items', { categoryID: catId, itemIDs: ids }).then(function (r) {\n\t\t\t\t\t\t\t\tif (!r.ok) r.text().then(function (t) { console.error('reorder items failed', t); });\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t\t\ttbody.addEventListener('dragover', function (e) { e.preventDefault(); });\n\t\t\t\t\t});\n\t\t\t\t})();\n\t\t\t</script></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 127, "</div><script>\n\t\t\t\t(function () {\n\t\t\t\t\tfunction getCookie(name) {\n\t\t\t\t\t\tconst value = '; ' + document.cookie;\n\t\t\t\t\t\tconst parts = value.split('; ' + name + '=');\n\t\t\t\t\t\tif (parts.length === 2) return parts.pop().split(';').shift() || '';\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\t\t\t\t\tfunction adminFetch(url, body) {\n\t\t\t\t\t\tconst headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': getCookie('csrf') || '' };\n\t\t\t\t\t\treturn fetch(url, { method: 'POST', headers, body: JSON.stringify(body), credentials: 'same-origin' });\n\t\t\t\t\t}\n\t\t\t\t\tdocument.querySelectorAll('[data-set-category-for]').forEach(function (el) {\n\t\t\t\t\t\tel.addEventListener('click', function () {\n\t\t\t\t\t\t\tconst itemId = el.getAttribute('data-set-category-for');\n\t\t\t\t\t\t\tconst catId = el.getAttribute('data-category-id-value');\n\t\t\t\t\t\t\tconst name = el.getAttribute('data-category-name-text') || '';\n\t\t\t\t\t\t\tconst hidden = document.getElementById('edit-item-cat-value-' + itemId);\n\t\t\t\t\t\t\tif (hidden) hidden.value = catId;\n\t\t\t\t\t\t\tconst label = document.querySelector('.edit-item-cat-label[data-item-id=\"' + itemId + '\"]');\n\t\t\t\t\t\t\tif (label) label.textContent = name;\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t\tconst catRoot = document.getElementById('admin-menu-categories');\n\t\t\t\t\tif (!catRoot) return;\n\t\t\t\t\tlet dragCat = null;\n\t\t\t\t\tcatRoot.querySelectorAll('.admin-menu-category-card').forEach(function (card) {\n\t\t\t\t\t\tcard.addEventListener('dragstart', function (e) {\n\t\t\t\t\t\t\tdragCat = card;\n\t\t\t\t\t\t\te.dataTransfer.effectAllowed = 'move';\n\t\t\t\t\t\t\tcard.classList.add('opacity-50');\n\t\t\t\t\t\t});\n\t\t\t\t\t\tcard.addEventListener('dragend', function () {\n\t\t\t\t\t\t\tcard.classList.remove('opacity-50');\n\t\t\t\t\t\t\tdragCat = null;\n\t\t\t\t\t\t});\n\t\t\t\t\t\tcard.addEventListener('dragover', function (e) {\n\t\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\t\tif (!dragCat || dragCat === card) return;\n\t\t\t\t\t\t\tconst rect = card.getBoundingClientRect();\n\t\t\t\t\t\t\tconst before = e.clientY < rect.top + rect.height / 2;\n\t\t\t\t\t\t\tcatRoot.insertBefore(dragCat, before ? card : card.nextSibling);\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t\tcatRoot.querySelectorAll('.admin-category-drag-handle').forEach(function (h) {\n\t\t\t\t\t\th.addEventListener('mousedown', function (e) { e.stopPropagation(); });\n\t\t\t\t\t\th.addEventListener('click', function (e) { e.preventDefault(); });\n\t\t\t\t\t});\n\t\t\t\t\tcatRoot.addEventListener('drop', function (e) {\n\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\tif (!dragCat) return;\n\t\t\t\t\t\tconst ids = Array.from(catRoot.querySelectorAll('.admin-menu-category-card')).map(function (c) {\n\t\t\t\t\t\t\treturn c.getAttribute('data-category-id');\n\t\t\t\t\t\t});\n\t\t\t\t\t\tadminFetch('/admin/menu/reorder-categories', { categoryIDs: ids }).then(function (r) {\n\t\t\t\t\t\t\tif (!r.ok) r.text().then(function (t) { console.error('reorder categories failed', t); });\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t\tcatRoot.addEventListener('dragover', function (e) { e.preventDefault(); });\n\n\t\t\t\t\tcatRoot.querySelectorAll('.admin-menu-item-tbody').forEach(function (tbody) {\n\t\t\t\t\t\tlet dragRow = null;\n\t\t\t\t\t\tconst catId = tbody.getAttribute('data-category-id');\n\t\t\t\t\t\ttbody.querySelectorAll('.admin-menu-item-row').forEach(function (row) {\n\t\t\t\t\t\t\trow.addEventListener('dragstart', function (e) {\n\t\t\t\t\t\t\t\tdragRow = row;\n\t\t\t\t\t\t\t\te.dataTransfer.effectAllowed = 'move';\n\t\t\t\t\t\t\t\trow.classList.add('opacity-50');\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\trow.addEventListener('dragend', function () {\n\t\t\t\t\t\t\t\trow.classList.remove('opacity-50');\n\t\t\t\t\t\t\t\tdragRow = null;\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\trow.addEventListener('dragover', function (e) {\n\t\t\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\t\t\tif (!dragRow || dragRow === row || dragRow.parentNode !== tbody) return;\n\t\t\t\t\t\t\t\tconst rect = row.getBoundingClientRect();\n\t\t\t\t\t\t\t\tconst before = e.clientY < rect.top + rect.height / 2;\n\t\t\t\t\t\t\t\ttbody.insertBefore(dragRow, before ? row : row.nextSibling);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t\t\ttbody.querySelectorAll('.admin-item-drag-handle').forEach(function (h) {\n\t\t\t\t\t\t\th.addEventListener('mousedown', function (e) { e.stopPropagation(); });\n\t\t\t\t\t\t\th.addEventListener('click', function (e) { e.preventDefault(); });\n\t\t\t\t\t\t});\n\t\t\t\t\t\ttbody.addEventListener('drop', function (e) {\n\t\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\t\tif (!dragRow || dragRow.parentNode !== tbody) return;\n\t\t\t\t\t\t\tconst ids = Array.from(tbody.querySelectorAll('.admin-menu-item-row')).map(function (r) {\n\t\t\t\t\t\t\t\treturn r.getAttribute('data-item-id');\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\tadminFetch('/admin/menu/reorder-items', { categoryID: catId, itemIDs: ids }).then(function (r) {\n\t\t\t\t\t\t\t\tif (!r.ok) r.text().then(function (t) { console.error('reorder items failed', t); });\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t\t\ttbody.addEventListener('dragover', function (e) { e.preventDefault(); });\n\t\t\t\t\t});\n\t\t\t\t})();\n\t\t\t</script></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

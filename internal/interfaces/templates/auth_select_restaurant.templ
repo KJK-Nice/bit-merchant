@@ -3,12 +3,14 @@ package templates
 import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
-	"bitmerchant/internal/interfaces/templates/components/ui/label"
+	"bitmerchant/internal/interfaces/templates/components/ui/popover"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
+	"bitmerchant/internal/interfaces/templates/components/ui/selectbox"
 )
 
 templ AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options []RestaurantOption) {
 	@Layout("Select Restaurant - BitMerchant") {
-		<div class="max-w-xl mx-auto mt-8">
+		<div class="max-w-xl mx-auto mt-10 md:mt-14">
 			@card.Card() {
 				@card.Header() {
 					@card.Title() {
@@ -19,22 +21,38 @@ templ AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options
 					}
 				}
 				@card.Content() {
-					<form action="/auth/select-restaurant" method="post" class="space-y-4">
+					<form action="/auth/select-restaurant" method="post" class="space-y-5">
 						<input type="hidden" name="csrf" value={ csrfToken }/>
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "restaurantID", Class: "block"}) {
-								Restaurant
-							}
-							<select id="restaurantID" name="restaurantID" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required>
-								for _, option := range options {
-									if option.RestaurantID == currentRestaurantID {
-										<option value={ option.RestaurantID } selected>{ option.DisplayName + " (" + option.Role + ")" }</option>
-									} else {
-										<option value={ option.RestaurantID }>{ option.DisplayName + " (" + option.Role + ")" }</option>
+						@primitives.Field(primitives.FieldProps{
+							ID:       "restaurantID",
+							Label:    "Restaurant",
+							Required: true,
+						}) {
+							@selectbox.SelectBox() {
+								@selectbox.Trigger(selectbox.TriggerProps{
+									ID:       "restaurantID",
+									Name:     "restaurantID",
+									HasError: len(options) == 0,
+								}) {
+									@selectbox.Value(selectbox.ValueProps{
+										Placeholder: "Select a restaurant",
+									})
+								}
+								@selectbox.Content() {
+									@selectbox.Group() {
+										@selectbox.Label() { Restaurants }
+										for _, option := range options {
+											@selectbox.Item(selectbox.ItemProps{
+												Value:    option.RestaurantID,
+												Selected: option.RestaurantID == currentRestaurantID,
+											}) {
+												{ option.DisplayName + " (" + option.Role + ")" }
+											}
+										}
 									}
 								}
-							</select>
-						</div>
+							}
+						}
 						@button.Button(button.Props{Type: "submit", Class: "w-full"}) {
 							Use this restaurant
 						}
@@ -42,5 +60,7 @@ templ AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options
 				}
 			}
 		</div>
+		@popover.Script()
+		@selectbox.Script()
 	}
 }

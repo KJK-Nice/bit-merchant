@@ -4,11 +4,12 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 )
 
 templ AuthInvite(csrfToken, invitationToken, role string) {
 	@Layout("Accept Invitation - BitMerchant") {
-		<div class="max-w-md mx-auto mt-8">
+		<div class="max-w-md mx-auto mt-10 md:mt-14">
 			@card.Card() {
 				@card.Header() {
 					@card.Title() {
@@ -19,9 +20,12 @@ templ AuthInvite(csrfToken, invitationToken, role string) {
 					}
 				}
 				@card.Content() {
-					<form id="passkey-invite-form" class="space-y-4" data-csrf={ csrfToken } data-invitation-token={ invitationToken }>
-						<div>
-							<label for="displayName" class="block text-sm font-medium mb-2">Your name</label>
+					<form id="passkey-invite-form" class="space-y-5" data-csrf={ csrfToken } data-invitation-token={ invitationToken }>
+						@primitives.Field(primitives.FieldProps{
+							ID:       "displayName",
+							Label:    "Your name",
+							Required: true,
+						}) {
 							@input.Input(input.Props{
 								ID: "displayName",
 								Name: "displayName",
@@ -29,7 +33,7 @@ templ AuthInvite(csrfToken, invitationToken, role string) {
 								Placeholder: "Kitchen staff name",
 								Required: true,
 							})
-						</div>
+						}
 						@button.Button(button.Props{Type: "submit"}) {
 							Accept and register passkey
 						}

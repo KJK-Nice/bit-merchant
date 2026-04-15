@@ -1,0 +1,105 @@
+package primitives
+
+import (
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
+	"bitmerchant/internal/interfaces/templates/utils"
+)
+
+type PageHeaderProps struct {
+	Title       string
+	Description string
+	Class       string
+}
+
+type InlineAlertVariant string
+
+const (
+	InlineAlertInfo    InlineAlertVariant = "info"
+	InlineAlertSuccess InlineAlertVariant = "success"
+	InlineAlertWarning InlineAlertVariant = "warning"
+	InlineAlertError   InlineAlertVariant = "error"
+)
+
+type InlineAlertProps struct {
+	Class       string
+	Variant     InlineAlertVariant
+	Description string
+}
+
+type FieldProps struct {
+	ID          string
+	Label       string
+	Class       string
+	Hint        string
+	Error       string
+	LabelClass  string
+	InputClass  string
+	Description string
+	Required    bool
+}
+
+templ PageHeader(props ...PageHeaderProps) {
+	{{ var p PageHeaderProps }}
+	if len(props) > 0 {
+		{{ p = props[0] }}
+	}
+	<div class={ utils.TwMerge("space-y-1.5", p.Class) }>
+		<h1 class="text-2xl font-semibold tracking-tight">{ p.Title }</h1>
+		if p.Description != "" {
+			<p class="text-sm text-muted-foreground">{ p.Description }</p>
+		}
+	</div>
+}
+
+templ InlineAlert(props ...InlineAlertProps) {
+	{{ var p InlineAlertProps }}
+	if len(props) > 0 {
+		{{ p = props[0] }}
+	}
+	if p.Variant == "" {
+		{{ p.Variant = InlineAlertInfo }}
+	}
+	<div
+		role="alert"
+		class={ utils.TwMerge(
+			"rounded-md border px-4 py-3 text-sm",
+			utils.If(p.Variant == InlineAlertInfo, "border-border bg-muted/40 text-foreground"),
+			utils.If(p.Variant == InlineAlertSuccess, "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"),
+			utils.If(p.Variant == InlineAlertWarning, "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300"),
+			utils.If(p.Variant == InlineAlertError, "border-destructive/50 bg-destructive/10 text-destructive"),
+			p.Class,
+		) }
+	>
+		{ p.Description }
+		{ children... }
+	</div>
+}
+
+templ Field(props ...FieldProps) {
+	{{ var p FieldProps }}
+	if len(props) > 0 {
+		{{ p = props[0] }}
+	}
+	<div class={ utils.TwMerge("space-y-2", p.Class) }>
+		if p.Label != "" {
+			@label.Label(label.Props{For: p.ID, Class: p.LabelClass}) {
+				{ p.Label }
+				if p.Required {
+					<span class="ml-1 text-destructive">*</span>
+				}
+			}
+		}
+		<div class={ p.InputClass }>
+			{ children... }
+		</div>
+		if p.Description != "" {
+			<p class="text-xs text-muted-foreground">{ p.Description }</p>
+		}
+		if p.Hint != "" {
+			<p class="text-xs text-muted-foreground">{ p.Hint }</p>
+		}
+		if p.Error != "" {
+			<p class="text-xs text-destructive">{ p.Error }</p>
+		}
+	</div>
+}

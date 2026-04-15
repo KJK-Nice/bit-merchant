@@ -4,12 +4,12 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
-	"bitmerchant/internal/interfaces/templates/components/ui/label"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 )
 
 templ OrderLookupPage(csrfToken string) {
 	@Layout("Find Order") {
-		<div class="container mx-auto max-w-md py-12">
+		<div class="container mx-auto max-w-md py-10 md:py-14">
 			@card.Card() {
 				@card.Header() {
 					@card.Title() {
@@ -20,12 +20,13 @@ templ OrderLookupPage(csrfToken string) {
 					}
 				}
 				@card.Content() {
-					<form action="/order/lookup" method="POST" class="space-y-4">
+					<form action="/order/lookup" method="POST" class="space-y-5">
 						<input type="hidden" name="csrf" value={ csrfToken }/>
-						<div class="space-y-2">
-							@label.Label(label.Props{For: "orderNumber"}) {
-								Order Number
-							}
+						@primitives.Field(primitives.FieldProps{
+							ID:       "orderNumber",
+							Label:    "Order Number",
+							Required: true,
+						}) {
 							@input.Input(input.Props{
 								Type:        "text",
 								ID:          "orderNumber",
@@ -33,7 +34,7 @@ templ OrderLookupPage(csrfToken string) {
 								Placeholder: "e.g. 1234",
 								Required:    true,
 							})
-						</div>
+						}
 						@button.Button(button.Props{
 							Type:  "submit",
 							Class: "w-full",

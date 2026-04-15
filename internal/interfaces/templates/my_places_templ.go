@@ -18,6 +18,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 )
 
 func MyPlacesPage(visited []placesQuery.VisitedPlace) templ.Component {
@@ -53,7 +54,15 @@ func MyPlacesPage(visited []placesQuery.VisitedPlace) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"container mx-auto p-4 max-w-2xl pb-24 md:pb-8 space-y-6\"><div class=\"space-y-2\"><h1 class=\"text-3xl font-bold\">My places</h1><p class=\"text-muted-foreground text-sm\">Restaurants you've opened on this device—like stamps from places you've been.</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"container mx-auto p-4 max-w-2xl pb-24 md:pb-8 space-y-6\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = primitives.PageHeader(primitives.PageHeaderProps{
+				Title:       "My places",
+				Description: "Restaurants you've opened on this device—like stamps from places you've been.",
+				Class:       "space-y-2",
+			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

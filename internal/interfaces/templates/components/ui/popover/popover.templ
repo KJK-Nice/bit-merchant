@@ -54,6 +54,10 @@ type ContentProps struct {
 	Exclusive        bool
 }
 
+templ Root() {
+	{ children... }
+}
+
 templ Trigger(props ...TriggerProps) {
 	{{ var p TriggerProps }}
 	if len(props) > 0 {

@@ -1,6 +1,12 @@
 package templates
 
-import "bitmerchant/internal/interfaces/templates/components/ui/label"
+import (
+	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
+	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
+	"bitmerchant/internal/interfaces/templates/components/ui/popover"
+)
 
 templ Layout(title string) {
 	<!DOCTYPE html>
@@ -57,8 +63,11 @@ templ Layout(title string) {
 					};
 				})();
 			</script>
-			<script src="/assets/js/input.min.js"></script>
+			@input.Script()
 			@label.Script()
+			@popover.Script()
+			@dropdown.Script()
+			@dialog.Script()
 			<script>
 				if ('serviceWorker' in navigator) {
 					window.addEventListener('load', function() {
@@ -72,7 +81,7 @@ templ Layout(title string) {
 			</script>
 		</head>
 		<body class="bg-background text-foreground antialiased min-h-screen flex flex-col">
-			<main class="container mx-auto py-6 flex-grow">
+			<main class="container mx-auto py-6 md:py-8 flex-grow">
 				{ children... }
 			</main>
 		</body>

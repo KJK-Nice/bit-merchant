@@ -23,7 +23,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 						<p class="text-sm font-medium text-foreground/90">Table { tableLabel }</p>
 					}
 				</div>
-				<a href="/my-places" class="text-sm font-medium text-primary whitespace-nowrap shrink-0 hover:underline pt-1">
+				<a href="/my-places" class="inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-primary shadow-sm whitespace-nowrap shrink-0 hover:bg-muted">
 					My places
 				</a>
 			</div>
@@ -43,48 +43,100 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 				</div>
 			}
 			
-			<!-- Cart Summary Component (Desktop) -->
 			<div class="hidden md:block sticky top-4 z-10">
 				@components.CartSummary(cart, true)
 			</div>
 
-			<div class="space-y-10">
-				for _, cat := range data.Categories {
-					<section>
-						<h2 class="text-2xl font-semibold mb-4 pb-2 border-b">{ cat.Category.Name }</h2>
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+			if len(data.Categories) > 0 {
+				<div class="md:hidden sticky top-0 z-20 -mx-4 px-4 py-2 border-y bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+					<div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+						for i, cat := range data.Categories {
+							<a
+								href={ templ.SafeURL(fmt.Sprintf("#cat-%d", i)) }
+								class="inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground/90 hover:bg-muted"
+							>
+								{ cat.Category.Name }
+							</a>
+						}
+					</div>
+				</div>
+			}
+
+			<div class="space-y-8">
+				for i, cat := range data.Categories {
+					<section id={ fmt.Sprintf("cat-%d", i) } class="space-y-3 scroll-mt-20">
+						<div class="flex items-center justify-between gap-3">
+							<h2 class="text-2xl font-semibold tracking-tight">{ cat.Category.Name }</h2>
+						</div>
+						<div class="flex gap-3 overflow-x-auto snap-x snap-mandatory md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 							for _, item := range cat.Items {
-								@card.Card(card.Props{Class: "h-full flex flex-col"}) {
-									@card.Header() {
-										if item.PhotoURL != "" {
-											<div class="aspect-video w-full overflow-hidden rounded-md mb-3">
-												<img src={ item.PhotoURL } alt={ item.Name } class="h-full w-full object-cover" loading="lazy" width="400" height="300" />
+								<div class="snap-start shrink-0 md:w-auto md:max-w-none" style="width:min(84vw,24rem);">
+									if item.PhotoURL != "" {
+										@card.Card(card.Props{
+											Class: "relative overflow-hidden border-0 shadow-none",
+											Attributes: templ.Attributes{
+												"style": "height:22rem;",
+											},
+										}) {
+											<img src={ item.PhotoURL } alt={ item.Name } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="400" height="300"/>
+											<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+											<div class="p-4 min-h-32 flex flex-col justify-end gap-3 text-white bg-gradient-to-t from-black/92 via-black/70 to-transparent backdrop-blur-sm" style="position:absolute;left:0;right:0;bottom:0;">
+												<h3 class="text-base font-semibold leading-snug line-clamp-2 [text-shadow:0_1px_6px_rgba(0,0,0,0.75)] rounded-lg px-2.5 py-1.5 backdrop-blur-lg w-fit max-w-full shadow-md" style="background:rgba(67,38,18,0.78);">{ item.Name }</h3>
+												<div class="flex items-center justify-between gap-3">
+													<span class="text-lg font-semibold tracking-tight [text-shadow:0_1px_6px_rgba(0,0,0,0.75)] rounded-lg px-2.5 py-1 backdrop-blur-lg shadow-md" style="background:rgba(67,38,18,0.78);">{ fmt.Sprintf("$%.2f", item.Price) }</span>
+													if item.IsAvailable && data.Restaurant.IsOpen {
+														@button.Button(button.Props{
+															Variant: button.VariantDefault,
+															Class:   "bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md",
+															Attributes: templ.Attributes{
+																"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
+															},
+														}) {
+															Add to Cart
+														}
+													} else if !item.IsAvailable {
+														@badge.Badge(badge.Props{Variant: badge.VariantDestructive, Class: "font-medium"}) { Out of Stock }
+													} else {
+														@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-background/90 text-foreground font-medium"}) { Closed }
+													}
+												</div>
 											</div>
 										}
-										@card.Title() { { item.Name } }
-									}
-									@card.Content(card.ContentProps{Class: "flex-grow"}) {
-										<p class="text-muted-foreground">{ item.Description }</p>
-									}
-									@card.Footer(card.FooterProps{Class: "justify-between items-center pt-4"}) {
-										<span class="text-lg font-semibold">{ fmt.Sprintf("$%.2f", item.Price) }</span>
-										
-										if item.IsAvailable && data.Restaurant.IsOpen {
-											@button.Button(button.Props{
-												Variant: button.VariantDefault,
-												Attributes: templ.Attributes{
-													"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
-												},
-											}) {
-												Add to Cart
+									} else {
+										@card.Card(card.Props{
+											Class: "flex flex-col border",
+											Attributes: templ.Attributes{
+												"style": "height:22rem;",
+											},
+										}) {
+											@card.Header(card.HeaderProps{Class: "pb-3"}) {
+												@card.Title(card.TitleProps{Class: "leading-snug line-clamp-2"}) { { item.Name } }
 											}
-										} else if !item.IsAvailable {
-											@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { Out of Stock }
-										} else {
-											@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Closed }
+											@card.Content(card.ContentProps{Class: "flex-grow pt-0"}) {
+												if item.Description != "" {
+													<p class="text-sm text-muted-foreground line-clamp-3">{ item.Description }</p>
+												}
+											}
+											@card.Footer(card.FooterProps{Class: "justify-between items-center border-t pt-4"}) {
+												<span class="text-xl font-bold tracking-tight">{ fmt.Sprintf("$%.2f", item.Price) }</span>
+												if item.IsAvailable && data.Restaurant.IsOpen {
+													@button.Button(button.Props{
+														Variant: button.VariantDefault,
+														Attributes: templ.Attributes{
+															"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
+														},
+													}) {
+														Add to Cart
+													}
+												} else if !item.IsAvailable {
+													@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) { Out of Stock }
+												} else {
+													@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Closed }
+												}
+											}
 										}
 									}
-								}
+								</div>
 							}
 						</div>
 					</section>
@@ -93,7 +145,6 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 		</div>
 
 		@components.CartFloatingButton(cart)
-		<!-- Auto-refresh cart on load to ensure state is synced when navigating back -->
 		<div data-init="@get('/cart')"></div>
 
 		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/menu"})

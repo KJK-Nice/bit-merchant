@@ -5,8 +5,10 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/layouts"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/checkbox"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
@@ -19,11 +21,12 @@ import (
 
 templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, menuError string) {
 	@layouts.Dashboard("Menu Management", "/admin/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
-		<div class="space-y-8 mt-4">
+		<div class="space-y-6 mt-4">
 			if menuError != "" {
-				<div class="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
-					{ menuError }
-				</div>
+				@primitives.InlineAlert(primitives.InlineAlertProps{
+					Variant:     primitives.InlineAlertError,
+					Description: menuError,
+				})
 			}
 			<div class="flex justify-between items-center">
 				<h2 class="text-3xl font-bold tracking-tight">Menu Management</h2>
@@ -112,11 +115,11 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 												@input.Input(input.Props{Type: "number", ID: "edit-cat-order-" + string(catData.Category.ID), Name: "displayOrder", Value: strconv.Itoa(catData.Category.DisplayOrder)})
 											</div>
 											<div class="flex items-center space-x-2">
-												if catData.Category.IsActive {
-													<input type="checkbox" id={ "edit-cat-active-" + string(catData.Category.ID) } name="isActive" checked class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
-												} else {
-													<input type="checkbox" id={ "edit-cat-active-" + string(catData.Category.ID) } name="isActive" class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
-												}
+												@checkbox.Checkbox(checkbox.Props{
+													ID:      "edit-cat-active-" + string(catData.Category.ID),
+													Name:    "isActive",
+													Checked: catData.Category.IsActive,
+												})
 												@label.Label(label.Props{For: "edit-cat-active-" + string(catData.Category.ID), Class: "cursor-pointer"}) {
 													Category visible on customer menu
 												}
@@ -165,7 +168,11 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 												})
 											</div>
 											<div class="flex items-center space-x-2">
-												<input type="checkbox" id={ "add-item-available-" + string(catData.Category.ID) } name="available" checked class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
+												@checkbox.Checkbox(checkbox.Props{
+													ID:      "add-item-available-" + string(catData.Category.ID),
+													Name:    "available",
+													Checked: true,
+												})
 												@label.Label(label.Props{For: "add-item-available-" + string(catData.Category.ID), Class: "cursor-pointer"}) {
 													Available
 												}
@@ -371,11 +378,11 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 																		})
 																	</div>
 																	<div class="flex items-center space-x-2">
-																		if item.IsAvailable {
-																			<input type="checkbox" id={ "edit-item-avail-" + string(item.ID) } name="available" checked class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
-																		} else {
-																			<input type="checkbox" id={ "edit-item-avail-" + string(item.ID) } name="available" class="h-4 w-4 rounded border border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"/>
-																		}
+																		@checkbox.Checkbox(checkbox.Props{
+																			ID:      "edit-item-avail-" + string(item.ID),
+																			Name:    "available",
+																			Checked: item.IsAvailable,
+																		})
 																		@label.Label(label.Props{For: "edit-item-avail-" + string(item.ID), Class: "cursor-pointer"}) {
 																			Available
 																		}

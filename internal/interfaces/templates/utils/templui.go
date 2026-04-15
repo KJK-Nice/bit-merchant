@@ -2,10 +2,11 @@
 package utils
 
 import (
-	"fmt"
-	"time"
-
+	"context"
 	"crypto/rand"
+	"fmt"
+	"io"
+	"time"
 
 	"github.com/a-h/templ"
 
@@ -58,3 +59,14 @@ func RandomID() string {
 // ScriptVersion is a timestamp generated at app start for cache busting.
 // Used in Script() templates to append ?v=<timestamp> to script URLs.
 var ScriptVersion = fmt.Sprintf("%d", time.Now().Unix())
+
+// ComponentScript renders a standard templUI component script tag.
+func ComponentScript(component string) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		_, err := io.WriteString(
+			w,
+			fmt.Sprintf(`<script defer nonce="%s" src="/assets/js/%s.min.js?v=%s"></script>`, templ.GetNonce(ctx), component, ScriptVersion),
+		)
+		return err
+	})
+}

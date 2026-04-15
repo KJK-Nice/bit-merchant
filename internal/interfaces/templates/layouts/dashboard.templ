@@ -8,6 +8,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
@@ -69,7 +70,7 @@ templ Dashboard(title string, currentPath string, activeRestaurantLabel string, 
 					};
 				})();
 			</script>
-			<script src="/assets/js/input.min.js"></script>
+			@input.Script()
 			@sidebar.Script()
 			@dialog.Script()
 			@dropdown.Script()
