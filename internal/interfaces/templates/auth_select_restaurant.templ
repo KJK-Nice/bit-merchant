@@ -3,6 +3,7 @@ package templates
 import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/popover"
 	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/components/ui/selectbox"
 )
@@ -59,5 +60,7 @@ templ AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options
 				}
 			}
 		</div>
+		@popover.Script()
+		@selectbox.Script()
 	}
 }

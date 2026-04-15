@@ -11,6 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/popover"
 	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/components/ui/selectbox"
 )
@@ -153,7 +154,7 @@ func AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options 
 					var templ_7745c5c3_Var8 string
 					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_select_restaurant.templ`, Line: 24, Col: 56}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_select_restaurant.templ`, Line: 25, Col: 56}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 					if templ_7745c5c3_Err != nil {
@@ -281,7 +282,7 @@ func AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options 
 											var templ_7745c5c3_Var16 string
 											templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(option.DisplayName + " (" + option.Role + ")")
 											if templ_7745c5c3_Err != nil {
-												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_select_restaurant.templ`, Line: 48, Col: 59}
+												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_select_restaurant.templ`, Line: 49, Col: 59}
 											}
 											_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 											if templ_7745c5c3_Err != nil {
@@ -364,6 +365,18 @@ func AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options 
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = popover.Script().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = selectbox.Script().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

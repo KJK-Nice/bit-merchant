@@ -3,7 +3,6 @@ package layouts
 import (
 	"strconv"
 
-	"bitmerchant/internal/interfaces/templates/components/ui/checkbox"
 	"bitmerchant/internal/interfaces/templates/components/ui/avatar"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
@@ -12,10 +11,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
-	"bitmerchant/internal/interfaces/templates/components/ui/selectbox"
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
-	"bitmerchant/internal/interfaces/templates/components/ui/tabs"
-	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 )
 
@@ -81,10 +77,6 @@ templ Dashboard(title string, currentPath string, activeRestaurantLabel string, 
 			@avatar.Script()
 			@popover.Script()
 			@label.Script()
-			@selectbox.Script()
-			@checkbox.Script()
-			@tabs.Script()
-			@toast.Script()
 			@textarea.Script()
 		</head>
 		<body class="bg-background text-foreground antialiased min-h-screen">

@@ -1,15 +1,11 @@
 package templates
 
 import (
-	"bitmerchant/internal/interfaces/templates/components/ui/checkbox"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
-	"bitmerchant/internal/interfaces/templates/components/ui/selectbox"
-	"bitmerchant/internal/interfaces/templates/components/ui/tabs"
-	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 )
 
 templ Layout(title string) {
@@ -72,10 +68,6 @@ templ Layout(title string) {
 			@popover.Script()
 			@dropdown.Script()
 			@dialog.Script()
-			@selectbox.Script()
-			@checkbox.Script()
-			@tabs.Script()
-			@toast.Script()
 			<script>
 				if ('serviceWorker' in navigator) {
 					window.addEventListener('load', function() {
