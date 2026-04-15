@@ -7,6 +7,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/tabs"
 	"bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/ordering/app/cart"
 	"fmt"
@@ -15,17 +16,46 @@ import (
 templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 	@Layout(data.Restaurant.Name + " · Menu") {
 		<div class="container mx-auto p-4 space-y-6 pb-40 md:pb-6">
-			<div class="flex justify-between items-start gap-4">
-				<div class="space-y-1 min-w-0">
-					<h1 class="text-3xl font-bold tracking-tight">{ data.Restaurant.Name }</h1>
-					<p class="text-muted-foreground text-sm">You're ordering here</p>
-					if tableLabel != "" {
-						<p class="text-sm font-medium text-foreground/90">Table { tableLabel }</p>
+			<div data-menu-sticky-header class="sticky top-0 z-30 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+				<div class="space-y-3">
+					<div class="flex justify-between items-start gap-4">
+						<div class="space-y-1 min-w-0">
+							<h1 class="text-2xl font-bold tracking-tight truncate">{ data.Restaurant.Name }</h1>
+							<p class="text-muted-foreground text-sm">You're ordering here</p>
+							if tableLabel != "" {
+								<p class="text-sm font-medium text-foreground/90">Table { tableLabel }</p>
+							}
+						</div>
+						<a href="/my-places" class="inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-primary shadow-sm whitespace-nowrap shrink-0 hover:bg-muted">
+							My places
+						</a>
+					</div>
+					if len(data.Categories) > 0 {
+						<div class="overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+							@tabs.Tabs(tabs.Props{
+								ID:    "menu-category-tabs",
+								Class: "w-max",
+							}) {
+								@tabs.List(tabs.ListProps{
+									Class: "h-10 border border-border/70 bg-muted/70 rounded-xl p-1",
+								}) {
+									for i, cat := range data.Categories {
+										@tabs.Trigger(tabs.TriggerProps{
+											Value:    fmt.Sprintf("cat-%d", i),
+											IsActive: i == 0,
+											Class:    "h-8 px-3 rounded-lg shrink-0 text-sm",
+											Attributes: templ.Attributes{
+												"data-cat-target": fmt.Sprintf("cat-%d", i),
+											},
+										}) {
+											{ cat.Category.Name }
+										}
+									}
+								}
+							}
+						</div>
 					}
 				</div>
-				<a href="/my-places" class="inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-primary shadow-sm whitespace-nowrap shrink-0 hover:bg-muted">
-					My places
-				</a>
 			</div>
 
 			if !data.Restaurant.IsOpen {
@@ -47,24 +77,9 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 				@components.CartSummary(cart, true)
 			</div>
 
-			if len(data.Categories) > 0 {
-				<div class="md:hidden sticky top-0 z-20 -mx-4 px-4 py-2 border-y bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-					<div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-						for i, cat := range data.Categories {
-							<a
-								href={ templ.SafeURL(fmt.Sprintf("#cat-%d", i)) }
-								class="inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground/90 hover:bg-muted"
-							>
-								{ cat.Category.Name }
-							</a>
-						}
-					</div>
-				</div>
-			}
-
 			<div class="space-y-8">
 				for i, cat := range data.Categories {
-					<section id={ fmt.Sprintf("cat-%d", i) } class="space-y-3 scroll-mt-20">
+					<section id={ fmt.Sprintf("cat-%d", i) } class="space-y-3 scroll-mt-40 md:scroll-mt-24">
 						<div class="flex items-center justify-between gap-3">
 							<h2 class="text-2xl font-semibold tracking-tight">{ cat.Category.Name }</h2>
 						</div>
@@ -157,6 +172,78 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 		</div>
 
 		<script>
+			(() => {
+				const tabsRoot = document.getElementById('menu-category-tabs');
+				if (!tabsRoot) return;
+
+				const triggers = Array.from(tabsRoot.querySelectorAll('[data-tui-tabs-trigger][data-cat-target]'));
+				if (!triggers.length) return;
+
+				const sections = triggers
+					.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))
+					.filter(Boolean);
+				if (!sections.length) return;
+
+				const setActive = (sectionID) => {
+					for (const trigger of triggers) {
+						const isActive = trigger.getAttribute('data-cat-target') === sectionID;
+						trigger.setAttribute('data-tui-tabs-state', isActive ? 'active' : 'inactive');
+						if (isActive) {
+							trigger.setAttribute('aria-current', 'true');
+						} else {
+							trigger.removeAttribute('aria-current');
+						}
+					}
+				};
+
+				const scrollToSection = (sectionID) => {
+					const section = document.getElementById(sectionID);
+					if (!section) return;
+					section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					window.history.replaceState(null, '', `#${sectionID}`);
+					setActive(sectionID);
+				};
+
+				for (const trigger of triggers) {
+					trigger.addEventListener('click', () => {
+						const sectionID = trigger.getAttribute('data-cat-target');
+						if (!sectionID) return;
+						scrollToSection(sectionID);
+					});
+				}
+
+				const observer = new IntersectionObserver(
+					(entries) => {
+						let best = null;
+						for (const entry of entries) {
+							if (!entry.isIntersecting) continue;
+							if (!best || entry.intersectionRatio > best.intersectionRatio) {
+								best = entry;
+							}
+						}
+						if (best?.target?.id) {
+							setActive(best.target.id);
+						}
+					},
+					{
+						root: null,
+						rootMargin: '-35% 0px -55% 0px',
+						threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
+					},
+				);
+
+				for (const section of sections) {
+					observer.observe(section);
+				}
+
+				const initialHash = window.location.hash.replace('#', '');
+				if (initialHash && sections.some((section) => section.id === initialHash)) {
+					setActive(initialHash);
+				} else if (sections[0]?.id) {
+					setActive(sections[0].id);
+				}
+			})();
+
 			let deferredPrompt;
 			window.addEventListener('beforeinstallprompt', (e) => {
 				e.preventDefault();
