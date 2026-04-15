@@ -69,13 +69,22 @@ func SurfaceRoutingMiddleware(cfg SurfaceConfig) echo.MiddlewareFunc {
 }
 
 func classifyRouteSurface(path string) AppSurface {
-	if hasPathPrefix(path, "/menu") || hasPathPrefix(path, "/my-places") || hasPathPrefix(path, "/cart") || hasPathPrefix(path, "/order") {
+	if hasAnyPathPrefix(path, "/menu", "/my-places", "/scan", "/cart", "/order") {
 		return AppSurfaceCustomer
 	}
-	if hasPathPrefix(path, "/dashboard") || hasPathPrefix(path, "/admin") || hasPathPrefix(path, "/kitchen") || hasPathPrefix(path, "/auth") || hasPathPrefix(path, "/owner") {
+	if hasAnyPathPrefix(path, "/dashboard", "/admin", "/kitchen", "/auth", "/owner") {
 		return AppSurfaceMerchant
 	}
 	return AppSurfacePublic
+}
+
+func hasAnyPathPrefix(path string, prefixes ...string) bool {
+	for _, prefix := range prefixes {
+		if hasPathPrefix(path, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func hasPathPrefix(path, prefix string) bool {

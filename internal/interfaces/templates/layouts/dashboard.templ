@@ -13,6 +13,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
+	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 )
 
 templ Dashboard(title string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, csrfToken string, switcherOptions []RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
@@ -78,6 +79,7 @@ templ Dashboard(title string, currentPath string, activeRestaurantLabel string, 
 			@popover.Script()
 			@label.Script()
 			@textarea.Script()
+			@toast.Script()
 		</head>
 		<body class="bg-background text-foreground antialiased min-h-screen">
 			<form id="layout-logout-form" method="post" action="/auth/logout" class="hidden">

@@ -6,6 +6,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
+	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 )
 
 templ Layout(title string) {
@@ -68,6 +69,7 @@ templ Layout(title string) {
 			@popover.Script()
 			@dropdown.Script()
 			@dialog.Script()
+			@toast.Script()
 			<script>
 				if ('serviceWorker' in navigator) {
 					window.addEventListener('load', function() {

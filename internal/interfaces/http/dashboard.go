@@ -24,6 +24,17 @@ type DashboardHandler struct {
 	logger         *slog.Logger
 }
 
+const dashboardFlashStatusUpdateFailed = "status_update_failed"
+
+func dashboardFlashMessage(flashCode string) string {
+	switch flashCode {
+	case dashboardFlashStatusUpdateFailed:
+		return "We could not update restaurant status. Please try again."
+	default:
+		return ""
+	}
+}
+
 func NewDashboardHandler(
 	getStatsUC *dashboard.GetDashboardStatsUseCase,
 	getHistoryUC *dashboard.GetOrderHistoryUseCase,
@@ -73,7 +84,7 @@ func (h *DashboardHandler) Dashboard(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to load restaurant: "+err.Error())
 	}
 
-	statusErr := c.QueryParam("error")
+	statusErr := dashboardFlashMessage(c.QueryParam("flash"))
 
 	dn, st, ini := LayoutUserStringsFromContext(c)
 	label := ActiveRestaurantLabel(c.Request().Context(), restaurantID, h.restaurantRepo)
@@ -96,7 +107,7 @@ func (h *DashboardHandler) ToggleOpen(c echo.Context) error {
 
 	_, err = h.toggleOpenUC.Execute(c.Request().Context(), restaurantID, closedMsg, reopen)
 	if err != nil {
-		return c.Redirect(http.StatusFound, "/dashboard?error="+url.QueryEscape(err.Error()))
+		return c.Redirect(http.StatusFound, "/dashboard?flash="+url.QueryEscape(dashboardFlashStatusUpdateFailed))
 	}
 
 	return c.Redirect(http.StatusFound, "/dashboard")

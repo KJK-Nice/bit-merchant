@@ -31,6 +31,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 
 	e.GET("/menu", handlers.Menu.GetMenu)
 	e.GET("/my-places", handlers.Places.GetMyPlaces)
+	e.GET("/scan", handlers.Places.GetScanQR)
 
 	e.GET("/cart", handlers.Cart.GetCart)
 	e.POST("/cart/add", handlers.Cart.AddToCart)

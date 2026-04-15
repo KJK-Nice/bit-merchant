@@ -16,7 +16,7 @@ templ EntryPage(reason string) {
 
 			if reason == "restaurant_required" {
 				<div class="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
-					Restaurant context is required. Please scan a QR code or open My Places.
+					Restaurant context is required. Please scan a QR code or open Places.
 				</div>
 			}
 			if reason == "restaurant_not_found" {
@@ -25,9 +25,12 @@ templ EntryPage(reason string) {
 				</div>
 			}
 
-			<div class="grid gap-3 sm:grid-cols-3">
-				@button.Button(button.Props{Href: "/my-places", Class: "w-full"}) {
-					My Places
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+				@button.Button(button.Props{Href: "/scan", Class: "w-full"}) {
+					Scan QR
+				}
+				@button.Button(button.Props{Href: "/my-places", Variant: button.VariantSecondary, Class: "w-full"}) {
+					Places
 				}
 				@button.Button(button.Props{Href: "/auth/login", Variant: button.VariantSecondary, Class: "w-full"}) {
 					Login

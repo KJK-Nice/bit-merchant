@@ -8,9 +8,9 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/checkbox"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
-	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
+	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
@@ -23,9 +23,15 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 	@layouts.Dashboard("Menu Management", "/admin/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div class="space-y-6 mt-4">
 			if menuError != "" {
-				@primitives.InlineAlert(primitives.InlineAlertProps{
-					Variant:     primitives.InlineAlertError,
+				@toast.Toast(toast.Props{
+					Title:       "Menu update failed",
 					Description: menuError,
+					Variant:     toast.VariantError,
+					Position:    toast.PositionTopRight,
+					Duration:    4200,
+					Dismissible: true,
+					Icon:        true,
+					ShowIndicator: true,
 				})
 			}
 			<div class="flex justify-between items-center">

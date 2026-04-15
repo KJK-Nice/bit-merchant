@@ -78,7 +78,7 @@ func TestAdminQR_TableCountAndPrint(t *testing.T) {
 		c.Set(httpMiddleware.ContextRestaurantID, restID)
 		require.NoError(t, adminHandler.PostQRSettings(c))
 		assert.Equal(t, http.StatusFound, rec.Code)
-		assert.Contains(t, rec.Header().Get(echo.HeaderLocation), "/admin/qr?saved=1")
+		assert.Contains(t, rec.Header().Get(echo.HeaderLocation), "/admin/qr?flash=qr_settings_saved")
 
 		reqP := httptest.NewRequest(http.MethodGet, "/admin/qr/print", nil)
 		recP := httptest.NewRecorder()

@@ -5,6 +5,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 	"bitmerchant/internal/interfaces/templates/layouts"
 	"strconv"
 )
@@ -12,11 +13,32 @@ import (
 templ QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, restaurantName string, tableNumbers []int, tableCountInput int, qrError string, saved bool) {
 	@layouts.Dashboard("QR codes", "/admin/qr", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div class="space-y-8 mt-4 max-w-4xl">
+			if saved {
+				@toast.Toast(toast.Props{
+					Title:       "QR settings saved",
+					Description: "Table count has been updated.",
+					Variant:     toast.VariantSuccess,
+					Position:    toast.PositionTopRight,
+					Duration:    3200,
+					Dismissible: true,
+					Icon:        true,
+					ShowIndicator: true,
+				})
+			}
+			if qrError != "" {
+				@toast.Toast(toast.Props{
+					Title:       "QR update failed",
+					Description: qrError,
+					Variant:     toast.VariantError,
+					Position:    toast.PositionTopRight,
+					Duration:    4200,
+					Dismissible: true,
+					Icon:        true,
+					ShowIndicator: true,
+				})
+			}
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div>
-					if saved {
-						<p class="text-sm text-muted-foreground mb-1">Settings saved.</p>
-					}
 					<h1 class="text-2xl font-bold tracking-tight">Table QR codes</h1>
 					<p class="text-muted-foreground text-sm mt-1">
 						Each code opens your menu for this restaurant. Print a sheet for every table.
@@ -34,11 +56,6 @@ templ QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName str
 					}
 				</div>
 			</div>
-			if qrError != "" {
-				<div class="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
-					{ qrError }
-				</div>
-			}
 			@card.Card() {
 				@card.Header() {
 					@card.Title() {
