@@ -13,8 +13,21 @@ const csrfTokenForMerchantHost = async (actor: Awaited<ReturnType<typeof Merchan
 
 const selectedRestaurantID = async (actor: Awaited<ReturnType<typeof MerchantActor>>): Promise<string> => {
   const hiddenInput = actor.page.locator("button#restaurantID input[data-tui-selectbox-hidden-input]");
+  let value = (await hiddenInput.getAttribute("value")) ?? "";
+  if (value.trim() !== "") {
+    return value;
+  }
+
+  const trigger = actor.page.locator("button#restaurantID");
+  await trigger.click();
+
+  const firstOption = actor.page.locator("[data-tui-selectbox-content='true'] [role='option']").first();
+  await expect(firstOption).toBeVisible();
+  await firstOption.click();
+
   await expect(hiddenInput).toHaveAttribute("value", /.+/);
-  return (await hiddenInput.getAttribute("value")) ?? "";
+  value = (await hiddenInput.getAttribute("value")) ?? "";
+  return value;
 };
 
 const createCategoryAndItem = async (
@@ -137,10 +150,10 @@ test.describe("Admin menu and QR management", () => {
 
     await owner.page.getByLabel("Tables").fill("3");
     await Promise.all([
-      owner.page.waitForURL("**/admin/qr?saved=1", { waitUntil: "domcontentloaded" }),
+      owner.page.waitForURL("**/admin/qr?flash=qr_settings_saved", { waitUntil: "domcontentloaded" }),
       owner.page.getByRole("button", { name: "Save" }).click(),
     ]);
-    await expect(owner.page.getByText("Settings saved.")).toBeVisible();
+    await expect(owner.page).toHaveURL(/\/admin\/qr\?flash=qr_settings_saved$/);
     await expect(owner.page.getByText(/Table 3/)).toBeVisible();
 
     const customerContext = await browser.newContext();
