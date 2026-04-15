@@ -22,18 +22,50 @@ import (
 const adminMenuDashboardPath = "/admin/dashboard"
 const adminQRPath = "/admin/qr"
 
-func adminMenuRedirect(errMsg string) string {
-	if errMsg == "" {
+const (
+	adminFlashMenuActionFailed  = "menu_action_failed"
+	adminFlashMenuItemNotFound  = "menu_item_not_found"
+	adminFlashMenuImageRequired = "menu_image_required"
+	adminFlashQRActionFailed    = "qr_action_failed"
+	adminFlashQRSettingsSaved   = "qr_settings_saved"
+)
+
+func adminMenuRedirect(flashCode string) string {
+	if flashCode == "" {
 		return adminMenuDashboardPath
 	}
-	return adminMenuDashboardPath + "?error=" + url.QueryEscape(errMsg)
+	return adminMenuDashboardPath + "?flash=" + url.QueryEscape(flashCode)
 }
 
-func adminQRRedirect(errMsg string) string {
-	if errMsg == "" {
+func adminQRRedirect(flashCode string) string {
+	if flashCode == "" {
 		return adminQRPath
 	}
-	return adminQRPath + "?error=" + url.QueryEscape(errMsg)
+	return adminQRPath + "?flash=" + url.QueryEscape(flashCode)
+}
+
+func adminMenuFlashMessage(flashCode string) string {
+	switch flashCode {
+	case adminFlashMenuItemNotFound:
+		return "Menu item not found."
+	case adminFlashMenuImageRequired:
+		return "Please choose an image file before uploading."
+	case adminFlashMenuActionFailed:
+		return "We could not update the menu. Please try again."
+	default:
+		return ""
+	}
+}
+
+func adminQRFlashState(flashCode string) (qrError string, saved bool) {
+	switch flashCode {
+	case adminFlashQRSettingsSaved:
+		return "", true
+	case adminFlashQRActionFailed:
+		return "We could not update QR settings. Please try again.", false
+	default:
+		return "", false
+	}
 }
 
 func (h *AdminHandler) restaurantID(c echo.Context) (common.RestaurantID, error) {
@@ -50,7 +82,7 @@ func (h *AdminHandler) renderAdminDashboard(c echo.Context, menuData *menuQuery.
 	if sErr != nil {
 		return c.String(http.StatusInternalServerError, "Failed to load navigation")
 	}
-	menuError := c.QueryParam("error")
+	menuError := adminMenuFlashMessage(c.QueryParam("flash"))
 	return admin.Dashboard(menuData, getCSRFToken(c), activeLabel, dn, st, ini, switchOpts, activeRole, canCreate, menuError).Render(c.Request().Context(), c.Response())
 }
 
@@ -145,7 +177,7 @@ func (h *AdminHandler) CreateCategory(c echo.Context) error {
 	}
 
 	if _, err = h.createCategoryUC.Execute(c.Request().Context(), req); err != nil {
-		return c.Redirect(http.StatusFound, adminMenuRedirect(err.Error()))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuActionFailed))
 	}
 
 	return c.Redirect(http.StatusFound, adminMenuDashboardPath)
@@ -170,7 +202,7 @@ func (h *AdminHandler) UpdateCategory(c echo.Context) error {
 		IsActive:     isActive,
 	}
 	if err := h.updateCategoryUC.Execute(c.Request().Context(), req); err != nil {
-		return c.Redirect(http.StatusFound, adminMenuRedirect(err.Error()))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuActionFailed))
 	}
 	return c.Redirect(http.StatusFound, adminMenuDashboardPath)
 }
@@ -198,7 +230,7 @@ func (h *AdminHandler) CreateItem(c echo.Context) error {
 	}
 
 	if _, err = h.createItemUC.Execute(c.Request().Context(), req); err != nil {
-		return c.Redirect(http.StatusFound, adminMenuRedirect(err.Error()))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuActionFailed))
 	}
 
 	return c.Redirect(http.StatusFound, adminMenuDashboardPath)
@@ -227,7 +259,7 @@ func (h *AdminHandler) UpdateItem(c echo.Context) error {
 		Available:    available,
 	}
 	if err := h.updateItemUC.Execute(c.Request().Context(), req); err != nil {
-		return c.Redirect(http.StatusFound, adminMenuRedirect(err.Error()))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuActionFailed))
 	}
 	return c.Redirect(http.StatusFound, adminMenuDashboardPath)
 }
@@ -240,7 +272,7 @@ func (h *AdminHandler) ToggleItemAvailability(c echo.Context) error {
 	}
 	itemID := common.ItemID(c.Param("id"))
 	if err := h.toggleItemAvailUC.Execute(c.Request().Context(), restaurantID, itemID); err != nil {
-		return c.Redirect(http.StatusFound, adminMenuRedirect(err.Error()))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuActionFailed))
 	}
 	return c.Redirect(http.StatusFound, adminMenuDashboardPath)
 }
@@ -255,10 +287,10 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 
 	existing, err := h.itemRepo.FindByID(itemID)
 	if err != nil {
-		return c.Redirect(http.StatusFound, adminMenuRedirect("Item not found"))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuItemNotFound))
 	}
 	if existing.RestaurantID != restaurantID {
-		return c.Redirect(http.StatusFound, adminMenuRedirect("Item not found"))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuItemNotFound))
 	}
 
 	file, err := c.FormFile("photo")
@@ -266,11 +298,11 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 		if existing.PhotoURL != "" {
 			return c.Redirect(http.StatusFound, adminMenuDashboardPath)
 		}
-		return c.Redirect(http.StatusFound, adminMenuRedirect("Image file required"))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuImageRequired))
 	}
 	src, err := file.Open()
 	if err != nil {
-		return c.Redirect(http.StatusFound, adminMenuRedirect(err.Error()))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuActionFailed))
 	}
 	defer src.Close()
 
@@ -283,7 +315,7 @@ func (h *AdminHandler) UploadPhoto(c echo.Context) error {
 	}
 
 	if _, err = h.uploadPhotoUC.Execute(c.Request().Context(), req); err != nil {
-		return c.Redirect(http.StatusFound, adminMenuRedirect(err.Error()))
+		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuActionFailed))
 	}
 
 	return c.Redirect(http.StatusFound, adminMenuDashboardPath)
@@ -362,7 +394,8 @@ func (h *AdminHandler) GetQRPage(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Failed to load restaurant")
 	}
-	return h.renderQRPage(c, rest, c.QueryParam("error"), c.QueryParam("saved") == "1")
+	qrError, saved := adminQRFlashState(c.QueryParam("flash"))
+	return h.renderQRPage(c, rest, qrError, saved)
 }
 
 // PostQRSettings handles POST /admin/qr/settings
@@ -373,9 +406,9 @@ func (h *AdminHandler) PostQRSettings(c echo.Context) error {
 	}
 	count, _ := strconv.Atoi(c.FormValue("tableCount"))
 	if err := h.updateTableCountUC.Execute(c.Request().Context(), restaurantID, count); err != nil {
-		return c.Redirect(http.StatusFound, adminQRRedirect(err.Error()))
+		return c.Redirect(http.StatusFound, adminQRRedirect(adminFlashQRActionFailed))
 	}
-	return c.Redirect(http.StatusFound, adminQRPath+"?saved=1")
+	return c.Redirect(http.StatusFound, adminQRRedirect(adminFlashQRSettingsSaved))
 }
 
 // GetQRTablePNG handles GET /admin/qr/table/:table

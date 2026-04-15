@@ -27,3 +27,8 @@ func (h *PlacesHandler) GetMyPlaces(c echo.Context) error {
 	}
 	return templates.MyPlacesPage(visited).Render(c.Request().Context(), c.Response())
 }
+
+// GetScanQR handles GET /scan.
+func (h *PlacesHandler) GetScanQR(c echo.Context) error {
+	return templates.ScanQRPage().Render(c.Request().Context(), c.Response())
+}

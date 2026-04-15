@@ -11,6 +11,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
+	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 	"bitmerchant/internal/interfaces/templates/layouts"
 	"bitmerchant/internal/ordering/domain/order"
 	"bitmerchant/internal/restaurant/domain/restaurant"
@@ -20,9 +21,15 @@ templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItem
 	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div class="space-y-6 mt-4">
 			if statusError != "" {
-				@primitives.InlineAlert(primitives.InlineAlertProps{
-					Variant:     primitives.InlineAlertError,
+				@toast.Toast(toast.Props{
+					Title:       "Status update failed",
 					Description: statusError,
+					Variant:     toast.VariantError,
+					Position:    toast.PositionTopRight,
+					Duration:    4200,
+					Dismissible: true,
+					Icon:        true,
+					ShowIndicator: true,
 				})
 			}
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">

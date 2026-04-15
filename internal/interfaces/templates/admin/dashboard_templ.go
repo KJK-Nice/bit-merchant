@@ -18,9 +18,9 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
-	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
+	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 	"bitmerchant/internal/interfaces/templates/layouts"
 	menuQuery "bitmerchant/internal/menu/app/query"
 	"fmt"
@@ -65,9 +65,15 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 				return templ_7745c5c3_Err
 			}
 			if menuError != "" {
-				templ_7745c5c3_Err = primitives.InlineAlert(primitives.InlineAlertProps{
-					Variant:     primitives.InlineAlertError,
-					Description: menuError,
+				templ_7745c5c3_Err = toast.Toast(toast.Props{
+					Title:         "Menu update failed",
+					Description:   menuError,
+					Variant:       toast.VariantError,
+					Position:      toast.PositionTopRight,
+					Duration:      4200,
+					Dismissible:   true,
+					Icon:          true,
+					ShowIndicator: true,
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -196,7 +202,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 45, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 51, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -360,7 +366,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 							var templ_7745c5c3_Var16 string
 							templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(catData.Category.Name)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 81, Col: 116}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 87, Col: 116}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 							if templ_7745c5c3_Err != nil {
@@ -507,7 +513,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										var templ_7745c5c3_Var24 string
 										templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs("Edit " + catData.Category.Name)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 101, Col: 62}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 107, Col: 62}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 										if templ_7745c5c3_Err != nil {
@@ -532,7 +538,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 								var templ_7745c5c3_Var25 templ.SafeURL
 								templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/category/" + string(catData.Category.ID) + "/update")
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 103, Col: 85}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 109, Col: 85}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 								if templ_7745c5c3_Err != nil {
@@ -545,7 +551,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 								var templ_7745c5c3_Var26 string
 								templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 104, Col: 61}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 110, Col: 61}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 								if templ_7745c5c3_Err != nil {
@@ -786,7 +792,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 										var templ_7745c5c3_Var37 string
 										templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs("Add Item to " + catData.Category.Name)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 140, Col: 69}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 146, Col: 69}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 										if templ_7745c5c3_Err != nil {
@@ -811,7 +817,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 								var templ_7745c5c3_Var38 string
 								templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 143, Col: 61}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 149, Col: 61}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 								if templ_7745c5c3_Err != nil {
@@ -824,7 +830,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 								var templ_7745c5c3_Var39 string
 								templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(string(catData.Category.ID))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 144, Col: 85}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 150, Col: 85}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 								if templ_7745c5c3_Err != nil {
@@ -1293,7 +1299,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 													var templ_7745c5c3_Var58 string
 													templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
 													if templ_7745c5c3_Err != nil {
-														return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 221, Col: 39}
+														return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 227, Col: 39}
 													}
 													_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 													if templ_7745c5c3_Err != nil {
@@ -1338,7 +1344,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 												var templ_7745c5c3_Var60 string
 												templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 230, Col: 50}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 236, Col: 50}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 												if templ_7745c5c3_Err != nil {
@@ -1373,7 +1379,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 												var templ_7745c5c3_Var62 string
 												templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", item.Price))
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 232, Col: 62}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 238, Col: 62}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 												if templ_7745c5c3_Err != nil {
@@ -1477,7 +1483,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 												var templ_7745c5c3_Var67 templ.SafeURL
 												templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/item/" + string(item.ID) + "/toggle-availability")
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 246, Col: 100}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 252, Col: 100}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 												if templ_7745c5c3_Err != nil {
@@ -1490,7 +1496,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 												var templ_7745c5c3_Var68 string
 												templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 247, Col: 65}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 253, Col: 65}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 												if templ_7745c5c3_Err != nil {
@@ -1632,7 +1638,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																var templ_7745c5c3_Var76 string
 																templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs("Photo — " + item.Name)
 																if templ_7745c5c3_Err != nil {
-																	return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 265, Col: 61}
+																	return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 271, Col: 61}
 																}
 																_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 																if templ_7745c5c3_Err != nil {
@@ -1657,7 +1663,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 														var templ_7745c5c3_Var77 templ.SafeURL
 														templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/item/" + string(item.ID) + "/photo")
 														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 267, Col: 88}
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 273, Col: 88}
 														}
 														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 														if templ_7745c5c3_Err != nil {
@@ -1670,7 +1676,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 														var templ_7745c5c3_Var78 string
 														templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 268, Col: 67}
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 274, Col: 67}
 														}
 														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 														if templ_7745c5c3_Err != nil {
@@ -1714,7 +1720,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															var templ_7745c5c3_Var80 string
 															templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
 															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 275, Col: 44}
+																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 281, Col: 44}
 															}
 															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 															if templ_7745c5c3_Err != nil {
@@ -1727,7 +1733,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															var templ_7745c5c3_Var81 string
 															templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 275, Col: 62}
+																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 281, Col: 62}
 															}
 															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 															if templ_7745c5c3_Err != nil {
@@ -1779,7 +1785,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															var templ_7745c5c3_Var83 string
 															templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs("photo-file-" + string(item.ID))
 															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 288, Col: 74}
+																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 294, Col: 74}
 															}
 															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 															if templ_7745c5c3_Err != nil {
@@ -1797,7 +1803,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 															var templ_7745c5c3_Var84 string
 															templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs("photo-file-" + string(item.ID))
 															if templ_7745c5c3_Err != nil {
-																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 290, Col: 74}
+																return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 296, Col: 74}
 															}
 															_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 															if templ_7745c5c3_Err != nil {
@@ -1945,7 +1951,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																var templ_7745c5c3_Var92 string
 																templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.JoinStringErrs("Edit " + item.Name)
 																if templ_7745c5c3_Err != nil {
-																	return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 305, Col: 56}
+																	return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 311, Col: 56}
 																}
 																_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var92))
 																if templ_7745c5c3_Err != nil {
@@ -1970,7 +1976,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 														var templ_7745c5c3_Var93 templ.SafeURL
 														templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.JoinURLErrs("/admin/item/" + string(item.ID) + "/update")
 														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 307, Col: 75}
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 313, Col: 75}
 														}
 														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var93))
 														if templ_7745c5c3_Err != nil {
@@ -1983,7 +1989,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 														var templ_7745c5c3_Var94 string
 														templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.JoinStringErrs("edit-item-form-" + string(item.ID))
 														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 307, Col: 150}
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 313, Col: 150}
 														}
 														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
 														if templ_7745c5c3_Err != nil {
@@ -1996,7 +2002,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 														var templ_7745c5c3_Var95 string
 														templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 308, Col: 67}
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 314, Col: 67}
 														}
 														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var95))
 														if templ_7745c5c3_Err != nil {
@@ -2009,7 +2015,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 														var templ_7745c5c3_Var96 string
 														templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs("edit-item-cat-value-" + string(item.ID))
 														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 309, Col: 101}
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 315, Col: 101}
 														}
 														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
 														if templ_7745c5c3_Err != nil {
@@ -2022,7 +2028,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 														var templ_7745c5c3_Var97 string
 														templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(string(item.CategoryID))
 														if templ_7745c5c3_Err != nil {
-															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 309, Col: 135}
+															return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 315, Col: 135}
 														}
 														_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 														if templ_7745c5c3_Err != nil {
@@ -2104,7 +2110,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																	var templ_7745c5c3_Var102 string
 																	templ_7745c5c3_Var102, templ_7745c5c3_Err = templ.JoinStringErrs(string(item.ID))
 																	if templ_7745c5c3_Err != nil {
-																		return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 331, Col: 123}
+																		return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 337, Col: 123}
 																	}
 																	_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var102))
 																	if templ_7745c5c3_Err != nil {
@@ -2117,7 +2123,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																	var templ_7745c5c3_Var103 string
 																	templ_7745c5c3_Var103, templ_7745c5c3_Err = templ.JoinStringErrs(catLabel)
 																	if templ_7745c5c3_Err != nil {
-																		return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 331, Col: 136}
+																		return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 337, Col: 136}
 																	}
 																	_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var103))
 																	if templ_7745c5c3_Err != nil {
@@ -2192,7 +2198,7 @@ func Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaur
 																			var templ_7745c5c3_Var107 string
 																			templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(optCat.Category.Name)
 																			if templ_7745c5c3_Err != nil {
-																				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 347, Col: 45}
+																				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/admin/dashboard.templ`, Line: 353, Col: 45}
 																			}
 																			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
 																			if templ_7745c5c3_Err != nil {

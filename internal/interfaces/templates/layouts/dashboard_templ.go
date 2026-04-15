@@ -21,6 +21,7 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
+	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 )
 
 func Dashboard(title string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, csrfToken string, switcherOptions []RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) templ.Component {
@@ -51,7 +52,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 24, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 25, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -93,6 +94,10 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = toast.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</head><body class=\"bg-background text-foreground antialiased min-h-screen\"><form id=\"layout-logout-form\" method=\"post\" action=\"/auth/logout\" class=\"hidden\"><input type=\"hidden\" name=\"csrf\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -100,7 +105,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 84, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 86, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -119,7 +124,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("sidebar-switch-" + strconv.Itoa(i))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 88, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 90, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -132,7 +137,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 89, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 91, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -145,7 +150,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(opt.RestaurantID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 90, Col: 71}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 92, Col: 71}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -265,7 +270,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 											var templ_7745c5c3_Var15 string
 											templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(activeRestaurantLabel)
 											if templ_7745c5c3_Err != nil {
-												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 111, Col: 37}
+												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 113, Col: 37}
 											}
 											_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 											if templ_7745c5c3_Err != nil {
@@ -289,7 +294,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 											var templ_7745c5c3_Var16 string
 											templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(activeRestaurantRole)
 											if templ_7745c5c3_Err != nil {
-												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 117, Col: 99}
+												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 119, Col: 99}
 											}
 											_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 											if templ_7745c5c3_Err != nil {
@@ -385,7 +390,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 												var templ_7745c5c3_Var20 string
 												templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(opt.DisplayName)
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 139, Col: 57}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 141, Col: 57}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 												if templ_7745c5c3_Err != nil {
@@ -398,7 +403,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 												var templ_7745c5c3_Var21 string
 												templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(opt.Role)
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 140, Col: 79}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 142, Col: 79}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 												if templ_7745c5c3_Err != nil {
@@ -1018,7 +1023,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 												var templ_7745c5c3_Var47 string
 												templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(userInitials)
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 243, Col: 27}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 245, Col: 27}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 												if templ_7745c5c3_Err != nil {
@@ -1043,7 +1048,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 										var templ_7745c5c3_Var48 string
 										templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(userDisplayName)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 247, Col: 64}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 249, Col: 64}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 										if templ_7745c5c3_Err != nil {
@@ -1056,7 +1061,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 										var templ_7745c5c3_Var49 string
 										templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(userSubtitle)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 248, Col: 79}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 250, Col: 79}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 										if templ_7745c5c3_Err != nil {
@@ -1115,7 +1120,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 										var templ_7745c5c3_Var52 string
 										templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(userDisplayName)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 258, Col: 28}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 260, Col: 28}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 										if templ_7745c5c3_Err != nil {
@@ -1291,7 +1296,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 				var templ_7745c5c3_Var56 string
 				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 292, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 294, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 				if templ_7745c5c3_Err != nil {
