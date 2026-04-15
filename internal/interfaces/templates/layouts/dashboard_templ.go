@@ -12,14 +12,19 @@ import (
 	"strconv"
 
 	"bitmerchant/internal/interfaces/templates/components/ui/avatar"
+	"bitmerchant/internal/interfaces/templates/components/ui/checkbox"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/popover"
+	"bitmerchant/internal/interfaces/templates/components/ui/selectbox"
 	"bitmerchant/internal/interfaces/templates/components/ui/sidebar"
+	"bitmerchant/internal/interfaces/templates/components/ui/tabs"
 	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
+	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 )
 
 func Dashboard(title string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, csrfToken string, switcherOptions []RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) templ.Component {
@@ -50,13 +55,17 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 23, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 28, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " | BitMerchant</title><script>\n\t\t\t\tif (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {\n\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t}\n\t\t\t\twindow.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {\n\t\t\t\t\tif (event.matches) {\n\t\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tdocument.documentElement.classList.remove('dark');\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t</script><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><link href=\"/assets/css/output.css\" rel=\"stylesheet\"><script type=\"module\" src=\"https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js\"></script><script>\n\t\t\t\t(function () {\n\t\t\t\t\tfunction getCookie(name) {\n\t\t\t\t\t\tconst value = `; ${document.cookie}`;\n\t\t\t\t\t\tconst parts = value.split(`; ${name}=`);\n\t\t\t\t\t\tif (parts.length === 2) {\n\t\t\t\t\t\t\treturn parts.pop().split(';').shift();\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\n\t\t\t\t\tconst originalFetch = window.fetch.bind(window);\n\t\t\t\t\twindow.fetch = function (input, init) {\n\t\t\t\t\t\tconst method = ((init && init.method) || 'GET').toUpperCase();\n\t\t\t\t\t\tif (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst csrfToken = getCookie('csrf');\n\t\t\t\t\t\tif (!csrfToken) {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst headers = new Headers((init && init.headers) || {});\n\t\t\t\t\t\tif (!headers.has('X-CSRF-Token')) {\n\t\t\t\t\t\t\theaders.set('X-CSRF-Token', csrfToken);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst nextInit = Object.assign({}, init || {}, { headers: headers });\n\t\t\t\t\t\treturn originalFetch(input, nextInit);\n\t\t\t\t\t};\n\t\t\t\t})();\n\t\t\t</script><script src=\"/assets/js/input.min.js\"></script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " | BitMerchant</title><script>\n\t\t\t\tif (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {\n\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t}\n\t\t\t\twindow.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {\n\t\t\t\t\tif (event.matches) {\n\t\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tdocument.documentElement.classList.remove('dark');\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t</script><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><link href=\"/assets/css/output.css\" rel=\"stylesheet\"><script type=\"module\" src=\"https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js\"></script><script>\n\t\t\t\t(function () {\n\t\t\t\t\tfunction getCookie(name) {\n\t\t\t\t\t\tconst value = `; ${document.cookie}`;\n\t\t\t\t\t\tconst parts = value.split(`; ${name}=`);\n\t\t\t\t\t\tif (parts.length === 2) {\n\t\t\t\t\t\t\treturn parts.pop().split(';').shift();\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\n\t\t\t\t\tconst originalFetch = window.fetch.bind(window);\n\t\t\t\t\twindow.fetch = function (input, init) {\n\t\t\t\t\t\tconst method = ((init && init.method) || 'GET').toUpperCase();\n\t\t\t\t\t\tif (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst csrfToken = getCookie('csrf');\n\t\t\t\t\t\tif (!csrfToken) {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst headers = new Headers((init && init.headers) || {});\n\t\t\t\t\t\tif (!headers.has('X-CSRF-Token')) {\n\t\t\t\t\t\t\theaders.set('X-CSRF-Token', csrfToken);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst nextInit = Object.assign({}, init || {}, { headers: headers });\n\t\t\t\t\t\treturn originalFetch(input, nextInit);\n\t\t\t\t\t};\n\t\t\t\t})();\n\t\t\t</script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = input.Script().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -84,6 +93,22 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = selectbox.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = checkbox.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = tabs.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = toast.Script().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = textarea.Script().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -95,7 +120,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 83, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 92, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -114,7 +139,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("sidebar-switch-" + strconv.Itoa(i))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 87, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 96, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -127,7 +152,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 88, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 97, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -140,7 +165,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(opt.RestaurantID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 89, Col: 71}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 98, Col: 71}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -260,7 +285,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 											var templ_7745c5c3_Var15 string
 											templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(activeRestaurantLabel)
 											if templ_7745c5c3_Err != nil {
-												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 110, Col: 37}
+												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 119, Col: 37}
 											}
 											_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 											if templ_7745c5c3_Err != nil {
@@ -284,7 +309,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 											var templ_7745c5c3_Var16 string
 											templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(activeRestaurantRole)
 											if templ_7745c5c3_Err != nil {
-												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 116, Col: 99}
+												return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 125, Col: 99}
 											}
 											_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 											if templ_7745c5c3_Err != nil {
@@ -380,7 +405,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 												var templ_7745c5c3_Var20 string
 												templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(opt.DisplayName)
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 138, Col: 57}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 147, Col: 57}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 												if templ_7745c5c3_Err != nil {
@@ -393,7 +418,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 												var templ_7745c5c3_Var21 string
 												templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(opt.Role)
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 139, Col: 79}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 148, Col: 79}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 												if templ_7745c5c3_Err != nil {
@@ -1013,7 +1038,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 												var templ_7745c5c3_Var47 string
 												templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(userInitials)
 												if templ_7745c5c3_Err != nil {
-													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 242, Col: 27}
+													return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 251, Col: 27}
 												}
 												_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 												if templ_7745c5c3_Err != nil {
@@ -1038,7 +1063,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 										var templ_7745c5c3_Var48 string
 										templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(userDisplayName)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 246, Col: 64}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 255, Col: 64}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 										if templ_7745c5c3_Err != nil {
@@ -1051,7 +1076,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 										var templ_7745c5c3_Var49 string
 										templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(userSubtitle)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 247, Col: 79}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 256, Col: 79}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 										if templ_7745c5c3_Err != nil {
@@ -1110,7 +1135,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 										var templ_7745c5c3_Var52 string
 										templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(userDisplayName)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 257, Col: 28}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 266, Col: 28}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 										if templ_7745c5c3_Err != nil {
@@ -1286,7 +1311,7 @@ func Dashboard(title string, currentPath string, activeRestaurantLabel string, u
 				var templ_7745c5c3_Var56 string
 				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 291, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layouts/dashboard.templ`, Line: 300, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 				if templ_7745c5c3_Err != nil {

@@ -4,11 +4,12 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 )
 
 templ OwnerSignup(csrfToken string) {
 	@Layout("Restaurant Signup - BitMerchant") {
-		<div class="max-w-md mx-auto mt-8">
+		<div class="max-w-md mx-auto mt-10 md:mt-14">
 			@card.Card() {
 				@card.Header() {
 					@card.Title() {
@@ -19,12 +20,13 @@ templ OwnerSignup(csrfToken string) {
 					}
 				}
 				@card.Content() {
-					<form method="POST" action="/owner/signup" class="space-y-4">
+					<form method="POST" action="/owner/signup" class="space-y-5">
 						<input type="hidden" name="csrf" value={ csrfToken }/>
-						<div>
-							<label for="name" class="block text-sm font-medium mb-2">
-								Restaurant Name
-							</label>
+						@primitives.Field(primitives.FieldProps{
+							ID:       "name",
+							Label:    "Restaurant Name",
+							Required: true,
+						}) {
 							@input.Input(input.Props{
 								ID: "name",
 								Name: "name",
@@ -32,7 +34,7 @@ templ OwnerSignup(csrfToken string) {
 								Placeholder: "Enter restaurant name",
 								Required: true,
 							})
-						</div>
+						}
 						@button.Button(button.Props{Type: "submit"}) {
 							Create Account
 						}
@@ -42,4 +44,3 @@ templ OwnerSignup(csrfToken string) {
 		</div>
 	}
 }
-

@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"net/url"
 
-	"bitmerchant/internal/ordering/app/cart"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
+	"bitmerchant/internal/interfaces/templates/components/ui/radio"
+	"bitmerchant/internal/ordering/app/cart"
 )
 
 templ OrderConfirmationPage(cart *cart.Cart, restaurantID string, csrfToken string) {
 	@Layout("Confirm Order") {
-		<div class="container mx-auto p-4 space-y-8 max-w-2xl pb-24 md:pb-8">
+		<div class="container mx-auto p-4 space-y-6 max-w-2xl pb-24 md:pb-8">
 			<div class="flex items-center gap-4">
 				@button.Button(button.Props{
 					Variant: button.VariantGhost,
@@ -38,8 +40,15 @@ templ OrderConfirmationPage(cart *cart.Cart, restaurantID string, csrfToken stri
 						<input type="hidden" name="csrf" value={ csrfToken }/>
 						<input type="hidden" name="restaurantID" value={ restaurantID }/>
 						<div class="flex items-center space-x-3 border p-4 rounded-md">
-							<input type="radio" name="paymentMethod" value="cash" checked class="h-4 w-4 text-primary focus:ring-primary"/>
-							<label class="font-medium">Pay with Cash</label>
+							@radio.Radio(radio.Props{
+								ID:      "payment-method-cash",
+								Name:    "paymentMethod",
+								Value:   "cash",
+								Checked: true,
+							})
+							@label.Label(label.Props{For: "payment-method-cash", Class: "font-medium cursor-pointer"}) {
+								Pay with Cash
+							}
 						</div>
 						
 						@button.Button(button.Props{

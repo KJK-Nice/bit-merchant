@@ -12,6 +12,7 @@ import (
 	"bitmerchant/internal/auth/domain/user"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/components/ui/separator"
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
@@ -49,7 +50,14 @@ func AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-8 mt-4 max-w-2xl\"><div><h1 class=\"text-2xl font-bold tracking-tight\">Account</h1><p class=\"text-muted-foreground text-sm mt-1\">Your passkey identity and restaurant access.</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-6 mt-4 max-w-2xl\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = primitives.PageHeader(primitives.PageHeaderProps{
+				Title:       "Account",
+				Description: "Your passkey identity and restaurant access.",
+			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -129,7 +137,7 @@ func AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel
 						var templ_7745c5c3_Var7 string
 						templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(user.DisplayName)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 29, Col: 50}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 30, Col: 50}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 						if templ_7745c5c3_Err != nil {
@@ -142,7 +150,7 @@ func AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel
 						var templ_7745c5c3_Var8 string
 						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(string(user.ID))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 33, Col: 65}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 34, Col: 65}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 						if templ_7745c5c3_Err != nil {
@@ -155,7 +163,7 @@ func AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel
 						var templ_7745c5c3_Var9 string
 						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(user.CreatedAt.Format("Jan 2, 2006"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 37, Col: 50}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 38, Col: 50}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 						if templ_7745c5c3_Err != nil {
@@ -275,7 +283,7 @@ func AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel
 								var templ_7745c5c3_Var14 string
 								templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(m.DisplayName)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 57, Col: 51}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 58, Col: 51}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 								if templ_7745c5c3_Err != nil {
@@ -288,7 +296,7 @@ func AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel
 								var templ_7745c5c3_Var15 string
 								templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(m.RestaurantID)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 58, Col: 80}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 59, Col: 80}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 								if templ_7745c5c3_Err != nil {
@@ -313,7 +321,7 @@ func AuthProfilePage(csrfToken string, currentPath string, activeRestaurantLabel
 									var templ_7745c5c3_Var17 string
 									templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(m.Role)
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 61, Col: 19}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/auth_profile.templ`, Line: 62, Col: 19}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 									if templ_7745c5c3_Err != nil {

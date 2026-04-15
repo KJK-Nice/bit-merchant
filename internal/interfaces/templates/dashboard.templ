@@ -7,7 +7,9 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
-	"bitmerchant/internal/interfaces/templates/components/ui/label"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
+	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
 	"bitmerchant/internal/interfaces/templates/layouts"
 	"bitmerchant/internal/ordering/domain/order"
@@ -16,11 +18,12 @@ import (
 
 templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems []query.TopItem, rest *restaurant.Restaurant, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, statusError string) {
 	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
-		<div class="space-y-8 mt-4">
+		<div class="space-y-6 mt-4">
 			if statusError != "" {
-				<div class="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
-					{ statusError }
-				</div>
+				@primitives.InlineAlert(primitives.InlineAlertProps{
+					Variant:     primitives.InlineAlertError,
+					Description: statusError,
+				})
 			}
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 				@card.Card() {
@@ -89,18 +92,28 @@ templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItem
 					<form action="/dashboard/toggle-open" method="POST" class="space-y-4">
 						<input type="hidden" name="csrf" value={ csrfToken }/>
 						if rest.IsOpen {
-							<div class="space-y-2">
-								@label.Label(label.Props{For: "closed_message"}) {
-									Message for guests (optional)
-								}
-								<textarea id="closed_message" name="closed_message" rows="3" class="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" placeholder="e.g. Closed for a private event today."></textarea>
-							</div>
-							<div class="space-y-2">
-								@label.Label(label.Props{For: "reopening_hours"}) {
-									Expected reopening (optional)
-								}
-								<input type="text" id="reopening_hours" name="reopening_hours" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" placeholder="e.g. Tomorrow 11am"/>
-							</div>
+							@primitives.Field(primitives.FieldProps{
+								ID:    "closed_message",
+								Label: "Message for guests (optional)",
+							}) {
+								@textarea.Textarea(textarea.Props{
+									ID:          "closed_message",
+									Name:        "closed_message",
+									Rows:        3,
+									Placeholder: "e.g. Closed for a private event today.",
+								})
+							}
+							@primitives.Field(primitives.FieldProps{
+								ID:    "reopening_hours",
+								Label: "Expected reopening (optional)",
+							}) {
+								@input.Input(input.Props{
+									Type:        "text",
+									ID:          "reopening_hours",
+									Name:        "reopening_hours",
+									Placeholder: "e.g. Tomorrow 11am",
+								})
+							}
 							@button.Button(button.Props{Type: "submit", Variant: button.VariantDestructive}) {
 								Close restaurant
 							}
