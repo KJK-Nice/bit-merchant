@@ -89,11 +89,10 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 											},
 										}) {
 											<img src={ item.PhotoURL } alt={ item.Name } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="400" height="300"/>
-											<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-											<div class="p-4 min-h-32 flex flex-col justify-end gap-3 text-white bg-black/35 backdrop-blur-md" style="position:absolute;left:0;right:0;bottom:0;">
-												<h3 class="text-base font-semibold leading-snug line-clamp-2 [text-shadow:0_1px_4px_rgba(0,0,0,0.8)]">{ item.Name }</h3>
+											<div class="p-4 min-h-32 flex flex-col justify-end gap-3 text-white bg-gradient-to-t from-black/85 via-black/50 to-transparent" style="position:absolute;left:0;right:0;bottom:0;">
+												<h3 class="text-base font-semibold leading-snug line-clamp-2 [text-shadow:0_1px_8px_rgba(0,0,0,0.9)]">{ item.Name }</h3>
 												<div class="flex items-center justify-between gap-3">
-													<span class="text-lg font-semibold tracking-tight [text-shadow:0_1px_4px_rgba(0,0,0,0.8)]">{ fmt.Sprintf("$%.2f", item.Price) }</span>
+													<span class="text-lg font-semibold tracking-tight [text-shadow:0_1px_8px_rgba(0,0,0,0.9)]">{ fmt.Sprintf("$%.2f", item.Price) }</span>
 													if item.IsAvailable && data.Restaurant.IsOpen {
 														@button.Button(button.Props{
 															Variant: button.VariantDefault,
