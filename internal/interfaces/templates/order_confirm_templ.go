@@ -272,7 +272,7 @@ func OrderConfirmationPage(cart *cart.Cart, restaurantID string, csrfToken strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/confirm"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/confirm", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", url.QueryEscape(restaurantID))}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -1,43 +1,123 @@
 package templates
 
 import (
+	"fmt"
+	"net/url"
+
+	placesQuery "bitmerchant/internal/places/app/query"
+	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 )
 
-templ EntryPage(reason string) {
+templ EntryPage(reason string, visited []placesQuery.VisitedPlace) {
 	@Layout("BitMerchant") {
-		<div class="mx-auto max-w-2xl px-4 py-12 space-y-6">
-			<div class="space-y-3">
-				<h1 class="text-3xl font-bold tracking-tight">BitMerchant</h1>
-				<p class="text-muted-foreground">
-					Scan a table QR to open a menu, or jump to a place you already visited.
-				</p>
-			</div>
-
-			if reason == "restaurant_required" {
-				<div class="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
-					Restaurant context is required. Please scan a QR code or open Places.
+		<div class="flex flex-col items-center justify-center min-h-[calc(100svh-5rem)] px-4 py-8">
+			<div class="w-full max-w-sm space-y-8">
+				<!-- Hero -->
+				<div class="flex flex-col items-center text-center space-y-4">
+					<img
+						src="/static/pwa/icon.svg"
+						alt="BitMerchant"
+						class="w-20 h-20 rounded-2xl border border-border shadow-sm"
+					/>
+					<div class="space-y-1">
+						if len(visited) > 0 {
+							<h1 class="text-2xl font-bold tracking-tight">Your places</h1>
+							<p class="text-sm font-medium text-muted-foreground">BitMerchant</p>
+						} else {
+							<h1 class="text-2xl font-bold tracking-tight">Order at your table</h1>
+							<p class="text-sm font-medium text-muted-foreground">BitMerchant</p>
+						}
+					</div>
+					if len(visited) == 0 {
+						<p class="text-sm text-muted-foreground max-w-xs">
+							Scan the table QR code to see the menu and place your order.
+						</p>
+					}
 				</div>
-			}
-			if reason == "restaurant_not_found" {
-				<div class="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
-					That restaurant link is not available. Please scan a new QR code.
+				<!-- Conditional alerts -->
+				if reason == "restaurant_required" {
+					@primitives.InlineAlert(primitives.InlineAlertProps{
+						Variant:     primitives.InlineAlertWarning,
+						Description: "Restaurant context is required. Please scan a QR code or open Places.",
+					})
+				}
+				if reason == "restaurant_not_found" {
+					@primitives.InlineAlert(primitives.InlineAlertProps{
+						Variant:     primitives.InlineAlertWarning,
+						Description: "That restaurant link is not available. Please scan a new QR code.",
+					})
+				}
+				<!-- Customer actions -->
+				if len(visited) > 0 {
+					<!-- Places list -->
+					<div class="flex flex-col gap-2">
+						for _, p := range visited {
+							<a
+								href={ templ.SafeURL(fmt.Sprintf("/menu?restaurantID=%s", url.QueryEscape(string(p.RestaurantID)))) }
+								class="block transition-transform active:scale-[0.99]"
+							>
+								@card.Card() {
+									@card.Content(card.ContentProps{Class: "p-4"}) {
+										<div class="flex justify-between items-center gap-3">
+											<div class="min-w-0 space-y-1">
+												<p class="font-semibold truncate">{ p.Name }</p>
+												if p.HasOrderedHere {
+													<p class="text-xs text-muted-foreground">Ordered here before</p>
+												}
+											</div>
+											<div class="flex items-center gap-2 shrink-0">
+												if p.IsOpen {
+													@badge.Badge(badge.Props{Variant: badge.VariantDefault}) {
+														Open
+													}
+												} else {
+													@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+														Closed
+													}
+												}
+												@icon.ChevronRight(icon.Props{Class: "size-4 text-muted-foreground"})
+											</div>
+										</div>
+									}
+								}
+							</a>
+						}
+					</div>
+					<!-- Scan new table as secondary action -->
+					<div class="space-y-2">
+						@button.Button(button.Props{Href: "/scan", Variant: button.VariantOutline, Class: "w-full"}) {
+							@icon.ScanQrCode()
+							Scan a new table
+						}
+					</div>
+				} else {
+					<!-- First-time: primary scan action only -->
+					<div class="space-y-3">
+						<p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</p>
+						@button.Button(button.Props{Href: "/scan", Size: button.SizeLg, Class: "w-full"}) {
+							@icon.ScanQrCode()
+							Scan QR Code
+						}
+					</div>
+				}
+				<!-- Merchant actions -->
+				<div class="space-y-3">
+					<p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Merchant</p>
+					<div class="flex flex-col gap-2">
+						@button.Button(button.Props{Href: "/auth/login", Variant: button.VariantOutline, Class: "w-full"}) {
+							@icon.LogIn()
+							Login
+						}
+						@button.Button(button.Props{Href: "/owner/signup", Variant: button.VariantGhost, Class: "w-full"}) {
+							@icon.Store()
+							Owner Signup
+						}
+					</div>
 				</div>
-			}
-
-			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-				@button.Button(button.Props{Href: "/scan", Class: "w-full"}) {
-					Scan QR
-				}
-				@button.Button(button.Props{Href: "/my-places", Variant: button.VariantSecondary, Class: "w-full"}) {
-					Places
-				}
-				@button.Button(button.Props{Href: "/auth/login", Variant: button.VariantSecondary, Class: "w-full"}) {
-					Login
-				}
-				@button.Button(button.Props{Href: "/owner/signup", Variant: button.VariantOutline, Class: "w-full"}) {
-					Owner Signup
-				}
 			</div>
 		</div>
 	}

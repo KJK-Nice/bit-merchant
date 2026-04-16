@@ -55,6 +55,6 @@ templ OrderStatus(order *order.Order) {
 templ OrderStatusPage(order *order.Order) {
 	@Layout("Order Status") {
 		@OrderStatus(order)
-		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup"})
+		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", string(order.RestaurantID))})
 	}
 }

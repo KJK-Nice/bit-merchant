@@ -2,6 +2,8 @@ package main
 
 import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	handler "bitmerchant/internal/interfaces/http"
+	placesQuery "bitmerchant/internal/places/app/query"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +15,13 @@ import (
 
 func TestRootRouteRendersEntryPage(t *testing.T) {
 	e := echo.New()
-	registerRoutes(e, routeHandlers{}, memory.NewMemoryMembershipRepository())
+	listVisitedUC := placesQuery.NewListVisitedRestaurantsUseCase(
+		memory.NewMemorySessionRestaurantVisitRepository(),
+		memory.NewMemoryRestaurantRepository(),
+		memory.NewMemoryOrderRepository(),
+	)
+	placesHandler := handler.NewPlacesHandler(listVisitedUC)
+	registerRoutes(e, routeHandlers{Places: placesHandler}, memory.NewMemoryMembershipRepository())
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
@@ -21,5 +29,5 @@ func TestRootRouteRendersEntryPage(t *testing.T) {
 	e.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusOK, rec.Code)
-	assert.Contains(t, rec.Body.String(), "Scan a table QR")
+	assert.Contains(t, rec.Body.String(), "Scan the table QR")
 }

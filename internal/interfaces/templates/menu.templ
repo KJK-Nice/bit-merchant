@@ -160,7 +160,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 		@components.CartFloatingButton(cart)
 		<div data-init="@get('/cart')"></div>
 
-		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/menu"})
+		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/menu", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", string(data.Restaurant.ID))})
 		
 		<div id="pwa-install-btn" class="hidden fixed bottom-32 right-4 z-50 md:bottom-20">
 			<button onclick="installPWA()" class="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full p-4 shadow-lg flex items-center gap-2 transition-all">
@@ -170,70 +170,71 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 		</div>
 
 			<script>
-				(() => {
+				document.addEventListener('DOMContentLoaded', () => {
 					const tabsRoot = document.getElementById('menu-category-tabs');
-					if (!tabsRoot || !window.tui?.tabs?.setActive) return;
+					if (!tabsRoot) return;
 
 					const triggers = Array.from(tabsRoot.querySelectorAll('[data-tui-tabs-trigger][data-cat-target]'));
 					if (!triggers.length) return;
 
-				const sections = triggers
-					.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))
-					.filter(Boolean);
-				if (!sections.length) return;
+					const sections = triggers
+						.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))
+						.filter(Boolean);
+					if (!sections.length) return;
 
 					const setActive = (sectionID) => {
-						window.tui.tabs.setActive('menu-category-tabs', sectionID);
+						window.tui?.tabs?.setActive('menu-category-tabs', sectionID);
 					};
 
-				const scrollToSection = (sectionID) => {
-					const section = document.getElementById(sectionID);
-					if (!section) return;
-					section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-					window.history.replaceState(null, '', `#${sectionID}`);
-					setActive(sectionID);
-				};
+					const scrollToSection = (sectionID) => {
+						const section = document.getElementById(sectionID);
+						if (!section) return;
+						section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						window.history.replaceState(null, '', `#${sectionID}`);
+						setActive(sectionID);
+					};
 
 					for (const trigger of triggers) {
 						trigger.addEventListener('click', (event) => {
 							event.preventDefault();
+							event.stopPropagation();
 							const sectionID = trigger.getAttribute('data-cat-target');
 							if (!sectionID) return;
 							scrollToSection(sectionID);
-					});
-				}
+						});
+					}
 
-				const observer = new IntersectionObserver(
-					(entries) => {
-						let best = null;
-						for (const entry of entries) {
-							if (!entry.isIntersecting) continue;
-							if (!best || entry.intersectionRatio > best.intersectionRatio) {
-								best = entry;
+					const observer = new IntersectionObserver(
+						(entries) => {
+							let best = null;
+							for (const entry of entries) {
+								if (!entry.isIntersecting) continue;
+								if (!best || entry.intersectionRatio > best.intersectionRatio) {
+									best = entry;
+								}
 							}
-						}
-						if (best?.target?.id) {
-							setActive(best.target.id);
-						}
-					},
-					{
-						root: null,
-						rootMargin: '-35% 0px -55% 0px',
-						threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
-					},
-				);
+							if (best?.target?.id) {
+								setActive(best.target.id);
+							}
+						},
+						{
+							root: null,
+							rootMargin: '-35% 0px -55% 0px',
+							threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
+						},
+					);
 
-				for (const section of sections) {
-					observer.observe(section);
-				}
+					for (const section of sections) {
+						observer.observe(section);
+					}
 
-				const initialHash = window.location.hash.replace('#', '');
-				if (initialHash && sections.some((section) => section.id === initialHash)) {
-					setActive(initialHash);
-				} else if (sections[0]?.id) {
-					setActive(sections[0].id);
-				}
-			})();
+					const initialHash = window.location.hash.replace('#', '');
+					if (initialHash && sections.some((section) => section.id === initialHash)) {
+						setActive(initialHash);
+					} else if (sections[0]?.id) {
+						setActive(sections[0].id);
+					}
+				});
 
 			let deferredPrompt;
 			window.addEventListener('beforeinstallprompt', (e) => {

@@ -62,6 +62,6 @@ templ OrderConfirmationPage(cart *cart.Cart, restaurantID string, csrfToken stri
 			}
 		</div>
 
-		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/confirm"})
+		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/confirm", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", url.QueryEscape(restaurantID))})
 	}
 }
