@@ -58,7 +58,7 @@ test.describe("Customer order resilience", () => {
     await customer.attemptsTo(OpenRoute("customer", "/order/confirm"));
 
     await expect(customer.page).toHaveURL(/\/\?reason=restaurant_required$/);
-    await expect(customer.page.getByText("Scan a table QR to open a menu")).toBeVisible();
+    await expect(customer.page.getByText("Order at your table")).toBeVisible();
 
     await context.close();
   });
