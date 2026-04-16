@@ -90,7 +90,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 										}) {
 											<img src={ item.PhotoURL } alt={ item.Name } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="400" height="300"/>
 											<div class="p-3" style="position:absolute;left:0;right:0;bottom:0;">
-												<div class="bg-black/65 rounded-xl p-3 flex flex-col gap-2.5">
+												<div class="rounded-xl p-3 flex flex-col gap-2.5" style="background:rgba(0,0,0,0.65);">
 													<h3 class="text-base font-semibold leading-snug line-clamp-2 text-white">{ item.Name }</h3>
 													<div class="flex items-center justify-between gap-3">
 														<span class="text-lg font-semibold tracking-tight text-white">{ fmt.Sprintf("$%.2f", item.Price) }</span>
