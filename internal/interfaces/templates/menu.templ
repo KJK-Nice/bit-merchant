@@ -16,7 +16,7 @@ import (
 templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 	@Layout(data.Restaurant.Name + " · Menu") {
 		<div class="container mx-auto p-4 space-y-6 pb-40 md:pb-6 relative">
-			<div data-menu-sticky-header class="sticky top-0 z-[80] isolate -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+			<div data-menu-sticky-header class="sticky top-0 z-[100] isolate -mx-4 border-b bg-background px-4 py-3">
 				<div class="space-y-3">
 					<div class="flex justify-between items-start gap-4">
 						<div class="space-y-1 min-w-0">
@@ -30,8 +30,8 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 							My places
 						</a>
 					</div>
-					if len(data.Categories) > 0 {
-						<div class="overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+						if len(data.Categories) > 0 {
+							<div class="overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 								@tabs.Tabs(tabs.Props{
 									ID:    "menu-category-tabs",
 									Class: "w-max",
@@ -41,15 +41,16 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 											@tabs.Trigger(tabs.TriggerProps{
 												Value:    fmt.Sprintf("cat-%d", i),
 												IsActive: i == 0,
+												Class:    "flex-none shrink-0",
 												Attributes: templ.Attributes{
 													"data-cat-target": fmt.Sprintf("cat-%d", i),
 												},
-										}) {
-											{ cat.Category.Name }
+											}) {
+												{ cat.Category.Name }
+											}
 										}
 									}
 								}
-							}
 						</div>
 					}
 				</div>
@@ -74,9 +75,9 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 				@components.CartSummary(cart, true)
 			</div>
 
-			<div class="space-y-8 relative z-0">
-				for i, cat := range data.Categories {
-					<section id={ fmt.Sprintf("cat-%d", i) } class="space-y-3 scroll-mt-40 md:scroll-mt-24 relative z-0">
+				<div class="space-y-8 relative z-0">
+					for i, cat := range data.Categories {
+						<section id={ fmt.Sprintf("cat-%d", i) } class="space-y-3 scroll-mt-40 md:scroll-mt-24 relative z-0">
 						<div class="flex items-center justify-between gap-3">
 							<h2 class="text-2xl font-semibold tracking-tight">{ cat.Category.Name }</h2>
 						</div>
@@ -168,30 +169,22 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 			</button>
 		</div>
 
-		<script>
-			(() => {
-				const tabsRoot = document.getElementById('menu-category-tabs');
-				if (!tabsRoot) return;
+			<script>
+				(() => {
+					const tabsRoot = document.getElementById('menu-category-tabs');
+					if (!tabsRoot || !window.tui?.tabs?.setActive) return;
 
-				const triggers = Array.from(tabsRoot.querySelectorAll('[data-tui-tabs-trigger][data-cat-target]'));
-				if (!triggers.length) return;
+					const triggers = Array.from(tabsRoot.querySelectorAll('[data-tui-tabs-trigger][data-cat-target]'));
+					if (!triggers.length) return;
 
 				const sections = triggers
 					.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))
 					.filter(Boolean);
 				if (!sections.length) return;
 
-				const setActive = (sectionID) => {
-					for (const trigger of triggers) {
-						const isActive = trigger.getAttribute('data-cat-target') === sectionID;
-						trigger.setAttribute('data-tui-tabs-state', isActive ? 'active' : 'inactive');
-						if (isActive) {
-							trigger.setAttribute('aria-current', 'true');
-						} else {
-							trigger.removeAttribute('aria-current');
-						}
-					}
-				};
+					const setActive = (sectionID) => {
+						window.tui.tabs.setActive('menu-category-tabs', sectionID);
+					};
 
 				const scrollToSection = (sectionID) => {
 					const section = document.getElementById(sectionID);
@@ -201,11 +194,12 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 					setActive(sectionID);
 				};
 
-				for (const trigger of triggers) {
-					trigger.addEventListener('click', () => {
-						const sectionID = trigger.getAttribute('data-cat-target');
-						if (!sectionID) return;
-						scrollToSection(sectionID);
+					for (const trigger of triggers) {
+						trigger.addEventListener('click', (event) => {
+							event.preventDefault();
+							const sectionID = trigger.getAttribute('data-cat-target');
+							if (!sectionID) return;
+							scrollToSection(sectionID);
 					});
 				}
 
