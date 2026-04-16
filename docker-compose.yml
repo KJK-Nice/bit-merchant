@@ -12,6 +12,14 @@ services:
         condition: service_healthy
     env_file:
       - .env.docker
+    # Override surface URLs so localhost:8079 serves all surfaces (no subdomain redirects in dev)
+    environment:
+      BASE_URL: http://localhost:8079
+      PUBLIC_BASE_URL: http://localhost:8079
+      CUSTOMER_BASE_URL: http://localhost:8079
+      MERCHANT_BASE_URL: http://localhost:8079
+      COOKIE_SECURE: "false"
+      DISABLE_RATE_LIMIT: "true"
 
   caddy:
     image: caddy:2-alpine

@@ -28,6 +28,7 @@
       "runtimeExecutable": "docker",
       "runtimeArgs": [
         "compose",
+        "-p", "bit-merchant",
         "up",
         "--build"
       ],

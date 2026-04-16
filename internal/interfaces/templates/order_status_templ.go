@@ -376,7 +376,7 @@ func OrderStatusPage(order *order.Order) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", string(order.RestaurantID))}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

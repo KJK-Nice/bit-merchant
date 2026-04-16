@@ -1,6 +1,8 @@
 package footer_nav
 
 import (
+	"strings"
+
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"bitmerchant/internal/interfaces/templates/utils"
 )
@@ -8,6 +10,7 @@ import (
 type Props struct {
 	Class       string
 	CurrentPath string
+	MenuHref    string
 }
 
 templ NavItem(currentPath string, href string, label string) {
@@ -57,10 +60,22 @@ templ CustomerFooterNav(props Props) {
 			props.Class,
 		) }
 	>
+		{{ menuHref := "/menu" }}
+		if props.MenuHref != "" {
+			{{ menuHref = props.MenuHref }}
+		}
 		<div class="flex justify-around items-center h-16 w-full">
-			@NavItem(props.CurrentPath, "/menu", "Menu") {
+			<a
+				href={ templ.SafeURL(menuHref) }
+				class={ utils.TwMerge(
+					"flex flex-col items-center justify-center w-full h-full text-[10px] font-medium transition-colors gap-1",
+					utils.If(strings.HasPrefix(props.CurrentPath, "/menu"), "text-primary"),
+					utils.If(!strings.HasPrefix(props.CurrentPath, "/menu"), "text-muted-foreground hover:text-primary"),
+				) }
+			>
 				@icon.Utensils(icon.Props{Class: "size-5"})
-			}
+				<span>Menu</span>
+			</a>
 			@NavItem(props.CurrentPath, "/my-places", "Places") {
 				@icon.MapPin(icon.Props{Class: "size-5"})
 			}
