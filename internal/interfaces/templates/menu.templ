@@ -89,25 +89,27 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 											},
 										}) {
 											<img src={ item.PhotoURL } alt={ item.Name } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="400" height="300"/>
-											<div class="p-4 min-h-32 flex flex-col justify-end gap-3" style="position:absolute;left:0;right:0;bottom:0;">
-												<h3 class="text-base font-semibold leading-snug line-clamp-2 text-white bg-black/60 rounded-lg px-2.5 py-1.5 w-fit max-w-full">{ item.Name }</h3>
-												<div class="flex items-center justify-between gap-3">
-													<span class="text-lg font-semibold tracking-tight text-white bg-black/60 rounded-lg px-2.5 py-1">{ fmt.Sprintf("$%.2f", item.Price) }</span>
-													if item.IsAvailable && data.Restaurant.IsOpen {
-														@button.Button(button.Props{
-															Variant: button.VariantDefault,
-															Class:   "bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md",
-															Attributes: templ.Attributes{
-																"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
-															},
-														}) {
-															Add to Cart
+											<div class="p-3" style="position:absolute;left:0;right:0;bottom:0;">
+												<div class="bg-black/65 rounded-xl p-3 flex flex-col gap-2.5">
+													<h3 class="text-base font-semibold leading-snug line-clamp-2 text-white">{ item.Name }</h3>
+													<div class="flex items-center justify-between gap-3">
+														<span class="text-lg font-semibold tracking-tight text-white">{ fmt.Sprintf("$%.2f", item.Price) }</span>
+														if item.IsAvailable && data.Restaurant.IsOpen {
+															@button.Button(button.Props{
+																Variant: button.VariantDefault,
+																Class:   "bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md",
+																Attributes: templ.Attributes{
+																	"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
+																},
+															}) {
+																Add to Cart
+															}
+														} else if !item.IsAvailable {
+															@badge.Badge(badge.Props{Variant: badge.VariantDestructive, Class: "font-medium"}) { Out of Stock }
+														} else {
+															@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-background/90 text-foreground font-medium"}) { Closed }
 														}
-													} else if !item.IsAvailable {
-														@badge.Badge(badge.Props{Variant: badge.VariantDestructive, Class: "font-medium"}) { Out of Stock }
-													} else {
-														@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-background/90 text-foreground font-medium"}) { Closed }
-													}
+													</div>
 												</div>
 											</div>
 										}
