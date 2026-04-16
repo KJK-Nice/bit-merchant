@@ -54,14 +54,14 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"container mx-auto p-4 space-y-6 pb-40 md:pb-6 relative\"><div data-menu-sticky-header class=\"sticky top-0 z-[100] isolate -mx-4 border-b bg-background px-4 py-3\"><div class=\"space-y-3\"><div class=\"flex justify-between items-start gap-4\"><div class=\"space-y-1 min-w-0\"><h1 class=\"text-2xl font-bold tracking-tight truncate\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header data-menu-sticky-header class=\"fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-[env(safe-area-inset-top)]\"><div class=\"container mx-auto px-4 py-3 space-y-3\"><div class=\"space-y-1 min-w-0\"><h1 class=\"text-2xl font-bold tracking-tight truncate\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(data.Restaurant.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 23, Col: 84}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 21, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -79,7 +79,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(tableLabel)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 26, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 24, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -90,7 +90,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><a href=\"/my-places\" class=\"inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-primary shadow-sm whitespace-nowrap shrink-0 hover:bg-muted\">My places</a></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -139,7 +139,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 								var templ_7745c5c3_Var8 string
 								templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(cat.Category.Name)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 49, Col: 31}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 43, Col: 29}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 								if templ_7745c5c3_Err != nil {
@@ -150,7 +150,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							templ_7745c5c3_Err = tabs.Trigger(tabs.TriggerProps{
 								Value:    fmt.Sprintf("cat-%d", i),
 								IsActive: i == 0,
-								Class:    "flex-none shrink-0",
+								Class:    "flex-none",
 								Attributes: templ.Attributes{
 									"data-cat-target": fmt.Sprintf("cat-%d", i),
 								},
@@ -179,7 +179,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></header><div class=\"container mx-auto px-4 pt-40 space-y-6 pb-40 md:pb-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -204,7 +204,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(data.Restaurant.ClosedMessage)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 66, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 61, Col: 53}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -223,7 +223,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 					var templ_7745c5c3_Var10 string
 					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(data.Restaurant.ReopeningHours)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 69, Col: 84}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 64, Col: 84}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 					if templ_7745c5c3_Err != nil {
@@ -239,7 +239,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"hidden md:block sticky top-4 z-10\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"hidden md:block sticky top-44 z-10\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -259,20 +259,20 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("cat-%d", i))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 80, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 75, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" class=\"space-y-3 scroll-mt-40 md:scroll-mt-24 relative z-0\"><div class=\"flex items-center justify-between gap-3\"><h2 class=\"text-2xl font-semibold tracking-tight\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" class=\"space-y-3 scroll-mt-40 md:scroll-mt-40 relative z-0\"><div class=\"flex items-center justify-between gap-3\"><h2 class=\"text-2xl font-semibold tracking-tight\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(cat.Category.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 82, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 77, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -307,7 +307,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							var templ_7745c5c3_Var14 string
 							templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 94, Col: 35}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 89, Col: 35}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 							if templ_7745c5c3_Err != nil {
@@ -320,7 +320,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							var templ_7745c5c3_Var15 string
 							templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 94, Col: 53}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 89, Col: 53}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 							if templ_7745c5c3_Err != nil {
@@ -333,7 +333,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							var templ_7745c5c3_Var16 string
 							templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 97, Col: 235}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 92, Col: 235}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 							if templ_7745c5c3_Err != nil {
@@ -346,7 +346,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							var templ_7745c5c3_Var17 string
 							templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", item.Price))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 99, Col: 229}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 94, Col: 229}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 							if templ_7745c5c3_Err != nil {
@@ -439,7 +439,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							return nil
 						})
 						templ_7745c5c3_Err = card.Card(card.Props{
-							Class: "relative overflow-hidden border-0 shadow-none",
+							Class: "relative z-0 overflow-hidden border-0 shadow-none",
 							Attributes: templ.Attributes{
 								"style": "height:22rem;",
 							},
@@ -487,7 +487,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 									var templ_7745c5c3_Var24 string
 									templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 126, Col: 90}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 121, Col: 90}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 									if templ_7745c5c3_Err != nil {
@@ -529,7 +529,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 									var templ_7745c5c3_Var26 string
 									templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 130, Col: 85}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 125, Col: 85}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 									if templ_7745c5c3_Err != nil {
@@ -569,7 +569,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 								var templ_7745c5c3_Var28 string
 								templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", item.Price))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 134, Col: 93}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 129, Col: 93}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 								if templ_7745c5c3_Err != nil {
@@ -663,7 +663,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							return nil
 						})
 						templ_7745c5c3_Err = card.Card(card.Props{
-							Class: "flex flex-col border",
+							Class: "relative z-0 flex flex-col border",
 							Attributes: templ.Attributes{
 								"style": "height:22rem;",
 							},
@@ -706,7 +706,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<span class=\"font-medium\">Install App</span></button></div><script>\n\t\t\t\t(() => {\n\t\t\t\t\tconst tabsRoot = document.getElementById('menu-category-tabs');\n\t\t\t\t\tif (!tabsRoot || !window.tui?.tabs?.setActive) return;\n\n\t\t\t\t\tconst triggers = Array.from(tabsRoot.querySelectorAll('[data-tui-tabs-trigger][data-cat-target]'));\n\t\t\t\t\tif (!triggers.length) return;\n\n\t\t\t\tconst sections = triggers\n\t\t\t\t\t.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))\n\t\t\t\t\t.filter(Boolean);\n\t\t\t\tif (!sections.length) return;\n\n\t\t\t\t\tconst setActive = (sectionID) => {\n\t\t\t\t\t\twindow.tui.tabs.setActive('menu-category-tabs', sectionID);\n\t\t\t\t\t};\n\n\t\t\t\tconst scrollToSection = (sectionID) => {\n\t\t\t\t\tconst section = document.getElementById(sectionID);\n\t\t\t\t\tif (!section) return;\n\t\t\t\t\tsection.scrollIntoView({ behavior: 'smooth', block: 'start' });\n\t\t\t\t\twindow.history.replaceState(null, '', `#${sectionID}`);\n\t\t\t\t\tsetActive(sectionID);\n\t\t\t\t};\n\n\t\t\t\t\tfor (const trigger of triggers) {\n\t\t\t\t\t\ttrigger.addEventListener('click', (event) => {\n\t\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t\t\tconst sectionID = trigger.getAttribute('data-cat-target');\n\t\t\t\t\t\t\tif (!sectionID) return;\n\t\t\t\t\t\t\tscrollToSection(sectionID);\n\t\t\t\t\t});\n\t\t\t\t}\n\n\t\t\t\tconst observer = new IntersectionObserver(\n\t\t\t\t\t(entries) => {\n\t\t\t\t\t\tlet best = null;\n\t\t\t\t\t\tfor (const entry of entries) {\n\t\t\t\t\t\t\tif (!entry.isIntersecting) continue;\n\t\t\t\t\t\t\tif (!best || entry.intersectionRatio > best.intersectionRatio) {\n\t\t\t\t\t\t\t\tbest = entry;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t\tif (best?.target?.id) {\n\t\t\t\t\t\t\tsetActive(best.target.id);\n\t\t\t\t\t\t}\n\t\t\t\t\t},\n\t\t\t\t\t{\n\t\t\t\t\t\troot: null,\n\t\t\t\t\t\trootMargin: '-35% 0px -55% 0px',\n\t\t\t\t\t\tthreshold: [0, 0.2, 0.4, 0.6, 0.8, 1],\n\t\t\t\t\t},\n\t\t\t\t);\n\n\t\t\t\tfor (const section of sections) {\n\t\t\t\t\tobserver.observe(section);\n\t\t\t\t}\n\n\t\t\t\tconst initialHash = window.location.hash.replace('#', '');\n\t\t\t\tif (initialHash && sections.some((section) => section.id === initialHash)) {\n\t\t\t\t\tsetActive(initialHash);\n\t\t\t\t} else if (sections[0]?.id) {\n\t\t\t\t\tsetActive(sections[0].id);\n\t\t\t\t}\n\t\t\t})();\n\n\t\t\tlet deferredPrompt;\n\t\t\twindow.addEventListener('beforeinstallprompt', (e) => {\n\t\t\t\te.preventDefault();\n\t\t\t\tdeferredPrompt = e;\n\t\t\t\tconst installBtn = document.getElementById('pwa-install-btn');\n\t\t\t\tif (installBtn) {\n\t\t\t\t\tinstallBtn.classList.remove('hidden');\n\t\t\t\t}\n\t\t\t});\n\n\t\t\tasync function installPWA() {\n\t\t\t\tif (!deferredPrompt) return;\n\t\t\t\tdeferredPrompt.prompt();\n\t\t\t\tconst { outcome } = await deferredPrompt.userChoice;\n\t\t\t\tdeferredPrompt = null;\n\t\t\t\tconst installBtn = document.getElementById('pwa-install-btn');\n\t\t\t\tif (installBtn) {\n\t\t\t\t\tinstallBtn.classList.add('hidden');\n\t\t\t\t}\n\t\t\t}\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<span class=\"font-medium\">Install App</span></button></div><script>\n\t\t\t(() => {\n\t\t\t\tconst bindCategoryTabsSync = () => {\n\t\t\t\t\tif (!window.tui?.tabs?.setActive) return false;\n\t\t\t\t\tconst tabsRoot = document.getElementById('menu-category-tabs');\n\t\t\t\t\tif (!tabsRoot || tabsRoot.dataset.syncBound === 'true') return true;\n\n\t\t\t\t\tconst triggers = Array.from(tabsRoot.querySelectorAll('[data-tui-tabs-trigger][data-cat-target]'));\n\t\t\t\t\tif (!triggers.length) return true;\n\n\t\t\t\t\tconst sections = triggers\n\t\t\t\t\t\t.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))\n\t\t\t\t\t\t.filter(Boolean);\n\t\t\t\t\tif (!sections.length) return true;\n\n\t\t\t\t\ttabsRoot.dataset.syncBound = 'true';\n\n\t\t\t\t\tconst setActive = (sectionID) => {\n\t\t\t\t\t\twindow.tui.tabs.setActive('menu-category-tabs', sectionID);\n\t\t\t\t\t};\n\n\t\t\t\t\tconst scrollToSection = (sectionID) => {\n\t\t\t\t\t\tconst section = document.getElementById(sectionID);\n\t\t\t\t\t\tif (!section) return;\n\t\t\t\t\t\tsection.scrollIntoView({ behavior: 'smooth', block: 'start' });\n\t\t\t\t\t\twindow.history.replaceState(null, '', `#${sectionID}`);\n\t\t\t\t\t\tsetActive(sectionID);\n\t\t\t\t\t};\n\n\t\t\t\t\tfor (const trigger of triggers) {\n\t\t\t\t\t\ttrigger.addEventListener('click', (event) => {\n\t\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t\t\tconst sectionID = trigger.getAttribute('data-cat-target');\n\t\t\t\t\t\t\tif (!sectionID) return;\n\t\t\t\t\t\t\tscrollToSection(sectionID);\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\n\t\t\t\t\tconst observer = new IntersectionObserver(\n\t\t\t\t\t\t(entries) => {\n\t\t\t\t\t\t\tlet best = null;\n\t\t\t\t\t\t\tfor (const entry of entries) {\n\t\t\t\t\t\t\t\tif (!entry.isIntersecting) continue;\n\t\t\t\t\t\t\t\tif (!best || entry.intersectionRatio > best.intersectionRatio) {\n\t\t\t\t\t\t\t\t\tbest = entry;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tif (best?.target?.id) {\n\t\t\t\t\t\t\t\tsetActive(best.target.id);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t},\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\troot: null,\n\t\t\t\t\t\t\trootMargin: '-35% 0px -55% 0px',\n\t\t\t\t\t\t\tthreshold: [0, 0.2, 0.4, 0.6, 0.8, 1],\n\t\t\t\t\t\t},\n\t\t\t\t\t);\n\n\t\t\t\t\tfor (const section of sections) {\n\t\t\t\t\t\tobserver.observe(section);\n\t\t\t\t\t}\n\n\t\t\t\t\tconst initialHash = window.location.hash.replace('#', '');\n\t\t\t\t\tif (initialHash && sections.some((section) => section.id === initialHash)) {\n\t\t\t\t\t\tsetActive(initialHash);\n\t\t\t\t\t} else if (sections[0]?.id) {\n\t\t\t\t\t\tsetActive(sections[0].id);\n\t\t\t\t\t}\n\n\t\t\t\t\treturn true;\n\t\t\t\t};\n\n\t\t\t\tconst initWhenReady = () => {\n\t\t\t\t\tif (bindCategoryTabsSync()) return;\n\n\t\t\t\t\tlet attempts = 0;\n\t\t\t\t\tconst maxAttempts = 60;\n\t\t\t\t\tconst timer = window.setInterval(() => {\n\t\t\t\t\t\tattempts += 1;\n\t\t\t\t\t\tif (bindCategoryTabsSync() || attempts >= maxAttempts) {\n\t\t\t\t\t\t\twindow.clearInterval(timer);\n\t\t\t\t\t\t}\n\t\t\t\t\t}, 50);\n\t\t\t\t};\n\n\t\t\t\tif (document.readyState === 'loading') {\n\t\t\t\t\tdocument.addEventListener('DOMContentLoaded', initWhenReady, { once: true });\n\t\t\t\t} else {\n\t\t\t\t\tinitWhenReady();\n\t\t\t\t}\n\t\t\t})();\n\n\t\t\tlet deferredPrompt;\n\t\t\twindow.addEventListener('beforeinstallprompt', (e) => {\n\t\t\t\te.preventDefault();\n\t\t\t\tdeferredPrompt = e;\n\t\t\t\tconst installBtn = document.getElementById('pwa-install-btn');\n\t\t\t\tif (installBtn) {\n\t\t\t\t\tinstallBtn.classList.remove('hidden');\n\t\t\t\t}\n\t\t\t});\n\n\t\t\tasync function installPWA() {\n\t\t\t\tif (!deferredPrompt) return;\n\t\t\t\tdeferredPrompt.prompt();\n\t\t\t\tconst { outcome } = await deferredPrompt.userChoice;\n\t\t\t\tdeferredPrompt = null;\n\t\t\t\tconst installBtn = document.getElementById('pwa-install-btn');\n\t\t\t\tif (installBtn) {\n\t\t\t\t\tinstallBtn.classList.add('hidden');\n\t\t\t\t}\n\t\t\t}\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

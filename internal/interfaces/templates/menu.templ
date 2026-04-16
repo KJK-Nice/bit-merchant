@@ -15,47 +15,42 @@ import (
 
 templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 	@Layout(data.Restaurant.Name + " · Menu") {
-		<div class="container mx-auto p-4 space-y-6 pb-40 md:pb-6 relative">
-			<div data-menu-sticky-header class="sticky top-0 z-[100] isolate -mx-4 border-b bg-background px-4 py-3">
-				<div class="space-y-3">
-					<div class="flex justify-between items-start gap-4">
-						<div class="space-y-1 min-w-0">
-							<h1 class="text-2xl font-bold tracking-tight truncate">{ data.Restaurant.Name }</h1>
-							<p class="text-muted-foreground text-sm">You're ordering here</p>
-							if tableLabel != "" {
-								<p class="text-sm font-medium text-foreground/90">Table { tableLabel }</p>
-							}
-						</div>
-						<a href="/my-places" class="inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-primary shadow-sm whitespace-nowrap shrink-0 hover:bg-muted">
-							My places
-						</a>
-					</div>
-						if len(data.Categories) > 0 {
-							<div class="overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-								@tabs.Tabs(tabs.Props{
-									ID:    "menu-category-tabs",
-									Class: "w-max",
-								}) {
-									@tabs.List() {
-										for i, cat := range data.Categories {
-											@tabs.Trigger(tabs.TriggerProps{
-												Value:    fmt.Sprintf("cat-%d", i),
-												IsActive: i == 0,
-												Class:    "flex-none shrink-0",
-												Attributes: templ.Attributes{
-													"data-cat-target": fmt.Sprintf("cat-%d", i),
-												},
-											}) {
-												{ cat.Category.Name }
-											}
-										}
-									}
-								}
-						</div>
+		<header data-menu-sticky-header class="fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-[env(safe-area-inset-top)]">
+			<div class="container mx-auto px-4 py-3 space-y-3">
+				<div class="space-y-1 min-w-0">
+					<h1 class="text-2xl font-bold tracking-tight truncate">{ data.Restaurant.Name }</h1>
+					<p class="text-muted-foreground text-sm">You're ordering here</p>
+					if tableLabel != "" {
+						<p class="text-sm font-medium text-foreground/90">Table { tableLabel }</p>
 					}
 				</div>
+				if len(data.Categories) > 0 {
+					<div class="overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+						@tabs.Tabs(tabs.Props{
+							ID:    "menu-category-tabs",
+							Class: "w-max",
+						}) {
+							@tabs.List() {
+								for i, cat := range data.Categories {
+									@tabs.Trigger(tabs.TriggerProps{
+										Value:    fmt.Sprintf("cat-%d", i),
+										IsActive: i == 0,
+										Class:    "flex-none",
+										Attributes: templ.Attributes{
+											"data-cat-target": fmt.Sprintf("cat-%d", i),
+										},
+									}) {
+										{ cat.Category.Name }
+									}
+								}
+							}
+						}
+					</div>
+				}
 			</div>
+		</header>
 
+		<div class="container mx-auto px-4 pt-40 space-y-6 pb-40 md:pb-6">
 			if !data.Restaurant.IsOpen {
 				<div class="bg-destructive text-destructive-foreground p-4 rounded-md shadow-sm">
 					<div class="flex items-center gap-2">
@@ -70,14 +65,14 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 					}
 				</div>
 			}
-			
-			<div class="hidden md:block sticky top-4 z-10">
+
+			<div class="hidden md:block sticky top-44 z-10">
 				@components.CartSummary(cart, true)
 			</div>
 
 				<div class="space-y-8 relative z-0">
 					for i, cat := range data.Categories {
-						<section id={ fmt.Sprintf("cat-%d", i) } class="space-y-3 scroll-mt-40 md:scroll-mt-24 relative z-0">
+						<section id={ fmt.Sprintf("cat-%d", i) } class="space-y-3 scroll-mt-40 md:scroll-mt-40 relative z-0">
 						<div class="flex items-center justify-between gap-3">
 							<h2 class="text-2xl font-semibold tracking-tight">{ cat.Category.Name }</h2>
 						</div>
@@ -86,7 +81,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 								<div class="snap-start shrink-0 md:w-auto md:max-w-none" style="width:min(84vw,24rem);">
 									if item.PhotoURL != "" {
 										@card.Card(card.Props{
-											Class: "relative overflow-hidden border-0 shadow-none",
+											Class: "relative z-0 overflow-hidden border-0 shadow-none",
 											Attributes: templ.Attributes{
 												"style": "height:22rem;",
 											},
@@ -117,7 +112,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 										}
 									} else {
 										@card.Card(card.Props{
-											Class: "flex flex-col border",
+											Class: "relative z-0 flex flex-col border",
 											Attributes: templ.Attributes{
 												"style": "height:22rem;",
 											},
@@ -161,7 +156,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 		<div data-init="@get('/cart')"></div>
 
 		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/menu"})
-		
+
 		<div id="pwa-install-btn" class="hidden fixed bottom-32 right-4 z-50 md:bottom-20">
 			<button onclick="installPWA()" class="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full p-4 shadow-lg flex items-center gap-2 transition-all">
 				@icon.Icon("download")(icon.Props{Class: "h-6 w-6"})
@@ -169,30 +164,34 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 			</button>
 		</div>
 
-			<script>
-				(() => {
+		<script>
+			(() => {
+				const bindCategoryTabsSync = () => {
+					if (!window.tui?.tabs?.setActive) return false;
 					const tabsRoot = document.getElementById('menu-category-tabs');
-					if (!tabsRoot || !window.tui?.tabs?.setActive) return;
+					if (!tabsRoot || tabsRoot.dataset.syncBound === 'true') return true;
 
 					const triggers = Array.from(tabsRoot.querySelectorAll('[data-tui-tabs-trigger][data-cat-target]'));
-					if (!triggers.length) return;
+					if (!triggers.length) return true;
 
-				const sections = triggers
-					.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))
-					.filter(Boolean);
-				if (!sections.length) return;
+					const sections = triggers
+						.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))
+						.filter(Boolean);
+					if (!sections.length) return true;
+
+					tabsRoot.dataset.syncBound = 'true';
 
 					const setActive = (sectionID) => {
 						window.tui.tabs.setActive('menu-category-tabs', sectionID);
 					};
 
-				const scrollToSection = (sectionID) => {
-					const section = document.getElementById(sectionID);
-					if (!section) return;
-					section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-					window.history.replaceState(null, '', `#${sectionID}`);
-					setActive(sectionID);
-				};
+					const scrollToSection = (sectionID) => {
+						const section = document.getElementById(sectionID);
+						if (!section) return;
+						section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						window.history.replaceState(null, '', `#${sectionID}`);
+						setActive(sectionID);
+					};
 
 					for (const trigger of triggers) {
 						trigger.addEventListener('click', (event) => {
@@ -200,38 +199,60 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 							const sectionID = trigger.getAttribute('data-cat-target');
 							if (!sectionID) return;
 							scrollToSection(sectionID);
-					});
-				}
+						});
+					}
 
-				const observer = new IntersectionObserver(
-					(entries) => {
-						let best = null;
-						for (const entry of entries) {
-							if (!entry.isIntersecting) continue;
-							if (!best || entry.intersectionRatio > best.intersectionRatio) {
-								best = entry;
+					const observer = new IntersectionObserver(
+						(entries) => {
+							let best = null;
+							for (const entry of entries) {
+								if (!entry.isIntersecting) continue;
+								if (!best || entry.intersectionRatio > best.intersectionRatio) {
+									best = entry;
+								}
 							}
-						}
-						if (best?.target?.id) {
-							setActive(best.target.id);
-						}
-					},
-					{
-						root: null,
-						rootMargin: '-35% 0px -55% 0px',
-						threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
-					},
-				);
+							if (best?.target?.id) {
+								setActive(best.target.id);
+							}
+						},
+						{
+							root: null,
+							rootMargin: '-35% 0px -55% 0px',
+							threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
+						},
+					);
 
-				for (const section of sections) {
-					observer.observe(section);
-				}
+					for (const section of sections) {
+						observer.observe(section);
+					}
 
-				const initialHash = window.location.hash.replace('#', '');
-				if (initialHash && sections.some((section) => section.id === initialHash)) {
-					setActive(initialHash);
-				} else if (sections[0]?.id) {
-					setActive(sections[0].id);
+					const initialHash = window.location.hash.replace('#', '');
+					if (initialHash && sections.some((section) => section.id === initialHash)) {
+						setActive(initialHash);
+					} else if (sections[0]?.id) {
+						setActive(sections[0].id);
+					}
+
+					return true;
+				};
+
+				const initWhenReady = () => {
+					if (bindCategoryTabsSync()) return;
+
+					let attempts = 0;
+					const maxAttempts = 60;
+					const timer = window.setInterval(() => {
+						attempts += 1;
+						if (bindCategoryTabsSync() || attempts >= maxAttempts) {
+							window.clearInterval(timer);
+						}
+					}, 50);
+				};
+
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', initWhenReady, { once: true });
+				} else {
+					initWhenReady();
 				}
 			})();
 
