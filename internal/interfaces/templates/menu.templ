@@ -26,9 +26,6 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 								<p class="text-sm font-medium text-foreground/90">Table { tableLabel }</p>
 							}
 						</div>
-						<a href="/my-places" class="inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-primary shadow-sm whitespace-nowrap shrink-0 hover:bg-muted">
-							My places
-						</a>
 					</div>
 						if len(data.Categories) > 0 {
 							<div class="overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
