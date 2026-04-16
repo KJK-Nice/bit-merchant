@@ -2,42 +2,70 @@ package templates
 
 import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 )
 
 templ EntryPage(reason string) {
 	@Layout("BitMerchant") {
-		<div class="mx-auto max-w-2xl px-4 py-12 space-y-6">
-			<div class="space-y-3">
-				<h1 class="text-3xl font-bold tracking-tight">BitMerchant</h1>
-				<p class="text-muted-foreground">
-					Scan a table QR to open a menu, or jump to a place you already visited.
-				</p>
-			</div>
-
-			if reason == "restaurant_required" {
-				<div class="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
-					Restaurant context is required. Please scan a QR code or open Places.
+		<div class="flex flex-col items-center justify-center min-h-[calc(100svh-5rem)] px-4 py-8">
+			<div class="w-full max-w-sm space-y-8">
+				<!-- Hero -->
+				<div class="flex flex-col items-center text-center space-y-4">
+					<img
+						src="/static/pwa/icon.svg"
+						alt="BitMerchant"
+						class="w-20 h-20 rounded-2xl border border-border shadow-sm"
+					/>
+					<div class="space-y-1">
+						<h1 class="text-2xl font-bold tracking-tight">Order at your table</h1>
+						<p class="text-sm font-medium text-muted-foreground">BitMerchant</p>
+					</div>
+					<p class="text-sm text-muted-foreground max-w-xs">
+						Scan the table QR code to see the menu and place your order.
+					</p>
 				</div>
-			}
-			if reason == "restaurant_not_found" {
-				<div class="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
-					That restaurant link is not available. Please scan a new QR code.
+				<!-- Conditional alerts -->
+				if reason == "restaurant_required" {
+					@primitives.InlineAlert(primitives.InlineAlertProps{
+						Variant:     primitives.InlineAlertWarning,
+						Description: "Restaurant context is required. Please scan a QR code or open Places.",
+					})
+				}
+				if reason == "restaurant_not_found" {
+					@primitives.InlineAlert(primitives.InlineAlertProps{
+						Variant:     primitives.InlineAlertWarning,
+						Description: "That restaurant link is not available. Please scan a new QR code.",
+					})
+				}
+				<!-- Customer actions -->
+				<div class="space-y-3">
+					<p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</p>
+					<div class="flex flex-col gap-2">
+						@button.Button(button.Props{Href: "/scan", Size: button.SizeLg, Class: "w-full"}) {
+							@icon.ScanQrCode()
+							Scan QR Code
+						}
+						@button.Button(button.Props{Href: "/my-places", Variant: button.VariantSecondary, Size: button.SizeLg, Class: "w-full"}) {
+							@icon.MapPin()
+							My Places
+						}
+					</div>
 				</div>
-			}
-
-			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-				@button.Button(button.Props{Href: "/scan", Class: "w-full"}) {
-					Scan QR
-				}
-				@button.Button(button.Props{Href: "/my-places", Variant: button.VariantSecondary, Class: "w-full"}) {
-					Places
-				}
-				@button.Button(button.Props{Href: "/auth/login", Variant: button.VariantSecondary, Class: "w-full"}) {
-					Login
-				}
-				@button.Button(button.Props{Href: "/owner/signup", Variant: button.VariantOutline, Class: "w-full"}) {
-					Owner Signup
-				}
+				<!-- Merchant actions -->
+				<div class="space-y-3">
+					<p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Merchant</p>
+					<div class="flex flex-col gap-2">
+						@button.Button(button.Props{Href: "/auth/login", Variant: button.VariantOutline, Class: "w-full"}) {
+							@icon.LogIn()
+							Login
+						}
+						@button.Button(button.Props{Href: "/owner/signup", Variant: button.VariantGhost, Class: "w-full"}) {
+							@icon.Store()
+							Owner Signup
+						}
+					</div>
+				</div>
 			</div>
 		</div>
 	}

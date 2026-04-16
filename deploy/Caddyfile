@@ -16,3 +16,7 @@ https://order.bitmerchant.local:8080 {
 	tls internal
 	reverse_proxy app:8081
 }
+
+http://localhost:8079 {
+	reverse_proxy app:8081
+}
