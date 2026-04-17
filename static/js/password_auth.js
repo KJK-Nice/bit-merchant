@@ -7,7 +7,8 @@
   function collectFields(form, fields) {
     const data = {};
     for (const f of fields) {
-      const el = form.querySelector(`[name="${f}"]`);
+      // Prefer field inside this form; fall back to first match in document for shared fields.
+      const el = form.querySelector(`[name="${f}"]`) || document.querySelector(`[name="${f}"]`);
       if (el) data[f] = el.value;
     }
     return data;
