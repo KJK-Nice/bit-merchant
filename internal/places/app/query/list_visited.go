@@ -5,11 +5,14 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/ordering/domain/order"
 	"bitmerchant/internal/places/domain/visit"
 	"bitmerchant/internal/restaurant/domain/restaurant"
+	"log/slog"
 )
 
+// VisitedPlace is a read model row for the customer "my places" list.
 type VisitedPlace struct {
 	RestaurantID   common.RestaurantID
 	Name           string
@@ -18,27 +21,41 @@ type VisitedPlace struct {
 	IsOpen         bool
 }
 
-type ListVisitedRestaurantsUseCase struct {
+// SessionVisitedPlaces lists restaurants visited in a session.
+type SessionVisitedPlaces struct {
+	SessionID string
+}
+
+type SessionVisitedPlacesHandler decorator.QueryHandler[SessionVisitedPlaces, []VisitedPlace]
+
+type sessionVisitedPlacesHandler struct {
 	visits      visit.Repository
 	restaurants restaurant.Repository
 	orders      order.Repository
 }
 
-func NewListVisitedRestaurantsUseCase(visits visit.Repository, restaurants restaurant.Repository, orders order.Repository) *ListVisitedRestaurantsUseCase {
-	return &ListVisitedRestaurantsUseCase{visits: visits, restaurants: restaurants, orders: orders}
+func NewSessionVisitedPlacesHandler(visits visit.Repository, restaurants restaurant.Repository, orders order.Repository, log *slog.Logger, metrics decorator.MetricsClient) SessionVisitedPlacesHandler {
+	if visits == nil {
+		panic("nil visit.Repository")
+	}
+	if restaurants == nil {
+		panic("nil restaurant.Repository")
+	}
+	h := sessionVisitedPlacesHandler{visits: visits, restaurants: restaurants, orders: orders}
+	return decorator.ApplyQueryDecorators[SessionVisitedPlaces, []VisitedPlace](h, log, metrics)
 }
 
-func (uc *ListVisitedRestaurantsUseCase) Execute(ctx context.Context, sessionID string) ([]VisitedPlace, error) {
-	if sessionID == "" {
+func (h sessionVisitedPlacesHandler) Handle(ctx context.Context, q SessionVisitedPlaces) ([]VisitedPlace, error) {
+	if q.SessionID == "" {
 		return nil, nil
 	}
-	visitRows, err := uc.visits.FindBySessionID(ctx, sessionID)
+	visitRows, err := h.visits.FindBySessionID(ctx, q.SessionID)
 	if err != nil {
 		return nil, err
 	}
 	ordered := make(map[common.RestaurantID]struct{})
-	if uc.orders != nil {
-		orders, oerr := uc.orders.FindBySessionID(sessionID)
+	if h.orders != nil {
+		orders, oerr := h.orders.FindBySessionID(q.SessionID)
 		if oerr == nil {
 			for _, o := range orders {
 				ordered[o.RestaurantID] = struct{}{}
@@ -47,7 +64,7 @@ func (uc *ListVisitedRestaurantsUseCase) Execute(ctx context.Context, sessionID 
 	}
 	out := make([]VisitedPlace, 0, len(visitRows))
 	for _, v := range visitRows {
-		rest, err := uc.restaurants.FindByID(v.RestaurantID())
+		rest, err := h.restaurants.FindByID(v.RestaurantID())
 		if err != nil || rest == nil {
 			continue
 		}

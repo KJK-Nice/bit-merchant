@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"bitmerchant/internal/infrastructure/server"
-	"bitmerchant/internal/interfaces/http/middleware"
+	"bitmerchant/internal/common/http/middleware"
+	cserver "bitmerchant/internal/common/server"
 	"bitmerchant/internal/service"
 
 	"github.com/labstack/echo/v4"
@@ -38,13 +40,17 @@ func main() {
 	}
 	defer cleanup()
 
-	err = server.RunHTTPServer(server.HTTPConfig{
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	httpSrv := cserver.Component{Config: cserver.HTTPConfig{
 		Port:             cfg.Port,
 		PublicBaseURL:    cfg.PublicBaseURL,
 		CustomerBaseURL:  cfg.CustomerBaseURL,
 		MerchantBaseURL:  cfg.MerchantBaseURL,
 		DisableRateLimit: cfg.DisableRateLimit,
-	}, application.Infra.Logger, func(e *echo.Echo) {
+	}}
+	err = httpSrv.Run(ctx, application.Infra.Logger, func(e *echo.Echo) {
 		e.Use(middleware.SessionMiddlewareWithReposAndOptions(application.Ports.SessionRepo, application.Ports.UserRepo, application.Ports.SessionOptions))
 
 		registerRoutes(e, routeHandlers{

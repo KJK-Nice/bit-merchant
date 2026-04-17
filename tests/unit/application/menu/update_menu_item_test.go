@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func TestUpdateMenuItemUseCase_Execute(t *testing.T) {
+func TestUpdateMenuItemHandler_Handle(t *testing.T) {
 	ctx := context.Background()
 	repoCat := memory.NewMemoryMenuCategoryRepository()
 	repoItem := memory.NewMemoryMenuItemRepository()
@@ -30,8 +30,8 @@ func TestUpdateMenuItemUseCase_Execute(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, repoItem.Save(item))
 
-	uc := menuCmd.NewUpdateMenuItemUseCase(repoItem, repoCat)
-	err = uc.Execute(ctx, menuCmd.UpdateMenuItemRequest{
+	uc := menuCmd.NewUpdateMenuItemHandler(repoItem, repoCat, nil, nil)
+	err = uc.Handle(ctx, menuCmd.UpdateMenuItem{
 		RestaurantID: rid,
 		ItemID:       item.ID,
 		CategoryID:   cat2.ID,
@@ -51,7 +51,7 @@ func TestUpdateMenuItemUseCase_Execute(t *testing.T) {
 	assert.Equal(t, "iced", updated.Description)
 }
 
-func TestUpdateMenuItemUseCase_WrongRestaurant(t *testing.T) {
+func TestUpdateMenuItemHandler_WrongRestaurant(t *testing.T) {
 	ctx := context.Background()
 	repoCat := memory.NewMemoryMenuCategoryRepository()
 	repoItem := memory.NewMemoryMenuItemRepository()
@@ -65,8 +65,8 @@ func TestUpdateMenuItemUseCase_WrongRestaurant(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, repoItem.Save(item))
 
-	uc := menuCmd.NewUpdateMenuItemUseCase(repoItem, repoCat)
-	err = uc.Execute(ctx, menuCmd.UpdateMenuItemRequest{
+	uc := menuCmd.NewUpdateMenuItemHandler(repoItem, repoCat, nil, nil)
+	err = uc.Handle(ctx, menuCmd.UpdateMenuItem{
 		RestaurantID: r2,
 		ItemID:       item.ID,
 		CategoryID:   cat.ID,

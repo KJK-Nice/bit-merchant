@@ -1,15 +1,16 @@
 package http_test
 
 import (
+	authapp "bitmerchant/internal/auth/app"
 	"bitmerchant/internal/auth/domain/invitation"
 	"bitmerchant/internal/auth/domain/membership"
 	"bitmerchant/internal/auth/domain/session"
 	"bitmerchant/internal/auth/domain/user"
 	"bitmerchant/internal/common"
 
+	authhttp "bitmerchant/internal/auth/ports/http"
+	httpMiddleware "bitmerchant/internal/common/http/middleware"
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 	restaurantCmd "bitmerchant/internal/restaurant/app/command"
 	"bitmerchant/internal/restaurant/domain/restaurant"
 
@@ -24,6 +25,25 @@ import (
 	"testing"
 	"time"
 )
+
+func newTestAuthHandler(
+	userRepo user.Repository,
+	membershipRepo membership.Repository,
+	invitationRepo invitation.Repository,
+	sessionRepo session.Repository,
+	restaurantRepo restaurant.Repository,
+	createUC restaurantCmd.CreateRestaurantHandler,
+	sessionOpts httpMiddleware.SessionOptions,
+) *authhttp.AuthHandler {
+	if restaurantRepo == nil {
+		restaurantRepo = memory.NewMemoryRestaurantRepository()
+	}
+	if createUC == nil {
+		createUC = restaurantCmd.NewCreateRestaurantHandler(restaurantRepo, nil, nil)
+	}
+	app := authapp.NewApplication(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, createUC, nil, nil)
+	return authhttp.NewAuthHandler(nil, app, nil, sessionOpts)
+}
 
 type failingInvitationRepo struct{}
 
@@ -59,7 +79,7 @@ func TestAuthHandlerPostSelectRestaurant_UpdatesSessionAndRedirectsByRole(t *tes
 		ExpiresAt: time.Now().Add(time.Hour),
 	}))
 
-	h := handler.NewAuthHandler(nil, userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, nil, nil, httpMiddleware.SessionOptions{})
+	h := newTestAuthHandler(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, nil, httpMiddleware.SessionOptions{})
 
 	form := url.Values{}
 	form.Set("restaurantID", string(restID))
@@ -101,7 +121,7 @@ func TestAuthHandlerGetSelectRestaurant_RendersRestaurantOptions(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, membershipRepo.Save(membership))
 
-	h := handler.NewAuthHandler(nil, userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, nil, nil, httpMiddleware.SessionOptions{})
+	h := newTestAuthHandler(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, nil, httpMiddleware.SessionOptions{})
 
 	req := httptest.NewRequest(http.MethodGet, "/auth/select-restaurant", nil)
 	rec := httptest.NewRecorder()
@@ -130,7 +150,7 @@ func TestAuthHandlerPostNewRestaurant_CreatesMembershipAndSwitchesSession(t *tes
 	membershipRepo := memory.NewMemoryMembershipRepository()
 	invitationRepo := memory.NewMemoryInvitationRepository()
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
-	createUC := restaurantCmd.NewCreateRestaurantUseCase(restaurantRepo)
+	createUC := restaurantCmd.NewCreateRestaurantHandler(restaurantRepo, nil, nil)
 
 	user, err := user.NewUser("owner-newr", "Owner NewR")
 	require.NoError(t, err)
@@ -153,7 +173,7 @@ func TestAuthHandlerPostNewRestaurant_CreatesMembershipAndSwitchesSession(t *tes
 		ExpiresAt:    time.Now().Add(time.Hour),
 	}))
 
-	h := handler.NewAuthHandler(nil, userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, createUC, nil, httpMiddleware.SessionOptions{TTL: time.Hour})
+	h := newTestAuthHandler(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, createUC, httpMiddleware.SessionOptions{TTL: time.Hour})
 
 	form := url.Values{}
 	form.Set("name", "Brand New Cafe")
@@ -191,7 +211,7 @@ func TestAuthHandlerPostNewRestaurant_ForbiddenForKitchenStaff(t *testing.T) {
 	membershipRepo := memory.NewMemoryMembershipRepository()
 	invitationRepo := memory.NewMemoryInvitationRepository()
 	restaurantRepo := memory.NewMemoryRestaurantRepository()
-	createUC := restaurantCmd.NewCreateRestaurantUseCase(restaurantRepo)
+	createUC := restaurantCmd.NewCreateRestaurantHandler(restaurantRepo, nil, nil)
 
 	user, err := user.NewUser("kitchen-u", "Kitchen")
 	require.NoError(t, err)
@@ -206,7 +226,7 @@ func TestAuthHandlerPostNewRestaurant_ForbiddenForKitchenStaff(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, membershipRepo.Save(membership))
 
-	h := handler.NewAuthHandler(nil, userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, createUC, nil, httpMiddleware.SessionOptions{})
+	h := newTestAuthHandler(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, createUC, httpMiddleware.SessionOptions{})
 
 	form := url.Values{}
 	form.Set("name", "Sneaky Place")
@@ -245,7 +265,7 @@ func TestAuthHandlerLogout_DeletesSessionAndExpiresCookie(t *testing.T) {
 		ExpiresAt: time.Now().Add(time.Hour),
 	}))
 
-	h := handler.NewAuthHandler(nil, userRepo, membershipRepo, invitationRepo, sessionRepo, nil, nil, nil, httpMiddleware.SessionOptions{})
+	h := newTestAuthHandler(userRepo, membershipRepo, invitationRepo, sessionRepo, nil, nil, httpMiddleware.SessionOptions{})
 
 	req := httptest.NewRequest(http.MethodPost, "/auth/logout", nil)
 	rec := httptest.NewRecorder()
@@ -268,7 +288,7 @@ func TestAuthHandlerCreateInvitation_SanitizesSaveErrors(t *testing.T) {
 	membershipRepo := memory.NewMemoryMembershipRepository()
 	invitationRepo := &failingInvitationRepo{}
 
-	h := handler.NewAuthHandler(nil, userRepo, membershipRepo, invitationRepo, sessionRepo, nil, nil, nil, httpMiddleware.SessionOptions{})
+	h := newTestAuthHandler(userRepo, membershipRepo, invitationRepo, sessionRepo, nil, nil, httpMiddleware.SessionOptions{})
 
 	user, err := user.NewUser("owner-1", "Owner")
 	require.NoError(t, err)

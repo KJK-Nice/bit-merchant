@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestMarkOrderReadyUseCase_Execute(t *testing.T) {
+func TestMarkOrderReadyHandler_Handle(t *testing.T) {
 	t.Run("successfully marks order as ready", func(t *testing.T) {
 		orderID := common.OrderID("order-123")
 		existingOrder := createTestOrder("order-123", common.FulfillmentStatusPreparing, common.PaymentStatusPaid)
@@ -36,8 +36,8 @@ func TestMarkOrderReadyUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenCmd.NewMarkOrderReadyUseCase(mockOrderRepo, mockEventBus)
-		_, err := uc.Execute(context.Background(), orderID)
+		uc := kitchenCmd.NewMarkOrderReadyHandler(mockOrderRepo, mockEventBus, nil, nil)
+		_, err := uc.Handle(context.Background(), kitchenCmd.MarkOrderReady{OrderID: orderID})
 
 		assert.NoError(t, err)
 		assert.Equal(t, common.FulfillmentStatusReady, savedOrder.FulfillmentStatus)
@@ -56,8 +56,8 @@ func TestMarkOrderReadyUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenCmd.NewMarkOrderReadyUseCase(mockOrderRepo, &mockEventBus{})
-		_, err := uc.Execute(context.Background(), orderID)
+		uc := kitchenCmd.NewMarkOrderReadyHandler(mockOrderRepo, &mockEventBus{}, nil, nil)
+		_, err := uc.Handle(context.Background(), kitchenCmd.MarkOrderReady{OrderID: orderID})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid status transition")

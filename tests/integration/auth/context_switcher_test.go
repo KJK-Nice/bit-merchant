@@ -1,14 +1,16 @@
 package auth_test
 
 import (
+	authapp "bitmerchant/internal/auth/app"
 	"bitmerchant/internal/auth/domain/membership"
 	"bitmerchant/internal/auth/domain/session"
 	"bitmerchant/internal/auth/domain/user"
 	"bitmerchant/internal/common"
 
+	authhttp "bitmerchant/internal/auth/ports/http"
+	httpMiddleware "bitmerchant/internal/common/http/middleware"
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	restaurantCmd "bitmerchant/internal/restaurant/app/command"
 	"bitmerchant/internal/restaurant/domain/restaurant"
 
 	"github.com/labstack/echo/v4"
@@ -62,7 +64,9 @@ func TestSelectRestaurantUpdatesActiveContext(t *testing.T) {
 		userRepo,
 		httpMiddleware.SessionOptions{TTL: time.Hour},
 	))
-	authHandler := handler.NewAuthHandler(nil, userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, nil, nil, httpMiddleware.SessionOptions{})
+	createUC := restaurantCmd.NewCreateRestaurantHandler(restaurantRepo, nil, nil)
+	authApp := authapp.NewApplication(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, createUC, nil, nil)
+	authHandler := authhttp.NewAuthHandler(nil, authApp, nil, httpMiddleware.SessionOptions{})
 	group := e.Group("/auth")
 	group.Use(httpMiddleware.RequireAuth())
 	group.POST("/select-restaurant", authHandler.PostSelectRestaurant)

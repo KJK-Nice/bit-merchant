@@ -39,8 +39,8 @@ func TestDashboardIntegration(t *testing.T) {
 	// Use Cases
 	_ = paymentRepo
 	_ = paymentMethod
-	createOrderUC := orderCmd.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
-	getStatsUC := dashboard.NewGetDashboardStatsUseCase(orderRepo)
+	createOrderUC := orderCmd.NewCreateOrderHandler(orderRepo, restRepo, eventBus, logger.Logger, nil)
+	getStatsUC := dashboard.NewRestaurantDashboardStatsHandler(orderRepo, nil, nil)
 
 	t.Run("Order Creation Reflected in Stats", func(t *testing.T) {
 		// 1. Create an Order
@@ -50,14 +50,14 @@ func TestDashboardIntegration(t *testing.T) {
 		require.NoError(t, cartSvc.AddItem(sessionID, item, 2)) // 2 Burgers = $30
 		userCart := cartSvc.GetCart(sessionID)
 
-		req := orderCmd.CreateOrderRequest{
+		req := orderCmd.CreateOrder{
 			RestaurantID:  "restaurant_1", // Must match dashboard default
 			SessionID:     sessionID,
 			Cart:          userCart,
 			PaymentMethod: common.PaymentMethodTypeCash,
 		}
 
-		resp, err := createOrderUC.Execute(context.Background(), req)
+		resp, err := createOrderUC.Handle(context.Background(), req)
 		assert.NoError(t, err)
 
 		// 2. Mark Order as Paid (since stats only count paid orders)
@@ -68,7 +68,10 @@ func TestDashboardIntegration(t *testing.T) {
 		_ = orderRepo.Save(savedOrder)
 
 		// 3. Check Stats
-		stats, err := getStatsUC.Execute(context.Background(), "restaurant_1", dashboard.DateRangeToday)
+		stats, err := getStatsUC.Handle(context.Background(), dashboard.RestaurantDashboardStats{
+			RestaurantID: "restaurant_1",
+			Range:        dashboard.DateRangeToday,
+		})
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, stats.OrderCount)
@@ -95,7 +98,10 @@ func TestDashboardIntegration(t *testing.T) {
 		oldPaid.CreatedAt = time.Now().AddDate(0, 0, -10)
 		_ = orderRepo.Save(oldPaid)
 
-		stats, err := getStatsUC.Execute(context.Background(), "restaurant_1", dashboard.DateRangeWeek)
+		stats, err := getStatsUC.Handle(context.Background(), dashboard.RestaurantDashboardStats{
+			RestaurantID: "restaurant_1",
+			Range:        dashboard.DateRangeWeek,
+		})
 		assert.NoError(t, err)
 
 		// Includes previously created paid order ($30) + recent paid order ($12), excludes oldPaid ($9).

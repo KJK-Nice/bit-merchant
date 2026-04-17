@@ -12,9 +12,9 @@ import (
 	"testing"
 )
 
-func TestGetTopSellingItemsUseCase(t *testing.T) {
+func TestTopSellingMenuItemsHandler(t *testing.T) {
 	orderRepo := memory.NewMemoryOrderRepository()
-	uc := dashboard.NewGetTopSellingItemsUseCase(orderRepo)
+	h := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil)
 	restaurantID := common.RestaurantID("r1")
 
 	// Order 1: 2 Burgers, 1 Soda
@@ -43,7 +43,9 @@ func TestGetTopSellingItemsUseCase(t *testing.T) {
 	_ = orderRepo.Save(o3)
 
 	t.Run("Get Top Items", func(t *testing.T) {
-		items, err := uc.Execute(context.Background(), restaurantID)
+		items, err := h.Handle(context.Background(), dashboard.TopSellingMenuItems{
+			RestaurantID: restaurantID,
+		})
 		assert.NoError(t, err)
 
 		// Expected: Burger (3), Soda (1)

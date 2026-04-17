@@ -13,9 +13,9 @@ import (
 	"time"
 )
 
-func TestGetOrderHistoryUseCase(t *testing.T) {
+func TestPaidOrdersForRestaurantHandler(t *testing.T) {
 	orderRepo := memory.NewMemoryOrderRepository()
-	uc := dashboard.NewGetOrderHistoryUseCase(orderRepo)
+	h := dashboard.NewPaidOrdersForRestaurantHandler(orderRepo, nil, nil)
 	restaurantID := common.RestaurantID("r1")
 
 	// Seed orders
@@ -41,7 +41,9 @@ func TestGetOrderHistoryUseCase(t *testing.T) {
 	_ = orderRepo.Save(o3)
 
 	t.Run("Get Paid Orders Sorted By Newest First", func(t *testing.T) {
-		orders, err := uc.Execute(context.Background(), restaurantID)
+		orders, err := h.Handle(context.Background(), dashboard.PaidOrdersForRestaurant{
+			RestaurantID: restaurantID,
+		})
 		assert.NoError(t, err)
 		assert.Len(t, orders, 2)
 

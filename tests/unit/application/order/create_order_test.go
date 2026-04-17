@@ -18,7 +18,7 @@ import (
 	"testing"
 )
 
-func TestCreateOrderUseCase(t *testing.T) {
+func TestCreateOrderHandler(t *testing.T) {
 	orderRepo := memory.NewMemoryOrderRepository()
 	paymentRepo := memory.NewMemoryPaymentRepository()
 	restRepo := memory.NewMemoryRestaurantRepository()
@@ -33,11 +33,12 @@ func TestCreateOrderUseCase(t *testing.T) {
 
 	_ = paymentRepo
 	_ = paymentMethod
-	uc := orderCmd.NewCreateOrderUseCase(
+	uc := orderCmd.NewCreateOrderHandler(
 		orderRepo,
 		restRepo,
 		eventBus,
-		logger,
+		logger.Logger,
+		nil,
 	)
 
 	t.Run("Execute Success", func(t *testing.T) {
@@ -49,14 +50,14 @@ func TestCreateOrderUseCase(t *testing.T) {
 
 		userCart := cartSvc.GetCart(sessionID)
 
-		req := orderCmd.CreateOrderRequest{
+		req := orderCmd.CreateOrder{
 			RestaurantID:  "r1",
 			SessionID:     sessionID,
 			Cart:          userCart,
 			PaymentMethod: common.PaymentMethodTypeCash,
 		}
 
-		resp, err := uc.Execute(context.Background(), req)
+		resp, err := uc.Handle(context.Background(), req)
 		assert.NoError(t, err)
 		assert.NotNil(t, resp)
 		assert.NotEmpty(t, resp.OrderID)

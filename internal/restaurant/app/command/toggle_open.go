@@ -6,25 +6,41 @@ import (
 	"strings"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/restaurant/domain/restaurant"
+	"log/slog"
 )
 
-type ToggleRestaurantOpenUseCase struct {
+// ToggleRestaurantOpen opens or closes a restaurant for service.
+type ToggleRestaurantOpen struct {
+	RestaurantID   common.RestaurantID
+	ClosedMessage  string
+	ReopeningHours string
+}
+
+type ToggleRestaurantOpenHandler decorator.CommandResultHandler[ToggleRestaurantOpen, bool]
+
+type toggleRestaurantOpenHandler struct {
 	repo restaurant.Repository
 }
 
-func NewToggleRestaurantOpenUseCase(repo restaurant.Repository) *ToggleRestaurantOpenUseCase {
-	return &ToggleRestaurantOpenUseCase{repo: repo}
+func NewToggleRestaurantOpenHandler(repo restaurant.Repository, log *slog.Logger, metrics decorator.MetricsClient) ToggleRestaurantOpenHandler {
+	if repo == nil {
+		panic("nil restaurant.Repository")
+	}
+	h := toggleRestaurantOpenHandler{repo: repo}
+	return decorator.ApplyCommandResultDecorators[ToggleRestaurantOpen, bool](h, log, metrics)
 }
 
-func (uc *ToggleRestaurantOpenUseCase) Execute(ctx context.Context, id common.RestaurantID, closedMessage, reopeningHours string) (bool, error) {
-	r, err := uc.repo.FindByID(id)
+func (h toggleRestaurantOpenHandler) Handle(ctx context.Context, cmd ToggleRestaurantOpen) (bool, error) {
+	_ = ctx
+	r, err := h.repo.FindByID(cmd.RestaurantID)
 	if err != nil {
 		return false, err
 	}
 
-	closedMessage = strings.TrimSpace(closedMessage)
-	reopeningHours = strings.TrimSpace(reopeningHours)
+	closedMessage := strings.TrimSpace(cmd.ClosedMessage)
+	reopeningHours := strings.TrimSpace(cmd.ReopeningHours)
 	if err := restaurant.ValidateDescription(closedMessage); err != nil {
 		return false, fmt.Errorf("closed message: %w", err)
 	}
@@ -38,7 +54,7 @@ func (uc *ToggleRestaurantOpenUseCase) Execute(ctx context.Context, id common.Re
 		r.Open()
 	}
 
-	if err := uc.repo.Save(r); err != nil {
+	if err := h.repo.Save(r); err != nil {
 		return false, err
 	}
 

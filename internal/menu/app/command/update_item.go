@@ -5,10 +5,13 @@ import (
 	"fmt"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/menu/domain/menu"
+	"log/slog"
 )
 
-type UpdateMenuItemRequest struct {
+// UpdateMenuItem updates an item and may move it to another category.
+type UpdateMenuItem struct {
 	RestaurantID common.RestaurantID
 	ItemID       common.ItemID
 	CategoryID   common.CategoryID
@@ -18,49 +21,56 @@ type UpdateMenuItemRequest struct {
 	Available    bool
 }
 
-type UpdateMenuItemUseCase struct {
+type UpdateMenuItemHandler decorator.CommandHandler[UpdateMenuItem]
+
+type updateMenuItemHandler struct {
 	itemRepo menu.ItemRepository
 	catRepo  menu.CategoryRepository
 }
 
-func NewUpdateMenuItemUseCase(itemRepo menu.ItemRepository, catRepo menu.CategoryRepository) *UpdateMenuItemUseCase {
-	return &UpdateMenuItemUseCase{itemRepo: itemRepo, catRepo: catRepo}
+func NewUpdateMenuItemHandler(itemRepo menu.ItemRepository, catRepo menu.CategoryRepository, log *slog.Logger, metrics decorator.MetricsClient) UpdateMenuItemHandler {
+	if itemRepo == nil || catRepo == nil {
+		panic("nil menu repository")
+	}
+	h := updateMenuItemHandler{itemRepo: itemRepo, catRepo: catRepo}
+	return decorator.ApplyCommandDecorators[UpdateMenuItem](h, log, metrics)
 }
 
-func (uc *UpdateMenuItemUseCase) Execute(ctx context.Context, req UpdateMenuItemRequest) error {
-	item, err := uc.itemRepo.FindByID(req.ItemID)
+func (h updateMenuItemHandler) Handle(ctx context.Context, cmd UpdateMenuItem) error {
+	_ = ctx
+	item, err := h.itemRepo.FindByID(cmd.ItemID)
 	if err != nil {
 		return err
 	}
 
-	cat, err := uc.catRepo.FindByID(req.CategoryID)
+	cat, err := h.catRepo.FindByID(cmd.CategoryID)
 	if err != nil {
 		return err
 	}
 
-	if err := validateItemAndCategoryOwnership(item, cat, req.RestaurantID); err != nil {
+	if err := validateItemAndCategoryOwnership(item, cat, cmd.RestaurantID); err != nil {
 		return err
 	}
-	if err := validateUpdateMenuItemRequest(req); err != nil {
+	if err := validateUpdateMenuItem(cmd); err != nil {
 		return err
 	}
 
 	oldCat := item.CategoryID
-	item.CategoryID = req.CategoryID
-	item.Name = req.Name
-	item.Price = req.Price
-	item.SetAvailable(req.Available)
-	if err := item.SetDescription(req.Description); err != nil {
+	item.CategoryID = cmd.CategoryID
+	item.Name = cmd.Name
+	item.Price = cmd.Price
+	item.SetAvailable(cmd.Available)
+	if err := item.SetDescription(cmd.Description); err != nil {
 		return err
 	}
 
-	if oldCat != req.CategoryID {
-		if err := uc.moveItemToCategoryEnd(item, req.CategoryID); err != nil {
+	if oldCat != cmd.CategoryID {
+		if err := h.moveItemToCategoryEnd(item, cmd.CategoryID); err != nil {
 			return err
 		}
 	}
 
-	return uc.itemRepo.Update(item)
+	return h.itemRepo.Update(item)
 }
 
 func validateItemAndCategoryOwnership(item *menu.MenuItem, cat *menu.MenuCategory, restaurantID common.RestaurantID) error {
@@ -73,30 +83,30 @@ func validateItemAndCategoryOwnership(item *menu.MenuItem, cat *menu.MenuCategor
 	return nil
 }
 
-func validateUpdateMenuItemRequest(req UpdateMenuItemRequest) error {
-	if err := menu.ValidateItemName(req.Name); err != nil {
+func validateUpdateMenuItem(cmd UpdateMenuItem) error {
+	if err := menu.ValidateItemName(cmd.Name); err != nil {
 		return err
 	}
-	if err := menu.ValidatePrice(req.Price); err != nil {
+	if err := menu.ValidatePrice(cmd.Price); err != nil {
 		return err
 	}
-	if err := menu.ValidateDescription(req.Description); err != nil {
+	if err := menu.ValidateDescription(cmd.Description); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (uc *UpdateMenuItemUseCase) moveItemToCategoryEnd(item *menu.MenuItem, categoryID common.CategoryID) error {
-	maxOrder, err := uc.maxDisplayOrderInCategoryExcluding(categoryID, item.ID)
+func (h updateMenuItemHandler) moveItemToCategoryEnd(item *menu.MenuItem, categoryID common.CategoryID) error {
+	maxOrder, err := h.maxDisplayOrderInCategoryExcluding(categoryID, item.ID)
 	if err != nil {
 		return err
 	}
 	return item.SetDisplayOrder(maxOrder + 1)
 }
 
-func (uc *UpdateMenuItemUseCase) maxDisplayOrderInCategoryExcluding(categoryID common.CategoryID, excludeItemID common.ItemID) (int, error) {
+func (h updateMenuItemHandler) maxDisplayOrderInCategoryExcluding(categoryID common.CategoryID, excludeItemID common.ItemID) (int, error) {
 	maxOrder := -1
-	siblings, err := uc.itemRepo.FindByCategoryID(categoryID)
+	siblings, err := h.itemRepo.FindByCategoryID(categoryID)
 	if err != nil {
 		return 0, err
 	}

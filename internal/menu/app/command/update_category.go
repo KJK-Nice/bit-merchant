@@ -5,10 +5,13 @@ import (
 	"fmt"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/menu/domain/menu"
+	"log/slog"
 )
 
-type UpdateMenuCategoryRequest struct {
+// UpdateMenuCategory updates category metadata and active flag.
+type UpdateMenuCategory struct {
 	RestaurantID common.RestaurantID
 	CategoryID   common.CategoryID
 	Name         string
@@ -16,32 +19,39 @@ type UpdateMenuCategoryRequest struct {
 	IsActive     bool
 }
 
-type UpdateMenuCategoryUseCase struct {
+type UpdateMenuCategoryHandler decorator.CommandHandler[UpdateMenuCategory]
+
+type updateMenuCategoryHandler struct {
 	repo menu.CategoryRepository
 }
 
-func NewUpdateMenuCategoryUseCase(repo menu.CategoryRepository) *UpdateMenuCategoryUseCase {
-	return &UpdateMenuCategoryUseCase{repo: repo}
+func NewUpdateMenuCategoryHandler(repo menu.CategoryRepository, log *slog.Logger, metrics decorator.MetricsClient) UpdateMenuCategoryHandler {
+	if repo == nil {
+		panic("nil menu.CategoryRepository")
+	}
+	h := updateMenuCategoryHandler{repo: repo}
+	return decorator.ApplyCommandDecorators[UpdateMenuCategory](h, log, metrics)
 }
 
-func (uc *UpdateMenuCategoryUseCase) Execute(ctx context.Context, req UpdateMenuCategoryRequest) error {
-	cat, err := uc.repo.FindByID(req.CategoryID)
+func (h updateMenuCategoryHandler) Handle(ctx context.Context, cmd UpdateMenuCategory) error {
+	_ = ctx
+	cat, err := h.repo.FindByID(cmd.CategoryID)
 	if err != nil {
 		return err
 	}
-	if cat.RestaurantID != req.RestaurantID {
+	if cat.RestaurantID != cmd.RestaurantID {
 		return fmt.Errorf("category does not belong to restaurant")
 	}
-	if err := menu.ValidateCategoryName(req.Name); err != nil {
+	if err := menu.ValidateCategoryName(cmd.Name); err != nil {
 		return err
 	}
-	if req.DisplayOrder < 0 {
+	if cmd.DisplayOrder < 0 {
 		return fmt.Errorf("display order must be >= 0")
 	}
 
-	cat.Name = req.Name
-	cat.DisplayOrder = req.DisplayOrder
-	cat.SetActive(req.IsActive)
+	cat.Name = cmd.Name
+	cat.DisplayOrder = cmd.DisplayOrder
+	cat.SetActive(cmd.IsActive)
 
-	return uc.repo.Update(cat)
+	return h.repo.Update(cat)
 }

@@ -3,23 +3,21 @@ package http_test
 import (
 	"bitmerchant/internal/common"
 
+	httpMiddleware "bitmerchant/internal/common/http/middleware"
 	"bitmerchant/internal/infrastructure/qr"
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 	menuCmd "bitmerchant/internal/menu/app/command"
 	menuQuery "bitmerchant/internal/menu/app/query"
-	"bitmerchant/internal/menu/domain/menu"
 	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	restauranthttp "bitmerchant/internal/restaurant/ports/http"
 
 	// Mock Use Cases for Admin Handler
 	restaurantQuery "bitmerchant/internal/restaurant/app/query"
-	"bitmerchant/internal/restaurant/domain/restaurant"
 	"context"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
@@ -27,69 +25,28 @@ import (
 	"testing"
 )
 
-type MockCreateRestaurantUseCase struct {
-	mock.Mock
-}
-
-func (m *MockCreateRestaurantUseCase) Execute(ctx context.Context, req restaurantCmd.CreateRestaurantRequest) (*restaurant.Restaurant, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*restaurant.Restaurant), args.Error(1)
-}
-
-type MockCreateMenuCategoryUseCase struct {
-	mock.Mock
-}
-
-func (m *MockCreateMenuCategoryUseCase) Execute(ctx context.Context, req menuCmd.CreateMenuCategoryRequest) (*menu.MenuCategory, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*menu.MenuCategory), args.Error(1)
-}
-
-type MockCreateMenuItemUseCase struct {
-	mock.Mock
-}
-
-func (m *MockCreateMenuItemUseCase) Execute(ctx context.Context, req menuCmd.CreateMenuItemRequest) (*menu.MenuItem, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*menu.MenuItem), args.Error(1)
-}
-
 func TestAdminEndpoints(t *testing.T) {
 	e := echo.New()
-
-	// Setup Mocks
-	// Note: Ideally we test with real use cases + memory repos for "component" tests,
-	// or mocks for pure "unit" tests of handler.
-	// Given I have real use cases and memory repos, I can use them to be more robust.
 
 	repoRest := memory.NewMemoryRestaurantRepository()
 	repoCat := memory.NewMemoryMenuCategoryRepository()
 	repoItem := memory.NewMemoryMenuItemRepository()
 
-	createRestUC := restaurantCmd.NewCreateRestaurantUseCase(repoRest)
-	createCatUC := menuCmd.NewCreateMenuCategoryUseCase(repoCat)
-	createItemUC := menuCmd.NewCreateMenuItemUseCase(repoItem)
+	createRestUC := restaurantCmd.NewCreateRestaurantHandler(repoRest, nil, nil)
+	createCatUC := menuCmd.NewCreateMenuCategoryHandler(repoCat, nil, nil)
+	createItemUC := menuCmd.NewCreateMenuItemHandler(repoItem, nil, nil)
 
-	getMenuAdminUC := menuQuery.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{})
-	updateItemUC := menuCmd.NewUpdateMenuItemUseCase(repoItem, repoCat)
-	updateCategoryUC := menuCmd.NewUpdateMenuCategoryUseCase(repoCat)
-	toggleAvailUC := menuCmd.NewToggleMenuItemAvailabilityUseCase(repoItem)
-	reorderCatUC := menuCmd.NewReorderMenuCategoriesUseCase(repoCat)
-	reorderItemUC := menuCmd.NewReorderMenuItemsUseCase(repoItem, repoCat)
-	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountUseCase(repoRest)
-	generateQRUC := restaurantQuery.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
+	getMenuAdminUC := menuQuery.NewMenuForAdminHandler(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
+	updateItemUC := menuCmd.NewUpdateMenuItemHandler(repoItem, repoCat, nil, nil)
+	updateCategoryUC := menuCmd.NewUpdateMenuCategoryHandler(repoCat, nil, nil)
+	toggleAvailUC := menuCmd.NewToggleMenuItemAvailabilityHandler(repoItem, nil, nil)
+	reorderCatUC := menuCmd.NewReorderMenuCategoriesHandler(repoCat, nil, nil)
+	reorderItemUC := menuCmd.NewReorderMenuItemsHandler(repoItem, repoCat, nil, nil)
+	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountHandler(repoRest, nil, nil)
+	generateQRUC := restaurantQuery.NewRestaurantTableQRImageHandler(qr.NewQRCodeService(), "http://localhost", repoRest, nil, nil)
 
 	membershipRepo := memory.NewMemoryMembershipRepository()
-	adminHandler := handler.NewAdminHandler(
+	adminHandler := restauranthttp.NewAdminHandler(
 		createRestUC,
 		createCatUC,
 		createItemUC,
@@ -143,7 +100,7 @@ func TestAdminEndpoints(t *testing.T) {
 
 	t.Run("POST /admin/item creates item", func(t *testing.T) {
 		// Need a category first
-		cat, _ := createCatUC.Execute(context.Background(), menuCmd.CreateMenuCategoryRequest{
+		cat, _ := createCatUC.Handle(context.Background(), menuCmd.CreateMenuCategory{
 			RestaurantID: restID,
 			Name:         "Mains",
 			DisplayOrder: 1,

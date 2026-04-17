@@ -1,22 +1,22 @@
 package places_test
 
 import (
-	"bitmerchant/internal/common"
+	"context"
+	"testing"
+	"time"
 
+	"bitmerchant/internal/common"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	"bitmerchant/internal/ordering/domain/order"
 	placesQuery "bitmerchant/internal/places/app/query"
 	"bitmerchant/internal/places/domain/visit"
 	"bitmerchant/internal/restaurant/domain/restaurant"
-	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
-func TestListVisitedRestaurantsUseCase(t *testing.T) {
+func TestSessionVisitedPlacesHandler(t *testing.T) {
 	rest := memory.NewMemoryRestaurantRepository()
 	visits := memory.NewMemorySessionRestaurantVisitRepository()
 	ord := memory.NewMemoryOrderRepository()
@@ -37,8 +37,8 @@ func TestListVisitedRestaurantsUseCase(t *testing.T) {
 	o.FiatAmount = 1
 	require.NoError(t, ord.Save(o))
 
-	uc := placesQuery.NewListVisitedRestaurantsUseCase(visits, rest, ord)
-	out, err := uc.Execute(context.Background(), "s1")
+	h := placesQuery.NewSessionVisitedPlacesHandler(visits, rest, ord, nil, nil)
+	out, err := h.Handle(context.Background(), placesQuery.SessionVisitedPlaces{SessionID: "s1"})
 	require.NoError(t, err)
 	require.Len(t, out, 2)
 	assert.Equal(t, common.RestaurantID("r2"), out[0].RestaurantID)

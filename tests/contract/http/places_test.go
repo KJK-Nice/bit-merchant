@@ -2,9 +2,9 @@ package http_test
 
 import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
 	placesQuery "bitmerchant/internal/places/app/query"
 	"bitmerchant/internal/places/domain/visit"
+	placeshttp "bitmerchant/internal/places/ports/http"
 	"bitmerchant/internal/restaurant/domain/restaurant"
 	"context"
 	"time"
@@ -26,8 +26,8 @@ func TestGetMyPlaces(t *testing.T) {
 	require.NoError(t, rest.Save(r))
 	require.NoError(t, visits.Upsert(context.Background(), visit.NewSessionRestaurantVisit("sess-p", "pr-contract", time.Time{}, time.Time{})))
 
-	uc := placesQuery.NewListVisitedRestaurantsUseCase(visits, rest, orders)
-	h := handler.NewPlacesHandler(uc)
+	uc := placesQuery.NewSessionVisitedPlacesHandler(visits, rest, orders, nil, nil)
+	h := placeshttp.NewPlacesHandler(uc)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/my-places", nil)

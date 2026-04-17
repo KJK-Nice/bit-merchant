@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func TestGetKitchenOrdersUseCase_Execute(t *testing.T) {
+func TestActiveKitchenOrdersHandler_Handle(t *testing.T) {
 	t.Run("returns orders sorted chronologically", func(t *testing.T) {
 		restaurantID := common.RestaurantID("rest-1")
 
@@ -30,8 +30,8 @@ func TestGetKitchenOrdersUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenQuery.NewGetKitchenOrdersUseCase(mockOrderRepo)
-		orders, err := uc.Execute(context.Background(), restaurantID)
+		uc := kitchenQuery.NewActiveKitchenOrdersHandler(mockOrderRepo, nil, nil)
+		orders, err := uc.Handle(context.Background(), kitchenQuery.ActiveKitchenOrders{RestaurantID: restaurantID})
 
 		assert.NoError(t, err)
 		assert.Len(t, orders, 2)
@@ -46,8 +46,8 @@ func TestGetKitchenOrdersUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenQuery.NewGetKitchenOrdersUseCase(mockOrderRepo)
-		orders, err := uc.Execute(context.Background(), common.RestaurantID("rest-1"))
+		uc := kitchenQuery.NewActiveKitchenOrdersHandler(mockOrderRepo, nil, nil)
+		orders, err := uc.Handle(context.Background(), kitchenQuery.ActiveKitchenOrders{RestaurantID: common.RestaurantID("rest-1")})
 
 		assert.NoError(t, err)
 		assert.Empty(t, orders)

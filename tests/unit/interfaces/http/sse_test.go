@@ -4,14 +4,14 @@ import (
 	"strings"
 	"testing"
 
-	"bitmerchant/internal/interfaces/http"
+	commonhttp "bitmerchant/internal/common/http"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFormatDatastarEvent(t *testing.T) {
 	fragment := "<div id='test'>Content</div>"
-	result := http.FormatDatastarEvent(fragment)
+	result := commonhttp.FormatDatastarEvent(fragment)
 	str := string(result)
 
 	assert.Contains(t, str, "event: datastar-patch-elements")
@@ -24,7 +24,7 @@ func TestFormatDatastarPatch(t *testing.T) {
 	selector := "#list"
 	mode := "prepend"
 
-	result := http.FormatDatastarPatch(fragment, selector, mode)
+	result := commonhttp.FormatDatastarPatch(fragment, selector, mode)
 	str := string(result)
 
 	assert.Contains(t, str, "event: datastar-patch-elements")

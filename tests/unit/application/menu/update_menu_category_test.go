@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func TestUpdateMenuCategoryUseCase_Execute(t *testing.T) {
+func TestUpdateMenuCategoryHandler_Handle(t *testing.T) {
 	ctx := context.Background()
 	repo := memory.NewMemoryMenuCategoryRepository()
 	rid := common.RestaurantID("r1")
@@ -21,8 +21,8 @@ func TestUpdateMenuCategoryUseCase_Execute(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, repo.Save(cat))
 
-	uc := menuCmd.NewUpdateMenuCategoryUseCase(repo)
-	err = uc.Execute(ctx, menuCmd.UpdateMenuCategoryRequest{
+	uc := menuCmd.NewUpdateMenuCategoryHandler(repo, nil, nil)
+	err = uc.Handle(ctx, menuCmd.UpdateMenuCategory{
 		RestaurantID: rid,
 		CategoryID:   cat.ID,
 		Name:         "New Name",

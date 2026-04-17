@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
-	"bitmerchant/internal/ordering/domain/order"
+	"bitmerchant/internal/common/decorator"
+	"log/slog"
 )
 
 type DateRange string
@@ -22,16 +23,29 @@ type DashboardStats struct {
 	AverageOrderValue float64
 }
 
-type GetDashboardStatsUseCase struct {
-	orderRepo order.Repository
+// RestaurantDashboardStats returns aggregate stats for a restaurant in a date range.
+type RestaurantDashboardStats struct {
+	RestaurantID common.RestaurantID
+	Range        DateRange
 }
 
-func NewGetDashboardStatsUseCase(orderRepo order.Repository) *GetDashboardStatsUseCase {
-	return &GetDashboardStatsUseCase{orderRepo: orderRepo}
+type RestaurantDashboardStatsHandler decorator.QueryHandler[RestaurantDashboardStats, *DashboardStats]
+
+type restaurantDashboardStatsHandler struct {
+	orders OrderReadModel
 }
 
-func (uc *GetDashboardStatsUseCase) Execute(ctx context.Context, restaurantID common.RestaurantID, rangeType DateRange) (*DashboardStats, error) {
-	orders, err := uc.orderRepo.FindByRestaurantID(restaurantID)
+func NewRestaurantDashboardStatsHandler(orders OrderReadModel, log *slog.Logger, metrics decorator.MetricsClient) RestaurantDashboardStatsHandler {
+	if orders == nil {
+		panic("nil OrderReadModel")
+	}
+	h := restaurantDashboardStatsHandler{orders: orders}
+	return decorator.ApplyQueryDecorators[RestaurantDashboardStats, *DashboardStats](h, log, metrics)
+}
+
+func (h restaurantDashboardStatsHandler) Handle(ctx context.Context, q RestaurantDashboardStats) (*DashboardStats, error) {
+	_ = ctx
+	orders, err := h.orders.FindByRestaurantID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +54,7 @@ func (uc *GetDashboardStatsUseCase) Execute(ctx context.Context, restaurantID co
 	var totalSales float64
 
 	now := time.Now()
-	rangeStart := getRangeStart(now, rangeType)
+	rangeStart := getRangeStart(now, q.Range)
 
 	for _, o := range orders {
 		if o.CreatedAt.Before(rangeStart) {

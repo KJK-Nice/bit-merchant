@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestMarkOrderPreparingUseCase_Execute(t *testing.T) {
+func TestMarkOrderPreparingHandler_Handle(t *testing.T) {
 	t.Run("successfully marks order as preparing", func(t *testing.T) {
 		orderID := common.OrderID("order-123")
 		// Must be Paid to start preparing
@@ -37,8 +37,8 @@ func TestMarkOrderPreparingUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenCmd.NewMarkOrderPreparingUseCase(mockOrderRepo, mockEventBus)
-		_, err := uc.Execute(context.Background(), orderID)
+		uc := kitchenCmd.NewMarkOrderPreparingHandler(mockOrderRepo, mockEventBus, nil, nil)
+		_, err := uc.Handle(context.Background(), kitchenCmd.MarkOrderPreparing{OrderID: orderID})
 
 		assert.NoError(t, err)
 		assert.Equal(t, common.FulfillmentStatusPreparing, savedOrder.FulfillmentStatus)
@@ -56,8 +56,8 @@ func TestMarkOrderPreparingUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenCmd.NewMarkOrderPreparingUseCase(mockOrderRepo, &mockEventBus{})
-		_, err := uc.Execute(context.Background(), orderID)
+		uc := kitchenCmd.NewMarkOrderPreparingHandler(mockOrderRepo, &mockEventBus{}, nil, nil)
+		_, err := uc.Handle(context.Background(), kitchenCmd.MarkOrderPreparing{OrderID: orderID})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "cannot prepare unpaid order")
@@ -77,8 +77,8 @@ func TestMarkOrderPreparingUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenCmd.NewMarkOrderPreparingUseCase(mockOrderRepo, &mockEventBus{})
-		_, err := uc.Execute(context.Background(), orderID)
+		uc := kitchenCmd.NewMarkOrderPreparingHandler(mockOrderRepo, &mockEventBus{}, nil, nil)
+		_, err := uc.Handle(context.Background(), kitchenCmd.MarkOrderPreparing{OrderID: orderID})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid status transition")

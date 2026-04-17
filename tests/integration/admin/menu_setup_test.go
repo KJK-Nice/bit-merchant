@@ -32,41 +32,40 @@ func TestMenuSetupWorkflow(t *testing.T) {
 	repoItem := memory.NewMemoryMenuItemRepository()
 	var mockStorage stubPhotoStorage
 
-	createRestUC := restaurantCmd.NewCreateRestaurantUseCase(repoRest)
-	createCatUC := menuCmd.NewCreateMenuCategoryUseCase(repoCat)
-	createItemUC := menuCmd.NewCreateMenuItemUseCase(repoItem)
-	uploadPhotoUC := menuCmd.NewUploadPhotoUseCase(repoItem, mockStorage)
+	createRestUC := restaurantCmd.NewCreateRestaurantHandler(repoRest, nil, nil)
+	createCatUC := menuCmd.NewCreateMenuCategoryHandler(repoCat, nil, nil)
+	createItemUC := menuCmd.NewCreateMenuItemHandler(repoItem, nil, nil)
+	uploadPhotoUC := menuCmd.NewUploadMenuItemPhotoHandler(repoItem, mockStorage, nil, nil)
 
 	// 1. Create Restaurant
-	restReq := restaurantCmd.CreateRestaurantRequest{Name: "Burger King"}
-	rest, err := createRestUC.Execute(context.Background(), restReq)
+	rest, err := createRestUC.Handle(context.Background(), restaurantCmd.CreateRestaurant{Name: "Burger King"})
 	require.NoError(t, err)
 	require.NotEmpty(t, rest.ID)
 
 	// 2. Create Category
-	catReq := menuCmd.CreateMenuCategoryRequest{
+	catReq := menuCmd.CreateMenuCategory{
 		RestaurantID: rest.ID,
 		Name:         "Burgers",
 		DisplayOrder: 1,
 	}
-	cat, err := createCatUC.Execute(context.Background(), catReq)
+	cat, err := createCatUC.Handle(context.Background(), catReq)
 	require.NoError(t, err)
 	require.NotEmpty(t, cat.ID)
 
 	// 3. Create Item
-	itemReq := menuCmd.CreateMenuItemRequest{
+	itemReq := menuCmd.CreateMenuItem{
 		RestaurantID: rest.ID,
 		CategoryID:   cat.ID,
 		Name:         "Whopper",
 		Price:        5.99,
 		Available:    true,
 	}
-	item, err := createItemUC.Execute(context.Background(), itemReq)
+	item, err := createItemUC.Handle(context.Background(), itemReq)
 	require.NoError(t, err)
 	require.NotEmpty(t, item.ID)
 
 	// 4. Upload Photo
-	photoReq := menuCmd.UploadPhotoRequest{
+	photoReq := menuCmd.UploadMenuItemPhoto{
 		RestaurantID: rest.ID,
 		ItemID:       item.ID,
 		File:         bytes.NewBufferString("fake image data"),
@@ -74,7 +73,7 @@ func TestMenuSetupWorkflow(t *testing.T) {
 		ContentType:  "image/jpeg",
 	}
 
-	storedKey, err := uploadPhotoUC.Execute(context.Background(), photoReq)
+	storedKey, err := uploadPhotoUC.Handle(context.Background(), photoReq)
 	require.NoError(t, err)
 	assert.Contains(t, storedKey, "restaurants/")
 	assert.Contains(t, storedKey, string(item.ID))

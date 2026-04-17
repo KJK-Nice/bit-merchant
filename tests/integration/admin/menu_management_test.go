@@ -4,13 +4,13 @@ import (
 	"bitmerchant/internal/auth/domain/user"
 	"bitmerchant/internal/common"
 
+	httpMiddleware "bitmerchant/internal/common/http/middleware"
 	"bitmerchant/internal/infrastructure/qr"
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 	menuCmd "bitmerchant/internal/menu/app/command"
 	menuQuery "bitmerchant/internal/menu/app/query"
 	restaurantCmd "bitmerchant/internal/restaurant/app/command"
+	restauranthttp "bitmerchant/internal/restaurant/ports/http"
 
 	// Regression: admin menu HTML must list unavailable items and empty categories (not only public menu).
 	restaurantQuery "bitmerchant/internal/restaurant/app/query"
@@ -38,19 +38,19 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 	require.NoError(t, err)
 	require.NoError(t, repoRest.Save(rest))
 
-	createRestUC := restaurantCmd.NewCreateRestaurantUseCase(repoRest)
-	createCatUC := menuCmd.NewCreateMenuCategoryUseCase(repoCat)
-	createItemUC := menuCmd.NewCreateMenuItemUseCase(repoItem)
-	getMenuAdminUC := menuQuery.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{})
-	updateItemUC := menuCmd.NewUpdateMenuItemUseCase(repoItem, repoCat)
-	updateCategoryUC := menuCmd.NewUpdateMenuCategoryUseCase(repoCat)
-	toggleAvailUC := menuCmd.NewToggleMenuItemAvailabilityUseCase(repoItem)
-	reorderCatUC := menuCmd.NewReorderMenuCategoriesUseCase(repoCat)
-	reorderItemUC := menuCmd.NewReorderMenuItemsUseCase(repoItem, repoCat)
-	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountUseCase(repoRest)
-	generateQRUC := restaurantQuery.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
+	createRestUC := restaurantCmd.NewCreateRestaurantHandler(repoRest, nil, nil)
+	createCatUC := menuCmd.NewCreateMenuCategoryHandler(repoCat, nil, nil)
+	createItemUC := menuCmd.NewCreateMenuItemHandler(repoItem, nil, nil)
+	getMenuAdminUC := menuQuery.NewMenuForAdminHandler(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
+	updateItemUC := menuCmd.NewUpdateMenuItemHandler(repoItem, repoCat, nil, nil)
+	updateCategoryUC := menuCmd.NewUpdateMenuCategoryHandler(repoCat, nil, nil)
+	toggleAvailUC := menuCmd.NewToggleMenuItemAvailabilityHandler(repoItem, nil, nil)
+	reorderCatUC := menuCmd.NewReorderMenuCategoriesHandler(repoCat, nil, nil)
+	reorderItemUC := menuCmd.NewReorderMenuItemsHandler(repoItem, repoCat, nil, nil)
+	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountHandler(repoRest, nil, nil)
+	generateQRUC := restaurantQuery.NewRestaurantTableQRImageHandler(qr.NewQRCodeService(), "http://localhost", repoRest, nil, nil)
 
-	adminHandler := handler.NewAdminHandler(
+	adminHandler := restauranthttp.NewAdminHandler(
 		createRestUC,
 		createCatUC,
 		createItemUC,
@@ -68,21 +68,21 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 		repoRest,
 	)
 
-	_, err = createCatUC.Execute(context.Background(), menuCmd.CreateMenuCategoryRequest{
+	_, err = createCatUC.Handle(context.Background(), menuCmd.CreateMenuCategory{
 		RestaurantID: restID,
 		Name:         "Soon",
 		DisplayOrder: 0,
 	})
 	require.NoError(t, err)
 
-	cat2, err := createCatUC.Execute(context.Background(), menuCmd.CreateMenuCategoryRequest{
+	cat2, err := createCatUC.Handle(context.Background(), menuCmd.CreateMenuCategory{
 		RestaurantID: restID,
 		Name:         "Today",
 		DisplayOrder: 1,
 	})
 	require.NoError(t, err)
 
-	_, err = createItemUC.Execute(context.Background(), menuCmd.CreateMenuItemRequest{
+	_, err = createItemUC.Handle(context.Background(), menuCmd.CreateMenuItem{
 		RestaurantID: restID,
 		CategoryID:   cat2.ID,
 		Name:         "Special",

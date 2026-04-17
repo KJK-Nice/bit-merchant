@@ -2,20 +2,22 @@ package kitchen_test
 
 import (
 	"bitmerchant/internal/common"
+	commonhttp "bitmerchant/internal/common/http"
 
+	"bitmerchant/internal/common/http/middleware"
 	"bitmerchant/internal/infrastructure/events"
 	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/infrastructure/payment/cash"
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	interfaceEvents "bitmerchant/internal/interfaces/events"
-	eventHandlers "bitmerchant/internal/interfaces/events/handlers"
-	handler "bitmerchant/internal/interfaces/http"
-	"bitmerchant/internal/interfaces/http/middleware"
 	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/menu/domain/menu"
+	menuhttp "bitmerchant/internal/menu/ports/http"
 	"bitmerchant/internal/ordering/app/cart"
 	orderCmd "bitmerchant/internal/ordering/app/command"
+	orderevent "bitmerchant/internal/ordering/app/event"
 	orderQuery "bitmerchant/internal/ordering/app/query"
+	orderinghttp "bitmerchant/internal/ordering/ports/http"
+	ordersse "bitmerchant/internal/ordering/ports/sse"
 	placesCmd "bitmerchant/internal/places/app/command"
 	"bitmerchant/internal/restaurant/domain/restaurant"
 	"context"
@@ -46,7 +48,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Services
 	cartService := cart.NewCartService()
 	paymentMethod := cash.NewCashPaymentMethod()
-	sseHandler := handler.NewSSEHandler()
+	sseHandler := commonhttp.NewSSEHandler()
 
 	// Seed Data
 	restaurantID := common.RestaurantID("restaurant_1")
@@ -62,46 +64,46 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Use Cases
 	_ = paymentRepo
 	_ = paymentMethod
-	createOrderUC := orderCmd.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
-	getCustomerOrderUC := orderQuery.NewGetCustomerOrderByNumberUseCase(orderRepo)
-	getCustomerOrdersUC := orderQuery.NewGetCustomerOrdersUseCase(orderRepo)
-	getKitchenOrdersUC := orderQuery.NewGetKitchenOrdersUseCase(orderRepo)
-	markPaidUC := orderCmd.NewMarkOrderPaidUseCase(orderRepo, eventBus)
-	markPreparingUC := orderCmd.NewMarkOrderPreparingUseCase(orderRepo, eventBus)
-	markReadyUC := orderCmd.NewMarkOrderReadyUseCase(orderRepo, eventBus)
-	getMenuUC := menuQuery.NewGetMenuUseCase(menuCatRepo, menuItemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
+	createOrderUC := orderCmd.NewCreateOrderHandler(orderRepo, restRepo, eventBus, logger.Logger, nil)
+	getCustomerOrderUC := orderQuery.NewCustomerOrderByLookupHandler(orderRepo, nil, nil)
+	getCustomerOrdersUC := orderQuery.NewCustomerOrdersForSessionHandler(orderRepo, nil, nil)
+	getKitchenOrdersUC := orderQuery.NewActiveKitchenOrdersHandler(orderRepo, nil, nil)
+	markPaidUC := orderCmd.NewMarkOrderPaidHandler(orderRepo, eventBus, logger.Logger, nil)
+	markPreparingUC := orderCmd.NewMarkOrderPreparingHandler(orderRepo, eventBus, logger.Logger, nil)
+	markReadyUC := orderCmd.NewMarkOrderReadyHandler(orderRepo, eventBus, logger.Logger, nil)
+	getMenuUC := menuQuery.NewMenuForCustomerHandler(menuCatRepo, menuItemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
 
 	// Handlers
-	kitchenHandler := handler.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
-	orderHandler := handler.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
+	kitchenHandler := orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
+	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
-	recordVisitUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
-	_ = handler.NewMenuHandler(getMenuUC, cartService, recordVisitUC)
+	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
+	_ = menuhttp.NewMenuHandler(getMenuUC, cartService, recordVisitUC)
 
 	// Event Handlers
-	orderCreatedHandler := eventHandlers.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
-	orderPaidHandler := eventHandlers.NewOrderPaidHandler(logger, sseHandler, orderRepo)
-	orderPreparingHandler := eventHandlers.NewOrderPreparingHandler(logger, sseHandler, orderRepo)
-	orderReadyHandler := eventHandlers.NewOrderReadyHandler(logger, sseHandler, orderRepo)
+	orderCreatedHandler := ordersse.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
+	orderPaidHandler := ordersse.NewOrderPaidHandler(logger, sseHandler, orderRepo)
+	orderPreparingHandler := ordersse.NewOrderPreparingHandler(logger, sseHandler, orderRepo)
+	orderReadyHandler := ordersse.NewOrderReadyHandler(logger, sseHandler, orderRepo)
 
 	// Subscriptions
 	subscribe(t, eventBus, common.EventOrderCreated, func(msg []byte) {
-		var event interfaceEvents.OrderCreated
+		var event orderevent.OrderCreated
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderCreatedHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, common.EventOrderPaid, func(msg []byte) {
-		var event interfaceEvents.OrderPaid
+		var event orderevent.OrderPaid
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderPaidHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, common.EventOrderPreparing, func(msg []byte) {
-		var event interfaceEvents.OrderPreparing
+		var event orderevent.OrderPreparing
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderPreparingHandler.Handle(context.Background(), event))
 	})
 	subscribe(t, eventBus, common.EventOrderReady, func(msg []byte) {
-		var event interfaceEvents.OrderReady
+		var event orderevent.OrderReady
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderReadyHandler.Handle(context.Background(), event))
 	})
@@ -147,7 +149,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Note: Kitchen handler uses hardcoded "rest-1" in GetKitchen method in previous implementation?
 	// Let's check the implementation of GetKitchen.
 	// I updated main.go to use "restaurant-1" but did I update kitchen handler logic?
-	// The handler implementation in internal/interfaces/http/kitchen.go had: restaurantID := common.RestaurantID("rest-1")
+	// The handler implementation in internal/ordering/ports/http/kitchen.go had: restaurantID := common.RestaurantID("rest-1")
 	// This mismatch ("rest-1" vs "restaurant-1" in seed/tests) is likely the cause of empty list!
 
 	req = httptest.NewRequest(http.MethodGet, "/kitchen", nil)

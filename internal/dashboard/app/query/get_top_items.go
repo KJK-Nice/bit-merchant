@@ -5,7 +5,8 @@ import (
 	"sort"
 
 	"bitmerchant/internal/common"
-	"bitmerchant/internal/ordering/domain/order"
+	"bitmerchant/internal/common/decorator"
+	"log/slog"
 )
 
 type TopItem struct {
@@ -14,16 +15,28 @@ type TopItem struct {
 	Revenue  float64
 }
 
-type GetTopSellingItemsUseCase struct {
-	orderRepo order.Repository
+// TopSellingMenuItems returns up to five best-selling items for a restaurant.
+type TopSellingMenuItems struct {
+	RestaurantID common.RestaurantID
 }
 
-func NewGetTopSellingItemsUseCase(orderRepo order.Repository) *GetTopSellingItemsUseCase {
-	return &GetTopSellingItemsUseCase{orderRepo: orderRepo}
+type TopSellingMenuItemsHandler decorator.QueryHandler[TopSellingMenuItems, []TopItem]
+
+type topSellingMenuItemsHandler struct {
+	orders OrderReadModel
 }
 
-func (uc *GetTopSellingItemsUseCase) Execute(ctx context.Context, restaurantID common.RestaurantID) ([]TopItem, error) {
-	orders, err := uc.orderRepo.FindByRestaurantID(restaurantID)
+func NewTopSellingMenuItemsHandler(orders OrderReadModel, log *slog.Logger, metrics decorator.MetricsClient) TopSellingMenuItemsHandler {
+	if orders == nil {
+		panic("nil OrderReadModel")
+	}
+	h := topSellingMenuItemsHandler{orders: orders}
+	return decorator.ApplyQueryDecorators[TopSellingMenuItems, []TopItem](h, log, metrics)
+}
+
+func (h topSellingMenuItemsHandler) Handle(ctx context.Context, q TopSellingMenuItems) ([]TopItem, error) {
+	_ = ctx
+	orders, err := h.orders.FindByRestaurantID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}

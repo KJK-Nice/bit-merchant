@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func TestMarkOrderPaidUseCase_Execute(t *testing.T) {
+func TestMarkOrderPaidHandler_Handle(t *testing.T) {
 	t.Run("successfully marks order as paid", func(t *testing.T) {
 		orderID := common.OrderID("order-123")
 		existingOrder := createTestOrder("order-123", common.FulfillmentStatusPaid, common.PaymentStatusPending)
@@ -40,8 +40,8 @@ func TestMarkOrderPaidUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenCmd.NewMarkOrderPaidUseCase(mockOrderRepo, mockEventBus)
-		_, err := uc.Execute(context.Background(), orderID)
+		uc := kitchenCmd.NewMarkOrderPaidHandler(mockOrderRepo, mockEventBus, nil, nil)
+		_, err := uc.Handle(context.Background(), kitchenCmd.MarkOrderPaid{OrderID: orderID})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, savedOrder)
@@ -57,8 +57,8 @@ func TestMarkOrderPaidUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenCmd.NewMarkOrderPaidUseCase(mockOrderRepo, &mockEventBus{})
-		_, err := uc.Execute(context.Background(), common.OrderID("non-existent"))
+		uc := kitchenCmd.NewMarkOrderPaidHandler(mockOrderRepo, &mockEventBus{}, nil, nil)
+		_, err := uc.Handle(context.Background(), kitchenCmd.MarkOrderPaid{OrderID: common.OrderID("non-existent")})
 
 		assert.Error(t, err)
 		assert.Equal(t, "order not found", err.Error())
@@ -77,8 +77,8 @@ func TestMarkOrderPaidUseCase_Execute(t *testing.T) {
 			},
 		}
 
-		uc := kitchenCmd.NewMarkOrderPaidUseCase(mockOrderRepo, &mockEventBus{})
-		_, err := uc.Execute(context.Background(), orderID)
+		uc := kitchenCmd.NewMarkOrderPaidHandler(mockOrderRepo, &mockEventBus{}, nil, nil)
+		_, err := uc.Handle(context.Background(), kitchenCmd.MarkOrderPaid{OrderID: orderID})
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "db error")

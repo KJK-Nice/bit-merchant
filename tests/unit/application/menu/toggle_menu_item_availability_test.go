@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func TestToggleMenuItemAvailabilityUseCase(t *testing.T) {
+func TestToggleMenuItemAvailabilityHandler(t *testing.T) {
 	ctx := context.Background()
 	repoCat := memory.NewMemoryMenuCategoryRepository()
 	repoItem := memory.NewMemoryMenuItemRepository()
@@ -26,13 +26,13 @@ func TestToggleMenuItemAvailabilityUseCase(t *testing.T) {
 	require.NoError(t, repoItem.Save(item))
 	assert.True(t, item.IsAvailable)
 
-	uc := menuCmd.NewToggleMenuItemAvailabilityUseCase(repoItem)
-	require.NoError(t, uc.Execute(ctx, rid, item.ID))
+	uc := menuCmd.NewToggleMenuItemAvailabilityHandler(repoItem, nil, nil)
+	require.NoError(t, uc.Handle(ctx, menuCmd.ToggleMenuItemAvailability{RestaurantID: rid, ItemID: item.ID}))
 	after, err := repoItem.FindByID(item.ID)
 	require.NoError(t, err)
 	assert.False(t, after.IsAvailable)
 
-	require.NoError(t, uc.Execute(ctx, rid, item.ID))
+	require.NoError(t, uc.Handle(ctx, menuCmd.ToggleMenuItemAvailability{RestaurantID: rid, ItemID: item.ID}))
 	after2, err := repoItem.FindByID(item.ID)
 	require.NoError(t, err)
 	assert.True(t, after2.IsAvailable)

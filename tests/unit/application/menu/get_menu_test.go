@@ -27,11 +27,11 @@ func (fakePhotoStorage) PresignGet(_ context.Context, key string) (string, error
 	return "https://signed.example/" + key, nil
 }
 
-func TestGetMenuUseCase(t *testing.T) {
+func TestMenuForCustomerHandler(t *testing.T) {
 	catRepo := memory.NewMemoryMenuCategoryRepository()
 	itemRepo := memory.NewMemoryMenuItemRepository()
 	restRepo := memory.NewMemoryRestaurantRepository()
-	uc := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
+	uc := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
 
 	restID := common.RestaurantID("r1")
 	restaurant, _ := restaurant.NewRestaurant(restID, "Test Restaurant")
@@ -48,8 +48,8 @@ func TestGetMenuUseCase(t *testing.T) {
 	require.NoError(t, itemRepo.Save(item1))
 	require.NoError(t, itemRepo.Save(item2))
 
-	t.Run("Execute", func(t *testing.T) {
-		result, err := uc.Execute(context.Background(), restID)
+	t.Run("Handle", func(t *testing.T) {
+		result, err := uc.Handle(context.Background(), menuQuery.MenuForCustomer{RestaurantID: restID})
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, "Test Restaurant", result.Restaurant.Name)
@@ -66,14 +66,14 @@ func TestGetMenuUseCase(t *testing.T) {
 	})
 
 	t.Run("presigned_photo_urls", func(t *testing.T) {
-		ucPhoto := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, fakePhotoStorage{}, menuQuery.PhotoSignerConfig{
+		ucPhoto := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, fakePhotoStorage{}, menuQuery.PhotoSignerConfig{
 			Bucket: "mybucket",
-		})
+		}, nil, nil)
 		itemPhoto, _ := menu.NewMenuItem("iphoto", "c1", restID, "With Pix", 10.0)
 		itemPhoto.SetPhotoURLs("restaurants/r1/items/x.jpg", "restaurants/r1/items/x.jpg")
 		require.NoError(t, itemRepo.Save(itemPhoto))
 
-		result, err := ucPhoto.Execute(context.Background(), restID)
+		result, err := ucPhoto.Handle(context.Background(), menuQuery.MenuForCustomer{RestaurantID: restID})
 		require.NoError(t, err)
 		var found bool
 		for _, c := range result.Categories {

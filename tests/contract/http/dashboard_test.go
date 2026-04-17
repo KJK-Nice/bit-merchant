@@ -4,9 +4,9 @@ import (
 	"bitmerchant/internal/common"
 	dashboard "bitmerchant/internal/dashboard/app/query"
 
+	httpMiddleware "bitmerchant/internal/common/http/middleware"
+	dashboardhttp "bitmerchant/internal/dashboard/ports/http"
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 	"bitmerchant/internal/ordering/domain/order"
 	restaurantCmd "bitmerchant/internal/restaurant/app/command"
 	"bitmerchant/internal/restaurant/domain/restaurant"
@@ -38,12 +38,12 @@ func TestDashboardHandler(t *testing.T) {
 	_ = orderRepo.Save(o1)
 
 	// Use Cases
-	getStatsUC := dashboard.NewGetDashboardStatsUseCase(orderRepo)
-	getHistoryUC := dashboard.NewGetOrderHistoryUseCase(orderRepo)
-	getTopItemsUC := dashboard.NewGetTopSellingItemsUseCase(orderRepo)
-	toggleOpenUC := restaurantCmd.NewToggleRestaurantOpenUseCase(restaurantRepo)
+	getStatsUC := dashboard.NewRestaurantDashboardStatsHandler(orderRepo, nil, nil)
+	getHistoryUC := dashboard.NewPaidOrdersForRestaurantHandler(orderRepo, nil, nil)
+	getTopItemsUC := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil)
+	toggleOpenUC := restaurantCmd.NewToggleRestaurantOpenHandler(restaurantRepo, nil, nil)
 
-	h := handler.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, restaurantRepo, nil, slog.Default())
+	h := dashboardhttp.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, restaurantRepo, nil, slog.Default())
 
 	e := echo.New()
 

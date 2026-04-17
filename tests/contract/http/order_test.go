@@ -7,11 +7,11 @@ import (
 	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/infrastructure/payment/cash"
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/ordering/app/cart"
 	orderCmd "bitmerchant/internal/ordering/app/command"
 	orderQuery "bitmerchant/internal/ordering/app/query"
 	"bitmerchant/internal/ordering/domain/order"
+	orderinghttp "bitmerchant/internal/ordering/ports/http"
 
 	// Setup Dependencies
 	"bitmerchant/internal/restaurant/domain/restaurant"
@@ -39,12 +39,12 @@ func TestOrderEndpoints(t *testing.T) {
 
 	_ = paymentRepo
 	_ = paymentMethod
-	createUC := orderCmd.NewCreateOrderUseCase(orderRepo, restRepo, eventBus, logger)
-	getCustomerOrderUC := orderQuery.NewGetCustomerOrderByNumberUseCase(orderRepo)
-	getCustomerOrdersUC := orderQuery.NewGetCustomerOrdersUseCase(orderRepo)
+	createUC := orderCmd.NewCreateOrderHandler(orderRepo, restRepo, eventBus, logger.Logger, nil)
+	getCustomerOrderUC := orderQuery.NewCustomerOrderByLookupHandler(orderRepo, nil, nil)
+	getCustomerOrdersUC := orderQuery.NewCustomerOrdersForSessionHandler(orderRepo, nil, nil)
 	cartService := cart.NewCartService()
 
-	h := handler.NewOrderHandler(createUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
+	h := orderinghttp.NewOrderHandler(createUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
 
 	e := echo.New()
 

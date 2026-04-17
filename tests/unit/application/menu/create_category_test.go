@@ -43,10 +43,10 @@ func (m *MockMenuCategoryRepository) Delete(id common.CategoryID) error {
 	return args.Error(0)
 }
 
-func TestCreateMenuCategoryUseCase_Execute(t *testing.T) {
+func TestCreateMenuCategoryHandler_Handle(t *testing.T) {
 	t.Run("successfully creates category", func(t *testing.T) {
 		repo := new(MockMenuCategoryRepository)
-		useCase := menuCmd.NewCreateMenuCategoryUseCase(repo)
+		useCase := menuCmd.NewCreateMenuCategoryHandler(repo, nil, nil)
 
 		restaurantID := common.RestaurantID("rest-1")
 
@@ -54,13 +54,13 @@ func TestCreateMenuCategoryUseCase_Execute(t *testing.T) {
 			return c.Name == "Starters" && c.RestaurantID == restaurantID && c.DisplayOrder == 1
 		})).Return(nil)
 
-		req := menuCmd.CreateMenuCategoryRequest{
+		req := menuCmd.CreateMenuCategory{
 			RestaurantID: restaurantID,
 			Name:         "Starters",
 			DisplayOrder: 1,
 		}
 
-		resp, err := useCase.Execute(context.Background(), req)
+		resp, err := useCase.Handle(context.Background(), req)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, resp)
@@ -71,15 +71,15 @@ func TestCreateMenuCategoryUseCase_Execute(t *testing.T) {
 
 	t.Run("fails with invalid name", func(t *testing.T) {
 		repo := new(MockMenuCategoryRepository)
-		useCase := menuCmd.NewCreateMenuCategoryUseCase(repo)
+		useCase := menuCmd.NewCreateMenuCategoryHandler(repo, nil, nil)
 
-		req := menuCmd.CreateMenuCategoryRequest{
+		req := menuCmd.CreateMenuCategory{
 			RestaurantID: "rest-1",
 			Name:         "",
 			DisplayOrder: 1,
 		}
 
-		resp, err := useCase.Execute(context.Background(), req)
+		resp, err := useCase.Handle(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Nil(t, resp)

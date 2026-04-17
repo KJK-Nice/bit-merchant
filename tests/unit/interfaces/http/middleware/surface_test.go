@@ -1,7 +1,7 @@
 package middleware_test
 
 import (
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	httpMiddleware "bitmerchant/internal/common/http/middleware"
 	"net/http"
 	"net/http/httptest"
 	"testing"

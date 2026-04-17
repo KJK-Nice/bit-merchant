@@ -23,9 +23,14 @@ DDD Lite here is **not** a mandate for ubiquitous language workshops, event sour
 | **Places** | `internal/places/` | Session-scoped “visited restaurant” tracking. |
 | **Dashboard** | `internal/dashboard/` | Read-side reporting (stats, history, top items); no separate domain package beyond queries. |
 
-**Delivery and cross-cutting** code stays in familiar places:
+**Delivery and cross-cutting** code:
 
-- `internal/interfaces/http/` — HTTP handlers and middleware.
+- `internal/wiring/` — Composition-root shared types: `Config`, `Repositories` (all stores), `InitPhotoStorage`, `ConnectDatabase`, and demo `SeedData`.
+- `internal/<context>/service/` — Wires that context’s application handlers and HTTP ports (`package service`). The root `internal/service` package composes these into `app.Application`.
+- `internal/<context>/ports/http/` — Echo HTTP handlers (route-specific) for that bounded context (`package http`, imported with an alias such as `authhttp`, `orderinghttp`).
+- `internal/common/http/middleware/` — Shared Echo middleware (session, authz, CSRF, rate limiting, surface routing, …).
+- `internal/common/http/` (`commonhttp`) — Shared request helpers (auth context keys, layout labels, SSE hub used by ordering projections).
+- `internal/common/server/` — Shared HTTP transport: `server.Component` + `Run` (Echo, global middleware, static files, graceful shutdown). `cmd/server` composes the app then runs this component.
 - `internal/interfaces/templates/` — Templ UI.
 - `internal/infrastructure/events/` — Watermill-based in-process event bus and handlers.
 - `internal/infrastructure/migrations/` — Goose SQL migrations.
@@ -45,7 +50,8 @@ internal/ordering/
 ```
 
 - **`domain/`** — Types that express business rules. Interfaces for persistence live next to the aggregate that needs them (e.g. `order.Repository`).
-- **`app/command` and `app/query`** — Orchestration: load data, call domain methods, persist, publish events. These types are the **application layer**; they coordinate but should not bury domain rules that belong on entities.
+- **`app/app.go`** — Optional `Application{Commands, Queries}` bundle for the context (used in `restaurant`, `places`, `dashboard`; other contexts are migrating).
+- **`app/command` and `app/query`** — Orchestration: load data, call domain methods, persist, publish events. Refactored handlers follow the Three Dots style: small **command/query structs**, `Handle(ctx, …)` methods, exported `XHandler` type aliases to `decorator.CommandHandler` / `QueryHandler` / `CommandResultHandler`, and `NewXHandler(...)` constructors that wrap with `Apply*Decorators` (see `internal/common/decorator/`).
 - **`adapters/`** — Infrastructure: SQL, external APIs, in-memory stores for tests and default dev mode.
 
 ## Shared kernel
@@ -61,7 +67,7 @@ Keep this package lean. If something is only relevant to one context, it belongs
 
 Use cases may depend on **another context’s domain ports** (interfaces), not on that context’s adapters. For example, creating an order loads a restaurant through `restaurant.Repository` and builds line items using menu-related data—dependencies are expressed as interfaces injected at construction time in `cmd/server`.
 
-The **composition root** (`cmd/server`) is allowed to import every adapter and wire concrete types. Domain and application packages should not reach “out” to HTTP, SQL drivers, or global singletons.
+The **composition root** is `internal/service` (`service.NewApplication`, `service.Application`); `cmd/server` loads config and runs the HTTP `common/server` component. Those packages may import adapters and wire concrete types. Domain and application packages should not reach “out” to HTTP, SQL drivers, or global singletons.
 
 ## Domain events
 
@@ -85,7 +91,7 @@ Import bounded-context packages directly from `bitmerchant/internal/<context>/..
 2. Put **rules and state transitions** on domain types in `domain/`.
 3. Add or extend **repository interfaces** in the same domain package; implement them in `adapters/` (Postgres and/or memory).
 4. Add **command or query** types under `app/command` or `app/query`.
-5. Wire dependencies in **`cmd/server`** (repositories, use cases, handlers).
+5. Wire dependencies in **`internal/service`** (and add route registration in `cmd/server` if needed).
 6. If persistence or SQL changes, add a **Goose migration** and consider extending **`tests/integration/postgres/`** so adapters stay aligned with the schema.
 
 ## Further reading

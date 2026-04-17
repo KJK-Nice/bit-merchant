@@ -372,7 +372,7 @@ func EntryPage(reason string, visited []placesQuery.VisitedPlace) templ.Componen
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = button.Button(button.Props{Href: "/owner/signup", Variant: button.VariantGhost, Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = button.Button(button.Props{Href: "/auth/signup", Variant: button.VariantGhost, Class: "w-full"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
