@@ -258,7 +258,7 @@ func AuthLogin(csrfToken string) templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Sign in with password")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "Log in with email")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
