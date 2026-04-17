@@ -13,34 +13,51 @@ templ OwnerSignup(csrfToken string) {
 			@card.Card() {
 				@card.Header() {
 					@card.Title() {
-						Create Restaurant Account
+						Create owner account
 					}
 					@card.Description() {
-						Enter your restaurant name to get started
+						Register with a passkey and create your restaurant.
 					}
 				}
 				@card.Content() {
-					<form method="POST" action="/owner/signup" class="space-y-5">
-						<input type="hidden" name="csrf" value={ csrfToken }/>
+					<form id="passkey-signup-form" class="space-y-5" data-csrf={ csrfToken }>
 						@primitives.Field(primitives.FieldProps{
-							ID:       "name",
-							Label:    "Restaurant Name",
+							ID:       "displayName",
+							Label:    "Your name",
 							Required: true,
 						}) {
 							@input.Input(input.Props{
-								ID: "name",
-								Name: "name",
-								Type: "text",
-								Placeholder: "Enter restaurant name",
-								Required: true,
+								ID:          "displayName",
+								Name:        "displayName",
+								Type:        "text",
+								Placeholder: "Jane Doe",
+								Required:    true,
+							})
+						}
+						@primitives.Field(primitives.FieldProps{
+							ID:       "restaurantName",
+							Label:    "Restaurant name",
+							Required: true,
+						}) {
+							@input.Input(input.Props{
+								ID:          "restaurantName",
+								Name:        "restaurantName",
+								Type:        "text",
+								Placeholder: "BitMerchant Cafe",
+								Required:    true,
 							})
 						}
 						@button.Button(button.Props{Type: "submit"}) {
-							Create Account
+							Create with passkey
 						}
 					</form>
+					<p class="text-sm mt-4">
+						Already have an account?
+						<a class="underline" href="/auth/login">Sign in</a>
+					</p>
 				}
 			}
 		</div>
+		<script src="/static/js/passkey.js"></script>
 	}
 }
