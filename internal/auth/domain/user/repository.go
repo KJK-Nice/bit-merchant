@@ -11,5 +11,6 @@ type Repository interface {
 	Save(user *User) error
 	FindByID(id common.UserID) (*User, error)
 	FindByCredentialID(credentialID []byte) (*User, *webauthn.Credential, error)
+	FindByEmail(email string) (*User, error)
 	Update(user *User) error
 }

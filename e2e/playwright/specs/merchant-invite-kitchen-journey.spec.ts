@@ -74,6 +74,47 @@ test.describe("Merchant invite onboarding journey", () => {
     await kitchenContext.close();
   });
 
+  test("kitchen staff can accept invitation via email+password and lands on /kitchen", async ({ browser }) => {
+    const ownerContext = await browser.newContext();
+    const owner = await MerchantActor(ownerContext);
+
+    const suffix = `${Date.now()}-pw-invite`;
+    await owner.attemptsTo(RegisterOwnerWithPasskey(`Owner ${suffix}`, `PW Invite Cafe ${suffix}`));
+    await expect(owner.page).toHaveURL(/\/dashboard$/);
+
+    const csrf = await csrfTokenForMerchantHost(owner);
+    expect(csrf).not.toBe("");
+
+    const inviteURL = await createKitchenInviteURL(owner, csrf);
+    expect(inviteURL).toMatch(/^\/auth\/invite\/.+/);
+
+    const kitchenContext = await browser.newContext();
+    const kitchenUser = await MerchantActor(kitchenContext);
+
+    await kitchenUser.attemptsTo(OpenRoute("merchant", inviteURL));
+    await expect(kitchenUser.page.getByRole("heading", { name: "Accept invitation" })).toBeVisible();
+
+    // "Your name" is in the passkey form; password_auth.js reads it via document fallback.
+    await kitchenUser.page.getByLabel("Your name").fill(`Kitchen ${suffix}`);
+    await kitchenUser.page.getByLabel("Email").fill(`kitchen-${suffix}@test.local`);
+    await kitchenUser.page.getByLabel("Password").fill("password123");
+
+    await Promise.all([
+      kitchenUser.page.waitForURL("**/kitchen"),
+      kitchenUser.page.getByRole("button", { name: "Accept with password" }).click(),
+    ]);
+    await expect(kitchenUser.page).toHaveURL(/\/kitchen$/);
+
+    // Confirm kitchen staff cannot access owner-only admin pages.
+    const ownerOnlyResponse = await kitchenUser.page.goto(urlFor("merchant", "/admin/dashboard"), {
+      waitUntil: "domcontentloaded",
+    });
+    expect(ownerOnlyResponse?.status()).toBe(403);
+
+    await ownerContext.close();
+    await kitchenContext.close();
+  });
+
   test("invite link is single-use after kitchen user accepts invitation", async ({ browser }) => {
     const ownerContext = await browser.newContext();
     const owner = await MerchantActor(ownerContext);

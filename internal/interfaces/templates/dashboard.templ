@@ -19,7 +19,7 @@ import (
 
 templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems []query.TopItem, rest *restaurant.Restaurant, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, statusError string) {
 	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
-		<div class="space-y-6 mt-4">
+		<div class="space-y-6 mt-4 max-w-5xl">
 			if statusError != "" {
 				@toast.Toast(toast.Props{
 					Title:       "Status update failed",
@@ -32,7 +32,7 @@ templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItem
 					ShowIndicator: true,
 				})
 			}
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 				@card.Card() {
 					@card.Header(card.HeaderProps{Class: "pb-2"}) {
 						@card.Title(card.TitleProps{Class: "text-sm font-medium text-muted-foreground"}) {
@@ -140,24 +140,26 @@ templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItem
 					}
 				}
 				@card.Content() {
-					@table.Table() {
-						@table.Header() {
-							@table.Row() {
-								@table.Head() { Item }
-								@table.Head() { Quantity }
-								@table.Head() { Revenue }
-							}
-						}
-						@table.Body() {
-							for _, item := range topItems {
+					<div class="overflow-x-auto">
+						@table.Table() {
+							@table.Header() {
 								@table.Row() {
-									@table.Cell() { { item.Name } }
-									@table.Cell() { { fmt.Sprintf("%d", item.Quantity) } }
-									@table.Cell() { { fmt.Sprintf("$%.2f", item.Revenue) } }
+									@table.Head() { Item }
+									@table.Head() { Quantity }
+									@table.Head() { Revenue }
+								}
+							}
+							@table.Body() {
+								for _, item := range topItems {
+									@table.Row() {
+										@table.Cell() { { item.Name } }
+										@table.Cell() { { fmt.Sprintf("%d", item.Quantity) } }
+										@table.Cell() { { fmt.Sprintf("$%.2f", item.Revenue) } }
+									}
 								}
 							}
 						}
-					}
+					</div>
 				}
 			}
 
@@ -168,26 +170,28 @@ templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItem
 					}
 				}
 				@card.Content() {
-					@table.Table() {
-						@table.Header() {
-							@table.Row() {
-								@table.Head() { Order # }
-								@table.Head() { Date }
-								@table.Head() { Total }
-								@table.Head() { Status }
-							}
-						}
-						@table.Body() {
-							for _, order := range history {
+					<div class="overflow-x-auto">
+						@table.Table() {
+							@table.Header() {
 								@table.Row() {
-									@table.Cell() { { string(order.OrderNumber) } }
-									@table.Cell() { { order.CreatedAt.Format("15:04:05") } }
-									@table.Cell() { { fmt.Sprintf("$%.2f", order.FiatAmount) } }
-									@table.Cell() { { string(order.PaymentStatus) } }
+									@table.Head() { Order # }
+									@table.Head() { Date }
+									@table.Head() { Total }
+									@table.Head() { Status }
+								}
+							}
+							@table.Body() {
+								for _, order := range history {
+									@table.Row() {
+										@table.Cell() { { string(order.OrderNumber) } }
+										@table.Cell() { { order.CreatedAt.Format("15:04:05") } }
+										@table.Cell() { { fmt.Sprintf("$%.2f", order.FiatAmount) } }
+										@table.Cell() { { string(order.PaymentStatus) } }
+									}
 								}
 							}
 						}
-					}
+					</div>
 				}
 			}
 		</div>

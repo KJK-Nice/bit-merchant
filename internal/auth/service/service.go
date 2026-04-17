@@ -28,7 +28,8 @@ func New(
 	if logger == nil {
 		logger = slog.Default()
 	}
-	app := authapp.NewApplication(repos.User, repos.Membership, repos.Invitation, repos.Session, repos.Restaurant, createRestaurant, logger, nil)
+	hasher := authInfra.NewBcryptPasswordHasher()
+	app := authapp.NewApplication(repos.User, repos.Membership, repos.Invitation, repos.Session, repos.Restaurant, createRestaurant, hasher, logger, nil)
 	return &Auth{
 		Application: app,
 		HTTP:        authhttp.NewAuthHandler(webauthnSvc, app, logger, sessionOpts),
