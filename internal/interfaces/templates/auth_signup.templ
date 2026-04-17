@@ -16,7 +16,7 @@ templ AuthSignup(csrfToken string) {
 						Create owner account
 					}
 					@card.Description() {
-						Register with a passkey and create your restaurant.
+						Register with a passkey or email and password.
 					}
 				}
 				@card.Content() {
@@ -27,11 +27,11 @@ templ AuthSignup(csrfToken string) {
 							Required: true,
 						}) {
 							@input.Input(input.Props{
-								ID: "displayName",
-								Name: "displayName",
-								Type: "text",
+								ID:          "displayName",
+								Name:        "displayName",
+								Type:        "text",
 								Placeholder: "Jane Doe",
-								Required: true,
+								Required:    true,
 							})
 						}
 						@primitives.Field(primitives.FieldProps{
@@ -40,15 +40,36 @@ templ AuthSignup(csrfToken string) {
 							Required: true,
 						}) {
 							@input.Input(input.Props{
-								ID: "restaurantName",
-								Name: "restaurantName",
-								Type: "text",
+								ID:          "restaurantName",
+								Name:        "restaurantName",
+								Type:        "text",
 								Placeholder: "BitMerchant Cafe",
-								Required: true,
+								Required:    true,
 							})
 						}
 						@button.Button(button.Props{Type: "submit"}) {
 							Create with passkey
+						}
+					</form>
+					<div class="relative my-5">
+						<div class="absolute inset-0 flex items-center"><span class="w-full border-t"></span></div>
+						<div class="relative flex justify-center text-xs uppercase"><span class="bg-background px-2 text-muted-foreground">or</span></div>
+					</div>
+					<form id="password-signup-form" class="space-y-5" data-csrf={ csrfToken }>
+						@primitives.Field(primitives.FieldProps{ID: "pw-displayName", Label: "Your name", Required: true}) {
+							@input.Input(input.Props{ID: "pw-displayName", Name: "displayName", Type: "text", Placeholder: "Jane Doe", Required: true})
+						}
+						@primitives.Field(primitives.FieldProps{ID: "pw-restaurantName", Label: "Restaurant name", Required: true}) {
+							@input.Input(input.Props{ID: "pw-restaurantName", Name: "restaurantName", Type: "text", Placeholder: "BitMerchant Cafe", Required: true})
+						}
+						@primitives.Field(primitives.FieldProps{ID: "pw-email", Label: "Email", Required: true}) {
+							@input.Input(input.Props{ID: "pw-email", Name: "email", Type: "email", Placeholder: "you@example.com", Required: true})
+						}
+						@primitives.Field(primitives.FieldProps{ID: "pw-password", Label: "Password", Required: true}) {
+							@input.Input(input.Props{ID: "pw-password", Name: "password", Type: "password", Placeholder: "••••••••", Required: true})
+						}
+						@button.Button(button.Props{Type: "submit"}) {
+							Create with password
 						}
 					</form>
 					<p class="text-sm mt-4">
@@ -59,5 +80,6 @@ templ AuthSignup(csrfToken string) {
 			}
 		</div>
 		<script src="/static/js/passkey.js"></script>
+		<script src="/static/js/password_auth.js"></script>
 	}
 }

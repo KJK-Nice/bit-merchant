@@ -3,6 +3,8 @@ package templates
 import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 )
 
 templ AuthLogin(csrfToken string) {
@@ -11,16 +13,31 @@ templ AuthLogin(csrfToken string) {
 			@card.Card() {
 				@card.Header() {
 					@card.Title() {
-						Sign in with passkey
+						Sign in
 					}
 					@card.Description() {
-						Use your saved passkey to access dashboard and kitchen tools.
+						Use your passkey or email and password.
 					}
 				}
 				@card.Content() {
 					<form id="passkey-login-form" class="space-y-4" data-csrf={ csrfToken }>
 						@button.Button(button.Props{Type: "submit"}) {
-							Sign in
+							Sign in with passkey
+						}
+					</form>
+					<div class="relative my-5">
+						<div class="absolute inset-0 flex items-center"><span class="w-full border-t"></span></div>
+						<div class="relative flex justify-center text-xs uppercase"><span class="bg-background px-2 text-muted-foreground">or</span></div>
+					</div>
+					<form id="password-login-form" class="space-y-4" data-csrf={ csrfToken }>
+						@primitives.Field(primitives.FieldProps{ID: "login-email", Label: "Email", Required: true}) {
+							@input.Input(input.Props{ID: "login-email", Name: "email", Type: "email", Placeholder: "you@example.com", Required: true})
+						}
+						@primitives.Field(primitives.FieldProps{ID: "login-password", Label: "Password", Required: true}) {
+							@input.Input(input.Props{ID: "login-password", Name: "password", Type: "password", Placeholder: "••••••••", Required: true})
+						}
+						@button.Button(button.Props{Type: "submit"}) {
+							Sign in with password
 						}
 					</form>
 					<p class="text-sm mt-4">
@@ -31,5 +48,6 @@ templ AuthLogin(csrfToken string) {
 			}
 		</div>
 		<script src="/static/js/passkey.js"></script>
+		<script src="/static/js/password_auth.js"></script>
 	}
 }

@@ -3,6 +3,7 @@ package adapters
 import (
 	"bytes"
 	"errors"
+	"strings"
 	"sync"
 
 	"bitmerchant/internal/auth/domain/user"
@@ -58,4 +59,16 @@ func (r *MemoryUserRepository) Update(u *user.User) error {
 	}
 	r.users[u.ID] = u
 	return nil
+}
+
+func (r *MemoryUserRepository) FindByEmail(email string) (*user.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	lower := strings.ToLower(email)
+	for _, u := range r.users {
+		if strings.ToLower(u.Email) == lower {
+			return u, nil
+		}
+	}
+	return nil, errors.New("user not found")
 }

@@ -489,6 +489,111 @@ func (h *AuthHandler) CreateInvitation(c echo.Context) error {
 	})
 }
 
+type passwordLoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type passwordRegisterRequest struct {
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	DisplayName     string `json:"displayName"`
+	RestaurantName  string `json:"restaurantName"`
+	InvitationToken string `json:"invitationToken"`
+}
+
+func (h *AuthHandler) PostRegisterPassword(c echo.Context) error {
+	var req passwordRegisterRequest
+	if err := c.Bind(&req); err != nil {
+		return c.String(http.StatusBadRequest, "invalid payload")
+	}
+
+	outcome, err := h.app.Commands.RegisterWithPassword.Handle(c.Request().Context(), authcommand.RegisterWithPassword{
+		Email:           req.Email,
+		Password:        req.Password,
+		DisplayName:     req.DisplayName,
+		RestaurantName:  req.RestaurantName,
+		InvitationToken: req.InvitationToken,
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, authcommand.ErrEmailAlreadyTaken):
+			return c.String(http.StatusConflict, "email already registered")
+		case errors.Is(err, authcommand.ErrInvitationNotFound):
+			return c.String(http.StatusBadRequest, "invitation not found")
+		case errors.Is(err, authcommand.ErrInvitationNotUsable):
+			return c.String(http.StatusBadRequest, "invitation expired or already used")
+		default:
+			h.logger.Error("PostRegisterPassword failed", "error", err)
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	u, err := h.app.User.FindByEmail(req.Email)
+	if err != nil {
+		h.logger.Error("PostRegisterPassword user lookup after save failed", "error", err)
+		return c.String(http.StatusInternalServerError, "failed to load user")
+	}
+
+	redirect, err := h.issueAuthSession(c, u, outcome.RestaurantID)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "failed to create session")
+	}
+	if outcome.Redirect != "" {
+		redirect = outcome.Redirect
+	}
+	return c.JSON(http.StatusOK, map[string]string{"redirect": redirect})
+}
+
+func (h *AuthHandler) PostLoginPassword(c echo.Context) error {
+	var req passwordLoginRequest
+	if err := c.Bind(&req); err != nil {
+		return c.String(http.StatusBadRequest, "invalid payload")
+	}
+
+	result, err := h.app.Commands.LoginWithPassword.Handle(c.Request().Context(), authcommand.LoginWithPassword{
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "invalid email or password")
+	}
+
+	var restaurantID *common.RestaurantID
+	redirect := "/dashboard"
+	memberships, memErr := h.app.Queries.MembershipsForUser.Handle(c.Request().Context(), authquery.MembershipsForUser{UserID: result.User.ID})
+	if memErr == nil {
+		restaurantID, redirect = authquery.PostLoginRestaurantContext(memberships)
+	}
+
+	if _, err := h.issueAuthSession(c, result.User, restaurantID); err != nil {
+		return c.String(http.StatusInternalServerError, "failed to create session")
+	}
+	return c.JSON(http.StatusOK, map[string]string{"redirect": redirect})
+}
+
+// issueAuthSession creates a new auth session, sets the cookie, and returns the redirect path.
+func (h *AuthHandler) issueAuthSession(c echo.Context, u *user.User, restaurantID *common.RestaurantID) (string, error) {
+	oldSessionID, _ := c.Get("sessionID").(string)
+	authSession := &session.Session{
+		ID:           middleware.NewSessionID(),
+		UserID:       &u.ID,
+		RestaurantID: restaurantID,
+		CreatedAt:    time.Now(),
+		ExpiresAt:    time.Now().Add(h.sessionOpts.WithDefaults().TTL),
+	}
+	if err := h.app.Session.Save(authSession); err != nil {
+		h.logger.Error("issueAuthSession save failed", "error", err, "userID", u.ID)
+		return "", err
+	}
+	if oldSessionID != "" && oldSessionID != authSession.ID {
+		_ = h.app.Session.Delete(oldSessionID)
+	}
+	c.SetCookie(middleware.NewSessionCookie(authSession.ID, h.sessionOpts))
+	commonhttp.SetAuthenticatedContext(c, u, authSession)
+	return "/dashboard", nil
+}
+
 func (h *AuthHandler) getPending(sessionID string) (pendingRegistration, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()

@@ -78,8 +78,10 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	e.GET("/auth/invite/:token", handlers.Auth.GetInvite)
 	e.POST("/auth/register/begin", handlers.Auth.BeginRegistration)
 	e.POST("/auth/register/finish", handlers.Auth.FinishRegistration)
+	e.POST("/auth/register/password", handlers.Auth.PostRegisterPassword)
 	e.POST("/auth/login/begin", handlers.Auth.BeginLogin)
 	e.POST("/auth/login/finish", handlers.Auth.FinishLogin)
+	e.POST("/auth/login/password", handlers.Auth.PostLoginPassword)
 	e.POST("/auth/logout", handlers.Auth.Logout)
 
 	authSelectionGroup := e.Group("/auth")

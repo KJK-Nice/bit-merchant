@@ -34,12 +34,20 @@ type Commands struct {
 	SwitchActiveRestaurant      command.SwitchActiveRestaurantHandler
 	IssueKitchenStaffInvitation command.IssueKitchenStaffInvitationHandler
 	EndCustomerSession          command.EndCustomerSessionHandler
+	RegisterWithPassword        command.RegisterWithPasswordHandler
+	LoginWithPassword           command.LoginWithPasswordHandler
 }
 
 // Queries are read-side handlers.
 type Queries struct {
 	InvitationForToken query.InvitationForTokenHandler
 	MembershipsForUser query.MembershipsForUserHandler
+}
+
+// PasswordHasher abstracts bcrypt so the app layer stays free of crypto deps.
+type PasswordHasher interface {
+	command.PasswordHasher
+	command.PasswordVerifier
 }
 
 // NewApplication wires auth application handlers with optional logging/metrics decorators.
@@ -50,9 +58,12 @@ func NewApplication(
 	sessRepo session.Repository,
 	restRepo restaurantdomain.Repository,
 	createRestaurant restaurantCmd.CreateRestaurantHandler,
+	hasher PasswordHasher,
 	log *slog.Logger,
 	metrics decorator.MetricsClient,
 ) *Application {
+	acceptInv := command.NewAcceptInvitationForUserHandler(invRepo, memRepo, log, metrics)
+	completeSignup := command.NewCompleteSignupNewRestaurantHandler(memRepo, createRestaurant, log, metrics)
 	return &Application{
 		User:       userRepo,
 		Membership: memRepo,
@@ -60,12 +71,14 @@ func NewApplication(
 		Session:    sessRepo,
 		Restaurant: restRepo,
 		Commands: Commands{
-			AcceptInvitation:            command.NewAcceptInvitationForUserHandler(invRepo, memRepo, log, metrics),
-			CompleteSignupNewRestaurant: command.NewCompleteSignupNewRestaurantHandler(memRepo, createRestaurant, log, metrics),
+			AcceptInvitation:            acceptInv,
+			CompleteSignupNewRestaurant: completeSignup,
 			CreateRestaurantUnderOwner:  command.NewCreateRestaurantUnderOwnerHandler(memRepo, createRestaurant, log, metrics),
 			SwitchActiveRestaurant:      command.NewSwitchActiveRestaurantHandler(memRepo, sessRepo, log, metrics),
 			IssueKitchenStaffInvitation: command.NewIssueKitchenStaffInvitationHandler(memRepo, invRepo, log, metrics),
 			EndCustomerSession:          command.NewEndCustomerSessionHandler(sessRepo, log, metrics),
+			RegisterWithPassword:        command.NewRegisterWithPasswordHandler(userRepo, hasher, acceptInv, completeSignup, log, metrics),
+			LoginWithPassword:           command.NewLoginWithPasswordHandler(userRepo, hasher, log, metrics),
 		},
 		Queries: Queries{
 			InvitationForToken: query.NewInvitationForTokenHandler(invRepo, log, metrics),
