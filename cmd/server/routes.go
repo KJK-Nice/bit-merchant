@@ -2,25 +2,30 @@ package main
 
 import (
 	"bitmerchant/internal/auth/domain/membership"
+	authhttp "bitmerchant/internal/auth/ports/http"
 	"bitmerchant/internal/common"
-
-	handler "bitmerchant/internal/interfaces/http"
-	"bitmerchant/internal/interfaces/http/middleware"
+	commonhttp "bitmerchant/internal/common/http"
+	"bitmerchant/internal/common/http/middleware"
+	dashboardhttp "bitmerchant/internal/dashboard/ports/http"
+	menuhttp "bitmerchant/internal/menu/ports/http"
+	orderinghttp "bitmerchant/internal/ordering/ports/http"
+	placeshttp "bitmerchant/internal/places/ports/http"
+	restauranthttp "bitmerchant/internal/restaurant/ports/http"
 
 	"github.com/labstack/echo/v4"
 )
 
 type routeHandlers struct {
-	Menu      *handler.MenuHandler
-	Cart      *handler.CartHandler
-	Order     *handler.OrderHandler
-	Places    *handler.PlacesHandler
-	Kitchen   *handler.KitchenHandler
-	Admin     *handler.AdminHandler
-	Owner     *handler.OwnerHandler
-	Dashboard *handler.DashboardHandler
-	Auth      *handler.AuthHandler
-	SSE       *handler.SSEHandler
+	Menu      *menuhttp.MenuHandler
+	Cart      *orderinghttp.CartHandler
+	Order     *orderinghttp.OrderHandler
+	Places    *placeshttp.PlacesHandler
+	Kitchen   *orderinghttp.KitchenHandler
+	Admin     *restauranthttp.AdminHandler
+	Owner     *restauranthttp.OwnerHandler
+	Dashboard *dashboardhttp.DashboardHandler
+	Auth      *authhttp.AuthHandler
+	SSE       *commonhttp.SSEHandler
 }
 
 func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo membership.Repository) {

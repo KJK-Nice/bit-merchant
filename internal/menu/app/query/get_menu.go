@@ -5,17 +5,27 @@ import (
 	"sort"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/menu/domain/menu"
 	"bitmerchant/internal/restaurant/domain/restaurant"
+	"log/slog"
 )
 
+// PhotoSignerConfig configures how stored photo references are turned into presigned URLs.
 type PhotoSignerConfig struct {
 	Bucket        string
 	Endpoint      string
 	PublicBaseURL string
 }
 
-type GetMenuUseCase struct {
+// MenuForCustomer loads the customer-facing menu (active categories with available items).
+type MenuForCustomer struct {
+	RestaurantID common.RestaurantID
+}
+
+type MenuForCustomerHandler decorator.QueryHandler[MenuForCustomer, *MenuResponse]
+
+type menuForCustomerHandler struct {
 	catRepo        menu.CategoryRepository
 	itemRepo       menu.ItemRepository
 	restRepo       restaurant.Repository
@@ -23,14 +33,15 @@ type GetMenuUseCase struct {
 	photoSignerCfg PhotoSignerConfig
 }
 
-func NewGetMenuUseCase(catRepo menu.CategoryRepository, itemRepo menu.ItemRepository, restRepo restaurant.Repository, photos menu.PhotoStorage, photoSignerCfg PhotoSignerConfig) *GetMenuUseCase {
-	return &GetMenuUseCase{
+func NewMenuForCustomerHandler(catRepo menu.CategoryRepository, itemRepo menu.ItemRepository, restRepo restaurant.Repository, photos menu.PhotoStorage, photoSignerCfg PhotoSignerConfig, log *slog.Logger, metrics decorator.MetricsClient) MenuForCustomerHandler {
+	h := menuForCustomerHandler{
 		catRepo:        catRepo,
 		itemRepo:       itemRepo,
 		restRepo:       restRepo,
 		photos:         photos,
 		photoSignerCfg: photoSignerCfg,
 	}
+	return decorator.ApplyQueryDecorators[MenuForCustomer, *MenuResponse](h, log, metrics)
 }
 
 type MenuResponse struct {
@@ -43,13 +54,13 @@ type CategoryWithItems struct {
 	Items    []*menu.MenuItem
 }
 
-func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID common.RestaurantID) (*MenuResponse, error) {
-	rest, err := uc.restRepo.FindByID(restaurantID)
+func (h menuForCustomerHandler) Handle(ctx context.Context, q MenuForCustomer) (*MenuResponse, error) {
+	rest, err := h.restRepo.FindByID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}
 
-	categories, err := uc.catRepo.FindByRestaurantID(restaurantID)
+	categories, err := h.catRepo.FindByRestaurantID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +69,7 @@ func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID common.Resta
 		return categories[i].DisplayOrder < categories[j].DisplayOrder
 	})
 
-	items, err := uc.itemRepo.FindAvailableByRestaurantID(restaurantID)
+	items, err := h.itemRepo.FindAvailableByRestaurantID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +99,7 @@ func (uc *GetMenuUseCase) Execute(ctx context.Context, restaurantID common.Resta
 			return catItems[i].Name < catItems[j].Name
 		})
 
-		displayItems, err := ItemsWithPresignedPhotos(ctx, catItems, uc.photos, uc.photoSignerCfg)
+		displayItems, err := ItemsWithPresignedPhotos(ctx, catItems, h.photos, h.photoSignerCfg)
 		if err != nil {
 			return nil, err
 		}

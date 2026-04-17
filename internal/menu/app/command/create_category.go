@@ -6,32 +6,42 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/menu/domain/menu"
+	"log/slog"
 )
 
-type CreateMenuCategoryRequest struct {
+// CreateMenuCategory creates a new menu category.
+type CreateMenuCategory struct {
 	RestaurantID common.RestaurantID
 	Name         string
 	DisplayOrder int
 }
 
-type CreateMenuCategoryUseCase struct {
+type CreateMenuCategoryHandler decorator.CommandResultHandler[CreateMenuCategory, *menu.MenuCategory]
+
+type createMenuCategoryHandler struct {
 	repo menu.CategoryRepository
 }
 
-func NewCreateMenuCategoryUseCase(repo menu.CategoryRepository) *CreateMenuCategoryUseCase {
-	return &CreateMenuCategoryUseCase{repo: repo}
+func NewCreateMenuCategoryHandler(repo menu.CategoryRepository, log *slog.Logger, metrics decorator.MetricsClient) CreateMenuCategoryHandler {
+	if repo == nil {
+		panic("nil menu.CategoryRepository")
+	}
+	h := createMenuCategoryHandler{repo: repo}
+	return decorator.ApplyCommandResultDecorators[CreateMenuCategory, *menu.MenuCategory](h, log, metrics)
 }
 
-func (uc *CreateMenuCategoryUseCase) Execute(ctx context.Context, req CreateMenuCategoryRequest) (*menu.MenuCategory, error) {
+func (h createMenuCategoryHandler) Handle(ctx context.Context, cmd CreateMenuCategory) (*menu.MenuCategory, error) {
+	_ = ctx
 	id := common.CategoryID(fmt.Sprintf("cat_%d", time.Now().UnixNano()))
 
-	category, err := menu.NewMenuCategory(id, req.RestaurantID, req.Name, req.DisplayOrder)
+	category, err := menu.NewMenuCategory(id, cmd.RestaurantID, cmd.Name, cmd.DisplayOrder)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := uc.repo.Save(category); err != nil {
+	if err := h.repo.Save(category); err != nil {
 		return nil, err
 	}
 

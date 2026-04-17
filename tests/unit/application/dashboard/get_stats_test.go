@@ -13,9 +13,9 @@ import (
 	"time"
 )
 
-func TestGetDashboardStatsUseCase(t *testing.T) {
+func TestRestaurantDashboardStatsHandler(t *testing.T) {
 	orderRepo := memory.NewMemoryOrderRepository()
-	uc := dashboard.NewGetDashboardStatsUseCase(orderRepo)
+	h := dashboard.NewRestaurantDashboardStatsHandler(orderRepo, nil, nil)
 	restaurantID := common.RestaurantID("r1")
 	now := time.Now()
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
@@ -61,7 +61,10 @@ func TestGetDashboardStatsUseCase(t *testing.T) {
 	_ = orderRepo.Save(o5)
 
 	t.Run("Get Today's Stats", func(t *testing.T) {
-		stats, err := uc.Execute(context.Background(), restaurantID, dashboard.DateRangeToday)
+		stats, err := h.Handle(context.Background(), dashboard.RestaurantDashboardStats{
+			RestaurantID: restaurantID,
+			Range:        dashboard.DateRangeToday,
+		})
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, stats.OrderCount)
@@ -70,7 +73,10 @@ func TestGetDashboardStatsUseCase(t *testing.T) {
 	})
 
 	t.Run("Get Weekly Stats", func(t *testing.T) {
-		stats, err := uc.Execute(context.Background(), restaurantID, dashboard.DateRangeWeek)
+		stats, err := h.Handle(context.Background(), dashboard.RestaurantDashboardStats{
+			RestaurantID: restaurantID,
+			Range:        dashboard.DateRangeWeek,
+		})
 		assert.NoError(t, err)
 
 		assert.Equal(t, 2, stats.OrderCount)
@@ -79,7 +85,10 @@ func TestGetDashboardStatsUseCase(t *testing.T) {
 	})
 
 	t.Run("Get Monthly Stats", func(t *testing.T) {
-		stats, err := uc.Execute(context.Background(), restaurantID, dashboard.DateRangeMonth)
+		stats, err := h.Handle(context.Background(), dashboard.RestaurantDashboardStats{
+			RestaurantID: restaurantID,
+			Range:        dashboard.DateRangeMonth,
+		})
 		assert.NoError(t, err)
 
 		expectedCount := 2 // o1 + o2
@@ -95,7 +104,10 @@ func TestGetDashboardStatsUseCase(t *testing.T) {
 	})
 
 	t.Run("Invalid Range Defaults To Today", func(t *testing.T) {
-		stats, err := uc.Execute(context.Background(), restaurantID, dashboard.DateRange("invalid"))
+		stats, err := h.Handle(context.Background(), dashboard.RestaurantDashboardStats{
+			RestaurantID: restaurantID,
+			Range:        dashboard.DateRange("invalid"),
+		})
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, stats.OrderCount)

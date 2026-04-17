@@ -2,8 +2,8 @@ package main
 
 import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
 	placesQuery "bitmerchant/internal/places/app/query"
+	placeshttp "bitmerchant/internal/places/ports/http"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,12 +15,14 @@ import (
 
 func TestRootRouteRendersEntryPage(t *testing.T) {
 	e := echo.New()
-	listVisitedUC := placesQuery.NewListVisitedRestaurantsUseCase(
+	listVisitedUC := placesQuery.NewSessionVisitedPlacesHandler(
 		memory.NewMemorySessionRestaurantVisitRepository(),
 		memory.NewMemoryRestaurantRepository(),
 		memory.NewMemoryOrderRepository(),
+		nil,
+		nil,
 	)
-	placesHandler := handler.NewPlacesHandler(listVisitedUC)
+	placesHandler := placeshttp.NewPlacesHandler(listVisitedUC)
 	registerRoutes(e, routeHandlers{Places: placesHandler}, memory.NewMemoryMembershipRepository())
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)

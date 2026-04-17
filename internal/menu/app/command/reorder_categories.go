@@ -6,39 +6,54 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/menu/domain/menu"
+	"log/slog"
 )
 
-type ReorderMenuCategoriesUseCase struct {
+// ReorderMenuCategories persists a new display order for all categories of a restaurant.
+type ReorderMenuCategories struct {
+	RestaurantID       common.RestaurantID
+	OrderedCategoryIDs []common.CategoryID
+}
+
+type ReorderMenuCategoriesHandler decorator.CommandHandler[ReorderMenuCategories]
+
+type reorderMenuCategoriesHandler struct {
 	catRepo menu.CategoryRepository
 }
 
-func NewReorderMenuCategoriesUseCase(catRepo menu.CategoryRepository) *ReorderMenuCategoriesUseCase {
-	return &ReorderMenuCategoriesUseCase{catRepo: catRepo}
+func NewReorderMenuCategoriesHandler(catRepo menu.CategoryRepository, log *slog.Logger, metrics decorator.MetricsClient) ReorderMenuCategoriesHandler {
+	if catRepo == nil {
+		panic("nil menu.CategoryRepository")
+	}
+	h := reorderMenuCategoriesHandler{catRepo: catRepo}
+	return decorator.ApplyCommandDecorators[ReorderMenuCategories](h, log, metrics)
 }
 
-func (uc *ReorderMenuCategoriesUseCase) Execute(ctx context.Context, restaurantID common.RestaurantID, orderedCategoryIDs []common.CategoryID) error {
-	if len(orderedCategoryIDs) == 0 {
+func (h reorderMenuCategoriesHandler) Handle(ctx context.Context, cmd ReorderMenuCategories) error {
+	_ = ctx
+	if len(cmd.OrderedCategoryIDs) == 0 {
 		return nil
 	}
-	if err := validateUniqueCategoryOrder(orderedCategoryIDs); err != nil {
+	if err := validateUniqueCategoryOrder(cmd.OrderedCategoryIDs); err != nil {
 		return err
 	}
 
-	cats, err := uc.catRepo.FindByRestaurantID(restaurantID)
+	cats, err := h.catRepo.FindByRestaurantID(cmd.RestaurantID)
 	if err != nil {
 		return err
 	}
-	byID, err := validateAndMapCategories(cats, orderedCategoryIDs)
+	byID, err := validateAndMapCategories(cats, cmd.OrderedCategoryIDs)
 	if err != nil {
 		return err
 	}
 
-	for i, id := range orderedCategoryIDs {
+	for i, id := range cmd.OrderedCategoryIDs {
 		cat := byID[id]
 		cat.DisplayOrder = i
 		cat.UpdatedAt = time.Now()
-		if err := uc.catRepo.Update(cat); err != nil {
+		if err := h.catRepo.Update(cat); err != nil {
 			return err
 		}
 	}

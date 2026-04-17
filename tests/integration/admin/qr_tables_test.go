@@ -3,15 +3,15 @@ package admin_test
 import (
 	"bitmerchant/internal/common"
 
+	httpMiddleware "bitmerchant/internal/common/http/middleware"
 	"bitmerchant/internal/infrastructure/qr"
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 	menuCmd "bitmerchant/internal/menu/app/command"
 	menuQuery "bitmerchant/internal/menu/app/query"
 	restaurantCmd "bitmerchant/internal/restaurant/app/command"
 	restaurantQuery "bitmerchant/internal/restaurant/app/query"
 	"bitmerchant/internal/restaurant/domain/restaurant"
+	restauranthttp "bitmerchant/internal/restaurant/ports/http"
 	"context"
 
 	"github.com/labstack/echo/v4"
@@ -35,19 +35,19 @@ func TestAdminQR_TableCountAndPrint(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, repoRest.Save(rest))
 
-	createRestUC := restaurantCmd.NewCreateRestaurantUseCase(repoRest)
-	createCatUC := menuCmd.NewCreateMenuCategoryUseCase(repoCat)
-	createItemUC := menuCmd.NewCreateMenuItemUseCase(repoItem)
-	getMenuAdminUC := menuQuery.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{})
-	updateItemUC := menuCmd.NewUpdateMenuItemUseCase(repoItem, repoCat)
-	updateCategoryUC := menuCmd.NewUpdateMenuCategoryUseCase(repoCat)
-	toggleAvailUC := menuCmd.NewToggleMenuItemAvailabilityUseCase(repoItem)
-	reorderCatUC := menuCmd.NewReorderMenuCategoriesUseCase(repoCat)
-	reorderItemUC := menuCmd.NewReorderMenuItemsUseCase(repoItem, repoCat)
-	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountUseCase(repoRest)
-	generateQRUC := restaurantQuery.NewGenerateRestaurantQRUseCase(qr.NewQRCodeService(), "http://localhost", repoRest)
+	createRestUC := restaurantCmd.NewCreateRestaurantHandler(repoRest, nil, nil)
+	createCatUC := menuCmd.NewCreateMenuCategoryHandler(repoCat, nil, nil)
+	createItemUC := menuCmd.NewCreateMenuItemHandler(repoItem, nil, nil)
+	getMenuAdminUC := menuQuery.NewMenuForAdminHandler(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
+	updateItemUC := menuCmd.NewUpdateMenuItemHandler(repoItem, repoCat, nil, nil)
+	updateCategoryUC := menuCmd.NewUpdateMenuCategoryHandler(repoCat, nil, nil)
+	toggleAvailUC := menuCmd.NewToggleMenuItemAvailabilityHandler(repoItem, nil, nil)
+	reorderCatUC := menuCmd.NewReorderMenuCategoriesHandler(repoCat, nil, nil)
+	reorderItemUC := menuCmd.NewReorderMenuItemsHandler(repoItem, repoCat, nil, nil)
+	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountHandler(repoRest, nil, nil)
+	generateQRUC := restaurantQuery.NewRestaurantTableQRImageHandler(qr.NewQRCodeService(), "http://localhost", repoRest, nil, nil)
 
-	adminHandler := handler.NewAdminHandler(
+	adminHandler := restauranthttp.NewAdminHandler(
 		createRestUC, createCatUC, createItemUC, getMenuAdminUC,
 		updateItemUC, updateCategoryUC, toggleAvailUC, nil,
 		reorderCatUC, reorderItemUC,
@@ -55,7 +55,10 @@ func TestAdminQR_TableCountAndPrint(t *testing.T) {
 		updateTableUC, generateQRUC, membershipRepo, repoRest,
 	)
 
-	require.NoError(t, updateTableUC.Execute(context.Background(), restID, 2))
+	require.NoError(t, updateTableUC.Handle(context.Background(), restaurantCmd.UpdateRestaurantTableCount{
+		RestaurantID: restID,
+		TableCount:   2,
+	}))
 
 	t.Run("GET admin qr shows management copy", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/admin/qr", nil)

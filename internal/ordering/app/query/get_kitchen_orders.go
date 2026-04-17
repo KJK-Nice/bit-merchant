@@ -2,22 +2,33 @@ package query
 
 import (
 	"context"
+	"log/slog"
 	"sort"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/ordering/domain/order"
 )
 
-type GetKitchenOrdersUseCase struct {
+// ActiveKitchenOrders lists in-progress orders for a restaurant kitchen view.
+type ActiveKitchenOrders struct {
+	RestaurantID common.RestaurantID
+}
+
+type ActiveKitchenOrdersHandler decorator.QueryHandler[ActiveKitchenOrders, []*order.Order]
+
+type activeKitchenOrdersHandler struct {
 	repo order.Repository
 }
 
-func NewGetKitchenOrdersUseCase(repo order.Repository) *GetKitchenOrdersUseCase {
-	return &GetKitchenOrdersUseCase{repo: repo}
+func NewActiveKitchenOrdersHandler(repo order.Repository, log *slog.Logger, metrics decorator.MetricsClient) ActiveKitchenOrdersHandler {
+	h := activeKitchenOrdersHandler{repo: repo}
+	return decorator.ApplyQueryDecorators[ActiveKitchenOrders, []*order.Order](h, log, metrics)
 }
 
-func (uc *GetKitchenOrdersUseCase) Execute(ctx context.Context, restaurantID common.RestaurantID) ([]*order.Order, error) {
-	orders, err := uc.repo.FindActiveByRestaurantID(restaurantID)
+func (h activeKitchenOrdersHandler) Handle(ctx context.Context, q ActiveKitchenOrders) ([]*order.Order, error) {
+	_ = ctx
+	orders, err := h.repo.FindActiveByRestaurantID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}

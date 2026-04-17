@@ -63,10 +63,10 @@ func (m *MockMenuItemRepository) ReorderItemsInCategory(restaurantID common.Rest
 	return args.Error(0)
 }
 
-func TestCreateMenuItemUseCase_Execute(t *testing.T) {
+func TestCreateMenuItemHandler_Handle(t *testing.T) {
 	t.Run("successfully creates item", func(t *testing.T) {
 		repo := new(MockMenuItemRepository)
-		useCase := menuCmd.NewCreateMenuItemUseCase(repo)
+		useCase := menuCmd.NewCreateMenuItemHandler(repo, nil, nil)
 
 		restaurantID := common.RestaurantID("rest-1")
 		categoryID := common.CategoryID("cat-1")
@@ -76,7 +76,7 @@ func TestCreateMenuItemUseCase_Execute(t *testing.T) {
 			return i.Name == "Burger" && i.RestaurantID == restaurantID && i.CategoryID == categoryID && i.Price == 12.50 && i.DisplayOrder == 0
 		})).Return(nil)
 
-		req := menuCmd.CreateMenuItemRequest{
+		req := menuCmd.CreateMenuItem{
 			RestaurantID: restaurantID,
 			CategoryID:   categoryID,
 			Name:         "Burger",
@@ -85,7 +85,7 @@ func TestCreateMenuItemUseCase_Execute(t *testing.T) {
 			Available:    true,
 		}
 
-		resp, err := useCase.Execute(context.Background(), req)
+		resp, err := useCase.Handle(context.Background(), req)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, resp)
@@ -96,16 +96,16 @@ func TestCreateMenuItemUseCase_Execute(t *testing.T) {
 
 	t.Run("fails with invalid price", func(t *testing.T) {
 		repo := new(MockMenuItemRepository)
-		useCase := menuCmd.NewCreateMenuItemUseCase(repo)
+		useCase := menuCmd.NewCreateMenuItemHandler(repo, nil, nil)
 
-		req := menuCmd.CreateMenuItemRequest{
+		req := menuCmd.CreateMenuItem{
 			RestaurantID: "rest-1",
 			CategoryID:   "cat-1",
 			Name:         "Burger",
 			Price:        -10.0,
 		}
 
-		resp, err := useCase.Execute(context.Background(), req)
+		resp, err := useCase.Handle(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Nil(t, resp)

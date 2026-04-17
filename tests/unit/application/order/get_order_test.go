@@ -13,11 +13,11 @@ import (
 	"testing"
 )
 
-func TestGetOrderByNumberUseCase(t *testing.T) {
+func TestOrderByNumberForRestaurantHandler(t *testing.T) {
 	repo := memory.NewMemoryOrderRepository()
-	uc := orderQuery.NewGetOrderByNumberUseCase(repo)
+	uc := orderQuery.NewOrderByNumberForRestaurantHandler(repo, nil, nil)
 
-	t.Run("Execute Success", func(t *testing.T) {
+	t.Run("Handle Success", func(t *testing.T) {
 		// Setup order
 		item, _ := order.NewOrderItem("oi1", "o1", "mi1", "Burger", 1, 10.0)
 		existingOrder, _ := order.NewOrder(
@@ -31,14 +31,20 @@ func TestGetOrderByNumberUseCase(t *testing.T) {
 		)
 		require.NoError(t, repo.Save(existingOrder))
 
-		result, err := uc.Execute(context.Background(), "r1", "1234")
+		result, err := uc.Handle(context.Background(), orderQuery.OrderByNumberForRestaurant{
+			RestaurantID: common.RestaurantID("r1"),
+			OrderNumber:  "1234",
+		})
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, existingOrder.ID, result.ID)
 	})
 
-	t.Run("Execute Not Found", func(t *testing.T) {
-		_, err := uc.Execute(context.Background(), "r1", "9999")
+	t.Run("Handle Not Found", func(t *testing.T) {
+		_, err := uc.Handle(context.Background(), orderQuery.OrderByNumberForRestaurant{
+			RestaurantID: common.RestaurantID("r1"),
+			OrderNumber:  "9999",
+		})
 		assert.Error(t, err)
 	})
 }

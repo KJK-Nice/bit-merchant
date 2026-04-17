@@ -2,12 +2,13 @@ package customer_test
 
 import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
 	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/menu/domain/menu"
+	menuhttp "bitmerchant/internal/menu/ports/http"
 	"bitmerchant/internal/ordering/app/cart"
 	placesCmd "bitmerchant/internal/places/app/command"
 	placesQuery "bitmerchant/internal/places/app/query"
+	placeshttp "bitmerchant/internal/places/ports/http"
 	"bitmerchant/internal/restaurant/domain/restaurant"
 
 	"github.com/labstack/echo/v4"
@@ -30,12 +31,12 @@ func TestMenuThenMyPlacesListsRestaurant(t *testing.T) {
 	cat, _ := menu.NewMenuCategory("cat-v", "visit-test-r", "All", 0)
 	require.NoError(t, catRepo.Save(cat))
 
-	getMenuUC := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
+	getMenuUC := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
 	cartSvc := cart.NewCartService()
-	recordUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
-	menuH := handler.NewMenuHandler(getMenuUC, cartSvc, recordUC)
-	listUC := placesQuery.NewListVisitedRestaurantsUseCase(visitRepo, restRepo, orderRepo)
-	placesH := handler.NewPlacesHandler(listUC)
+	recordUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
+	menuH := menuhttp.NewMenuHandler(getMenuUC, cartSvc, recordUC)
+	listUC := placesQuery.NewSessionVisitedPlacesHandler(visitRepo, restRepo, orderRepo, nil, nil)
+	placesH := placeshttp.NewPlacesHandler(listUC)
 
 	e := echo.New()
 
@@ -62,8 +63,8 @@ func TestMyPlacesEmptyStateLinksToHome(t *testing.T) {
 	restRepo := memory.NewMemoryRestaurantRepository()
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	orderRepo := memory.NewMemoryOrderRepository()
-	listUC := placesQuery.NewListVisitedRestaurantsUseCase(visitRepo, restRepo, orderRepo)
-	placesH := handler.NewPlacesHandler(listUC)
+	listUC := placesQuery.NewSessionVisitedPlacesHandler(visitRepo, restRepo, orderRepo, nil, nil)
+	placesH := placeshttp.NewPlacesHandler(listUC)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/my-places", nil)

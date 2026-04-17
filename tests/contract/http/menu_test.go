@@ -2,9 +2,9 @@ package http_test
 
 import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
 	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/menu/domain/menu"
+	menuhttp "bitmerchant/internal/menu/ports/http"
 	"bitmerchant/internal/ordering/app/cart"
 	placesCmd "bitmerchant/internal/places/app/command"
 
@@ -33,9 +33,9 @@ func TestGetMenu(t *testing.T) {
 	require.NoError(t, catRepo.Save(cat))
 
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
-	recordVisitUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
-	uc := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
-	h := handler.NewMenuHandler(uc, cartService, recordVisitUC)
+	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
+	uc := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
+	h := menuhttp.NewMenuHandler(uc, cartService, recordVisitUC)
 
 	// Setup Echo
 	e := echo.New()
@@ -63,9 +63,9 @@ func TestGetMenu_MissingRestaurantIDRedirectsToEntry(t *testing.T) {
 	cartService := cart.NewCartService()
 
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
-	recordVisitUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
-	uc := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
-	h := handler.NewMenuHandler(uc, cartService, recordVisitUC)
+	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
+	uc := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
+	h := menuhttp.NewMenuHandler(uc, cartService, recordVisitUC)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/menu", nil)
@@ -87,9 +87,9 @@ func TestGetMenu_UnknownRestaurantIDRedirectsToEntry(t *testing.T) {
 	cartService := cart.NewCartService()
 
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
-	recordVisitUC := placesCmd.NewRecordMenuVisitUseCase(restRepo, visitRepo)
-	uc := menuQuery.NewGetMenuUseCase(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{})
-	h := handler.NewMenuHandler(uc, cartService, recordVisitUC)
+	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
+	uc := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
+	h := menuhttp.NewMenuHandler(uc, cartService, recordVisitUC)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/menu?restaurantID=unknown", nil)

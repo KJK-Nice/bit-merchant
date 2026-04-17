@@ -6,30 +6,40 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/restaurant/domain/restaurant"
+	"log/slog"
 )
 
-type CreateRestaurantRequest struct {
+// CreateRestaurant registers a new restaurant (command payload).
+type CreateRestaurant struct {
 	Name string
 }
 
-type CreateRestaurantUseCase struct {
+type CreateRestaurantHandler decorator.CommandResultHandler[CreateRestaurant, *restaurant.Restaurant]
+
+type createRestaurantHandler struct {
 	repo restaurant.Repository
 }
 
-func NewCreateRestaurantUseCase(repo restaurant.Repository) *CreateRestaurantUseCase {
-	return &CreateRestaurantUseCase{repo: repo}
+func NewCreateRestaurantHandler(repo restaurant.Repository, log *slog.Logger, metrics decorator.MetricsClient) CreateRestaurantHandler {
+	if repo == nil {
+		panic("nil restaurant.Repository")
+	}
+	h := createRestaurantHandler{repo: repo}
+	return decorator.ApplyCommandResultDecorators[CreateRestaurant, *restaurant.Restaurant](h, log, metrics)
 }
 
-func (uc *CreateRestaurantUseCase) Execute(ctx context.Context, req CreateRestaurantRequest) (*restaurant.Restaurant, error) {
+func (h createRestaurantHandler) Handle(ctx context.Context, cmd CreateRestaurant) (*restaurant.Restaurant, error) {
+	_ = ctx
 	id := common.RestaurantID(fmt.Sprintf("rest_%d", time.Now().UnixNano()))
 
-	r, err := restaurant.NewRestaurant(id, req.Name)
+	r, err := restaurant.NewRestaurant(id, cmd.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := uc.repo.Save(r); err != nil {
+	if err := h.repo.Save(r); err != nil {
 		return nil, err
 	}
 

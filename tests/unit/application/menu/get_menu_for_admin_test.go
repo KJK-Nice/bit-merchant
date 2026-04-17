@@ -25,7 +25,7 @@ func (adminFakePhotoStorage) PresignGet(_ context.Context, key string) (string, 
 	return "https://signed.example/" + key, nil
 }
 
-func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *testing.T) {
+func TestMenuForAdminHandler_IncludesUnavailableItemsAndEmptyCategories(t *testing.T) {
 	ctx := context.Background()
 	repoRest := memory.NewMemoryRestaurantRepository()
 	repoCat := memory.NewMemoryMenuCategoryRepository()
@@ -53,8 +53,8 @@ func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *te
 	unavail.SetAvailable(false)
 	require.NoError(t, repoItem.Save(unavail))
 
-	uc := menuQuery.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{})
-	resp, err := uc.Execute(ctx, rid)
+	uc := menuQuery.NewMenuForAdminHandler(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
+	resp, err := uc.Handle(ctx, menuQuery.MenuForAdmin{RestaurantID: rid})
 	require.NoError(t, err)
 	require.Len(t, resp.Categories, 2)
 
@@ -81,8 +81,8 @@ func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *te
 	assert.False(t, names["Soup"])
 
 	// Public menu omits unavailable and empty categories
-	pub := menuQuery.NewGetMenuUseCase(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{})
-	pubResp, err := pub.Execute(ctx, rid)
+	pub := menuQuery.NewMenuForCustomerHandler(repoCat, repoItem, repoRest, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
+	pubResp, err := pub.Handle(ctx, menuQuery.MenuForCustomer{RestaurantID: rid})
 	require.NoError(t, err)
 	require.Len(t, pubResp.Categories, 1)
 	assert.Equal(t, catWith.ID, pubResp.Categories[0].Category.ID)
@@ -90,7 +90,7 @@ func TestGetMenuForAdminUseCase_IncludesUnavailableItemsAndEmptyCategories(t *te
 	assert.Equal(t, "Burger", pubResp.Categories[0].Items[0].Name)
 }
 
-func TestGetMenuForAdminUseCase_PresignsPhotoURLs(t *testing.T) {
+func TestMenuForAdminHandler_PresignsPhotoURLs(t *testing.T) {
 	ctx := context.Background()
 	repoRest := memory.NewMemoryRestaurantRepository()
 	repoCat := memory.NewMemoryMenuCategoryRepository()
@@ -110,8 +110,8 @@ func TestGetMenuForAdminUseCase_PresignsPhotoURLs(t *testing.T) {
 	it.SetPhotoURLs("restaurants/r1/items/x.jpg", "restaurants/r1/items/x.jpg")
 	require.NoError(t, repoItem.Save(it))
 
-	uc := menuQuery.NewGetMenuForAdminUseCase(repoCat, repoItem, repoRest, adminFakePhotoStorage{}, menuQuery.PhotoSignerConfig{Bucket: "b"})
-	resp, err := uc.Execute(ctx, rid)
+	uc := menuQuery.NewMenuForAdminHandler(repoCat, repoItem, repoRest, adminFakePhotoStorage{}, menuQuery.PhotoSignerConfig{Bucket: "b"}, nil, nil)
+	resp, err := uc.Handle(ctx, menuQuery.MenuForAdmin{RestaurantID: rid})
 	require.NoError(t, err)
 	require.Len(t, resp.Categories, 1)
 	require.Len(t, resp.Categories[0].Items, 1)

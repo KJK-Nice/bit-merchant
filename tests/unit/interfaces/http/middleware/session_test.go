@@ -5,8 +5,8 @@ import (
 	"bitmerchant/internal/auth/domain/user"
 	"bitmerchant/internal/common"
 
+	httpMiddleware "bitmerchant/internal/common/http/middleware"
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"

@@ -1,30 +1,30 @@
 package places_test
 
 import (
-	"bitmerchant/internal/common"
+	"context"
+	"testing"
+	"time"
 
+	"bitmerchant/internal/common"
 	"bitmerchant/internal/infrastructure/repositories/memory"
 	placesCmd "bitmerchant/internal/places/app/command"
 	"bitmerchant/internal/restaurant/domain/restaurant"
-	"context"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
-func TestRecordMenuVisitUseCase(t *testing.T) {
+func TestRecordMenuVisitHandler(t *testing.T) {
 	rest := memory.NewMemoryRestaurantRepository()
 	visits := memory.NewMemorySessionRestaurantVisitRepository()
 	r, _ := restaurant.NewRestaurant("r1", "Cafe")
 	require.NoError(t, rest.Save(r))
 
-	uc := placesCmd.NewRecordMenuVisitUseCase(rest, visits)
+	h := placesCmd.NewRecordMenuVisitHandler(rest, visits, nil, nil)
 	ctx := context.Background()
 
-	require.NoError(t, uc.Execute(ctx, "sess-a", "r1"))
-	require.NoError(t, uc.Execute(ctx, "sess-a", "r1"))
+	require.NoError(t, h.Handle(ctx, placesCmd.RecordMenuVisit{SessionID: "sess-a", RestaurantID: "r1"}))
+	require.NoError(t, h.Handle(ctx, placesCmd.RecordMenuVisit{SessionID: "sess-a", RestaurantID: "r1"}))
 
 	got, err := visits.FindBySessionID(ctx, "sess-a")
 	require.NoError(t, err)

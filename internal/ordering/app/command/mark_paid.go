@@ -3,24 +3,37 @@ package command
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"bitmerchant/internal/common"
-	ifaceevents "bitmerchant/internal/interfaces/events"
+	"bitmerchant/internal/common/decorator"
+	"bitmerchant/internal/ordering/app/event"
 	"bitmerchant/internal/ordering/domain/order"
 )
 
-type MarkOrderPaidUseCase struct {
+// MarkOrderPaid records payment for an order and publishes OrderPaid.
+type MarkOrderPaid struct {
+	OrderID common.OrderID
+}
+
+type MarkOrderPaidHandler decorator.CommandResultHandler[MarkOrderPaid, *order.Order]
+
+type markOrderPaidHandler struct {
 	repo     order.Repository
 	eventBus common.EventBus
 }
 
-func NewMarkOrderPaidUseCase(repo order.Repository, eventBus common.EventBus) *MarkOrderPaidUseCase {
-	return &MarkOrderPaidUseCase{repo: repo, eventBus: eventBus}
+func NewMarkOrderPaidHandler(repo order.Repository, eventBus common.EventBus, log *slog.Logger, metrics decorator.MetricsClient) MarkOrderPaidHandler {
+	if repo == nil {
+		panic("nil order.Repository")
+	}
+	h := markOrderPaidHandler{repo: repo, eventBus: eventBus}
+	return decorator.ApplyCommandResultDecorators[MarkOrderPaid, *order.Order](h, log, metrics)
 }
 
-func (uc *MarkOrderPaidUseCase) Execute(ctx context.Context, orderID common.OrderID) (*order.Order, error) {
-	o, err := uc.repo.FindByID(orderID)
+func (h markOrderPaidHandler) Handle(ctx context.Context, cmd MarkOrderPaid) (*order.Order, error) {
+	o, err := h.repo.FindByID(cmd.OrderID)
 	if err != nil {
 		return nil, err
 	}
@@ -30,18 +43,18 @@ func (uc *MarkOrderPaidUseCase) Execute(ctx context.Context, orderID common.Orde
 
 	o.MarkPaid()
 
-	if err := uc.repo.Update(o); err != nil {
+	if err := h.repo.Update(o); err != nil {
 		return nil, err
 	}
 
-	event := ifaceevents.OrderPaid{
+	ev := event.OrderPaid{
 		OrderID:      o.ID,
 		RestaurantID: o.RestaurantID,
 		OrderNumber:  o.OrderNumber,
 		TotalAmount:  o.TotalAmount,
 		PaidAt:       time.Now(),
 	}
-	if err := uc.eventBus.Publish(ctx, event.EventName(), event); err != nil {
+	if err := h.eventBus.Publish(ctx, ev.EventName(), ev); err != nil {
 		return nil, err
 	}
 

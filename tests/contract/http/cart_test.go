@@ -2,9 +2,9 @@ package http_test
 
 import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
-	handler "bitmerchant/internal/interfaces/http"
 	"bitmerchant/internal/menu/domain/menu"
 	"bitmerchant/internal/ordering/app/cart"
+	orderinghttp "bitmerchant/internal/ordering/ports/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +23,7 @@ func TestCartEndpoints(t *testing.T) {
 	item, _ := menu.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
 	require.NoError(t, itemRepo.Save(item))
 
-	h := handler.NewCartHandler(cartService, itemRepo)
+	h := orderinghttp.NewCartHandler(cartService, itemRepo)
 	e := echo.New()
 
 	t.Run("Add Item", func(t *testing.T) {

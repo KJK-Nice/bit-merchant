@@ -2,19 +2,31 @@ package query
 
 import (
 	"context"
+	"log/slog"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/ordering/domain/order"
 )
 
-type GetOrderByNumberUseCase struct {
+// OrderByNumberForRestaurant loads an order by restaurant and order number string.
+type OrderByNumberForRestaurant struct {
+	RestaurantID common.RestaurantID
+	OrderNumber  string
+}
+
+type OrderByNumberForRestaurantHandler decorator.QueryHandler[OrderByNumberForRestaurant, *order.Order]
+
+type orderByNumberForRestaurantHandler struct {
 	orderRepo order.Repository
 }
 
-func NewGetOrderByNumberUseCase(orderRepo order.Repository) *GetOrderByNumberUseCase {
-	return &GetOrderByNumberUseCase{orderRepo: orderRepo}
+func NewOrderByNumberForRestaurantHandler(orderRepo order.Repository, log *slog.Logger, metrics decorator.MetricsClient) OrderByNumberForRestaurantHandler {
+	h := orderByNumberForRestaurantHandler{orderRepo: orderRepo}
+	return decorator.ApplyQueryDecorators[OrderByNumberForRestaurant, *order.Order](h, log, metrics)
 }
 
-func (uc *GetOrderByNumberUseCase) Execute(ctx context.Context, restaurantID common.RestaurantID, orderNumber string) (*order.Order, error) {
-	return uc.orderRepo.FindByOrderNumber(restaurantID, orderNumber)
+func (h orderByNumberForRestaurantHandler) Handle(ctx context.Context, q OrderByNumberForRestaurant) (*order.Order, error) {
+	_ = ctx
+	return h.orderRepo.FindByOrderNumber(q.RestaurantID, q.OrderNumber)
 }

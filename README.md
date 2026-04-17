@@ -29,11 +29,15 @@ The project follows **DDD Lite** (Domain-Driven Design Lite) with bounded contex
 ```
 internal/
   common/                           Shared kernel (IDs, EventBus interface)
+    decorator/                      CQRS handler interfaces + optional logging/metrics decorators
+    http/                           Shared HTTP helpers (auth context, CSRF, SSE hub) + middleware/
+    server/                         Shared HTTP server (Echo + graceful shutdown on signal)
 
   restaurant/                       Restaurant management
     domain/restaurant/              Aggregate: Restaurant (open/close, table count)
-    app/command/                    CreateRestaurant, ToggleOpen, UpdateTableCount
-    app/query/                      GenerateQR
+    app/app.go                      Application{Commands, Queries} bundle
+    app/command/                    CreateRestaurant, ToggleRestaurantOpen, UpdateRestaurantTableCount (decorator handlers)
+    app/query/                      RestaurantTableQRImage (decorator handler)
     adapters/                       Postgres + memory repositories
 
   menu/                             Catalog management
@@ -62,29 +66,36 @@ internal/
 
   places/                           Customer visit tracking
     domain/visit/                   SessionRestaurantVisit aggregate
-    app/command/                    RecordVisit
-    app/query/                      ListVisited
+    app/app.go                      Application{Commands, Queries}
+    app/command/                    RecordMenuVisit (decorator handler)
+    app/query/                      SessionVisitedPlaces (decorator handler)
     adapters/                       Postgres + memory repos
 
   dashboard/                        Reporting (query-only, no domain)
-    app/query/                      GetStats, GetHistory, GetTopItems
+    app/app.go                      Application{Queries}
+    app/query/                      RestaurantDashboardStats, PaidOrdersForRestaurant, TopSellingMenuItems (read model: OrderReadModel)
 
-  interfaces/                       Delivery layer (stays flat)
-    http/                           Echo HTTP handlers
-    http/middleware/                 Session, auth, CSRF, rate limiting
+  wiring/                           Composition-root shared types: Config, Repositories, DB/S3 init, SeedData
+  service/                          Root `Application`: `NewApplication` wires bounded-context `*/service` packages
+
+  interfaces/                       Presentation layer
     templates/                      Templ components and layouts
 ```
 
 ### Shared Kernel
 
-`internal/common/` contains cross-boundary value types:
+`internal/common/` contains cross-boundary value types and shared web building blocks:
 
 - `ids.go` -- All ID types (`RestaurantID`, `OrderID`, `UserID`, etc.), role constants, status enums
 - `events.go` -- `EventBus` and `DomainEvent` interfaces
+- `decorator/` -- `CommandHandler` / `QueryHandler` / `CommandResultHandler` + `Apply*Decorators` (Three Dots–style application layer)
+- `http/middleware/` -- Echo middleware (session, authz, CSRF, rate limit, surface routing, …)
+- `http/` -- Shared HTTP helpers (`commonhttp` package: auth context, layout strings, SSE hub)
+- `server/` -- `Component` + `Run` (Echo, global middleware, static files, graceful shutdown when `ctx` is cancelled)
 
 ### Imports
 
-Use bounded-context packages directly, for example `bitmerchant/internal/<context>/domain/...`, `app/command`, `app/query`, and `app/cart`. Legacy facade imports under `internal/domain/` and `internal/application/` are no longer supported.
+Use bounded-context packages directly, for example `bitmerchant/internal/<context>/domain/...`, `internal/<context>/app/command`, `internal/<context>/app/query`, and `internal/ordering/app/cart`. The composition root lives in `internal/service` (`service.Application`, `service.NewApplication`). Legacy facade imports under `internal/domain/` and `internal/application/` are not supported (the old `internal/application/menu` shim has been removed).
 
 ### Infrastructure
 

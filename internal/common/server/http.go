@@ -1,0 +1,80 @@
+// Package server is the shared HTTP transport for cmd/server: Echo bootstrap, global middleware,
+// static assets, graceful shutdown. Use [Component] from the composition root or call [RunHTTPServer] directly.
+package server
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"bitmerchant/internal/common/http/middleware"
+	"bitmerchant/internal/infrastructure/logging"
+
+	"github.com/labstack/echo/v4"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
+)
+
+// HTTPConfig defines transport-level server configuration.
+type HTTPConfig struct {
+	Port             string
+	PublicBaseURL    string
+	CustomerBaseURL  string
+	MerchantBaseURL  string
+	DisableRateLimit bool
+}
+
+// Component is the HTTP transport adapter used by the application composition root (cmd/server).
+type Component struct {
+	Config HTTPConfig
+}
+
+// Run applies shared middleware, registers routes, and blocks until ctx is cancelled or Listen fails.
+func (c Component) Run(ctx context.Context, logger *logging.Logger, register func(e *echo.Echo)) error {
+	return RunHTTPServer(ctx, c.Config, logger, register)
+}
+
+// RunHTTPServer applies shared middleware, registers routes, and runs until ctx is cancelled.
+func RunHTTPServer(ctx context.Context, cfg HTTPConfig, logger *logging.Logger, register func(e *echo.Echo)) error {
+	e := echo.New()
+
+	e.Use(echoMiddleware.Recover())
+	e.Use(middleware.SurfaceRoutingMiddleware(middleware.SurfaceConfig{
+		PublicBaseURL:   cfg.PublicBaseURL,
+		CustomerBaseURL: cfg.CustomerBaseURL,
+		MerchantBaseURL: cfg.MerchantBaseURL,
+	}))
+	e.Use(middleware.PerformanceMiddleware(logger, 200*time.Millisecond))
+	if !cfg.DisableRateLimit {
+		e.Use(middleware.RateLimitMiddleware())
+	}
+	e.Use(middleware.CSRFMiddleware())
+
+	e.Static("/static", "static")
+	e.Static("/assets", "assets")
+	e.File("/sw.js", "static/pwa/sw.js")
+
+	register(e)
+
+	errCh := make(chan error, 1)
+	go func() {
+		logger.Info("Starting server on port " + cfg.Port)
+		if err := e.Start(fmt.Sprintf(":%s", cfg.Port)); err != nil {
+			errCh <- err
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := e.Shutdown(shutdownCtx); err != nil {
+			return fmt.Errorf("shutdown http server: %w", err)
+		}
+		return nil
+	case err := <-errCh:
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}

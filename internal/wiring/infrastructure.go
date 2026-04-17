@@ -1,0 +1,95 @@
+package wiring
+
+import (
+	"context"
+	"database/sql"
+	"time"
+
+	"bitmerchant/internal/infrastructure/logging"
+	"bitmerchant/internal/infrastructure/migrations"
+	menuAdapters "bitmerchant/internal/menu/adapters"
+	"bitmerchant/internal/menu/domain/menu"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+)
+
+// InitPhotoStorage returns S3-backed photo storage when configured; otherwise nil (uploads fail gracefully).
+func InitPhotoStorage(cfg Config, logger *logging.Logger) (menu.PhotoStorage, error) {
+	if cfg.S3BucketName == "" || cfg.AWSRegion == "" {
+		logger.Info("S3 config missing, photo uploads will fail")
+		return nil, nil
+	}
+
+	expires := time.Duration(cfg.S3PresignGetExpiresSec) * time.Second
+	if cfg.S3PresignGetExpiresSec <= 0 {
+		expires = time.Hour
+	}
+
+	photoStorage, err := menuAdapters.NewS3Storage(context.Background(), menuAdapters.S3Config{
+		Bucket:            cfg.S3BucketName,
+		Region:            cfg.AWSRegion,
+		Endpoint:          cfg.S3Endpoint,
+		UsePathStyle:      cfg.S3UsePathStyle,
+		PresignGetExpires: expires,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return photoStorage, nil
+}
+
+// ConnectDatabase opens Postgres when DATABASE_URL is set; runs migrations; returns nil DB when URL is empty.
+func ConnectDatabase(cfg Config, logger *logging.Logger) (*sql.DB, error) {
+	if cfg.DatabaseURL == "" {
+		return nil, nil
+	}
+
+	bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	createdDB, bootstrapErr := migrations.EnsureDatabaseExists(bootstrapCtx, cfg.DatabaseURL)
+	bootstrapCancel()
+	if bootstrapErr != nil {
+		return nil, bootstrapErr
+	}
+
+	if createdDB {
+		logger.Info("Created missing database from DATABASE_URL")
+	} else {
+		logger.Info("Database from DATABASE_URL already exists")
+	}
+
+	db, dbErr := sql.Open("pgx", cfg.DatabaseURL)
+	if dbErr != nil {
+		return nil, dbErr
+	}
+
+	const (
+		maxPingAttempts = 15
+		pingDelay       = 2 * time.Second
+	)
+
+	var pingErr error
+	for attempt := 1; attempt <= maxPingAttempts; attempt++ {
+		pingCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		pingErr = db.PingContext(pingCtx)
+		cancel()
+		if pingErr == nil {
+			break
+		}
+
+		logger.Warn("Database ping failed, retrying", "attempt", attempt, "maxAttempts", maxPingAttempts, "error", pingErr)
+		time.Sleep(pingDelay)
+	}
+
+	if pingErr != nil {
+		_ = db.Close()
+		return nil, pingErr
+	}
+
+	if migrationErr := migrations.Up(context.Background(), db); migrationErr != nil {
+		_ = db.Close()
+		return nil, migrationErr
+	}
+
+	return db, nil
+}

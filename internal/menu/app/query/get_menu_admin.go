@@ -5,11 +5,20 @@ import (
 	"sort"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/menu/domain/menu"
 	"bitmerchant/internal/restaurant/domain/restaurant"
+	"log/slog"
 )
 
-type GetMenuForAdminUseCase struct {
+// MenuForAdmin loads the full menu for merchant administration.
+type MenuForAdmin struct {
+	RestaurantID common.RestaurantID
+}
+
+type MenuForAdminHandler decorator.QueryHandler[MenuForAdmin, *MenuResponse]
+
+type menuForAdminHandler struct {
 	catRepo        menu.CategoryRepository
 	itemRepo       menu.ItemRepository
 	restRepo       restaurant.Repository
@@ -17,23 +26,24 @@ type GetMenuForAdminUseCase struct {
 	photoSignerCfg PhotoSignerConfig
 }
 
-func NewGetMenuForAdminUseCase(catRepo menu.CategoryRepository, itemRepo menu.ItemRepository, restRepo restaurant.Repository, photos menu.PhotoStorage, photoSignerCfg PhotoSignerConfig) *GetMenuForAdminUseCase {
-	return &GetMenuForAdminUseCase{
+func NewMenuForAdminHandler(catRepo menu.CategoryRepository, itemRepo menu.ItemRepository, restRepo restaurant.Repository, photos menu.PhotoStorage, photoSignerCfg PhotoSignerConfig, log *slog.Logger, metrics decorator.MetricsClient) MenuForAdminHandler {
+	h := menuForAdminHandler{
 		catRepo:        catRepo,
 		itemRepo:       itemRepo,
 		restRepo:       restRepo,
 		photos:         photos,
 		photoSignerCfg: photoSignerCfg,
 	}
+	return decorator.ApplyQueryDecorators[MenuForAdmin, *MenuResponse](h, log, metrics)
 }
 
-func (uc *GetMenuForAdminUseCase) Execute(ctx context.Context, restaurantID common.RestaurantID) (*MenuResponse, error) {
-	rest, err := uc.restRepo.FindByID(restaurantID)
+func (h menuForAdminHandler) Handle(ctx context.Context, q MenuForAdmin) (*MenuResponse, error) {
+	rest, err := h.restRepo.FindByID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}
 
-	categories, err := uc.catRepo.FindByRestaurantID(restaurantID)
+	categories, err := h.catRepo.FindByRestaurantID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +55,7 @@ func (uc *GetMenuForAdminUseCase) Execute(ctx context.Context, restaurantID comm
 		return categories[i].Name < categories[j].Name
 	})
 
-	items, err := uc.itemRepo.FindByRestaurantID(restaurantID)
+	items, err := h.itemRepo.FindByRestaurantID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +78,7 @@ func (uc *GetMenuForAdminUseCase) Execute(ctx context.Context, restaurantID comm
 			}
 			return catItems[i].Name < catItems[j].Name
 		})
-		displayItems, err := ItemsWithPresignedPhotos(ctx, catItems, uc.photos, uc.photoSignerCfg)
+		displayItems, err := ItemsWithPresignedPhotos(ctx, catItems, h.photos, h.photoSignerCfg)
 		if err != nil {
 			return nil, err
 		}

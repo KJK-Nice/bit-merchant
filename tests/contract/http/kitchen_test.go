@@ -3,11 +3,11 @@ package http_test
 import (
 	"bitmerchant/internal/common"
 
-	handler "bitmerchant/internal/interfaces/http"
-	httpMiddleware "bitmerchant/internal/interfaces/http/middleware"
+	httpMiddleware "bitmerchant/internal/common/http/middleware"
 	kitchenCmd "bitmerchant/internal/ordering/app/command"
 	kitchenQuery "bitmerchant/internal/ordering/app/query"
 	"bitmerchant/internal/ordering/domain/order"
+	orderinghttp "bitmerchant/internal/ordering/ports/http"
 	"context"
 
 	"github.com/labstack/echo/v4"
@@ -89,13 +89,13 @@ func TestKitchenEndpoints(t *testing.T) {
 	mockBus := &mockKitchenEventBus{}
 
 	// Setup Use Cases
-	getOrdersUC := kitchenQuery.NewGetKitchenOrdersUseCase(mockRepo)
-	markPaidUC := kitchenCmd.NewMarkOrderPaidUseCase(mockRepo, mockBus)
-	markPreparingUC := kitchenCmd.NewMarkOrderPreparingUseCase(mockRepo, mockBus)
-	markReadyUC := kitchenCmd.NewMarkOrderReadyUseCase(mockRepo, mockBus)
+	getOrdersUC := kitchenQuery.NewActiveKitchenOrdersHandler(mockRepo, nil, nil)
+	markPaidUC := kitchenCmd.NewMarkOrderPaidHandler(mockRepo, mockBus, nil, nil)
+	markPreparingUC := kitchenCmd.NewMarkOrderPreparingHandler(mockRepo, mockBus, nil, nil)
+	markReadyUC := kitchenCmd.NewMarkOrderReadyHandler(mockRepo, mockBus, nil, nil)
 
 	// Setup Handler
-	h := handler.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
+	h := orderinghttp.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
 
 	// Routes
 	e.GET("/kitchen", h.GetKitchen)
