@@ -114,6 +114,35 @@ func (s *CartService) RemoveItem(sessionID string, itemID common.ItemID) error {
 	return nil
 }
 
+// DecrementItem reduces an item's quantity by 1. If the quantity reaches 0, the item is removed.
+func (s *CartService) DecrementItem(sessionID string, itemID common.ItemID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	cart, exists := s.carts[sessionID]
+	if !exists {
+		return nil
+	}
+
+	newItems := []CartItem{}
+	for _, item := range cart.Items {
+		if item.ItemID == itemID {
+			item.Quantity--
+			if item.Quantity <= 0 {
+				continue
+			}
+			item.Subtotal = float64(item.Quantity) * item.UnitPrice
+		}
+		newItems = append(newItems, item)
+	}
+	cart.Items = newItems
+	if len(cart.Items) == 0 {
+		cart.RestaurantID = ""
+	}
+	s.recalculateTotal(cart)
+	return nil
+}
+
 func (s *CartService) ClearCart(sessionID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

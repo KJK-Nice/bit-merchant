@@ -6,17 +6,20 @@ import (
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/menu/domain/menu"
 
-	// CartHandler handles cart-related HTTP requests
 	"bitmerchant/internal/ordering/app/cart"
 
-	"github.com/labstack/echo/v4"
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/labstack/echo/v4"
 )
 
 type CartHandler struct {
 	cartService *cart.CartService
-	itemRepo    menu.ItemRepository // Need item repo to get item details for AddItem
+	itemRepo    menu.ItemRepository
 }
 
 // NewCartHandler creates a new CartHandler
@@ -27,18 +30,48 @@ func NewCartHandler(cartService *cart.CartService, itemRepo menu.ItemRepository)
 	}
 }
 
+// writeCartSSE writes a Datastar SSE response with updated cart fragments + per-item qty signals.
+func (h *CartHandler) writeCartSSE(c echo.Context, updatedCart *cart.Cart) error {
+	ctx := c.Request().Context()
+	w := c.Response()
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	// Build HTML fragments.
+	var summaryBuf bytes.Buffer
+	if err := components.CartSummary(updatedCart, true).Render(ctx, &summaryBuf); err != nil {
+		return err
+	}
+	var floatBuf bytes.Buffer
+	if err := components.CartFloatingButton(updatedCart).Render(ctx, &floatBuf); err != nil {
+		return err
+	}
+
+	// Emit element patches.
+	fmt.Fprintf(w, "event: datastar-patch-elements\ndata: elements %s\n\n", summaryBuf.String())
+	fmt.Fprintf(w, "event: datastar-patch-elements\ndata: elements %s\n\n", floatBuf.String())
+
+	// Emit per-item qty signal patch so the menu page CTAs can react.
+	qtyMap := map[string]int{}
+	for _, item := range updatedCart.Items {
+		qtyMap[string(item.ItemID)] = item.Quantity
+	}
+	signalBytes, err := json.Marshal(map[string]any{"cartItemQty": qtyMap})
+	if err == nil {
+		fmt.Fprintf(w, "event: datastar-patch-signals\ndata: signals %s\n\n", string(signalBytes))
+	}
+
+	w.Flush()
+	return nil
+}
+
 // AddToCart handles POST /cart/add
 func (h *CartHandler) AddToCart(c echo.Context) error {
-	// Datastar sends JSON by default or form encoded?
-	// If using @post('/cart/add', { ... }), it sends JSON payload if header not set.
-	// However, c.FormValue works for both if Echo binder is used or content type is form.
-	// Datastar fetch defaults to JSON.
-	// Echo's c.FormValue does NOT parse JSON body automatically without Bind.
-	// But we can use a struct to bind.
-
 	type AddToCartRequest struct {
 		ItemID   string `json:"itemID" form:"itemID"`
-		Quantity string `json:"quantity" form:"quantity"` // Datastar sends strings usually in params object
+		Quantity string `json:"quantity" form:"quantity"`
 	}
 
 	req := new(AddToCartRequest)
@@ -46,7 +79,6 @@ func (h *CartHandler) AddToCart(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Invalid request")
 	}
 
-	// Fallback to query params if body is empty (e.g. Datastar @post without signals)
 	if req.ItemID == "" {
 		req.ItemID = c.QueryParam("itemID")
 	}
@@ -70,17 +102,35 @@ func (h *CartHandler) AddToCart(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	// Return updated CartSummary and CartFloatingButton fragments
 	updatedCart := h.cartService.GetCart(sessionID)
-	ctx := c.Request().Context()
-	resp := c.Response()
-	if err := components.CartSummary(updatedCart, true).Render(ctx, resp); err != nil {
-		return err
-	}
-	return components.CartFloatingButton(updatedCart).Render(ctx, resp)
+	return h.writeCartSSE(c, updatedCart)
 }
 
-// RemoveFromCart handles POST /cart/remove
+// DecrementFromCart handles POST /cart/decrement — reduces qty by 1, removes item at 0.
+func (h *CartHandler) DecrementFromCart(c echo.Context) error {
+	type DecrementRequest struct {
+		ItemID string `json:"itemID" form:"itemID"`
+	}
+	req := new(DecrementRequest)
+	if err := c.Bind(req); err != nil {
+		return c.String(http.StatusBadRequest, "Invalid request")
+	}
+
+	if req.ItemID == "" {
+		req.ItemID = c.QueryParam("itemID")
+	}
+
+	sessionID := c.Get("sessionID").(string)
+
+	if err := h.cartService.DecrementItem(sessionID, common.ItemID(req.ItemID)); err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	updatedCart := h.cartService.GetCart(sessionID)
+	return h.writeCartSSE(c, updatedCart)
+}
+
+// RemoveFromCart handles POST /cart/remove — removes the entire line regardless of qty.
 func (h *CartHandler) RemoveFromCart(c echo.Context) error {
 	type RemoveFromCartRequest struct {
 		ItemID string `json:"itemID" form:"itemID"`
@@ -90,7 +140,6 @@ func (h *CartHandler) RemoveFromCart(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Invalid request")
 	}
 
-	// Fallback to query params
 	if req.ItemID == "" {
 		req.ItemID = c.QueryParam("itemID")
 	}
@@ -101,20 +150,14 @@ func (h *CartHandler) RemoveFromCart(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	// Return updated CartSummary and CartFloatingButton fragments
 	updatedCart := h.cartService.GetCart(sessionID)
-	ctx := c.Request().Context()
-	resp := c.Response()
-	if err := components.CartSummary(updatedCart, true).Render(ctx, resp); err != nil {
-		return err
-	}
-	return components.CartFloatingButton(updatedCart).Render(ctx, resp)
+	return h.writeCartSSE(c, updatedCart)
 }
 
-// GetCart handles GET /cart
+// GetCart handles GET /cart — returns the cart summary fragment for Datastar to patch.
 func (h *CartHandler) GetCart(c echo.Context) error {
 	sessionID := c.Get("sessionID").(string)
-	cart := h.cartService.GetCart(sessionID)
-
-	return components.CartSummary(cart, true).Render(c.Request().Context(), c.Response())
+	updatedCart := h.cartService.GetCart(sessionID)
+	return h.writeCartSSE(c, updatedCart)
 }
+

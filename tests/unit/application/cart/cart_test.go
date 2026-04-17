@@ -59,6 +59,31 @@ func TestCartService(t *testing.T) {
 		assert.Empty(t, c.Items)
 	})
 
+	t.Run("DecrementItem reduces qty by 1", func(t *testing.T) {
+		s3 := cart.NewCartService()
+		sid := "session_dec"
+		item3, _ := menu.NewMenuItem("id3", "c1", "r1", "Pizza", 12.0)
+		require.NoError(t, s3.AddItem(sid, item3, 3))
+
+		require.NoError(t, s3.DecrementItem(sid, "id3"))
+		c := s3.GetCart(sid)
+		assert.Len(t, c.Items, 1)
+		assert.Equal(t, 2, c.Items[0].Quantity)
+		assert.InDelta(t, 24.0, c.Total, 0.001)
+	})
+
+	t.Run("DecrementItem removes item at zero", func(t *testing.T) {
+		s4 := cart.NewCartService()
+		sid := "session_dec2"
+		item4, _ := menu.NewMenuItem("id4", "c1", "r1", "Salad", 8.0)
+		require.NoError(t, s4.AddItem(sid, item4, 1))
+
+		require.NoError(t, s4.DecrementItem(sid, "id4"))
+		c := s4.GetCart(sid)
+		assert.Empty(t, c.Items)
+		assert.Equal(t, 0.0, c.Total)
+	})
+
 	t.Run("switch restaurant clears cart", func(t *testing.T) {
 		s2 := cart.NewCartService()
 		sid := "session_switch"

@@ -16,24 +16,41 @@ templ CartSummary(cart *cart.Cart, showCheckout bool) {
 			if len(cart.Items) == 0 {
 				<p class="text-muted-foreground">Your cart is empty.</p>
 			} else {
-				<div class="space-y-4">
+				<div class="space-y-3">
 					for _, item := range cart.Items {
-						<div class="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
-							<div>
-								<p class="font-medium">{ item.Name }</p>
-								<p class="text-sm text-muted-foreground">Qty: { fmt.Sprintf("%d", item.Quantity) }</p>
+						<div class="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0">
+							<div class="flex-1 min-w-0 pr-3">
+								<p class="font-medium truncate">{ item.Name }</p>
+								<p class="text-sm text-muted-foreground">{ fmt.Sprintf("$%.2f each", item.UnitPrice) }</p>
 							</div>
-							<div class="flex items-center gap-3">
-								<span class="font-medium">{ fmt.Sprintf("$%.2f", item.Subtotal) }</span>
-								@button.Button(button.Props{
-									Variant: button.VariantDestructive,
-									Size: button.SizeSm,
-									Attributes: templ.Attributes{
-										"data-on:click": fmt.Sprintf("@post('/cart/remove?itemID=%s')", item.ItemID),
-									},
-								}) {
-									Remove
-								}
+							<div class="flex items-center gap-2 shrink-0">
+								<!-- qty stepper -->
+								<div class="flex items-center gap-1.5">
+									@button.Button(button.Props{
+										Variant: button.VariantOutline,
+										Size:    button.SizeIcon,
+										Class:   "h-8 w-8 rounded-full",
+										Attributes: templ.Attributes{
+											"data-on:click": fmt.Sprintf("@post('/cart/decrement?itemID=%s')", item.ItemID),
+											"aria-label":    "Decrease quantity",
+										},
+									}) {
+										<span class="text-base leading-none select-none">−</span>
+									}
+									<span class="min-w-[1.5rem] text-center font-semibold tabular-nums">{ fmt.Sprintf("%d", item.Quantity) }</span>
+									@button.Button(button.Props{
+										Variant: button.VariantOutline,
+										Size:    button.SizeIcon,
+										Class:   "h-8 w-8 rounded-full",
+										Attributes: templ.Attributes{
+											"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ItemID),
+											"aria-label":    "Increase quantity",
+										},
+									}) {
+										<span class="text-base leading-none select-none">+</span>
+									}
+								</div>
+								<span class="font-semibold w-16 text-right">{ fmt.Sprintf("$%.2f", item.Subtotal) }</span>
 							</div>
 						</div>
 					}
@@ -47,7 +64,7 @@ templ CartSummary(cart *cart.Cart, showCheckout bool) {
 				</div>
 				if showCheckout {
 					@button.Button(button.Props{
-						Href: "/order/confirm",
+						Href:    "/order/confirm",
 						Variant: button.VariantDefault,
 					}) {
 						Checkout
@@ -71,9 +88,9 @@ templ CartFloatingButton(cart *cart.Cart) {
 		if len(cart.Items) > 0 {
 			<div class="fixed z-40 left-0 right-0 px-4 pointer-events-none md:hidden" style="bottom: calc(4rem + env(safe-area-inset-bottom) + 1rem)">
 				@button.Button(button.Props{
-					Class: "w-full shadow-lg pointer-events-auto flex justify-between items-center py-6 text-lg",
+					Class:   "w-full shadow-lg pointer-events-auto flex justify-between items-center py-6 text-lg",
 					Variant: button.VariantDefault,
-					Href: "/order/confirm",
+					Href:    "/order/confirm",
 				}) {
 					<div class="flex items-center gap-3">
 						<div class="bg-primary-foreground text-primary rounded-full min-w-[2rem] h-8 px-2 flex items-center justify-center text-sm font-bold">
