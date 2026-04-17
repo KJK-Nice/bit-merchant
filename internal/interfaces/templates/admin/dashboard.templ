@@ -21,7 +21,7 @@ import (
 
 templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, menuError string) {
 	@layouts.Dashboard("Menu Management", "/admin/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
-		<div class="space-y-6 mt-4">
+		<div class="space-y-6 mt-4 max-w-5xl">
 			if menuError != "" {
 				@toast.Toast(toast.Props{
 					Title:       "Menu update failed",
@@ -34,8 +34,8 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 					ShowIndicator: true,
 				})
 			}
-			<div class="flex justify-between items-center">
-				<h2 class="text-3xl font-bold tracking-tight">Menu Management</h2>
+			<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+				<h2 class="text-2xl md:text-3xl font-bold tracking-tight">Menu Management</h2>
 				@dialog.Dialog() {
 					@dialog.Trigger(dialog.TriggerProps{}) {
 						@button.Button(button.Props{}) {
@@ -148,7 +148,7 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 										<form action="/admin/item" method="post" class="space-y-4">
 											<input type="hidden" name="csrf" value={ csrfToken }/>
 											<input type="hidden" name="categoryID" value={ string(catData.Category.ID) }/>
-											<div class="grid grid-cols-2 gap-4">
+											<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 												<div class="space-y-2">
 													@label.Label(label.Props{For: "add-item-name-" + string(catData.Category.ID)}) {
 														Name
@@ -191,6 +191,7 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 						}
 						@card.Content() {
 							if len(catData.Items) > 0 {
+							<div class="overflow-x-auto">
 								@table.Table() {
 									@table.Header() {
 										@table.Row() {
@@ -357,7 +358,7 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 																			}
 																		}
 																	</div>
-																	<div class="grid grid-cols-2 gap-4">
+																	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 																		<div class="space-y-2">
 																			@label.Label(label.Props{For: "edit-item-name-" + string(item.ID)}) {
 																				Name
@@ -403,11 +404,12 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 										}
 									}
 								}
-							} else {
-								<div class="text-center py-6 text-muted-foreground">
-									No items in this category
-								</div>
-							}
+							</div>
+						} else {
+							<div class="text-center py-6 text-muted-foreground">
+								No items in this category
+							</div>
+						}
 						}
 					}
 				}
