@@ -31,9 +31,9 @@ tasks:
       - bash scripts/gen-pwa-icons.sh
 
   build:
-    desc: Compile server binary to bin/server
+    desc: Compile server binary to bin/server (injects git hash into SW version)
     cmds:
-      - go build -o bin/server ./cmd/server
+      - go build -ldflags "-X 'bitmerchant/internal/common/server.BuildHash=$(git rev-parse --short HEAD)'" -o bin/server ./cmd/server
 
   templ:
     desc: Run templ with integrated server and hot reload

@@ -51,7 +51,9 @@ func RunHTTPServer(ctx context.Context, cfg HTTPConfig, logger *logging.Logger, 
 
 	e.Static("/static", "static")
 	e.Static("/assets", "assets")
-	e.File("/sw.js", "static/pwa/sw.js")
+	e.GET("/sw.js", serveSW)
+	e.GET("/offline", serveOffline)
+	e.GET("/sw-kill.js", serveKillSwitch)
 
 	register(e)
 

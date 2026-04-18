@@ -84,18 +84,54 @@ templ Layout(title string) {
 			@tabs.Script()
 			@toast.Script()
 			<script>
-				if ('serviceWorker' in navigator) {
-					window.addEventListener('load', function() {
-						navigator.serviceWorker.register('/sw.js').then(function(registration) {
-							console.log('ServiceWorker registration successful with scope: ', registration.scope);
-						}, function(err) {
-							console.log('ServiceWorker registration failed: ', err);
+				(function () {
+					// Offline / online banner.
+					function syncOfflineBanner() {
+						var b = document.getElementById('pwa-offline-banner');
+						if (b) b.classList.toggle('hidden', navigator.onLine);
+					}
+					window.addEventListener('online', syncOfflineBanner);
+					window.addEventListener('offline', syncOfflineBanner);
+
+					if (!('serviceWorker' in navigator)) return;
+
+					window.addEventListener('load', function () {
+						navigator.serviceWorker.register('/sw.js').then(function (reg) {
+							// Watch for new SW version becoming available.
+							reg.addEventListener('updatefound', function () {
+								var newSW = reg.installing;
+								newSW.addEventListener('statechange', function () {
+									if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+										var banner = document.getElementById('pwa-update-banner');
+										if (banner) banner.classList.remove('hidden');
+									}
+								});
+							});
+
+							// Called by the Refresh button in the update banner.
+							window.__pwaUpdate = function () {
+								var sw = reg.waiting;
+								if (!sw) return;
+								navigator.serviceWorker.addEventListener('controllerchange', function () {
+									window.location.reload();
+								});
+								sw.postMessage({ type: 'SKIP_WAITING' });
+							};
 						});
 					});
-				}
+				})();
 			</script>
 		</head>
 		<body class="bg-background text-foreground antialiased min-h-screen flex flex-col">
+			<!-- PWA: new-version available banner (hidden until SW update detected) -->
+			<div id="pwa-update-banner" class="hidden fixed top-0 inset-x-0 z-50 flex items-center justify-between gap-4 bg-foreground text-background text-sm px-4 py-2 shadow-md" role="alert" aria-live="polite">
+				<span>A new version is available.</span>
+				<button type="button" class="shrink-0 underline font-medium focus:outline-none" onclick="window.__pwaUpdate && window.__pwaUpdate()">Refresh</button>
+			</div>
+			<!-- PWA: offline indicator (hidden while online) -->
+			<div id="pwa-offline-banner" class="hidden fixed bottom-0 inset-x-0 z-50 bg-yellow-400 text-yellow-900 text-sm text-center px-4 py-2" role="status" aria-live="polite">
+				You&#39;re offline — some features may be unavailable.
+			</div>
 			<main class="container mx-auto py-6 md:py-8 flex-grow">
 				{ children... }
 			</main>
