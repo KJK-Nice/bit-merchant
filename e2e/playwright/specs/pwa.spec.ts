@@ -6,15 +6,10 @@ import { surfaces } from "../support/surfaces";
 const customerURL = (path: string) => `${surfaces.customer}${path}`;
 
 // Wait for the active service worker on the customer surface.
+// navigator.serviceWorker.ready is a Promise that resolves exactly once there
+// is an active SW for this page's scope — no polling, no off-by-one bugs.
 async function waitForSW(page: import("@playwright/test").Page) {
-  await page.waitForFunction(
-    () =>
-      navigator.serviceWorker.controller !== null ||
-      navigator.serviceWorker
-        .getRegistration("/")
-        .then((r) => r?.active !== null),
-    { timeout: 10_000 }
-  );
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
 }
 
 // ─── manifest ────────────────────────────────────────────────────────────────
@@ -82,21 +77,11 @@ test.describe("Service worker", () => {
     await page.goto(customerURL("/menu?restaurantID=restaurant_1"));
     await page.waitForLoadState("networkidle");
 
-    // Poll until the SW reaches "activated" state — it must complete the
-    // installing → installed → activating → activated lifecycle after the
-    // first page load, which can take a moment beyond networkidle.
-    await page.waitForFunction(
-      async () => {
-        const reg = await navigator.serviceWorker.getRegistration("/");
-        return reg?.active?.state === "activated";
-      },
-      { timeout: 15_000 }
+    // serviceWorker.ready resolves once the registration's active SW reaches
+    // "activated". No custom polling needed — it's a one-shot promise.
+    const swState = await page.evaluate(() =>
+      navigator.serviceWorker.ready.then((reg) => reg.active?.state ?? null)
     );
-
-    const swState = await page.evaluate(async () => {
-      const reg = await navigator.serviceWorker.getRegistration("/");
-      return reg?.active?.state ?? null;
-    });
 
     expect(swState).toBe("activated");
     await context.close();
