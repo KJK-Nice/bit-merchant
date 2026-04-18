@@ -52,7 +52,33 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script>\n\t\t\t\tif (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {\n\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t}\n\t\t\t\twindow.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {\n\t\t\t\t\tif (event.matches) {\n\t\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tdocument.documentElement.classList.remove('dark');\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t</script><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/static/pwa/icons/apple-touch-180.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/static/pwa/icons/favicon-32.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/static/pwa/icons/favicon-16.png\"><link href=\"/assets/css/output.css\" rel=\"stylesheet\"><script type=\"module\" src=\"https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js\"></script><script>\n\t\t\t\t(function () {\n\t\t\t\t\tfunction getCookie(name) {\n\t\t\t\t\t\tconst value = `; ${document.cookie}`;\n\t\t\t\t\t\tconst parts = value.split(`; ${name}=`);\n\t\t\t\t\t\tif (parts.length === 2) {\n\t\t\t\t\t\t\treturn parts.pop().split(';').shift();\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\n\t\t\t\t\tconst originalFetch = window.fetch.bind(window);\n\t\t\t\t\twindow.fetch = function (input, init) {\n\t\t\t\t\t\tconst method = ((init && init.method) || 'GET').toUpperCase();\n\t\t\t\t\t\tif (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst csrfToken = getCookie('csrf');\n\t\t\t\t\t\tif (!csrfToken) {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst headers = new Headers((init && init.headers) || {});\n\t\t\t\t\t\tif (!headers.has('X-CSRF-Token')) {\n\t\t\t\t\t\t\theaders.set('X-CSRF-Token', csrfToken);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst nextInit = Object.assign({}, init || {}, { headers: headers });\n\t\t\t\t\t\treturn originalFetch(input, nextInit);\n\t\t\t\t\t};\n\t\t\t\t})();\n\t\t\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script nonce=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layout.templ`, Line: 28, Col: 38}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\">\n\t\t\t\tif (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {\n\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t}\n\t\t\t\twindow.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {\n\t\t\t\t\tif (event.matches) {\n\t\t\t\t\t\tdocument.documentElement.classList.add('dark');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tdocument.documentElement.classList.remove('dark');\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t</script><link rel=\"manifest\" href=\"/static/pwa/manifest.json\"><link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/static/pwa/icons/apple-touch-180.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/static/pwa/icons/favicon-32.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/static/pwa/icons/favicon-16.png\"><link href=\"/assets/css/output.css\" rel=\"stylesheet\"><script type=\"module\" src=\"/assets/js/datastar.js\"></script><script nonce=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layout.templ`, Line: 46, Col: 38}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\">\n\t\t\t\t(function () {\n\t\t\t\t\tfunction getCookie(name) {\n\t\t\t\t\t\tconst value = `; ${document.cookie}`;\n\t\t\t\t\t\tconst parts = value.split(`; ${name}=`);\n\t\t\t\t\t\tif (parts.length === 2) {\n\t\t\t\t\t\t\treturn parts.pop().split(';').shift();\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn '';\n\t\t\t\t\t}\n\n\t\t\t\t\tconst originalFetch = window.fetch.bind(window);\n\t\t\t\t\twindow.fetch = function (input, init) {\n\t\t\t\t\t\tconst method = ((init && init.method) || 'GET').toUpperCase();\n\t\t\t\t\t\tif (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst csrfToken = getCookie('csrf');\n\t\t\t\t\t\tif (!csrfToken) {\n\t\t\t\t\t\t\treturn originalFetch(input, init);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst headers = new Headers((init && init.headers) || {});\n\t\t\t\t\t\tif (!headers.has('X-CSRF-Token')) {\n\t\t\t\t\t\t\theaders.set('X-CSRF-Token', csrfToken);\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tconst nextInit = Object.assign({}, init || {}, { headers: headers });\n\t\t\t\t\t\treturn originalFetch(input, nextInit);\n\t\t\t\t\t};\n\t\t\t\t})();\n\t\t\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -84,7 +110,20 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<script>\n\t\t\t\t(function () {\n\t\t\t\t\t// Offline / online banner.\n\t\t\t\t\tfunction syncOfflineBanner() {\n\t\t\t\t\t\tvar b = document.getElementById('pwa-offline-banner');\n\t\t\t\t\t\tif (b) b.classList.toggle('hidden', navigator.onLine);\n\t\t\t\t\t}\n\t\t\t\t\twindow.addEventListener('online', syncOfflineBanner);\n\t\t\t\t\twindow.addEventListener('offline', syncOfflineBanner);\n\n\t\t\t\t\tif (!('serviceWorker' in navigator)) return;\n\n\t\t\t\t\twindow.addEventListener('load', function () {\n\t\t\t\t\t\tnavigator.serviceWorker.register('/sw.js').then(function (reg) {\n\t\t\t\t\t\t\t// Watch for new SW version becoming available.\n\t\t\t\t\t\t\treg.addEventListener('updatefound', function () {\n\t\t\t\t\t\t\t\tvar newSW = reg.installing;\n\t\t\t\t\t\t\t\tnewSW.addEventListener('statechange', function () {\n\t\t\t\t\t\t\t\t\tif (newSW.state === 'installed' && navigator.serviceWorker.controller) {\n\t\t\t\t\t\t\t\t\t\tvar banner = document.getElementById('pwa-update-banner');\n\t\t\t\t\t\t\t\t\t\tif (banner) banner.classList.remove('hidden');\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\t// Called by the Refresh button in the update banner.\n\t\t\t\t\t\t\twindow.__pwaUpdate = function () {\n\t\t\t\t\t\t\t\tvar sw = reg.waiting;\n\t\t\t\t\t\t\t\tif (!sw) return;\n\t\t\t\t\t\t\t\tnavigator.serviceWorker.addEventListener('controllerchange', function () {\n\t\t\t\t\t\t\t\t\twindow.location.reload();\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\tsw.postMessage({ type: 'SKIP_WAITING' });\n\t\t\t\t\t\t\t};\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t})();\n\t\t\t</script></head><body class=\"bg-background text-foreground antialiased min-h-screen flex flex-col\"><!-- PWA: new-version available banner (hidden until SW update detected) --><div id=\"pwa-update-banner\" class=\"hidden fixed top-0 inset-x-0 z-50 flex items-center justify-between gap-4 bg-foreground text-background text-sm px-4 py-2 shadow-md\" role=\"alert\" aria-live=\"polite\"><span>A new version is available.</span> <button type=\"button\" class=\"shrink-0 underline font-medium focus:outline-none\" onclick=\"window.__pwaUpdate && window.__pwaUpdate()\">Refresh</button></div><!-- PWA: offline indicator (hidden while online) --><div id=\"pwa-offline-banner\" class=\"hidden fixed bottom-0 inset-x-0 z-50 bg-yellow-400 text-yellow-900 text-sm text-center px-4 py-2\" role=\"status\" aria-live=\"polite\">You&#39;re offline — some features may be unavailable.</div><main class=\"container mx-auto py-6 md:py-8 flex-grow\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<script nonce=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/layout.templ`, Line: 86, Col: 38}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">\n\t\t\t\t(function () {\n\t\t\t\t\t// Offline / online banner.\n\t\t\t\t\tfunction syncOfflineBanner() {\n\t\t\t\t\t\tvar b = document.getElementById('pwa-offline-banner');\n\t\t\t\t\t\tif (b) b.classList.toggle('hidden', navigator.onLine);\n\t\t\t\t\t}\n\t\t\t\t\twindow.addEventListener('online', syncOfflineBanner);\n\t\t\t\t\twindow.addEventListener('offline', syncOfflineBanner);\n\n\t\t\t\t\tif (!('serviceWorker' in navigator)) return;\n\n\t\t\t\t\twindow.addEventListener('load', function () {\n\t\t\t\t\t\tnavigator.serviceWorker.register('/sw.js').then(function (reg) {\n\t\t\t\t\t\t\t// Watch for new SW version becoming available.\n\t\t\t\t\t\t\treg.addEventListener('updatefound', function () {\n\t\t\t\t\t\t\t\tvar newSW = reg.installing;\n\t\t\t\t\t\t\t\tnewSW.addEventListener('statechange', function () {\n\t\t\t\t\t\t\t\t\tif (newSW.state === 'installed' && navigator.serviceWorker.controller) {\n\t\t\t\t\t\t\t\t\t\tvar banner = document.getElementById('pwa-update-banner');\n\t\t\t\t\t\t\t\t\t\tif (banner) banner.classList.remove('hidden');\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\t// Called by the Refresh button in the update banner.\n\t\t\t\t\t\t\twindow.__pwaUpdate = function () {\n\t\t\t\t\t\t\t\tvar sw = reg.waiting;\n\t\t\t\t\t\t\t\tif (!sw) return;\n\t\t\t\t\t\t\t\tnavigator.serviceWorker.addEventListener('controllerchange', function () {\n\t\t\t\t\t\t\t\t\twindow.location.reload();\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\tsw.postMessage({ type: 'SKIP_WAITING' });\n\t\t\t\t\t\t\t};\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t})();\n\t\t\t</script></head><body class=\"bg-background text-foreground antialiased min-h-screen flex flex-col\"><!-- PWA: new-version available banner (hidden until SW update detected) --><div id=\"pwa-update-banner\" class=\"hidden fixed top-0 inset-x-0 z-50 flex items-center justify-between gap-4 bg-foreground text-background text-sm px-4 py-2 shadow-md\" role=\"alert\" aria-live=\"polite\"><span>A new version is available.</span> <button type=\"button\" class=\"shrink-0 underline font-medium focus:outline-none\" onclick=\"window.__pwaUpdate && window.__pwaUpdate()\">Refresh</button></div><!-- PWA: offline indicator (hidden while online) --><div id=\"pwa-offline-banner\" class=\"hidden fixed bottom-0 inset-x-0 z-50 bg-yellow-400 text-yellow-900 text-sm text-center px-4 py-2\" role=\"status\" aria-live=\"polite\">You&#39;re offline — some features may be unavailable.</div><main class=\"container mx-auto py-6 md:py-8 flex-grow\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -92,7 +131,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

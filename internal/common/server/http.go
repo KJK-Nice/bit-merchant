@@ -48,6 +48,7 @@ func RunHTTPServer(ctx context.Context, cfg HTTPConfig, logger *logging.Logger, 
 		e.Use(middleware.RateLimitMiddleware())
 	}
 	e.Use(middleware.CSRFMiddleware())
+	e.Use(middleware.CSPMiddleware())
 
 	e.Static("/static", "static")
 	e.Static("/assets", "assets")

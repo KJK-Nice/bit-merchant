@@ -25,7 +25,7 @@ templ Layout(title string) {
 			<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 			<meta name="apple-mobile-web-app-title" content="BitMerchant"/>
 			<title>{ title }</title>
-			<script>
+			<script nonce={ templ.GetNonce(ctx) }>
 				if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 					document.documentElement.classList.add('dark');
 				}
@@ -42,8 +42,8 @@ templ Layout(title string) {
 			<link rel="icon" type="image/png" sizes="32x32" href="/static/pwa/icons/favicon-32.png"/>
 			<link rel="icon" type="image/png" sizes="16x16" href="/static/pwa/icons/favicon-16.png"/>
 			<link href="/assets/css/output.css" rel="stylesheet"/>
-			<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js"></script>
-			<script>
+			<script type="module" src="/assets/js/datastar.js"></script>
+			<script nonce={ templ.GetNonce(ctx) }>
 				(function () {
 					function getCookie(name) {
 						const value = `; ${document.cookie}`;
@@ -83,7 +83,7 @@ templ Layout(title string) {
 			@dialog.Script()
 			@tabs.Script()
 			@toast.Script()
-			<script>
+			<script nonce={ templ.GetNonce(ctx) }>
 				(function () {
 					// Offline / online banner.
 					function syncOfflineBanner() {

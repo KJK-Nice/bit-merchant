@@ -2,18 +2,31 @@
 	auto_https disable_redirects
 }
 
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=()"
+		-Server
+	}
+}
+
 https://bitmerchant.local:8080 {
 	tls internal
+	import security_headers
 	reverse_proxy app:8081
 }
 
 https://merchant.bitmerchant.local:8080 {
 	tls internal
+	import security_headers
 	reverse_proxy app:8081
 }
 
 https://order.bitmerchant.local:8080 {
 	tls internal
+	import security_headers
 	reverse_proxy app:8081
 }
 
