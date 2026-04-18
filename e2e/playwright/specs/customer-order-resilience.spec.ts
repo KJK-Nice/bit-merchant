@@ -40,9 +40,9 @@ test.describe("Customer order resilience", () => {
     await expect(customer.page).toHaveURL(/\/order\/confirm$/);
     await expect(customer.page.getByRole("button", { name: "Place Order" })).toBeVisible();
 
-    await customer.page.getByRole("button", { name: "Remove" }).first().click();
+    await customer.page.getByRole("button", { name: "Decrease quantity" }).first().click();
     await expect(customer.page.getByText("Your cart is empty.")).toBeVisible();
-    await expect(customer.page.getByRole("button", { name: "Remove" })).toHaveCount(0);
+    await expect(customer.page.getByRole("button", { name: "Decrease quantity" })).toHaveCount(0);
     await expect(customer.page.getByText("Total:")).toHaveCount(0);
 
     await context.close();
