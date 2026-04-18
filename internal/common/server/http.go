@@ -5,6 +5,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"bitmerchant/internal/common/http/middleware"
@@ -42,18 +44,31 @@ func (c Component) Run(ctx context.Context, logger *logging.Logger, register fun
 func RunHTTPServer(ctx context.Context, cfg HTTPConfig, logger *logging.Logger, register func(e *echo.Echo)) error {
 	e := echo.New()
 
+	// Skip the request timeout for SSE stream endpoints — they are long-lived by design.
+	e.Use(echoMiddleware.ContextTimeoutWithConfig(echoMiddleware.ContextTimeoutConfig{
+		Skipper: func(c echo.Context) bool {
+			return strings.HasSuffix(c.Request().URL.Path, "/stream")
+		},
+		Timeout: 30 * time.Second,
+	}))
 	e.Use(echoMiddleware.Recover())
+	e.Use(middleware.RequestIDMiddleware())
 	e.Use(middleware.SurfaceRoutingMiddleware(middleware.SurfaceConfig{
 		PublicBaseURL:   cfg.PublicBaseURL,
 		CustomerBaseURL: cfg.CustomerBaseURL,
 		MerchantBaseURL: cfg.MerchantBaseURL,
 	}))
-	e.Use(middleware.PerformanceMiddleware(logger, 200*time.Millisecond))
+	e.Use(middleware.LoggingMiddleware())
+	e.Use(middleware.PerformanceMiddleware(200 * time.Millisecond))
 	if !cfg.DisableRateLimit {
 		e.Use(middleware.RateLimitMiddleware())
 	}
 	e.Use(middleware.CSRFMiddleware())
 	e.Use(middleware.CSPMiddleware(cfg.S3Endpoint))
+
+	e.GET("/health", func(c echo.Context) error {
+		return c.NoContent(http.StatusOK)
+	})
 
 	e.Static("/static", "static")
 	e.Static("/assets", "assets")
