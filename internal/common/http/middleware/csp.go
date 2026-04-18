@@ -30,6 +30,7 @@ func CSPMiddleware() echo.MiddlewareFunc {
 
 			csp := buildCSP(nonce)
 			c.Response().Header().Set("Content-Security-Policy", csp)
+			c.Response().Header().Set("X-Content-Type-Options", "nosniff")
 
 			return next(c)
 		}

@@ -82,6 +82,17 @@ test.describe("Service worker", () => {
     await page.goto(customerURL("/menu?restaurantID=restaurant_1"));
     await page.waitForLoadState("networkidle");
 
+    // Poll until the SW reaches "activated" state — it must complete the
+    // installing → installed → activating → activated lifecycle after the
+    // first page load, which can take a moment beyond networkidle.
+    await page.waitForFunction(
+      async () => {
+        const reg = await navigator.serviceWorker.getRegistration("/");
+        return reg?.active?.state === "activated";
+      },
+      { timeout: 15_000 }
+    );
+
     const swState = await page.evaluate(async () => {
       const reg = await navigator.serviceWorker.getRegistration("/");
       return reg?.active?.state ?? null;
@@ -123,10 +134,16 @@ test.describe("Offline menu browsing", () => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    // First visit — populates the SW runtime cache.
+    // First visit — installs and activates the SW (SW doesn't control this
+    // navigation since it wasn't active yet when the page load started).
     await page.goto(customerURL("/menu?restaurantID=restaurant_1"));
     await page.waitForLoadState("networkidle");
     await waitForSW(page);
+
+    // Second visit — SW is now active and controls this navigation, so it
+    // intercepts the request and populates the runtime cache.
+    await page.goto(customerURL("/menu?restaurantID=restaurant_1"));
+    await page.waitForLoadState("networkidle");
 
     // Go offline.
     await context.setOffline(true);
