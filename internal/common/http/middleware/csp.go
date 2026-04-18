@@ -47,12 +47,15 @@ func generateNonce() (string, error) {
 func buildCSP(nonce string) string {
 	return fmt.Sprintf(
 		// script-src: same-origin scripts + per-request nonce for inline scripts.
+		//   'unsafe-eval' is required by Datastar v1 which uses new Function() to
+		//   evaluate reactive expressions (data-show, data-bind, etc.).
+		//   See: assets/js/datastar.js — Function("el","$","__action","evt",...)
 		// style-src: unsafe-inline retained — Tailwind utility classes are static-file
 		//   but some templUI components inject inline style strings.
 		// connect-src 'self': covers Datastar SSE streams.
 		// worker-src 'self': allows /sw.js to be registered as a service worker.
 		"default-src 'self'; "+
-			"script-src 'self' 'nonce-%s'; "+
+			"script-src 'self' 'unsafe-eval' 'nonce-%s'; "+
 			"style-src 'self' 'unsafe-inline'; "+
 			"img-src 'self' data: blob:; "+
 			"connect-src 'self'; "+
