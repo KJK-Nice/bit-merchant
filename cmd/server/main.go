@@ -49,7 +49,7 @@ func main() {
 		CustomerBaseURL:  cfg.CustomerBaseURL,
 		MerchantBaseURL:  cfg.MerchantBaseURL,
 		DisableRateLimit: cfg.DisableRateLimit,
-		S3PublicBaseURL:  cfg.S3PublicBaseURL,
+		S3Endpoint:       cfg.S3Endpoint,
 	}}
 	err = httpSrv.Run(ctx, application.Infra.Logger, func(e *echo.Echo) {
 		e.Use(middleware.SessionMiddlewareWithReposAndOptions(application.Ports.SessionRepo, application.Ports.UserRepo, application.Ports.SessionOptions))

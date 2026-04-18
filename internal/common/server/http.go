@@ -21,11 +21,11 @@ type HTTPConfig struct {
 	CustomerBaseURL  string
 	MerchantBaseURL  string
 	DisableRateLimit bool
-	// S3PublicBaseURL is the public base URL for uploaded assets (e.g.
-	// "https://t3.storageapi.dev/bucket-name"). Its origin (scheme+host) is
-	// added to the CSP img-src allowlist so presigned image URLs are not blocked.
+	// S3Endpoint is the S3-compatible storage endpoint (AWS_ENDPOINT_URL /
+	// S3_ENDPOINT). Its origin (scheme+host) is added to the CSP img-src
+	// allowlist so presigned image URLs served from that host are not blocked.
 	// Leave empty when object storage is not configured.
-	S3PublicBaseURL string
+	S3Endpoint string
 }
 
 // Component is the HTTP transport adapter used by the application composition root (cmd/server).
@@ -53,7 +53,7 @@ func RunHTTPServer(ctx context.Context, cfg HTTPConfig, logger *logging.Logger, 
 		e.Use(middleware.RateLimitMiddleware())
 	}
 	e.Use(middleware.CSRFMiddleware())
-	e.Use(middleware.CSPMiddleware(cfg.S3PublicBaseURL))
+	e.Use(middleware.CSPMiddleware(cfg.S3Endpoint))
 
 	e.Static("/static", "static")
 	e.Static("/assets", "assets")
