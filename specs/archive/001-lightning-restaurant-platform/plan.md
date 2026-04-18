@@ -13,41 +13,38 @@ BitMerchant v1.0 enables restaurants to accept Lightning Network payments with a
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
+
 
 **Language/Version**: Go 1.25+ (Go 1.21+ minimum for required features)  
 **Primary Dependencies**: 
-  - `github.com/labstack/echo/v4` - Web framework with HTTP/2 SSE support
-  - `github.com/a-h/templ` - Type-safe Go templates
-  - `github.com/delaneyj/datastar` - Real-time hypermedia updates via SSE
-  - `github.com/ThreeDotsLabs/watermill` - Event streaming and pub/sub
-  - Strike API - Lightning Network payment processing  
+
+- `github.com/labstack/echo/v4` - Web framework with HTTP/2 SSE support
+- `github.com/a-h/templ` - Type-safe Go templates
+- `github.com/delaneyj/datastar` - Real-time hypermedia updates via SSE
+- `github.com/ThreeDotsLabs/watermill` - Event streaming and pub/sub
+- Strike API - Lightning Network payment processing  
 **Storage**: In-memory repositories (v1.0) with PostgreSQL-ready interface design. Future: PostgreSQL with hand-written SQL (no ORM).  
 **Testing**: Go standard `testing` package, `testify` for assertions. Integration tests for Strike API, contract tests for HTTP endpoints.  
 **Target Platform**: Linux server (backend), Progressive Web App (PWA) for frontend - works on any device with modern browser  
 **Project Type**: Web application (single codebase, server-rendered with SSE for real-time updates)  
 **Performance Goals**: 
-  - API endpoints: <200ms p95 latency (Constitution requirement)
-  - Menu page load: <2 seconds on 3G (SC-003)
-  - Lightning payment: <10 seconds end-to-end (SC-002)
-  - Order status updates: <5 seconds propagation (SC-004, SC-005)
-  - Critical user flow (order → pay): <2 minutes total (SC-001)  
+- API endpoints: <200ms p95 latency (Constitution requirement)
+- Menu page load: <2 seconds on 3G (SC-003)
+- Lightning payment: <10 seconds end-to-end (SC-002)
+- Order status updates: <5 seconds propagation (SC-004, SC-005)
+- Critical user flow (order → pay): <2 minutes total (SC-001)  
 **Constraints**: 
-  - Functions max 50 lines, classes max 300 lines (Constitution)
-  - Cyclomatic complexity max 10 per function (Constitution)
-  - Minimum 80% test coverage, 95% for payment/critical paths (Constitution)
-  - Frontend bundle <200KB gzipped (Constitution)
-  - PWA offline support for menu browsing
-  - Single tenant per deployment (v1.0)  
+- Functions max 50 lines, classes max 300 lines (Constitution)
+- Cyclomatic complexity max 10 per function (Constitution)
+- Minimum 80% test coverage, 95% for payment/critical paths (Constitution)
+- Frontend bundle <200KB gzipped (Constitution)
+- PWA offline support for menu browsing
+- Single tenant per deployment (v1.0)  
 **Scale/Scope**: 
-  - 10 restaurants active daily (SC-009)
-  - 1,000+ successful orders processed (SC-010)
-  - 20+ orders per restaurant per day (SC-011)
-  - Single restaurant per deployment initially
+- 10 restaurants active daily (SC-009)
+- 1,000+ successful orders processed (SC-010)
+- 20+ orders per restaurant per day (SC-011)
+- Single restaurant per deployment initially
 
 ## Constitution Check
 
@@ -56,11 +53,13 @@ BitMerchant v1.0 enables restaurants to accept Lightning Network payments with a
 ### Pre-Design Assessment
 
 **Code Quality**: 
+
 - ✅ Architecture supports small functions: Clean Architecture with DDD enforces separation of concerns, domain logic isolated in small functions
 - ⚠️ **Action Required**: Implement code review checklist to verify functions <50 lines, classes <300 lines. Use `gocyclo` linter to enforce complexity <10.
 - ✅ Standard library first approach aligns with code quality principles
 
 **Testing Standards**: 
+
 - ✅ **Coverage Requirements**: 
   - Payment processing (Strike API integration): 95% coverage (critical path)
   - Order management, kitchen display: 95% coverage (critical path)
@@ -73,6 +72,7 @@ BitMerchant v1.0 enables restaurants to accept Lightning Network payments with a
 - ✅ TDD workflow: Write tests → Get approval → Tests fail → Implement → Tests pass
 
 **User Experience Consistency**: 
+
 - ✅ **Design Patterns**: Type-safe Templ templates ensure consistent UI components across customer menu, kitchen display, owner dashboard
 - ✅ **Error Messages**: User-friendly error handling for payment failures, network issues, validation errors (FR-030)
 - ✅ **Accessibility**: PWA with semantic HTML, WCAG 2.1 AA compliance (Constitution requirement)
@@ -80,6 +80,7 @@ BitMerchant v1.0 enables restaurants to accept Lightning Network payments with a
 - ✅ **Responsive Design**: Mobile-first PWA works across all device sizes
 
 **Performance Requirements**: 
+
 - ✅ **API Endpoints**: <200ms p95 latency (Constitution) - Go + Echo provides low-latency HTTP handling
 - ✅ **Critical Flows**: 
   - Order → Pay flow: <2 minutes total (SC-001) - achievable with optimized menu load + Lightning payment
@@ -89,6 +90,7 @@ BitMerchant v1.0 enables restaurants to accept Lightning Network payments with a
 - ✅ **Bundle Size**: Server-rendered templates minimize frontend bundle, target <200KB gzipped
 
 **Quality Gates**: 
+
 - ✅ **Linting**: `golangci-lint` with strict rules, `gocyclo` for complexity
 - ✅ **Tests**: Go test suite with coverage reporting, minimum thresholds enforced
 - ✅ **Build**: Go build with CI/CD pipeline
@@ -101,30 +103,35 @@ BitMerchant v1.0 enables restaurants to accept Lightning Network payments with a
 **Status**: ✅ All gates pass after Phase 1 design
 
 **Code Quality**: 
+
 - ✅ Data model enforces small, focused entities (Restaurant, MenuCategory, MenuItem, Order, Payment)
 - ✅ Repository interfaces support clean separation (domain defines interfaces, infrastructure implements)
 - ✅ Domain events keep handlers small and focused
 - ✅ Architecture supports functions <50 lines, classes <300 lines
 
 **Testing Standards**: 
+
 - ✅ Data model provides clear test boundaries (entities, repositories, use cases)
 - ✅ Contract tests defined for all HTTP endpoints
 - ✅ Integration test points identified (Strike API, SSE, photo storage)
 - ✅ Domain events enable event-driven testing
 
 **User Experience Consistency**: 
+
 - ✅ API contracts define consistent error responses
 - ✅ SSE endpoints provide real-time updates without page refresh
 - ✅ PWA structure supports offline menu browsing
 - ✅ Responsive design supported via server-rendered templates
 
 **Performance Requirements**: 
+
 - ✅ API contracts specify performance targets (<200ms, <2s, <10s, <5s)
 - ✅ SSE endpoints use HTTP/2 for efficient real-time updates
 - ✅ Photo optimization (300KB) supports fast page loads
 - ✅ In-memory repositories provide low-latency for v1.0
 
 **Quality Gates**: 
+
 - ✅ All gates pass: Architecture supports linting, testing, build, performance, security, documentation requirements
 
 ## Project Structure
@@ -142,12 +149,8 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+
 
 ```text
 internal/
@@ -200,7 +203,10 @@ static/                  # Static assets (CSS, JS, images)
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
+
+

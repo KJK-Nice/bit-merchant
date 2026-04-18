@@ -27,6 +27,7 @@ go mod download
 ```
 
 **Key Dependencies**:
+
 - `github.com/labstack/echo/v4` - Web framework
 - `github.com/a-h/templ` - Type-safe templates
 - `github.com/delaneyj/datastar` - Real-time updates
@@ -196,6 +197,7 @@ gocyclo -over 10 ./internal
 ```
 
 **Requirements**:
+
 - Functions max 50 lines
 - Classes max 300 lines
 - Cyclomatic complexity max 10 per function
@@ -339,6 +341,7 @@ Photos uploaded to S3, CDN URL returned.
 ### Photo Optimization
 
 Photos automatically optimized:
+
 - Upload: Max 2MB
 - Display: 300KB optimized version
 - Limit: 100 photos per restaurant
@@ -431,16 +434,17 @@ golangci-lint run --fix
 
 ## Resources
 
-- **Go Documentation**: https://go.dev/doc/
-- **Echo Framework**: https://echo.labstack.com/
-- **Templ Templates**: https://templ.guide/
-- **Watermill Events**: https://watermill.io/
-- **Datastar**: https://github.com/delaneyj/datastar
-- **Strike API**: https://strike.me/developers
+- **Go Documentation**: [https://go.dev/doc/](https://go.dev/doc/)
+- **Echo Framework**: [https://echo.labstack.com/](https://echo.labstack.com/)
+- **Templ Templates**: [https://templ.guide/](https://templ.guide/)
+- **Watermill Events**: [https://watermill.io/](https://watermill.io/)
+- **Datastar**: [https://github.com/delaneyj/datastar](https://github.com/delaneyj/datastar)
+- **Strike API**: [https://strike.me/developers](https://strike.me/developers)
 
 ## Support
 
 For questions or issues:
+
 1. Check specification: `spec.md`
 2. Review architecture: `plan.md`
 3. Check contracts: `contracts/api-contracts.md`

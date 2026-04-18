@@ -101,6 +101,7 @@ Linda needs to see daily sales, order count, top-selling items, and settlement s
 ### Functional Requirements
 
 **Customer Ordering:**
+
 - **FR-001**: System MUST display restaurant menu organized by categories (Appetizers, Mains, Desserts, Drinks) with item names, descriptions, prices, and photos
 - **FR-002**: System MUST allow customers to browse menu without account creation, login, or personal information
 - **FR-003**: System MUST provide shopping cart where customers can add/remove items, adjust quantities, and see running total
@@ -112,6 +113,7 @@ Linda needs to see daily sales, order count, top-selling items, and settlement s
 - **FR-009**: System MUST work as Progressive Web App (PWA) - installable to home screen, works offline for menu browsing
 
 **Kitchen Operations:**
+
 - **FR-010**: System MUST display all paid orders on kitchen display tablet in chronological order (oldest first)
 - **FR-011**: System MUST show order details: order number, items with quantities, modifications, timestamp
 - **FR-012**: System MUST provide audible/visual alert when new paid order arrives
@@ -121,6 +123,7 @@ Linda needs to see daily sales, order count, top-selling items, and settlement s
 - **FR-016**: System MUST handle kitchen display tablet offline - queue status changes and sync when connection restored
 
 **Restaurant Management:**
+
 - **FR-017**: System MUST allow restaurant owner to create account with minimal information: restaurant name, Lightning address
 - **FR-018**: System MUST allow owner to create menu categories and add items within each category
 - **FR-019**: System MUST accept menu item details: name (required), description (optional), price in local currency (required), photo (optional)
@@ -137,6 +140,7 @@ Linda needs to see daily sales, order count, top-selling items, and settlement s
 - **FR-041**: System MUST disable ordering and payment functionality when restaurant is marked as closed, while keeping menu visible for browsing
 
 **Payment Processing:**
+
 - **FR-028**: System MUST integrate with Lightning Network for payment processing (Strike API)
 - **FR-029**: System MUST validate Lightning payment before creating order - no orders for unpaid invoices
 - **FR-030**: System MUST handle payment failures gracefully - detect within 30 seconds, show clear error, allow retry
@@ -145,6 +149,7 @@ Linda needs to see daily sales, order count, top-selling items, and settlement s
 - **FR-033**: System MUST convert fiat prices to satoshis at current exchange rate at time of invoice generation
 
 **System Reliability:**
+
 - **FR-034**: System MUST handle concurrent orders from multiple customers without conflicts
 - **FR-035**: System MUST maintain order sequence integrity based on payment confirmation timestamp
 - **FR-036**: System MUST log all payment attempts, successes, and failures for troubleshooting
@@ -180,6 +185,7 @@ Linda needs to see daily sales, order count, top-selling items, and settlement s
 ### Measurable Outcomes
 
 **Speed & Performance:**
+
 - **SC-001**: Customer completes entire ordering flow (browse → select → pay → confirm) in under 2 minutes on mobile device
 - **SC-002**: Lightning payment completes in under 10 seconds from invoice generation to order confirmation
 - **SC-003**: Menu pages load in under 2 seconds on 3G mobile networks
@@ -187,27 +193,31 @@ Linda needs to see daily sales, order count, top-selling items, and settlement s
 - **SC-005**: New paid orders appear on kitchen display within 5 seconds of payment confirmation
 
 **Setup & Usability:**
+
 - **SC-006**: Non-technical restaurant owner completes full menu setup (categories + 20 items with photos) in under 10 minutes
 - **SC-007**: Kitchen staff can fulfill orders confidently after 5-minute demonstration with no additional training
 - **SC-008**: Customer can order food without instructions, documentation, or staff assistance
 
 **Adoption & Volume:**
+
 - **SC-009**: 10 restaurants actively using system daily within 3 months of launch
 - **SC-010**: System processes 1,000+ successful Lightning payment orders
 - **SC-011**: Each restaurant processes average of 20+ orders per day after first week
 
 **Reliability:**
+
 - **SC-012**: 99% payment success rate (successful payment / total payment attempts)
 - **SC-013**: 99% system uptime measured across all components (menu display, payment processing, kitchen display)
 - **SC-014**: Zero orders lost due to system errors (all paid orders appear in kitchen queue)
 
 **User Satisfaction:**
+
 - **SC-015**: After first successful order, customers ask "How do I install this on my phone?" (PWA adoption indicator)
 - **SC-016**: Restaurant owners demonstrate system to other business owners within first week (word-of-mouth indicator)
 - **SC-017**: Kitchen staff prefer BitMerchant over previous POS system for order management (qualitative survey)
 - **SC-018**: Customers describe payment experience as "faster than credit card" (qualitative feedback)
 
 **Business Impact:**
+
 - **SC-019**: Restaurants report lower effective payment processing fees compared to credit card processors (2-3% baseline)
 - **SC-020**: Restaurant operates full business day (breakfast through dinner) using only BitMerchant with no additional tools needed
-

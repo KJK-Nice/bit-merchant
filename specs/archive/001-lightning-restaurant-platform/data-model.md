@@ -12,6 +12,7 @@
 **Purpose**: Represents a single restaurant tenant with menu structure and owner credentials.
 
 **Fields**:
+
 - `ID` (RestaurantID): Unique identifier (UUID or string)
 - `Name` (string): Restaurant name (required)
 - `LightningAddress` (string): Lightning Network address for receiving payments (required)
@@ -22,16 +23,19 @@
 - `UpdatedAt` (time.Time): Last update timestamp
 
 **Validation Rules**:
+
 - Name: 1-100 characters, required
 - LightningAddress: Valid Lightning address format, required
 - CreatedAt: Set on creation, immutable
 - UpdatedAt: Updated on every modification
 
 **State Transitions**:
+
 - `IsOpen: false → true`: Restaurant opens, menu becomes orderable
 - `IsOpen: true → false`: Restaurant closes, ordering disabled, menu visible
 
 **Relationships**:
+
 - Has many MenuCategories
 - Has many Orders
 - Has many Payments
@@ -43,6 +47,7 @@
 **Purpose**: Logical grouping of menu items (e.g., Appetizers, Mains, Desserts, Drinks).
 
 **Fields**:
+
 - `ID` (CategoryID): Unique identifier (UUID or string)
 - `RestaurantID` (RestaurantID): Foreign key to Restaurant
 - `Name` (string): Category name (required)
@@ -52,15 +57,18 @@
 - `UpdatedAt` (time.Time): Last update timestamp
 
 **Validation Rules**:
+
 - Name: 1-50 characters, required
 - DisplayOrder: >= 0, unique within restaurant
 - RestaurantID: Must reference existing Restaurant
 
 **State Transitions**:
+
 - `IsActive: true → false`: Category hidden from customer menu, items retained
 - `IsActive: false → true`: Category visible in customer menu
 
 **Relationships**:
+
 - Belongs to Restaurant
 - Has many MenuItems
 
@@ -71,6 +79,7 @@
 **Purpose**: Food/drink item with name, description, price, photo, and availability status.
 
 **Fields**:
+
 - `ID` (ItemID): Unique identifier (UUID or string)
 - `CategoryID` (CategoryID): Foreign key to MenuCategory
 - `RestaurantID` (RestaurantID): Foreign key to Restaurant (denormalized for queries)
@@ -84,6 +93,7 @@
 - `UpdatedAt` (time.Time): Last update timestamp
 
 **Validation Rules**:
+
 - Name: 1-100 characters, required
 - Description: 0-500 characters, optional
 - Price: > 0, required, precision 2 decimal places
@@ -92,15 +102,18 @@
 - RestaurantID: Must reference existing Restaurant
 
 **State Transitions**:
+
 - `IsAvailable: true → false`: Item hidden from customer menu, retained in system
 - `IsAvailable: false → true`: Item visible in customer menu
 
 **Relationships**:
+
 - Belongs to MenuCategory
 - Belongs to Restaurant (denormalized)
 - Has many OrderItems (through Order)
 
 **Photo Storage Constraints** (FR-020, FR-042):
+
 - Maximum 2MB per photo upload
 - Maximum 100 photos per restaurant
 - Automatic compression to 300KB optimized version for display
@@ -113,6 +126,7 @@
 **Purpose**: Customer purchase record with items, payment status, and fulfillment status.
 
 **Fields**:
+
 - `ID` (OrderID): Unique identifier (UUID or string)
 - `OrderNumber` (string): Human-readable order number (e.g., "ORD-001", unique)
 - `RestaurantID` (RestaurantID): Foreign key to Restaurant
@@ -128,6 +142,7 @@
 - `CompletedAt` (time.Time, optional): Order completion timestamp (when picked up)
 
 **Validation Rules**:
+
 - OrderNumber: Unique within restaurant, auto-generated format "ORD-{sequence}"
 - Items: At least 1 item required
 - TotalAmount: > 0, calculated from items + exchange rate
@@ -136,6 +151,7 @@
 - LightningInvoiceID: Required when PaymentStatus is "paid" or "pending"
 
 **State Transitions**:
+
 - `PaymentStatus: pending → paid`: Order created, appears in kitchen queue
 - `PaymentStatus: pending → failed`: Order not created, customer can retry
 - `FulfillmentStatus: paid → preparing`: Kitchen staff starts preparing
@@ -143,11 +159,13 @@
 - `FulfillmentStatus: ready → completed`: Customer picked up, order archived after 1 hour
 
 **Relationships**:
+
 - Belongs to Restaurant
 - Has many OrderItems
 - Has one Payment (when paid)
 
 **Business Rules**:
+
 - Order only created when PaymentStatus is "paid" (FR-029)
 - Order sequence integrity based on CreatedAt timestamp (FR-035)
 - Completed orders archived after 1 hour (FR-015)
@@ -159,6 +177,7 @@
 **Purpose**: Individual item within an order with quantity.
 
 **Fields**:
+
 - `ID` (OrderItemID): Unique identifier (UUID or string)
 - `OrderID` (OrderID): Foreign key to Order
 - `MenuItemID` (ItemID): Foreign key to MenuItem
@@ -168,12 +187,14 @@
 - `Subtotal` (int64): Quantity × UnitPriceSatoshis (calculated)
 
 **Validation Rules**:
+
 - Quantity: > 0, required
 - UnitPrice: > 0, snapshot from MenuItem.Price at order time
 - UnitPriceSatoshis: > 0, calculated from UnitPrice + exchange rate at order time
 - MenuItemID: Must reference existing MenuItem
 
 **Relationships**:
+
 - Belongs to Order
 - References MenuItem (snapshot, not foreign key - item may be deleted)
 
@@ -184,6 +205,7 @@
 **Purpose**: Lightning Network transaction record with invoice, amount, status, and settlement.
 
 **Fields**:
+
 - `ID` (PaymentID): Unique identifier (UUID or string)
 - `RestaurantID` (RestaurantID): Foreign key to Restaurant
 - `OrderID` (OrderID, optional): Foreign key to Order (when payment succeeds)
@@ -202,6 +224,7 @@
 - `FailureReason` (string, optional): Failure reason if Status is "failed"
 
 **Validation Rules**:
+
 - InvoiceID: Unique, required, from Strike API
 - AmountSatoshis: > 0, required
 - AmountFiat: > 0, required
@@ -210,16 +233,19 @@
 - SettlementStatus: Valid values: pending, settled
 
 **State Transitions**:
+
 - `Status: pending → paid`: Payment confirmed, Order created, PaidAt set
 - `Status: pending → failed`: Payment failed, FailureReason set, FailedAt set
 - `Status: pending → expired`: Invoice expired (typically 15 minutes)
 - `SettlementStatus: pending → settled`: Daily settlement completed, SettledAt set
 
 **Relationships**:
+
 - Belongs to Restaurant
 - Has one Order (when Status is "paid")
 
 **Business Rules**:
+
 - Payment must be validated before Order creation (FR-029)
 - Payment failures detected within 30 seconds (FR-030)
 - Daily settlement happens at end of business day (11:59 PM local time, FR-031)
@@ -262,6 +288,7 @@
 
 **Triggered**: When Payment.Status changes from `pending` to `paid`  
 **Payload**:
+
 - OrderID
 - RestaurantID
 - OrderNumber
@@ -269,6 +296,7 @@
 - CreatedAt
 
 **Handlers**:
+
 - Create Order entity
 - Publish to kitchen display (SSE)
 - Send push notification to customer
@@ -279,6 +307,7 @@
 
 **Triggered**: When Order.FulfillmentStatus changes  
 **Payload**:
+
 - OrderID
 - OrderNumber
 - PreviousStatus
@@ -286,6 +315,7 @@
 - UpdatedAt
 
 **Handlers**:
+
 - Update customer view (SSE)
 - Send push notification if status is "ready"
 
@@ -295,12 +325,14 @@
 
 **Triggered**: When Payment.Status changes to `failed`  
 **Payload**:
+
 - PaymentID
 - InvoiceID
 - FailureReason
 - FailedAt
 
 **Handlers**:
+
 - Show error message to customer
 - Allow retry (generate new invoice)
 
