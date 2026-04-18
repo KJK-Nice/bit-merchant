@@ -57,3 +57,10 @@ coverage/
 node_modules/
 playwright-report/
 test-results/
+
+# agentic-stack (memory files ARE committed; only runtime derivatives ignored)
+.agent/memory/dream.log
+.agent/memory/.index/
+.agent/**/__pycache__/
+.agent/**/*.pyc
+CLAUDE.md.pre-agentic-stack
