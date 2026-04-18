@@ -25,6 +25,11 @@ tasks:
     cmds:
       - templ generate
 
+  pwa:icons:
+    desc: Generate PWA icon rasters from static/pwa/icon.svg (requires librsvg)
+    cmds:
+      - bash scripts/gen-pwa-icons.sh
+
   build:
     desc: Compile server binary to bin/server
     cmds:
