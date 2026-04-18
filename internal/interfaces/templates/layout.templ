@@ -83,6 +83,7 @@ templ Layout(title string) {
 			@dialog.Script()
 			@tabs.Script()
 			@toast.Script()
+			<script defer src="/assets/js/cart-persist.js"></script>
 			<script nonce={ templ.GetNonce(ctx) }>
 				(function () {
 					// Offline / online banner.
@@ -117,6 +118,17 @@ templ Layout(title string) {
 								});
 								sw.postMessage({ type: 'SKIP_WAITING' });
 							};
+						});
+
+						// Forward SW observability events to the server logger.
+						navigator.serviceWorker.addEventListener('message', function (e) {
+							if (e.data && e.data.type && e.data.type.startsWith('sw:')) {
+								fetch('/api/pwa/events', {
+									method: 'POST',
+									headers: { 'Content-Type': 'application/json' },
+									body: JSON.stringify({ type: e.data.type, version: e.data.version || '' }),
+								}).catch(function () {});
+							}
 						});
 					});
 				})();

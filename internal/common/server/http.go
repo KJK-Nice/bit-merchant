@@ -55,6 +55,7 @@ func RunHTTPServer(ctx context.Context, cfg HTTPConfig, logger *logging.Logger, 
 	e.GET("/sw.js", serveSW)
 	e.GET("/offline", serveOffline)
 	e.GET("/sw-kill.js", serveKillSwitch)
+	e.POST("/api/pwa/events", servePWAEvents)
 
 	register(e)
 

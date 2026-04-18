@@ -1,11 +1,28 @@
 package server
 
 import (
+	"log/slog"
 	"net/http"
 	"text/template"
 
 	"github.com/labstack/echo/v4"
 )
+
+type pwaEvent struct {
+	Type    string `json:"type"`
+	Version string `json:"version,omitempty"`
+}
+
+func servePWAEvents(c echo.Context) error {
+	var evt pwaEvent
+	if err := c.Bind(&evt); err != nil {
+		return c.NoContent(http.StatusBadRequest)
+	}
+	if evt.Type != "" {
+		slog.Default().Info("pwa event", "type", evt.Type, "version", evt.Version)
+	}
+	return c.NoContent(http.StatusNoContent)
+}
 
 // BuildHash is injected at build time via -ldflags "-X bitmerchant/internal/common/server.BuildHash=<git-hash>".
 var BuildHash = "dev"
@@ -33,22 +50,36 @@ func serveKillSwitch(c echo.Context) error {
 const swSource = `
 const VERSION = '{{.Version}}';
 const CACHE_NAME = 'bitmerchant-' + VERSION;
+// Runtime cache for menu pages — intentionally not cleared on SW update so
+// previously visited menus survive app upgrades.
+const RUNTIME_CACHE = 'bitmerchant-runtime';
 const PRECACHE_URLS = [
   '/',
+  '/offline',
   '/static/pwa/manifest.json',
   '/static/pwa/icon.svg',
   '/static/pwa/icons/icon-192.png',
   '/static/pwa/icons/icon-512.png',
   '/assets/js/input.min.js',
+  '/assets/js/cart-persist.js',
+  '/assets/js/datastar.js',
   '/assets/css/output.css'
 ];
 
 // Never cache auth, merchant surfaces, or API paths.
 const DENY_PREFIXES = ['/merchant', '/admin', '/kitchen', '/auth', '/api'];
 
+function notifyClients(type) {
+  self.clients.matchAll({ includeUncontrolled: true }).then(clients =>
+    clients.forEach(c => c.postMessage({ type, version: VERSION }))
+  );
+}
+
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_URLS))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE_URLS))
+      .then(() => notifyClients('sw:installed'))
   );
 });
 
@@ -56,9 +87,11 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(names => Promise.all(
-        names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n))
+        // Keep RUNTIME_CACHE across versions; only clear versioned caches.
+        names.filter(n => n !== CACHE_NAME && n !== RUNTIME_CACHE).map(n => caches.delete(n))
       ))
       .then(() => self.clients.claim())
+      .then(() => notifyClients('sw:activated'))
   );
 });
 
@@ -66,8 +99,23 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Pass navigations through — canonical-host 302 redirects must not be wrapped.
-  if (request.mode === 'navigate') return;
+  if (request.mode === 'navigate') {
+    // Cache /menu pages for offline browsing (network-first, cache fallback).
+    // All other navigates pass through — canonical-host 302 redirects must not be wrapped.
+    if (url.pathname === '/menu') {
+      event.respondWith(
+        caches.open(RUNTIME_CACHE).then(cache =>
+          fetch(request)
+            .then(res => {
+              if (res.ok) cache.put(request, res.clone());
+              return res;
+            })
+            .catch(() => cache.match(request))
+        )
+      );
+    }
+    return;
+  }
 
   // Only intercept same-origin GETs outside the deny-list.
   if (request.method !== 'GET') return;

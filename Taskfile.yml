@@ -30,6 +30,19 @@ tasks:
     cmds:
       - bash scripts/gen-pwa-icons.sh
 
+  pwa:precache:
+    desc: Print a SHA-256 digest of all PWA-cached assets (audit helper)
+    cmds:
+      - |
+        find assets/ static/pwa/ -type f | sort | xargs sha256sum | tee /dev/stderr | sha256sum | awk '{print "precache-digest: " $1}'
+
+  pwa:build:
+    desc: Full PWA build — icons + templ + binary with build hash
+    cmds:
+      - task: pwa:icons
+      - templ generate
+      - go build -ldflags "-X 'bitmerchant/internal/common/server.BuildHash=$(git rev-parse --short HEAD)'" -o bin/server ./cmd/server
+
   build:
     desc: Compile server binary to bin/server (injects git hash into SW version)
     cmds:
