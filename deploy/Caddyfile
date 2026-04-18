@@ -7,7 +7,7 @@
 		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
-		Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=()"
+		Permissions-Policy "geolocation=(), camera=(self), microphone=(), payment=()"
 		-Server
 	}
 }
