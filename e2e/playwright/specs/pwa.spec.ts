@@ -99,8 +99,7 @@ test.describe("Service worker", () => {
 
   test("/offline page is reachable", async ({ request }) => {
     const res = await request.get(`${surfaces.customer}/offline`);
-    // Expect 503 (ServiceUnavailable) — that's intentional.
-    expect([200, 503]).toContain(res.status());
+    expect(res.status()).toBe(200);
     const body = await res.text();
     expect(body).toContain("offline");
   });

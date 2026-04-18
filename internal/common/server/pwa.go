@@ -37,8 +37,12 @@ func serveSW(c echo.Context) error {
 }
 
 func serveOffline(c echo.Context) error {
+	// Must return 200 so the SW install handler's cache.addAll(['/offline'])
+	// succeeds — cache.addAll rejects on any non-2xx response, which would
+	// prevent the SW from ever activating.
 	c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
-	return c.HTML(http.StatusServiceUnavailable, offlineHTML)
+	c.Response().Header().Set("Cache-Control", "no-store")
+	return c.HTML(http.StatusOK, offlineHTML)
 }
 
 func serveKillSwitch(c echo.Context) error {
