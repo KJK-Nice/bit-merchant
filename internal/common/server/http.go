@@ -48,10 +48,14 @@ func RunHTTPServer(ctx context.Context, cfg HTTPConfig, logger *logging.Logger, 
 		e.Use(middleware.RateLimitMiddleware())
 	}
 	e.Use(middleware.CSRFMiddleware())
+	e.Use(middleware.CSPMiddleware())
 
 	e.Static("/static", "static")
 	e.Static("/assets", "assets")
-	e.File("/sw.js", "static/pwa/sw.js")
+	e.GET("/sw.js", serveSW)
+	e.GET("/offline", serveOffline)
+	e.GET("/sw-kill.js", serveKillSwitch)
+	e.POST("/api/pwa/events", servePWAEvents)
 
 	register(e)
 
