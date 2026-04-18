@@ -160,4 +160,3 @@ func (h *CartHandler) GetCart(c echo.Context) error {
 	updatedCart := h.cartService.GetCart(sessionID)
 	return h.writeCartSSE(c, updatedCart)
 }
-
