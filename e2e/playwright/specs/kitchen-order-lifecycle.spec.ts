@@ -149,7 +149,8 @@ test.describe("Kitchen order lifecycle", () => {
     await expect(kitchenOrderCard).toBeVisible();
 
     await kitchenOrderCard.getByRole("button", { name: "Mark Paid" }).click();
-    await expect(kitchenOrderCard).toContainText("PAID");
+    await expect(kitchenOrderCard).toHaveAttribute("data-kitchen-status", "waiting-start");
+    await expect(kitchenOrderCard.getByRole("button", { name: "Start Preparing" })).toBeVisible();
     await expect(customerStatus).toContainText("PAID");
 
     await kitchenOrderCard.getByRole("button", { name: "Start Preparing" }).click();

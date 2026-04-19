@@ -71,10 +71,11 @@ func TestKitchenWorkflow(t *testing.T) {
 	markPaidUC := orderCmd.NewMarkOrderPaidHandler(orderRepo, eventBus, logger.Logger, nil)
 	markPreparingUC := orderCmd.NewMarkOrderPreparingHandler(orderRepo, eventBus, logger.Logger, nil)
 	markReadyUC := orderCmd.NewMarkOrderReadyHandler(orderRepo, eventBus, logger.Logger, nil)
+	markCompletedUC := orderCmd.NewMarkOrderCompletedHandler(orderRepo, eventBus, logger.Logger, nil)
 	getMenuUC := menuQuery.NewMenuForCustomerHandler(menuCatRepo, menuItemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
 
 	// Handlers
-	kitchenHandler := orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
+	kitchenHandler := orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, nil, nil)
 	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
@@ -85,6 +86,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	orderPaidHandler := ordersse.NewOrderPaidHandler(logger, sseHandler, orderRepo)
 	orderPreparingHandler := ordersse.NewOrderPreparingHandler(logger, sseHandler, orderRepo)
 	orderReadyHandler := ordersse.NewOrderReadyHandler(logger, sseHandler, orderRepo)
+	orderCompletedHandler := ordersse.NewOrderCompletedHandler(logger, sseHandler, orderRepo)
 
 	// Subscriptions
 	subscribe(t, eventBus, common.EventOrderCreated, func(msg []byte) {
@@ -107,6 +109,11 @@ func TestKitchenWorkflow(t *testing.T) {
 		require.NoError(t, json.Unmarshal(msg, &event))
 		require.NoError(t, orderReadyHandler.Handle(context.Background(), event))
 	})
+	subscribe(t, eventBus, common.EventOrderCompleted, func(msg []byte) {
+		var event orderevent.OrderCompleted
+		require.NoError(t, json.Unmarshal(msg, &event))
+		require.NoError(t, orderCompletedHandler.Handle(context.Background(), event))
+	})
 
 	// Echo Setup
 	e := echo.New()
@@ -118,6 +125,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	e.POST("/kitchen/order/:id/mark-paid", kitchenHandler.MarkPaid)
 	e.POST("/kitchen/order/:id/mark-preparing", kitchenHandler.MarkPreparing)
 	e.POST("/kitchen/order/:id/mark-ready", kitchenHandler.MarkReady)
+	e.POST("/kitchen/order/:id/mark-completed", kitchenHandler.MarkCompleted)
 
 	// --- Test Execution ---
 
@@ -170,7 +178,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	}
 
 	assert.Contains(t, rec.Body.String(), string(orderNumber))
-	assert.Contains(t, rec.Body.String(), "UNPAID")
+	assert.Contains(t, rec.Body.String(), "Payment pending")
 
 	// 3. Kitchen Marks Paid
 	req = httptest.NewRequest(http.MethodPost, "/kitchen/order/"+string(orderID)+"/mark-paid", nil)
@@ -183,7 +191,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	err = kitchenHandler.MarkPaid(c)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, rec.Code)
-	assert.Contains(t, rec.Body.String(), "PAID")
+	assert.Contains(t, rec.Body.String(), "Start Preparing")
 
 	updatedOrder, _ := orderRepo.FindByID(orderID)
 	assert.Equal(t, common.PaymentStatusPaid, updatedOrder.PaymentStatus)
@@ -219,6 +227,21 @@ func TestKitchenWorkflow(t *testing.T) {
 
 	updatedOrder, _ = orderRepo.FindByID(orderID)
 	assert.Equal(t, common.FulfillmentStatusReady, updatedOrder.FulfillmentStatus)
+
+	// 6. Kitchen Marks Completed (settled/cleared from active queue)
+	req = httptest.NewRequest(http.MethodPost, "/kitchen/order/"+string(orderID)+"/mark-completed", nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetPath("/kitchen/order/:id/mark-completed")
+	c.SetParamNames("id")
+	c.SetParamValues(string(orderID))
+
+	err = kitchenHandler.MarkCompleted(c)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	updatedOrder, _ = orderRepo.FindByID(orderID)
+	assert.Equal(t, common.FulfillmentStatusCompleted, updatedOrder.FulfillmentStatus)
 }
 
 func subscribe(t *testing.T, bus *events.EventBus, topic string, handler func([]byte)) {

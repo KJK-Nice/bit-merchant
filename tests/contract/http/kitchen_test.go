@@ -93,15 +93,17 @@ func TestKitchenEndpoints(t *testing.T) {
 	markPaidUC := kitchenCmd.NewMarkOrderPaidHandler(mockRepo, mockBus, nil, nil)
 	markPreparingUC := kitchenCmd.NewMarkOrderPreparingHandler(mockRepo, mockBus, nil, nil)
 	markReadyUC := kitchenCmd.NewMarkOrderReadyHandler(mockRepo, mockBus, nil, nil)
+	markCompletedUC := kitchenCmd.NewMarkOrderCompletedHandler(mockRepo, mockBus, nil, nil)
 
 	// Setup Handler
-	h := orderinghttp.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, nil, nil)
+	h := orderinghttp.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, nil, nil)
 
 	// Routes
 	e.GET("/kitchen", h.GetKitchen)
 	e.POST("/kitchen/order/:id/mark-paid", h.MarkPaid)
 	e.POST("/kitchen/order/:id/mark-preparing", h.MarkPreparing)
 	e.POST("/kitchen/order/:id/mark-ready", h.MarkReady)
+	e.POST("/kitchen/order/:id/mark-completed", h.MarkCompleted)
 
 	t.Run("GET /kitchen returns orders", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/kitchen", nil)

@@ -26,6 +26,7 @@ type Ordering struct {
 	MarkOrderPaid      orderCmd.MarkOrderPaidHandler
 	MarkOrderPreparing orderCmd.MarkOrderPreparingHandler
 	MarkOrderReady     orderCmd.MarkOrderReadyHandler
+	MarkOrderCompleted orderCmd.MarkOrderCompletedHandler
 
 	GetCustomerOrder  orderQuery.CustomerOrderByLookupHandler
 	GetCustomerOrders orderQuery.CustomerOrdersForSessionHandler
@@ -50,6 +51,7 @@ func New(
 	markPaidUC := orderCmd.NewMarkOrderPaidHandler(repos.Order, eventBus, logger.Logger, nil)
 	markPreparingUC := orderCmd.NewMarkOrderPreparingHandler(repos.Order, eventBus, logger.Logger, nil)
 	markReadyUC := orderCmd.NewMarkOrderReadyHandler(repos.Order, eventBus, logger.Logger, nil)
+	markCompletedUC := orderCmd.NewMarkOrderCompletedHandler(repos.Order, eventBus, logger.Logger, nil)
 
 	return Ordering{
 		CartService:        cartService,
@@ -57,12 +59,13 @@ func New(
 		MarkOrderPaid:      markPaidUC,
 		MarkOrderPreparing: markPreparingUC,
 		MarkOrderReady:     markReadyUC,
+		MarkOrderCompleted: markCompletedUC,
 		GetCustomerOrder:   getCustomerOrderByNumberUC,
 		GetCustomerOrders:  getCustomerOrdersUC,
 		GetKitchenOrders:   getKitchenOrdersUC,
 		CartHandler:        orderinghttp.NewCartHandler(cartService, repos.MenuItem),
 		OrderHandler:       orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, cartService),
-		KitchenHandler:     orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, repos.Restaurant, repos.Membership),
+		KitchenHandler:     orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, repos.Restaurant, repos.Membership),
 	}
 }
 
@@ -72,6 +75,7 @@ func RegisterOrderSSESubscriptions(eventBus *events.EventBus, logger *logging.Lo
 	orderPaidHandler := ordersse.NewOrderPaidHandler(logger, sseHandler, orderRepo)
 	orderPreparingHandler := ordersse.NewOrderPreparingHandler(logger, sseHandler, orderRepo)
 	orderReadyHandler := ordersse.NewOrderReadyHandler(logger, sseHandler, orderRepo)
+	orderCompletedHandler := ordersse.NewOrderCompletedHandler(logger, sseHandler, orderRepo)
 
 	subscribe(eventBus, common.EventOrderCreated, logger, func(msg []byte) {
 		var event orderevent.OrderCreated
@@ -98,6 +102,13 @@ func RegisterOrderSSESubscriptions(eventBus *events.EventBus, logger *logging.Lo
 		var event orderevent.OrderReady
 		if err := json.Unmarshal(msg, &event); err == nil {
 			_ = orderReadyHandler.Handle(context.Background(), event)
+		}
+	})
+
+	subscribe(eventBus, common.EventOrderCompleted, logger, func(msg []byte) {
+		var event orderevent.OrderCompleted
+		if err := json.Unmarshal(msg, &event); err == nil {
+			_ = orderCompletedHandler.Handle(context.Background(), event)
 		}
 	})
 }

@@ -1,25 +1,508 @@
 package templates
 
 import (
+	"bitmerchant/internal/common"
 	"bitmerchant/internal/ordering/domain/order"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/interfaces/templates/layouts"
+	"fmt"
 )
+
+func kitchenStatusForSummary(order *order.Order) string {
+	if order == nil {
+		return "waiting-start"
+	}
+	if order.PaymentStatus != common.PaymentStatusPaid {
+		return "pending-payment"
+	}
+	switch order.FulfillmentStatus {
+	case common.FulfillmentStatusPreparing:
+		return "preparing"
+	case common.FulfillmentStatusReady:
+		return "ready"
+	default:
+		return "waiting-start"
+	}
+}
+
+func kitchenCountByStatus(orders []*order.Order, status string) int {
+	total := 0
+	for _, current := range orders {
+		if kitchenStatusForSummary(current) == status {
+			total += 1
+		}
+	}
+	return total
+}
+
+templ kitchenLaneColumn(key string, title string, subtitle string, emptyText string, tone string) {
+	<section id={ "lane-shell-" + key } class={ fmt.Sprintf("kitchen-lane-shell rounded-xl border p-4 space-y-3 bg-gradient-to-b %s", tone) }>
+		<div class="flex items-start justify-between gap-3">
+			<div>
+				<h2 class="text-base font-semibold tracking-tight">{ title }</h2>
+				<p class="text-xs text-muted-foreground mt-1">{ subtitle }</p>
+			</div>
+			<span class="rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs font-semibold tabular-nums" data-lane-count={ key }>0</span>
+		</div>
+		<div id={ "lane-" + key } data-kitchen-lane={ key } class="min-h-[6rem] space-y-3"></div>
+		<p data-lane-empty={ key } class="rounded-md border border-dashed border-border/80 bg-background/60 px-3 py-3 text-sm text-muted-foreground">{ emptyText }</p>
+	</section>
+}
 
 templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
 	@layouts.Dashboard("Kitchen Display", "/kitchen", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div 
 			id="kitchen-display" 
 			data-init="@get('/kitchen/stream')"
-			class="space-y-6 mt-4"
+			class="space-y-6 mt-4 pb-6"
 		>
-			<h1 class="text-2xl font-bold mb-6 sr-only">Kitchen Display System</h1>
-			
-			<div id="orders-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+			<section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-muted/50 p-5">
+				<div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.12),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(16,185,129,0.1),transparent_45%)]"></div>
+				<div class="relative space-y-2">
+					<div class="flex flex-wrap items-center justify-between gap-2">
+						<div class="flex flex-wrap items-center gap-2">
+							<h1 class="text-2xl font-bold tracking-tight">Kitchen Board</h1>
+							<div id="kitchen-stream-state" class="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 px-2 py-1">
+								<span id="kitchen-stream-dot" class="kitchen-stream-dot" data-state="connecting"></span>
+								<span id="kitchen-stream-label" class="text-[10px] font-semibold uppercase tracking-[0.06em] leading-none text-muted-foreground">Checking live updates...</span>
+							</div>
+						</div>
+						<div class="flex items-center gap-2">
+							<button
+								id="kitchen-stream-reconnect"
+								type="button"
+								class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
+								aria-label="Reconnect live updates"
+								title="Reconnect live updates"
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M3 12a9 9 0 0 1 15.6-6.2" />
+									<path d="M21 3v6h-6" />
+									<path d="M21 12a9 9 0 0 1-15.6 6.2" />
+									<path d="M3 21v-6h6" />
+								</svg>
+							</button>
+							<button
+								id="kitchen-refetch"
+								type="button"
+								class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
+								aria-label="Refresh kitchen board"
+								title="Refresh kitchen board"
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M21 12a9 9 0 1 1-2.64-6.36" />
+									<path d="M21 3v6h-6" />
+								</svg>
+							</button>
+						</div>
+					</div>
+					<p class="text-sm text-muted-foreground">Orders grouped by stage, oldest first.</p>
+				</div>
+				<div id="kitchen-summary" class="relative mt-4">
+					<div class="kitchen-summary-card rounded-lg border border-border/70 bg-background/80 px-2 py-2 md:px-3">
+						<p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Active orders</p>
+						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="total">{ fmt.Sprintf("%d", len(orders)) }</p>
+					</div>
+					<div class="kitchen-summary-card rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-2 md:px-3">
+						<p class="text-xs font-medium uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300">Payment pending</p>
+						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="pending-payment">{ fmt.Sprintf("%d", kitchenCountByStatus(orders, "pending-payment")) }</p>
+					</div>
+					<div class="kitchen-summary-card rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2 py-2 md:px-3">
+						<p class="text-xs font-medium uppercase tracking-[0.08em] text-indigo-700 dark:text-indigo-300">Waiting to start</p>
+						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="waiting-start">{ fmt.Sprintf("%d", kitchenCountByStatus(orders, "waiting-start")) }</p>
+					</div>
+					<div class="kitchen-summary-card rounded-lg border border-sky-500/30 bg-sky-500/10 px-2 py-2 md:px-3">
+						<p class="text-xs font-medium uppercase tracking-[0.08em] text-sky-700 dark:text-sky-300">Preparing</p>
+						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="preparing">{ fmt.Sprintf("%d", kitchenCountByStatus(orders, "preparing")) }</p>
+					</div>
+					<div class="kitchen-summary-card rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-2 md:px-3">
+						<p class="text-xs font-medium uppercase tracking-[0.08em] text-emerald-700 dark:text-emerald-300">Ready</p>
+						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="ready">{ fmt.Sprintf("%d", kitchenCountByStatus(orders, "ready")) }</p>
+					</div>
+				</div>
+			</section>
+
+			<div id="kitchen-lanes" class="kitchen-lanes">
+				@kitchenLaneColumn("pending-payment", "Payment Needed", "Confirm payment before cooking.", "No unpaid tickets in queue.", "from-amber-500/5 to-background")
+				@kitchenLaneColumn("waiting-start", "Ready To Cook", "Paid orders waiting for prep.", "No paid tickets waiting to start.", "from-indigo-500/5 to-background")
+				@kitchenLaneColumn("preparing", "Preparing", "Orders currently being made.", "Nothing is currently in preparation.", "from-sky-500/5 to-background")
+				@kitchenLaneColumn("ready", "Ready For Pickup", "Keep this list visible to runners.", "No orders ready for pickup.", "from-emerald-500/5 to-background")
+			</div>
+
+			<div id="orders-list" class="hidden" aria-hidden="true">
 				for _, order := range orders {
 					@components.OrderCard(order)
 				}
 			</div>
 		</div>
+		<style nonce={ templ.GetNonce(ctx) }>
+			#kitchen-summary {
+				display: flex;
+				gap: 0.5rem;
+				overflow-x: auto;
+				padding-bottom: 0.25rem;
+				scroll-snap-type: x mandatory;
+				scrollbar-width: none;
+			}
+			#kitchen-summary::-webkit-scrollbar {
+				display: none;
+			}
+			#kitchen-summary .kitchen-summary-card {
+				min-width: 8.5rem;
+				flex: 0 0 auto;
+				scroll-snap-align: start;
+			}
+			#kitchen-lanes {
+				display: flex;
+				flex-direction: column;
+				gap: 1rem;
+				overflow: visible;
+				padding-bottom: 0;
+				scroll-snap-type: none;
+			}
+			#kitchen-lanes .kitchen-lane-shell {
+				min-width: 0;
+				flex: initial;
+			}
+			.kitchen-stream-dot {
+				display: inline-block;
+				width: 0.625rem;
+				height: 0.625rem;
+				flex-shrink: 0;
+				border-radius: 9999px;
+				background: #f59e0b;
+				box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35);
+			}
+			.kitchen-stream-dot[data-state="connected"] {
+				background: #10b981;
+				box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+			}
+			.kitchen-stream-dot[data-state="connecting"] {
+				background: #f59e0b;
+				box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35);
+				animation: kitchen-dot-pulse 1.2s infinite ease-in-out;
+			}
+			.kitchen-stream-dot[data-state="disconnected"] {
+				background: #ef4444;
+				box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35);
+			}
+			.kitchen-stream-dot[data-state="unsupported"] {
+				background: #71717a;
+				box-shadow: 0 0 0 2px rgba(113, 113, 122, 0.3);
+			}
+			@keyframes kitchen-dot-pulse {
+				0% { transform: scale(0.9); opacity: 0.8; }
+				50% { transform: scale(1); opacity: 1; }
+				100% { transform: scale(0.9); opacity: 0.8; }
+			}
+			@media (min-width: 768px) {
+				#kitchen-summary {
+					display: grid;
+					grid-template-columns: repeat(5, minmax(0, 1fr));
+					overflow: visible;
+					padding-bottom: 0;
+					scroll-snap-type: none;
+				}
+				#kitchen-summary .kitchen-summary-card {
+					min-width: 0;
+					flex: initial;
+				}
+				#kitchen-lanes {
+					display: grid;
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+					overflow: visible;
+				}
+				#kitchen-lanes .kitchen-lane-shell {
+					min-width: 0;
+					flex: initial;
+				}
+			}
+			@media (min-width: 1280px) {
+				#kitchen-lanes {
+					grid-template-columns: repeat(4, minmax(0, 1fr));
+				}
+			}
+		</style>
+		<script nonce={ templ.GetNonce(ctx) }>
+			(function () {
+				const root = document.getElementById("kitchen-display");
+				if (!root) return;
+
+				const laneElements = {
+					"pending-payment": document.getElementById("lane-pending-payment"),
+					"waiting-start": document.getElementById("lane-waiting-start"),
+					"preparing": document.getElementById("lane-preparing"),
+					"ready": document.getElementById("lane-ready"),
+				};
+				const streamDot = document.getElementById("kitchen-stream-dot");
+				const streamLabel = document.getElementById("kitchen-stream-label");
+				const streamReconnectButton = document.getElementById("kitchen-stream-reconnect");
+				const refetchButton = document.getElementById("kitchen-refetch");
+
+				const summaryCountElements = {
+					total: root.querySelector('[data-summary-count="total"]'),
+					"pending-payment": root.querySelector('[data-summary-count="pending-payment"]'),
+					"waiting-start": root.querySelector('[data-summary-count="waiting-start"]'),
+					preparing: root.querySelector('[data-summary-count="preparing"]'),
+					ready: root.querySelector('[data-summary-count="ready"]'),
+				};
+				const laneCountElements = {};
+				root.querySelectorAll("[data-lane-count]").forEach((element) => {
+					const key = element.getAttribute("data-lane-count");
+					if (key) laneCountElements[key] = element;
+				});
+				const laneEmptyElements = {};
+				root.querySelectorAll("[data-lane-empty]").forEach((element) => {
+					const key = element.getAttribute("data-lane-empty");
+					if (key) laneEmptyElements[key] = element;
+				});
+
+				function allCards() {
+					return Array.from(root.querySelectorAll(".kitchen-order-card"));
+				}
+
+				function statusOf(card) {
+					const raw = (card.getAttribute("data-kitchen-status") || "waiting-start").toLowerCase();
+					if (raw === "completed") return "completed";
+					if (laneElements[raw]) return raw;
+					return "waiting-start";
+				}
+
+				function createdAtOf(card) {
+					const value = Number.parseInt(card.getAttribute("data-order-created-at") || "0", 10);
+					return Number.isFinite(value) ? value : 0;
+				}
+
+				function routeCard(card) {
+					const status = statusOf(card);
+					if (status === "completed") {
+						card.remove();
+						return;
+					}
+					const lane = laneElements[status];
+					if (!lane) return;
+					if (card.parentElement !== lane) {
+						lane.appendChild(card);
+					}
+				}
+
+				function sortLane(lane) {
+					if (!lane) return;
+					const cards = Array.from(lane.querySelectorAll(".kitchen-order-card"));
+					if (cards.length < 2) return;
+					const sorted = [...cards].sort((a, b) => createdAtOf(a) - createdAtOf(b));
+					let changed = false;
+					for (let i = 0; i < cards.length; i += 1) {
+						if (cards[i] !== sorted[i]) {
+							changed = true;
+							break;
+						}
+					}
+					if (!changed) return;
+					sorted.forEach((card) => lane.appendChild(card));
+				}
+
+				function ageLabel(minutes) {
+					if (minutes < 1) return "now";
+					if (minutes < 60) return `${minutes}m`;
+					const hours = Math.floor(minutes / 60);
+					const remaining = minutes % 60;
+					if (hours < 24) return remaining === 0 ? `${hours}h` : `${hours}h ${remaining}m`;
+					return `${Math.floor(hours / 24)}d`;
+				}
+
+				function updateAges() {
+					const nowUnix = Math.floor(Date.now() / 1000);
+					allCards().forEach((card) => {
+						const ageNode = card.querySelector("[data-order-age]");
+						if (!ageNode) return;
+						const createdAt = createdAtOf(card);
+						if (createdAt <= 0) {
+							ageNode.textContent = "Unknown";
+							return;
+						}
+						const minutes = Math.max(0, Math.floor((nowUnix - createdAt) / 60));
+						ageNode.textContent = ageLabel(minutes);
+						card.classList.toggle("ring-2", minutes >= 15);
+						card.classList.toggle("ring-amber-400/60", minutes >= 15);
+						card.classList.toggle("ring-offset-1", minutes >= 15);
+					});
+				}
+
+				function updateCountsAndEmptyStates() {
+					const counts = {
+						"pending-payment": 0,
+						"waiting-start": 0,
+						preparing: 0,
+						ready: 0,
+					};
+
+					Object.keys(laneElements).forEach((key) => {
+						const lane = laneElements[key];
+						const value = lane ? lane.querySelectorAll(".kitchen-order-card").length : 0;
+						counts[key] = value;
+						if (laneCountElements[key]) laneCountElements[key].textContent = String(value);
+						if (laneEmptyElements[key]) laneEmptyElements[key].classList.toggle("hidden", value > 0);
+					});
+
+					counts.total = counts["pending-payment"] + counts["waiting-start"] + counts.preparing + counts.ready;
+					Object.keys(summaryCountElements).forEach((key) => {
+						const node = summaryCountElements[key];
+					if (!node) return;
+					const value = counts[key] || 0;
+					node.textContent = String(value);
+					});
+				}
+
+				let streamProbe = null;
+				function setStreamStatus(status) {
+					if (!streamDot || !streamLabel) return;
+					let state = "unsupported";
+					switch (status) {
+					case "connected":
+						state = "connected";
+						streamLabel.textContent = "Live updates on";
+						break;
+					case "connecting":
+						state = "connecting";
+						streamLabel.textContent = "Connecting live updates...";
+						break;
+					case "disconnected":
+						state = "disconnected";
+						streamLabel.textContent = "Live updates offline";
+						break;
+					default:
+						state = "unsupported";
+						streamLabel.textContent = "Live updates unavailable";
+						break;
+					}
+					streamDot.setAttribute("data-state", state);
+				}
+
+				function connectStreamProbe() {
+					if (!window.EventSource) {
+						setStreamStatus("unsupported");
+						return;
+					}
+					if (streamProbe) {
+						streamProbe.close();
+						streamProbe = null;
+					}
+					setStreamStatus("connecting");
+					const probe = new EventSource("/kitchen/stream");
+					streamProbe = probe;
+					probe.onopen = () => {
+						setStreamStatus("connected");
+					};
+					probe.onerror = () => {
+						setStreamStatus("disconnected");
+					};
+				}
+
+				if (streamReconnectButton instanceof HTMLButtonElement) {
+					streamReconnectButton.addEventListener("click", () => {
+						connectStreamProbe();
+					});
+				}
+				if (refetchButton instanceof HTMLButtonElement) {
+					refetchButton.addEventListener("click", () => {
+						window.location.reload();
+					});
+				}
+
+				let syncing = false;
+				function syncBoard() {
+					if (syncing) return;
+					syncing = true;
+					try {
+						allCards().forEach(routeCard);
+						Object.values(laneElements).forEach(sortLane);
+						updateCountsAndEmptyStates();
+						updateAges();
+					} finally {
+						syncing = false;
+					}
+				}
+
+				let frame = 0;
+				function requestSync() {
+					if (frame) return;
+					frame = window.requestAnimationFrame(() => {
+						frame = 0;
+						syncBoard();
+					});
+				}
+
+				const observer = new MutationObserver((mutations) => {
+					if (syncing) return;
+					for (const mutation of mutations) {
+						if (mutation.type === "attributes") {
+							const target = mutation.target;
+							if (target instanceof HTMLElement && target.classList.contains("kitchen-order-card")) {
+								requestSync();
+								return;
+							}
+						}
+						for (const node of mutation.addedNodes) {
+							if (!(node instanceof HTMLElement)) continue;
+							if (node.classList.contains("kitchen-order-card") || node.querySelector(".kitchen-order-card")) {
+								requestSync();
+								return;
+							}
+						}
+					}
+				});
+
+				observer.observe(root, {
+					childList: true,
+					subtree: true,
+					attributes: true,
+					attributeFilter: ["data-kitchen-status", "data-order-created-at"],
+				});
+
+				function labelForAction(action) {
+					switch (action) {
+					case "mark-paid":
+						return "Mark Paid";
+					case "mark-preparing":
+						return "Start Preparing";
+					case "mark-ready":
+						return "Mark Ready";
+					case "mark-completed":
+						return "Close Ticket";
+					default:
+						return "Update";
+					}
+				}
+
+				root.addEventListener("click", (event) => {
+					if (!(event.target instanceof Element)) return;
+					const actionButton = event.target.closest("[data-kitchen-action]");
+					if (!(actionButton instanceof HTMLButtonElement)) return;
+					if (actionButton.disabled) {
+						event.preventDefault();
+						return;
+					}
+					const initialAction = actionButton.getAttribute("data-kitchen-action") || "";
+					actionButton.disabled = true;
+					actionButton.textContent = "Updating...";
+					window.setTimeout(() => {
+						if (!actionButton.isConnected) return;
+						actionButton.disabled = false;
+						const currentAction = actionButton.getAttribute("data-kitchen-action") || initialAction;
+						actionButton.textContent = labelForAction(currentAction);
+					}, 5000);
+				});
+
+				connectStreamProbe();
+				syncBoard();
+				window.setInterval(updateAges, 60000);
+				window.addEventListener("beforeunload", () => {
+					if (streamProbe) {
+						streamProbe.close();
+					}
+				});
+			})();
+		</script>
 	}
 }

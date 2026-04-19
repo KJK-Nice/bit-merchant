@@ -32,6 +32,7 @@ type Commands struct {
 	MarkOrderPaid      orderCmd.MarkOrderPaidHandler
 	MarkOrderPreparing orderCmd.MarkOrderPreparingHandler
 	MarkOrderReady     orderCmd.MarkOrderReadyHandler
+	MarkOrderCompleted orderCmd.MarkOrderCompletedHandler
 
 	CreateRestaurant     restCmd.CreateRestaurantHandler
 	ToggleRestaurantOpen restCmd.ToggleRestaurantOpenHandler

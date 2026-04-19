@@ -96,6 +96,7 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 			MarkOrderPaid:           orderingSvc.MarkOrderPaid,
 			MarkOrderPreparing:      orderingSvc.MarkOrderPreparing,
 			MarkOrderReady:          orderingSvc.MarkOrderReady,
+			MarkOrderCompleted:      orderingSvc.MarkOrderCompleted,
 			CreateRestaurant:        restaurantSvc.CreateRestaurant,
 			ToggleRestaurantOpen:    restaurantSvc.ToggleRestaurantOpen,
 			UpdateTableCount:        restaurantSvc.UpdateTableCount,

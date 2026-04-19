@@ -20,6 +20,7 @@ type KitchenHandler struct {
 	markPaidUC      orderCmd.MarkOrderPaidHandler
 	markPreparingUC orderCmd.MarkOrderPreparingHandler
 	markReadyUC     orderCmd.MarkOrderReadyHandler
+	markCompletedUC orderCmd.MarkOrderCompletedHandler
 	restaurantRepo  restaurant.Repository
 	membershipRepo  membership.Repository
 }
@@ -29,6 +30,7 @@ func NewKitchenHandler(
 	markPaidUC orderCmd.MarkOrderPaidHandler,
 	markPreparingUC orderCmd.MarkOrderPreparingHandler,
 	markReadyUC orderCmd.MarkOrderReadyHandler,
+	markCompletedUC orderCmd.MarkOrderCompletedHandler,
 	restaurantRepo restaurant.Repository,
 	membershipRepo membership.Repository,
 ) *KitchenHandler {
@@ -37,6 +39,7 @@ func NewKitchenHandler(
 		markPaidUC:      markPaidUC,
 		markPreparingUC: markPreparingUC,
 		markReadyUC:     markReadyUC,
+		markCompletedUC: markCompletedUC,
 		restaurantRepo:  restaurantRepo,
 		membershipRepo:  membershipRepo,
 	}
@@ -81,6 +84,15 @@ func (h *KitchenHandler) MarkPreparing(c echo.Context) error {
 func (h *KitchenHandler) MarkReady(c echo.Context) error {
 	id := c.Param("id")
 	order, err := h.markReadyUC.Handle(c.Request().Context(), orderCmd.MarkOrderReady{OrderID: common.OrderID(id)})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	return components.OrderCard(order).Render(c.Request().Context(), c.Response())
+}
+
+func (h *KitchenHandler) MarkCompleted(c echo.Context) error {
+	id := c.Param("id")
+	order, err := h.markCompletedUC.Handle(c.Request().Context(), orderCmd.MarkOrderCompleted{OrderID: common.OrderID(id)})
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}

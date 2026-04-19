@@ -17,6 +17,7 @@ type Commands struct {
 	MarkOrderPaid      command.MarkOrderPaidHandler
 	MarkOrderPreparing command.MarkOrderPreparingHandler
 	MarkOrderReady     command.MarkOrderReadyHandler
+	MarkOrderCompleted command.MarkOrderCompletedHandler
 }
 
 // Queries are read-side handlers.
