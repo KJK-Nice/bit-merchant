@@ -82,9 +82,9 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 						<div class="flex items-center justify-between gap-3">
 							<h2 class="text-2xl font-semibold tracking-tight">{ cat.Category.Name }</h2>
 						</div>
-						<div class="flex gap-3 overflow-x-auto snap-x snap-mandatory md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-							for _, item := range cat.Items {
-								<div class="snap-start shrink-0 md:w-auto md:max-w-none" style="width:min(84vw,24rem);">
+						<div class="-mx-4 flex gap-3 overflow-x-auto snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+							for j, item := range cat.Items {
+								<div class={ "snap-start shrink-0 md:w-auto md:max-w-none", templ.KV("ms-4 md:ms-0", j == 0) } style="width:min(84vw,24rem);">
 									if item.PhotoURL != "" {
 										@card.Card(card.Props{
 											Class: "relative overflow-hidden border-0 shadow-none",
