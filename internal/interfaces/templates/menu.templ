@@ -235,7 +235,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 			</button>
 		</div>
 
-			<script>
+			<script nonce={ templ.GetNonce(ctx) }>
 				document.addEventListener('DOMContentLoaded', () => {
 					const tabsRoot = document.getElementById('menu-category-tabs');
 					if (!tabsRoot) return;
