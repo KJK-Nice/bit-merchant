@@ -37,8 +37,8 @@ templ ScanQRPage() {
 		</div>
 		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/my-places"})
 
-		<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-		<script>
+		<script src="/assets/js/html5-qrcode.min.js" nonce={ templ.GetNonce(ctx) }></script>
+		<script nonce={ templ.GetNonce(ctx) }>
 			(() => {
 				const statusEl = document.getElementById("scan-status");
 				const readerEl = document.getElementById("qr-reader");
