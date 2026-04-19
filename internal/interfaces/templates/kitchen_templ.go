@@ -9,12 +9,41 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"bitmerchant/internal/common"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/interfaces/templates/layouts"
 	"bitmerchant/internal/ordering/domain/order"
+	"fmt"
 )
 
-func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) templ.Component {
+func kitchenStatusForSummary(order *order.Order) string {
+	if order == nil {
+		return "waiting-start"
+	}
+	if order.PaymentStatus != common.PaymentStatusPaid {
+		return "pending-payment"
+	}
+	switch order.FulfillmentStatus {
+	case common.FulfillmentStatusPreparing:
+		return "preparing"
+	case common.FulfillmentStatusReady:
+		return "ready"
+	default:
+		return "waiting-start"
+	}
+}
+
+func kitchenCountByStatus(orders []*order.Order, status string) int {
+	total := 0
+	for _, current := range orders {
+		if kitchenStatusForSummary(current) == status {
+			total += 1
+		}
+	}
+	return total
+}
+
+func kitchenLaneColumn(key string, title string, subtitle string, emptyText string, tone string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -35,7 +64,158 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		var templ_7745c5c3_Var2 = []any{fmt.Sprintf("kitchen-lane-shell rounded-xl border p-4 space-y-3 bg-gradient-to-b %s", tone)}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs("lane-shell-" + key)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 39, Col: 34}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var2).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 1, Col: 0}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><div class=\"flex items-start justify-between gap-3\"><div><h2 class=\"text-base font-semibold tracking-tight\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 42, Col: 62}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</h2><p class=\"text-xs text-muted-foreground mt-1\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(subtitle)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 43, Col: 60}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p></div><span class=\"rounded-full border border-border bg-background/80 px-2 py-0.5 text-xs font-semibold tabular-nums\" data-lane-count=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(key)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 45, Col: 136}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">0</span></div><div id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var8 string
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs("lane-" + key)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 47, Col: 25}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" data-kitchen-lane=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(key)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 47, Col: 51}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" class=\"min-h-[6rem] space-y-3\"></div><p data-lane-empty=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(key)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 48, Col: 26}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" class=\"rounded-md border border-dashed border-border/80 bg-background/60 px-3 py-3 text-sm text-muted-foreground\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var11 string
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(emptyText)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 48, Col: 154}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p></section>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var12 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var12 == nil {
+			templ_7745c5c3_Var12 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Var13 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -47,7 +227,92 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"kitchen-display\" data-init=\"@get('/kitchen/stream')\" class=\"space-y-6 mt-4\"><h1 class=\"text-2xl font-bold mb-6 sr-only\">Kitchen Display System</h1><div id=\"orders-list\" class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div id=\"kitchen-display\" data-init=\"@get('/kitchen/stream')\" class=\"space-y-6 mt-4 pb-6\"><section class=\"relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-muted/50 p-5\"><div class=\"absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.12),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(16,185,129,0.1),transparent_45%)]\"></div><div class=\"relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between\"><div class=\"space-y-2\"><div class=\"flex flex-wrap items-center gap-2\"><h1 class=\"text-2xl font-bold tracking-tight\">Kitchen Board</h1><div id=\"kitchen-stream-state\" class=\"inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-2.5 py-1.5\"><span id=\"kitchen-stream-dot\" class=\"kitchen-stream-dot\" data-state=\"connecting\"></span> <span id=\"kitchen-stream-label\" class=\"text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground\">Checking live updates...</span></div></div><p class=\"text-sm text-muted-foreground\">Live order queue grouped by action stage. Oldest tickets are sorted first inside each lane.</p></div><div class=\"flex items-center gap-2\"><button id=\"kitchen-stream-reconnect\" type=\"button\" class=\"inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted\">Reconnect</button> <button id=\"kitchen-refetch\" type=\"button\" class=\"inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted\">Refresh</button></div></div><div id=\"kitchen-summary\" class=\"relative mt-4\"><div class=\"kitchen-summary-card rounded-lg border border-border/70 bg-background/80 px-2 py-2 md:px-3\"><p class=\"text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground\">Active orders</p><p class=\"mt-0.5 text-xl font-semibold tabular-nums md:text-2xl\" data-summary-count=\"total\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", len(orders)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 84, Col: 130}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p></div><div class=\"kitchen-summary-card rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-2 md:px-3\"><p class=\"text-xs font-medium uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300\">Payment pending</p><p class=\"mt-0.5 text-xl font-semibold tabular-nums md:text-2xl\" data-summary-count=\"pending-payment\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var15 string
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", kitchenCountByStatus(orders, "pending-payment")))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 88, Col: 176}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p></div><div class=\"kitchen-summary-card rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2 py-2 md:px-3\"><p class=\"text-xs font-medium uppercase tracking-[0.08em] text-indigo-700 dark:text-indigo-300\">Waiting to start</p><p class=\"mt-0.5 text-xl font-semibold tabular-nums md:text-2xl\" data-summary-count=\"waiting-start\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var16 string
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", kitchenCountByStatus(orders, "waiting-start")))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 92, Col: 172}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</p></div><div class=\"kitchen-summary-card rounded-lg border border-sky-500/30 bg-sky-500/10 px-2 py-2 md:px-3\"><p class=\"text-xs font-medium uppercase tracking-[0.08em] text-sky-700 dark:text-sky-300\">Preparing</p><p class=\"mt-0.5 text-xl font-semibold tabular-nums md:text-2xl\" data-summary-count=\"preparing\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var17 string
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", kitchenCountByStatus(orders, "preparing")))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 96, Col: 164}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</p></div><div class=\"kitchen-summary-card rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-2 md:px-3\"><p class=\"text-xs font-medium uppercase tracking-[0.08em] text-emerald-700 dark:text-emerald-300\">Ready</p><p class=\"mt-0.5 text-xl font-semibold tabular-nums md:text-2xl\" data-summary-count=\"ready\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var18 string
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", kitchenCountByStatus(orders, "ready")))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 100, Col: 156}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</p></div></div></section><div id=\"kitchen-lanes\" class=\"kitchen-lanes\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = kitchenLaneColumn("pending-payment", "Payment Needed", "Confirm payment before cooking.", "No unpaid tickets in queue.", "from-amber-500/5 to-background").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = kitchenLaneColumn("waiting-start", "Ready To Cook", "Paid orders waiting for prep.", "No paid tickets waiting to start.", "from-indigo-500/5 to-background").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = kitchenLaneColumn("preparing", "Preparing", "Orders currently being made.", "Nothing is currently in preparation.", "from-sky-500/5 to-background").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = kitchenLaneColumn("ready", "Ready For Pickup", "Keep this list visible to runners.", "No orders ready for pickup.", "from-emerald-500/5 to-background").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div><div id=\"orders-list\" class=\"hidden\" aria-hidden=\"true\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -57,13 +322,39 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div></div><style nonce=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var19 string
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 118, Col: 36}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\">\n\t\t\t#kitchen-summary {\n\t\t\t\tdisplay: flex;\n\t\t\t\tgap: 0.5rem;\n\t\t\t\toverflow-x: auto;\n\t\t\t\tpadding-bottom: 0.25rem;\n\t\t\t\tscroll-snap-type: x mandatory;\n\t\t\t\tscrollbar-width: none;\n\t\t\t}\n\t\t\t#kitchen-summary::-webkit-scrollbar {\n\t\t\t\tdisplay: none;\n\t\t\t}\n\t\t\t#kitchen-summary .kitchen-summary-card {\n\t\t\t\tmin-width: 8.5rem;\n\t\t\t\tflex: 0 0 auto;\n\t\t\t\tscroll-snap-align: start;\n\t\t\t}\n\t\t\t#kitchen-lanes {\n\t\t\t\tdisplay: flex;\n\t\t\t\tflex-direction: column;\n\t\t\t\tgap: 1rem;\n\t\t\t\toverflow: visible;\n\t\t\t\tpadding-bottom: 0;\n\t\t\t\tscroll-snap-type: none;\n\t\t\t}\n\t\t\t#kitchen-lanes .kitchen-lane-shell {\n\t\t\t\tmin-width: 0;\n\t\t\t\tflex: initial;\n\t\t\t}\n\t\t\t.kitchen-stream-dot {\n\t\t\t\tdisplay: inline-block;\n\t\t\t\twidth: 0.875rem;\n\t\t\t\theight: 0.875rem;\n\t\t\t\tflex-shrink: 0;\n\t\t\t\tborder-radius: 9999px;\n\t\t\t\tbackground: #f59e0b;\n\t\t\t\tbox-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35);\n\t\t\t}\n\t\t\t.kitchen-stream-dot[data-state=\"connected\"] {\n\t\t\t\tbackground: #10b981;\n\t\t\t\tbox-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);\n\t\t\t}\n\t\t\t.kitchen-stream-dot[data-state=\"connecting\"] {\n\t\t\t\tbackground: #f59e0b;\n\t\t\t\tbox-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35);\n\t\t\t\tanimation: kitchen-dot-pulse 1.2s infinite ease-in-out;\n\t\t\t}\n\t\t\t.kitchen-stream-dot[data-state=\"disconnected\"] {\n\t\t\t\tbackground: #ef4444;\n\t\t\t\tbox-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35);\n\t\t\t}\n\t\t\t.kitchen-stream-dot[data-state=\"unsupported\"] {\n\t\t\t\tbackground: #71717a;\n\t\t\t\tbox-shadow: 0 0 0 2px rgba(113, 113, 122, 0.3);\n\t\t\t}\n\t\t\t@keyframes kitchen-dot-pulse {\n\t\t\t\t0% { transform: scale(0.9); opacity: 0.8; }\n\t\t\t\t50% { transform: scale(1); opacity: 1; }\n\t\t\t\t100% { transform: scale(0.9); opacity: 0.8; }\n\t\t\t}\n\t\t\t@media (min-width: 768px) {\n\t\t\t\t#kitchen-summary {\n\t\t\t\t\tdisplay: grid;\n\t\t\t\t\tgrid-template-columns: repeat(5, minmax(0, 1fr));\n\t\t\t\t\toverflow: visible;\n\t\t\t\t\tpadding-bottom: 0;\n\t\t\t\t\tscroll-snap-type: none;\n\t\t\t\t}\n\t\t\t\t#kitchen-summary .kitchen-summary-card {\n\t\t\t\t\tmin-width: 0;\n\t\t\t\t\tflex: initial;\n\t\t\t\t}\n\t\t\t\t#kitchen-lanes {\n\t\t\t\t\tdisplay: grid;\n\t\t\t\t\tgrid-template-columns: repeat(2, minmax(0, 1fr));\n\t\t\t\t\toverflow: visible;\n\t\t\t\t}\n\t\t\t\t#kitchen-lanes .kitchen-lane-shell {\n\t\t\t\t\tmin-width: 0;\n\t\t\t\t\tflex: initial;\n\t\t\t\t}\n\t\t\t}\n\t\t\t@media (min-width: 1280px) {\n\t\t\t\t#kitchen-lanes {\n\t\t\t\t\tgrid-template-columns: repeat(4, minmax(0, 1fr));\n\t\t\t\t}\n\t\t\t}\n\t\t</style> <script nonce=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var20 string
+			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 206, Col: 37}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\">\n\t\t\t(function () {\n\t\t\t\tconst root = document.getElementById(\"kitchen-display\");\n\t\t\t\tif (!root) return;\n\n\t\t\t\tconst laneElements = {\n\t\t\t\t\t\"pending-payment\": document.getElementById(\"lane-pending-payment\"),\n\t\t\t\t\t\"waiting-start\": document.getElementById(\"lane-waiting-start\"),\n\t\t\t\t\t\"preparing\": document.getElementById(\"lane-preparing\"),\n\t\t\t\t\t\"ready\": document.getElementById(\"lane-ready\"),\n\t\t\t\t};\n\t\t\t\tconst streamDot = document.getElementById(\"kitchen-stream-dot\");\n\t\t\t\tconst streamLabel = document.getElementById(\"kitchen-stream-label\");\n\t\t\t\tconst streamReconnectButton = document.getElementById(\"kitchen-stream-reconnect\");\n\t\t\t\tconst refetchButton = document.getElementById(\"kitchen-refetch\");\n\n\t\t\t\tconst summaryCountElements = {\n\t\t\t\t\ttotal: root.querySelector('[data-summary-count=\"total\"]'),\n\t\t\t\t\t\"pending-payment\": root.querySelector('[data-summary-count=\"pending-payment\"]'),\n\t\t\t\t\t\"waiting-start\": root.querySelector('[data-summary-count=\"waiting-start\"]'),\n\t\t\t\t\tpreparing: root.querySelector('[data-summary-count=\"preparing\"]'),\n\t\t\t\t\tready: root.querySelector('[data-summary-count=\"ready\"]'),\n\t\t\t\t};\n\t\t\t\tconst laneCountElements = {};\n\t\t\t\troot.querySelectorAll(\"[data-lane-count]\").forEach((element) => {\n\t\t\t\t\tconst key = element.getAttribute(\"data-lane-count\");\n\t\t\t\t\tif (key) laneCountElements[key] = element;\n\t\t\t\t});\n\t\t\t\tconst laneEmptyElements = {};\n\t\t\t\troot.querySelectorAll(\"[data-lane-empty]\").forEach((element) => {\n\t\t\t\t\tconst key = element.getAttribute(\"data-lane-empty\");\n\t\t\t\t\tif (key) laneEmptyElements[key] = element;\n\t\t\t\t});\n\n\t\t\t\tfunction allCards() {\n\t\t\t\t\treturn Array.from(root.querySelectorAll(\".kitchen-order-card\"));\n\t\t\t\t}\n\n\t\t\t\tfunction statusOf(card) {\n\t\t\t\t\tconst raw = (card.getAttribute(\"data-kitchen-status\") || \"waiting-start\").toLowerCase();\n\t\t\t\t\tif (raw === \"completed\") return \"completed\";\n\t\t\t\t\tif (laneElements[raw]) return raw;\n\t\t\t\t\treturn \"waiting-start\";\n\t\t\t\t}\n\n\t\t\t\tfunction createdAtOf(card) {\n\t\t\t\t\tconst value = Number.parseInt(card.getAttribute(\"data-order-created-at\") || \"0\", 10);\n\t\t\t\t\treturn Number.isFinite(value) ? value : 0;\n\t\t\t\t}\n\n\t\t\t\tfunction routeCard(card) {\n\t\t\t\t\tconst status = statusOf(card);\n\t\t\t\t\tif (status === \"completed\") {\n\t\t\t\t\t\tcard.remove();\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tconst lane = laneElements[status];\n\t\t\t\t\tif (!lane) return;\n\t\t\t\t\tif (card.parentElement !== lane) {\n\t\t\t\t\t\tlane.appendChild(card);\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tfunction sortLane(lane) {\n\t\t\t\t\tif (!lane) return;\n\t\t\t\t\tconst cards = Array.from(lane.querySelectorAll(\".kitchen-order-card\"));\n\t\t\t\t\tif (cards.length < 2) return;\n\t\t\t\t\tconst sorted = [...cards].sort((a, b) => createdAtOf(a) - createdAtOf(b));\n\t\t\t\t\tlet changed = false;\n\t\t\t\t\tfor (let i = 0; i < cards.length; i += 1) {\n\t\t\t\t\t\tif (cards[i] !== sorted[i]) {\n\t\t\t\t\t\t\tchanged = true;\n\t\t\t\t\t\t\tbreak;\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\tif (!changed) return;\n\t\t\t\t\tsorted.forEach((card) => lane.appendChild(card));\n\t\t\t\t}\n\n\t\t\t\tfunction ageLabel(minutes) {\n\t\t\t\t\tif (minutes < 1) return \"now\";\n\t\t\t\t\tif (minutes < 60) return `${minutes}m`;\n\t\t\t\t\tconst hours = Math.floor(minutes / 60);\n\t\t\t\t\tconst remaining = minutes % 60;\n\t\t\t\t\tif (hours < 24) return remaining === 0 ? `${hours}h` : `${hours}h ${remaining}m`;\n\t\t\t\t\treturn `${Math.floor(hours / 24)}d`;\n\t\t\t\t}\n\n\t\t\t\tfunction updateAges() {\n\t\t\t\t\tconst nowUnix = Math.floor(Date.now() / 1000);\n\t\t\t\t\tallCards().forEach((card) => {\n\t\t\t\t\t\tconst ageNode = card.querySelector(\"[data-order-age]\");\n\t\t\t\t\t\tif (!ageNode) return;\n\t\t\t\t\t\tconst createdAt = createdAtOf(card);\n\t\t\t\t\t\tif (createdAt <= 0) {\n\t\t\t\t\t\t\tageNode.textContent = \"Unknown\";\n\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t}\n\t\t\t\t\t\tconst minutes = Math.max(0, Math.floor((nowUnix - createdAt) / 60));\n\t\t\t\t\t\tageNode.textContent = ageLabel(minutes);\n\t\t\t\t\t\tcard.classList.toggle(\"ring-2\", minutes >= 15);\n\t\t\t\t\t\tcard.classList.toggle(\"ring-amber-400/60\", minutes >= 15);\n\t\t\t\t\t\tcard.classList.toggle(\"ring-offset-1\", minutes >= 15);\n\t\t\t\t\t});\n\t\t\t\t}\n\n\t\t\t\tfunction updateCountsAndEmptyStates() {\n\t\t\t\t\tconst counts = {\n\t\t\t\t\t\t\"pending-payment\": 0,\n\t\t\t\t\t\t\"waiting-start\": 0,\n\t\t\t\t\t\tpreparing: 0,\n\t\t\t\t\t\tready: 0,\n\t\t\t\t\t};\n\n\t\t\t\t\tObject.keys(laneElements).forEach((key) => {\n\t\t\t\t\t\tconst lane = laneElements[key];\n\t\t\t\t\t\tconst value = lane ? lane.querySelectorAll(\".kitchen-order-card\").length : 0;\n\t\t\t\t\t\tcounts[key] = value;\n\t\t\t\t\t\tif (laneCountElements[key]) laneCountElements[key].textContent = String(value);\n\t\t\t\t\t\tif (laneEmptyElements[key]) laneEmptyElements[key].classList.toggle(\"hidden\", value > 0);\n\t\t\t\t\t});\n\n\t\t\t\t\tcounts.total = counts[\"pending-payment\"] + counts[\"waiting-start\"] + counts.preparing + counts.ready;\n\t\t\t\t\tObject.keys(summaryCountElements).forEach((key) => {\n\t\t\t\t\t\tconst node = summaryCountElements[key];\n\t\t\t\t\tif (!node) return;\n\t\t\t\t\tconst value = counts[key] || 0;\n\t\t\t\t\tnode.textContent = String(value);\n\t\t\t\t\t});\n\t\t\t\t}\n\n\t\t\t\tlet streamProbe = null;\n\t\t\t\tfunction setStreamStatus(status) {\n\t\t\t\t\tif (!streamDot || !streamLabel) return;\n\t\t\t\t\tlet state = \"unsupported\";\n\t\t\t\t\tswitch (status) {\n\t\t\t\t\tcase \"connected\":\n\t\t\t\t\t\tstate = \"connected\";\n\t\t\t\t\t\tstreamLabel.textContent = \"Live updates on\";\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase \"connecting\":\n\t\t\t\t\t\tstate = \"connecting\";\n\t\t\t\t\t\tstreamLabel.textContent = \"Connecting live updates...\";\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase \"disconnected\":\n\t\t\t\t\t\tstate = \"disconnected\";\n\t\t\t\t\t\tstreamLabel.textContent = \"Live updates offline\";\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tdefault:\n\t\t\t\t\t\tstate = \"unsupported\";\n\t\t\t\t\t\tstreamLabel.textContent = \"Live updates unavailable\";\n\t\t\t\t\t\tbreak;\n\t\t\t\t\t}\n\t\t\t\t\tstreamDot.setAttribute(\"data-state\", state);\n\t\t\t\t}\n\n\t\t\t\tfunction connectStreamProbe() {\n\t\t\t\t\tif (!window.EventSource) {\n\t\t\t\t\t\tsetStreamStatus(\"unsupported\");\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tif (streamProbe) {\n\t\t\t\t\t\tstreamProbe.close();\n\t\t\t\t\t\tstreamProbe = null;\n\t\t\t\t\t}\n\t\t\t\t\tsetStreamStatus(\"connecting\");\n\t\t\t\t\tconst probe = new EventSource(\"/kitchen/stream\");\n\t\t\t\t\tstreamProbe = probe;\n\t\t\t\t\tprobe.onopen = () => {\n\t\t\t\t\t\tsetStreamStatus(\"connected\");\n\t\t\t\t\t};\n\t\t\t\t\tprobe.onerror = () => {\n\t\t\t\t\t\tsetStreamStatus(\"disconnected\");\n\t\t\t\t\t};\n\t\t\t\t}\n\n\t\t\t\tif (streamReconnectButton instanceof HTMLButtonElement) {\n\t\t\t\t\tstreamReconnectButton.addEventListener(\"click\", () => {\n\t\t\t\t\t\tconnectStreamProbe();\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t\tif (refetchButton instanceof HTMLButtonElement) {\n\t\t\t\t\trefetchButton.addEventListener(\"click\", () => {\n\t\t\t\t\t\twindow.location.reload();\n\t\t\t\t\t});\n\t\t\t\t}\n\n\t\t\t\tlet syncing = false;\n\t\t\t\tfunction syncBoard() {\n\t\t\t\t\tif (syncing) return;\n\t\t\t\t\tsyncing = true;\n\t\t\t\t\ttry {\n\t\t\t\t\t\tallCards().forEach(routeCard);\n\t\t\t\t\t\tObject.values(laneElements).forEach(sortLane);\n\t\t\t\t\t\tupdateCountsAndEmptyStates();\n\t\t\t\t\t\tupdateAges();\n\t\t\t\t\t} finally {\n\t\t\t\t\t\tsyncing = false;\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tlet frame = 0;\n\t\t\t\tfunction requestSync() {\n\t\t\t\t\tif (frame) return;\n\t\t\t\t\tframe = window.requestAnimationFrame(() => {\n\t\t\t\t\t\tframe = 0;\n\t\t\t\t\t\tsyncBoard();\n\t\t\t\t\t});\n\t\t\t\t}\n\n\t\t\t\tconst observer = new MutationObserver((mutations) => {\n\t\t\t\t\tif (syncing) return;\n\t\t\t\t\tfor (const mutation of mutations) {\n\t\t\t\t\t\tif (mutation.type === \"attributes\") {\n\t\t\t\t\t\t\tconst target = mutation.target;\n\t\t\t\t\t\t\tif (target instanceof HTMLElement && target.classList.contains(\"kitchen-order-card\")) {\n\t\t\t\t\t\t\t\trequestSync();\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t\tfor (const node of mutation.addedNodes) {\n\t\t\t\t\t\t\tif (!(node instanceof HTMLElement)) continue;\n\t\t\t\t\t\t\tif (node.classList.contains(\"kitchen-order-card\") || node.querySelector(\".kitchen-order-card\")) {\n\t\t\t\t\t\t\t\trequestSync();\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\tobserver.observe(root, {\n\t\t\t\t\tchildList: true,\n\t\t\t\t\tsubtree: true,\n\t\t\t\t\tattributes: true,\n\t\t\t\t\tattributeFilter: [\"data-kitchen-status\", \"data-order-created-at\"],\n\t\t\t\t});\n\n\t\t\t\tfunction labelForAction(action) {\n\t\t\t\t\tswitch (action) {\n\t\t\t\t\tcase \"mark-paid\":\n\t\t\t\t\t\treturn \"Mark Paid\";\n\t\t\t\t\tcase \"mark-preparing\":\n\t\t\t\t\t\treturn \"Start Preparing\";\n\t\t\t\t\tcase \"mark-ready\":\n\t\t\t\t\t\treturn \"Mark Ready\";\n\t\t\t\t\tcase \"mark-completed\":\n\t\t\t\t\t\treturn \"Close Ticket\";\n\t\t\t\t\tdefault:\n\t\t\t\t\t\treturn \"Update\";\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\troot.addEventListener(\"click\", (event) => {\n\t\t\t\t\tif (!(event.target instanceof Element)) return;\n\t\t\t\t\tconst actionButton = event.target.closest(\"[data-kitchen-action]\");\n\t\t\t\t\tif (!(actionButton instanceof HTMLButtonElement)) return;\n\t\t\t\t\tif (actionButton.disabled) {\n\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tconst initialAction = actionButton.getAttribute(\"data-kitchen-action\") || \"\";\n\t\t\t\t\tactionButton.disabled = true;\n\t\t\t\t\tactionButton.textContent = \"Updating...\";\n\t\t\t\t\twindow.setTimeout(() => {\n\t\t\t\t\t\tif (!actionButton.isConnected) return;\n\t\t\t\t\t\tactionButton.disabled = false;\n\t\t\t\t\t\tconst currentAction = actionButton.getAttribute(\"data-kitchen-action\") || initialAction;\n\t\t\t\t\t\tactionButton.textContent = labelForAction(currentAction);\n\t\t\t\t\t}, 5000);\n\t\t\t\t});\n\n\t\t\t\tconnectStreamProbe();\n\t\t\t\tsyncBoard();\n\t\t\t\twindow.setInterval(updateAges, 60000);\n\t\t\t\twindow.addEventListener(\"beforeunload\", () => {\n\t\t\t\t\tif (streamProbe) {\n\t\t\t\t\t\tstreamProbe.close();\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t})();\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.Dashboard("Kitchen Display", "/kitchen", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.Dashboard("Kitchen Display", "/kitchen", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

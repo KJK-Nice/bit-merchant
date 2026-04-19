@@ -54,6 +54,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	kitchenGroup.POST("/order/:id/mark-paid", handlers.Kitchen.MarkPaid)
 	kitchenGroup.POST("/order/:id/mark-preparing", handlers.Kitchen.MarkPreparing)
 	kitchenGroup.POST("/order/:id/mark-ready", handlers.Kitchen.MarkReady)
+	kitchenGroup.POST("/order/:id/mark-completed", handlers.Kitchen.MarkCompleted)
 
 	adminGroup := e.Group("/admin")
 	adminGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, common.RoleOwner))
