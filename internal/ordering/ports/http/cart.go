@@ -31,7 +31,8 @@ func NewCartHandler(cartService *cart.CartService, itemRepo menu.ItemRepository)
 }
 
 // writeCartSSE writes a Datastar SSE response with updated cart fragments + per-item qty signals.
-func (h *CartHandler) writeCartSSE(c echo.Context, updatedCart *cart.Cart) error {
+// zeroedIDs are item IDs that were just removed; they are emitted with qty=0 so the menu CTA resets.
+func (h *CartHandler) writeCartSSE(c echo.Context, updatedCart *cart.Cart, zeroedIDs ...common.ItemID) error {
 	ctx := c.Request().Context()
 	w := c.Response()
 
@@ -57,6 +58,12 @@ func (h *CartHandler) writeCartSSE(c echo.Context, updatedCart *cart.Cart) error
 	qtyMap := map[string]int{}
 	for _, item := range updatedCart.Items {
 		qtyMap[string(item.ItemID)] = item.Quantity
+	}
+	// Explicitly zero out removed items so the "Add to Cart" CTA reappears.
+	for _, id := range zeroedIDs {
+		if _, stillInCart := qtyMap[string(id)]; !stillInCart {
+			qtyMap[string(id)] = 0
+		}
 	}
 	signalBytes, err := json.Marshal(map[string]any{"cartItemQty": qtyMap})
 	if err == nil {
@@ -127,7 +134,7 @@ func (h *CartHandler) DecrementFromCart(c echo.Context) error {
 	}
 
 	updatedCart := h.cartService.GetCart(sessionID)
-	return h.writeCartSSE(c, updatedCart)
+	return h.writeCartSSE(c, updatedCart, common.ItemID(req.ItemID))
 }
 
 // RemoveFromCart handles POST /cart/remove — removes the entire line regardless of qty.
@@ -151,7 +158,7 @@ func (h *CartHandler) RemoveFromCart(c echo.Context) error {
 	}
 
 	updatedCart := h.cartService.GetCart(sessionID)
-	return h.writeCartSSE(c, updatedCart)
+	return h.writeCartSSE(c, updatedCart, common.ItemID(req.ItemID))
 }
 
 // GetCart handles GET /cart — returns the cart summary fragment for Datastar to patch.
