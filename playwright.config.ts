@@ -46,6 +46,7 @@ export default defineConfig({
       PUBLIC_BASE_URL: "http://localhost:8080",
       CUSTOMER_BASE_URL: "http://order.localhost:8080",
       MERCHANT_BASE_URL: "http://merchant.localhost:8080",
+      EVENT_BUS_BACKEND: "memory",
       DISABLE_RATE_LIMIT: "true",
     },
   },
