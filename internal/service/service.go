@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"time"
 
 	authInfra "bitmerchant/internal/auth/adapters"
 	authservice "bitmerchant/internal/auth/service"
@@ -11,6 +13,7 @@ import (
 	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/infrastructure/qr"
 	menuservice "bitmerchant/internal/menu/service"
+	"bitmerchant/internal/ordering/domain/order"
 	orderingservice "bitmerchant/internal/ordering/service"
 	payAdapters "bitmerchant/internal/payment/adapters"
 	placeservice "bitmerchant/internal/places/service"
@@ -19,6 +22,10 @@ import (
 	commonhttp "bitmerchant/internal/common/http"
 	"bitmerchant/internal/common/http/middleware"
 	"bitmerchant/internal/wiring"
+
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
+	wmmiddleware "github.com/ThreeDotsLabs/watermill/message/router/middleware"
 )
 
 // Config mirrors runtime configuration required by the composition root (alias for wiring.Config).
@@ -36,17 +43,32 @@ func NewComponentTestApplication(ctx context.Context) Application {
 }
 
 func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Application, func(), error) {
-	eventBus := events.NewEventBus()
+	eventBus, err := events.NewEventBusWithConfig(eventBusConfig(cfg))
+	if err != nil {
+		return Application{}, nil, fmt.Errorf("init event bus: %w", err)
+	}
+
+	var db *sql.DB
+	var orderEventsRouter *message.Router
+	cleanupResources := func() {
+		if orderEventsRouter != nil {
+			_ = orderEventsRouter.Close()
+		}
+		_ = eventBus.Close()
+		if db != nil {
+			_ = db.Close()
+		}
+	}
 
 	photoStorage, err := wiring.InitPhotoStorage(cfg, logger)
 	if err != nil {
-		_ = eventBus.Close()
+		cleanupResources()
 		return Application{}, nil, fmt.Errorf("init photo storage: %w", err)
 	}
 
-	db, err := wiring.ConnectDatabase(cfg, logger)
+	db, err = wiring.ConnectDatabase(cfg, logger)
 	if err != nil {
-		_ = eventBus.Close()
+		cleanupResources()
 		return Application{}, nil, fmt.Errorf("connect database: %w", err)
 	}
 
@@ -67,28 +89,20 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 	restaurantSvc := restaurantservice.New(repos, cfg, qrService, menuSvc)
 	dashboardSvc := dashboardservice.New(repos, restaurantSvc.ToggleRestaurantOpen, logger.Logger)
 
-	secureCookie := middleware.ShouldUseSecureCookies(cfg.PublicBaseURL, cfg.ForceSecureCookie) ||
-		middleware.ShouldUseSecureCookies(cfg.CustomerBaseURL, cfg.ForceSecureCookie) ||
-		middleware.ShouldUseSecureCookies(cfg.MerchantBaseURL, cfg.ForceSecureCookie)
-	sessionOpts := middleware.SessionOptions{
-		SecureCookie:       secureCookie,
-		CookieName:         middleware.MerchantSessionCookieName,
-		MerchantCookieName: middleware.MerchantSessionCookieName,
-		CustomerCookieName: middleware.CustomerSessionCookieName,
-		LegacyCookieName:   middleware.SessionCookieName,
-	}
+	sessionOpts := newSessionOptions(cfg)
 	webauthnSvc, err := authInfra.NewWebAuthnService(cfg.RPID, "BitMerchant", []string{cfg.MerchantBaseURL})
 	if err != nil {
-		if db != nil {
-			_ = db.Close()
-		}
-		_ = eventBus.Close()
+		cleanupResources()
 		return Application{}, nil, fmt.Errorf("init webauthn: %w", err)
 	}
 
 	authSvc := authservice.New(repos, webauthnSvc, logger.Logger, sessionOpts, restaurantSvc.CreateRestaurant)
 
-	orderingservice.RegisterOrderSSESubscriptions(eventBus, logger, sseHandler, repos.Order)
+	orderEventsRouter, err = startOrderEventsRouter(ctx, cfg, eventBus, logger, sseHandler, repos.Order)
+	if err != nil {
+		cleanupResources()
+		return Application{}, nil, fmt.Errorf("init order events router: %w", err)
+	}
 
 	application := Application{
 		Commands: Commands{
@@ -143,11 +157,86 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 	}
 
 	cleanup := func() {
-		_ = eventBus.Close()
-		if db != nil {
-			_ = db.Close()
-		}
+		cleanupResources()
 	}
 
 	return application, cleanup, nil
+}
+
+func eventBusConfig(cfg Config) events.Config {
+	return events.Config{
+		Backend:           cfg.EventBusBackend,
+		NATSURL:           cfg.NATSURL,
+		NATSAutoProvision: cfg.NATSAutoProvision,
+		NATSAckWait:       cfg.NATSAckWait,
+		NATSCloseTimeout:  cfg.NATSCloseTimeout,
+		NATSSubscribers:   cfg.NATSSubscribersCount,
+		NATSInstanceID:    cfg.NATSInstanceID,
+	}
+}
+
+func resolveRouterCloseTimeout(cfg Config) time.Duration {
+	if cfg.NATSCloseTimeout <= 0 {
+		return 30 * time.Second
+	}
+	return cfg.NATSCloseTimeout
+}
+
+func newSessionOptions(cfg Config) middleware.SessionOptions {
+	secureCookie := middleware.ShouldUseSecureCookies(cfg.PublicBaseURL, cfg.ForceSecureCookie) ||
+		middleware.ShouldUseSecureCookies(cfg.CustomerBaseURL, cfg.ForceSecureCookie) ||
+		middleware.ShouldUseSecureCookies(cfg.MerchantBaseURL, cfg.ForceSecureCookie)
+
+	return middleware.SessionOptions{
+		SecureCookie:       secureCookie,
+		CookieName:         middleware.MerchantSessionCookieName,
+		MerchantCookieName: middleware.MerchantSessionCookieName,
+		CustomerCookieName: middleware.CustomerSessionCookieName,
+		LegacyCookieName:   middleware.SessionCookieName,
+	}
+}
+
+func startOrderEventsRouter(
+	ctx context.Context,
+	cfg Config,
+	eventBus *events.EventBus,
+	logger *logging.Logger,
+	sseHandler *commonhttp.SSEHandler,
+	orderRepo order.Repository,
+) (*message.Router, error) {
+	wmLogger := watermill.NewStdLogger(false, false)
+	orderEventsRouter, err := message.NewRouter(message.RouterConfig{
+		CloseTimeout: resolveRouterCloseTimeout(cfg),
+	}, wmLogger)
+	if err != nil {
+		return nil, err
+	}
+
+	orderEventsRouter.AddMiddleware(
+		wmmiddleware.Recoverer,
+		wmmiddleware.Retry{
+			MaxRetries:      3,
+			InitialInterval: 100 * time.Millisecond,
+			MaxInterval:     1 * time.Second,
+			Multiplier:      2.0,
+			Logger:          wmLogger,
+		}.Middleware,
+	)
+	orderingservice.RegisterOrderSSEHandlers(orderEventsRouter, eventBus.Subscriber(), logger, sseHandler, orderRepo)
+
+	routerErrors := make(chan error, 1)
+	go func() {
+		routerErrors <- orderEventsRouter.Run(ctx)
+	}()
+
+	select {
+	case runErr := <-routerErrors:
+		_ = orderEventsRouter.Close()
+		return nil, fmt.Errorf("run order events router: %w", runErr)
+	case <-orderEventsRouter.Running():
+		return orderEventsRouter, nil
+	case <-ctx.Done():
+		_ = orderEventsRouter.Close()
+		return nil, fmt.Errorf("application context cancelled while starting order events router: %w", ctx.Err())
+	}
 }

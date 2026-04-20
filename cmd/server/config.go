@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // firstEnv returns the first non-empty trimmed value from the given keys.
@@ -34,6 +36,14 @@ type serverConfig struct {
 	S3UsePathStyle         bool
 	S3PublicBaseURL        string
 	S3PresignGetExpiresSec int // unset/0 → 1-hour presign TTL (initPhotoStorage)
+
+	EventBusBackend      string
+	NATSURL              string
+	NATSAutoProvision    bool
+	NATSAckWait          time.Duration
+	NATSCloseTimeout     time.Duration
+	NATSSubscribersCount int
+	NATSInstanceID       string
 }
 
 func loadBaseURL() string {
@@ -75,6 +85,64 @@ func resolvePresignExpiresSec() int {
 	return sec
 }
 
+func resolveEventBusBackend() (string, error) {
+	backend := strings.ToLower(strings.TrimSpace(os.Getenv("EVENT_BUS_BACKEND")))
+	if backend == "" {
+		return "nats", nil
+	}
+	if backend != "memory" && backend != "nats" {
+		return "", fmt.Errorf("invalid EVENT_BUS_BACKEND %q: expected memory or nats", backend)
+	}
+	return backend, nil
+}
+
+func resolveBool(key string, fallback bool) bool {
+	v := strings.ToLower(strings.TrimSpace(os.Getenv(key)))
+	switch v {
+	case "true", "1", "yes", "on":
+		return true
+	case "false", "0", "no", "off":
+		return false
+	default:
+		return fallback
+	}
+}
+
+func resolveInt(key string, fallback int) int {
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(v)
+	if err != nil || parsed <= 0 {
+		return fallback
+	}
+	return parsed
+}
+
+func resolveDuration(key string, fallback time.Duration) time.Duration {
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		return fallback
+	}
+	parsed, err := time.ParseDuration(v)
+	if err != nil || parsed <= 0 {
+		return fallback
+	}
+	return parsed
+}
+
+func resolveNATSInstanceID() string {
+	if id := strings.TrimSpace(os.Getenv("NATS_INSTANCE_ID")); id != "" {
+		return id
+	}
+	hostname, err := os.Hostname()
+	if err != nil || strings.TrimSpace(hostname) == "" {
+		return "bitmerchant"
+	}
+	return hostname
+}
+
 func normalizeSurfaceURLs(base, public, customer, merchant string) (string, string, string) {
 	if public == "" {
 		public = base
@@ -90,6 +158,10 @@ func normalizeSurfaceURLs(base, public, customer, merchant string) (string, stri
 
 func loadConfig() (serverConfig, error) {
 	base := loadBaseURL()
+	eventBusBackend, err := resolveEventBusBackend()
+	if err != nil {
+		return serverConfig{}, err
+	}
 
 	cfg := serverConfig{
 		Port:                   resolvePort(os.Getenv("PORT")),
@@ -106,6 +178,16 @@ func loadConfig() (serverConfig, error) {
 		S3UsePathStyle:         resolvePathStyleDefault(firstEnv("AWS_ENDPOINT_URL", "S3_ENDPOINT")),
 		S3PublicBaseURL:        strings.TrimSpace(os.Getenv("S3_PUBLIC_BASE_URL")),
 		S3PresignGetExpiresSec: resolvePresignExpiresSec(),
+		EventBusBackend:        eventBusBackend,
+		NATSURL:                strings.TrimSpace(firstEnv("NATS_URL")),
+		NATSAutoProvision:      resolveBool("NATS_AUTO_PROVISION", true),
+		NATSAckWait:            resolveDuration("NATS_ACK_WAIT", 30*time.Second),
+		NATSCloseTimeout:       resolveDuration("NATS_CLOSE_TIMEOUT", 30*time.Second),
+		NATSSubscribersCount:   resolveInt("NATS_SUBSCRIBERS_COUNT", 1),
+		NATSInstanceID:         resolveNATSInstanceID(),
+	}
+	if cfg.NATSURL == "" {
+		cfg.NATSURL = "nats://localhost:4222"
 	}
 	cfg.PublicBaseURL, cfg.CustomerBaseURL, cfg.MerchantBaseURL = normalizeSurfaceURLs(cfg.BaseURL, cfg.PublicBaseURL, cfg.CustomerBaseURL, cfg.MerchantBaseURL)
 

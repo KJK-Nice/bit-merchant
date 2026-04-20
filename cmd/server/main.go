@@ -33,6 +33,13 @@ func main() {
 		S3UsePathStyle:         cfg.S3UsePathStyle,
 		S3PublicBaseURL:        cfg.S3PublicBaseURL,
 		S3PresignGetExpiresSec: cfg.S3PresignGetExpiresSec,
+		EventBusBackend:        cfg.EventBusBackend,
+		NATSURL:                cfg.NATSURL,
+		NATSAutoProvision:      cfg.NATSAutoProvision,
+		NATSAckWait:            cfg.NATSAckWait,
+		NATSCloseTimeout:       cfg.NATSCloseTimeout,
+		NATSSubscribersCount:   cfg.NATSSubscribersCount,
+		NATSInstanceID:         cfg.NATSInstanceID,
 	})
 	if err != nil {
 		_, _ = os.Stderr.WriteString("failed to initialize application: " + err.Error() + "\n")

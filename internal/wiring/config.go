@@ -1,5 +1,7 @@
 package wiring
 
+import "time"
+
 // Config is runtime configuration for the composition root (DB, URLs, S3, WebAuthn, cookies).
 type Config struct {
 	PublicBaseURL          string
@@ -14,4 +16,12 @@ type Config struct {
 	S3UsePathStyle         bool
 	S3PublicBaseURL        string
 	S3PresignGetExpiresSec int
+
+	EventBusBackend      string
+	NATSURL              string
+	NATSAutoProvision    bool
+	NATSAckWait          time.Duration
+	NATSCloseTimeout     time.Duration
+	NATSSubscribersCount int
+	NATSInstanceID       string
 }
