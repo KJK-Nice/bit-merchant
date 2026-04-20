@@ -17,7 +17,7 @@ BitMerchant is a lightning-fast restaurant ordering platform designed for cash-f
 - **Templating**: Templ (Type-safe Go templates)
 - **UI Library**: Datastar (Hypermedia) + TemplUI
 - **Database**: In-memory by default, optional PostgreSQL-backed auth + core persistence via `DATABASE_URL`
-- **Events**: Watermill (in-process event bus for order lifecycle)
+- **Events**: Watermill (configurable backend: in-memory or NATS JetStream)
 - **Logging**: `log/slog` with [humanslog](https://github.com/ThreeDotsLabs/humanslog) for pretty development output
 
 ## Architecture
@@ -156,6 +156,13 @@ Configuration is loaded from the process environment in `[cmd/server/config.go](
 | `S3_USE_PATH_STYLE`      | No       | `true` when `AWS_ENDPOINT_URL` is set, else path-style off for AWS | Path-style URLs vs virtual-hosted. Many compat servers need `true`.                                                                                                                       |
 | `S3_PUBLIC_BASE_URL`     | No       | *(empty)*                                                          | Optional. Used to derive the **object key** from **legacy** menu rows that still store a full public URL (before keys-only storage). Not required for new uploads.                        |
 | `S3_PRESIGN_GET_EXPIRES` | No       | `3600`                                                             | Seconds until each **presigned GET** URL for menu photos expires (private buckets). Use a larger value if customers keep the menu open longer than an hour.                               |
+| `EVENT_BUS_BACKEND`      | No       | `nats`                                                             | Event backend. Supported values: `memory`, `nats`.                                                                                                                                        |
+| `NATS_URL`               | No       | `nats://localhost:4222`                                            | NATS server URL (used when `EVENT_BUS_BACKEND=nats`).                                                                                                                                      |
+| `NATS_AUTO_PROVISION`    | No       | `true`                                                             | Auto-create JetStream streams for topics on first publish/subscribe.                                                                                                                      |
+| `NATS_ACK_WAIT`          | No       | `30s`                                                              | Ack wait timeout for JetStream subscriptions and redelivery behavior.                                                                                                                      |
+| `NATS_CLOSE_TIMEOUT`     | No       | `30s`                                                              | Graceful close timeout for NATS subscribers and Watermill router shutdown.                                                                                                                 |
+| `NATS_SUBSCRIBERS_COUNT` | No       | `1`                                                                | Concurrent subscriber handlers per topic on this app instance.                                                                                                                             |
+| `NATS_INSTANCE_ID`       | No       | host name                                                          | Instance identity used to derive queue/durable prefixes (`bitmerchant_<instance>`) for per-instance durable fanout.                                                                      |
 
 
 Credentials: set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (or use the SDK default chain, e.g. instance role). They are read by the AWS SDK, not listed in `config.go`.
@@ -182,7 +189,7 @@ Goose migration files live under `internal/infrastructure/migrations/sql/`.
 
 `[docker-compose.yml](docker-compose.yml)` loads `**[.env.docker](.env.docker)**` for the `app` and `postgres` containers (database URL uses host `postgres`, not `localhost`).
 
-The stack now includes a Caddy TLS reverse-proxy:
+The default stack includes a Caddy TLS reverse-proxy:
 
 - Caddy listens on `:8080` with HTTPS
 - App listens internally on `app:8081`
@@ -194,11 +201,13 @@ The stack now includes a Caddy TLS reverse-proxy:
 echo "127.0.0.1 bitmerchant.local merchant.bitmerchant.local order.bitmerchant.local" | sudo tee -a /etc/hosts
 ```
 
-1. Start the stack:
+1. Start the default stack:
 
 ```bash
 docker compose up --build
 ```
+
+NATS JetStream is included in the default compose stack, so with `EVENT_BUS_BACKEND=nats` no extra profile flags are required.
 
 1. Trust Caddy's local CA (one-time, if browser warns):
 

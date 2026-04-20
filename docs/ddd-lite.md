@@ -32,7 +32,7 @@ DDD Lite here is **not** a mandate for ubiquitous language workshops, event sour
 - `internal/common/http/` (`commonhttp`) — Shared request helpers (auth context keys, layout labels, SSE hub used by ordering projections).
 - `internal/common/server/` — Shared HTTP transport: `server.Component` + `Run` (Echo, global middleware, static files, graceful shutdown). `cmd/server` composes the app then runs this component.
 - `internal/interfaces/templates/` — Templ UI.
-- `internal/infrastructure/events/` — Watermill-based in-process event bus and handlers.
+- `internal/infrastructure/events/` — Watermill event bus infrastructure (in-memory or NATS JetStream) and handlers.
 - `internal/infrastructure/migrations/` — Goose SQL migrations.
 - `internal/infrastructure/logging/`, `internal/infrastructure/qr/` — shared technical services.
 

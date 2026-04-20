@@ -1,12 +1,10 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 
 	"bitmerchant/internal/common"
 	commonhttp "bitmerchant/internal/common/http"
-	"bitmerchant/internal/infrastructure/events"
 	"bitmerchant/internal/infrastructure/logging"
 	orderCart "bitmerchant/internal/ordering/app/cart"
 	orderCmd "bitmerchant/internal/ordering/app/command"
@@ -16,6 +14,8 @@ import (
 	orderinghttp "bitmerchant/internal/ordering/ports/http"
 	ordersse "bitmerchant/internal/ordering/ports/sse"
 	"bitmerchant/internal/wiring"
+
+	"github.com/ThreeDotsLabs/watermill/message"
 )
 
 // Ordering bundles cart, order workflows, kitchen HTTP, and SSE event subscriptions for order events.
@@ -40,7 +40,7 @@ type Ordering struct {
 // New wires ordering bounded-context handlers and HTTP ports.
 func New(
 	repos wiring.Repositories,
-	eventBus *events.EventBus,
+	eventBus common.EventBus,
 	logger *logging.Logger,
 ) Ordering {
 	cartService := orderCart.NewCartService()
@@ -69,60 +69,56 @@ func New(
 	}
 }
 
-// RegisterOrderSSESubscriptions connects order domain events to SSE projection handlers.
-func RegisterOrderSSESubscriptions(eventBus *events.EventBus, logger *logging.Logger, sseHandler *commonhttp.SSEHandler, orderRepo order.Repository) {
+// RegisterOrderSSEHandlers connects order domain events to SSE projection handlers through Watermill Router.
+func RegisterOrderSSEHandlers(router *message.Router, subscriber message.Subscriber, logger *logging.Logger, sseHandler *commonhttp.SSEHandler, orderRepo order.Repository) {
 	orderCreatedHandler := ordersse.NewOrderCreatedHandler(logger, sseHandler, orderRepo)
 	orderPaidHandler := ordersse.NewOrderPaidHandler(logger, sseHandler, orderRepo)
 	orderPreparingHandler := ordersse.NewOrderPreparingHandler(logger, sseHandler, orderRepo)
 	orderReadyHandler := ordersse.NewOrderReadyHandler(logger, sseHandler, orderRepo)
 	orderCompletedHandler := ordersse.NewOrderCompletedHandler(logger, sseHandler, orderRepo)
 
-	subscribe(eventBus, common.EventOrderCreated, logger, func(msg []byte) {
+	router.AddConsumerHandler("sse_order_created", common.EventOrderCreated, subscriber, func(msg *message.Message) error {
 		var event orderevent.OrderCreated
-		if err := json.Unmarshal(msg, &event); err == nil {
-			_ = orderCreatedHandler.Handle(context.Background(), event)
+		if err := json.Unmarshal(msg.Payload, &event); err != nil {
+			logger.Warn("Skipping malformed order created event", "error", err)
+			return nil
 		}
+		return orderCreatedHandler.Handle(msg.Context(), event)
 	})
 
-	subscribe(eventBus, common.EventOrderPaid, logger, func(msg []byte) {
+	router.AddConsumerHandler("sse_order_paid", common.EventOrderPaid, subscriber, func(msg *message.Message) error {
 		var event orderevent.OrderPaid
-		if err := json.Unmarshal(msg, &event); err == nil {
-			_ = orderPaidHandler.Handle(context.Background(), event)
+		if err := json.Unmarshal(msg.Payload, &event); err != nil {
+			logger.Warn("Skipping malformed order paid event", "error", err)
+			return nil
 		}
+		return orderPaidHandler.Handle(msg.Context(), event)
 	})
 
-	subscribe(eventBus, common.EventOrderPreparing, logger, func(msg []byte) {
+	router.AddConsumerHandler("sse_order_preparing", common.EventOrderPreparing, subscriber, func(msg *message.Message) error {
 		var event orderevent.OrderPreparing
-		if err := json.Unmarshal(msg, &event); err == nil {
-			_ = orderPreparingHandler.Handle(context.Background(), event)
+		if err := json.Unmarshal(msg.Payload, &event); err != nil {
+			logger.Warn("Skipping malformed order preparing event", "error", err)
+			return nil
 		}
+		return orderPreparingHandler.Handle(msg.Context(), event)
 	})
 
-	subscribe(eventBus, common.EventOrderReady, logger, func(msg []byte) {
+	router.AddConsumerHandler("sse_order_ready", common.EventOrderReady, subscriber, func(msg *message.Message) error {
 		var event orderevent.OrderReady
-		if err := json.Unmarshal(msg, &event); err == nil {
-			_ = orderReadyHandler.Handle(context.Background(), event)
+		if err := json.Unmarshal(msg.Payload, &event); err != nil {
+			logger.Warn("Skipping malformed order ready event", "error", err)
+			return nil
 		}
+		return orderReadyHandler.Handle(msg.Context(), event)
 	})
 
-	subscribe(eventBus, common.EventOrderCompleted, logger, func(msg []byte) {
+	router.AddConsumerHandler("sse_order_completed", common.EventOrderCompleted, subscriber, func(msg *message.Message) error {
 		var event orderevent.OrderCompleted
-		if err := json.Unmarshal(msg, &event); err == nil {
-			_ = orderCompletedHandler.Handle(context.Background(), event)
+		if err := json.Unmarshal(msg.Payload, &event); err != nil {
+			logger.Warn("Skipping malformed order completed event", "error", err)
+			return nil
 		}
+		return orderCompletedHandler.Handle(msg.Context(), event)
 	})
-}
-
-func subscribe(bus *events.EventBus, topic string, logger *logging.Logger, handlerFunc func([]byte)) {
-	go func() {
-		msgs, err := bus.Subscribe(context.Background(), topic)
-		if err != nil {
-			logger.Error("Failed to subscribe", "topic", topic, "error", err)
-			return
-		}
-		for msg := range msgs {
-			handlerFunc(msg.Payload)
-			msg.Ack()
-		}
-	}()
 }
