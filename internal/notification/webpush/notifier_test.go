@@ -3,6 +3,7 @@ package webpush_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"testing"
@@ -67,7 +68,7 @@ func TestNotifier_Send_CustomerSubscriptionsReceivePush(t *testing.T) {
 	}
 
 	fn, calls := fakeSend(http.StatusCreated)
-	n := webpush.NewNotifier(repo, webpush.VAPIDConfig{}).WithSendFunc(fn)
+	n := webpush.NewNotifier(repo, webpush.VAPIDConfig{}, nil).WithSendFunc(fn)
 	if err := n.Send(context.Background(), makeNotif("customer", "ORD-1")); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -84,7 +85,7 @@ func TestNotifier_Send_GoneResponseRemovesSubscription(t *testing.T) {
 	}
 
 	fn, _ := fakeSend(http.StatusGone)
-	n := webpush.NewNotifier(repo, webpush.VAPIDConfig{}).WithSendFunc(fn)
+	n := webpush.NewNotifier(repo, webpush.VAPIDConfig{}, nil).WithSendFunc(fn)
 	_ = n.Send(context.Background(), makeNotif("customer", "ORD-2"))
 
 	if len(repo.deleted) != 1 || repo.deleted[0] != endpoint {
@@ -95,7 +96,7 @@ func TestNotifier_Send_GoneResponseRemovesSubscription(t *testing.T) {
 func TestNotifier_Send_NoSubscriptions_NoError(t *testing.T) {
 	repo := newStubRepo()
 	fn, calls := fakeSend(http.StatusCreated)
-	n := webpush.NewNotifier(repo, webpush.VAPIDConfig{}).WithSendFunc(fn)
+	n := webpush.NewNotifier(repo, webpush.VAPIDConfig{}, nil).WithSendFunc(fn)
 	if err := n.Send(context.Background(), makeNotif("customer", "ORD-NONE")); err != nil {
 		t.Fatalf("unexpected error when no subscriptions: %v", err)
 	}
@@ -111,11 +112,37 @@ func TestNotifier_Send_KitchenSubscriptions(t *testing.T) {
 	}
 
 	fn, calls := fakeSend(http.StatusCreated)
-	n := webpush.NewNotifier(repo, webpush.VAPIDConfig{}).WithSendFunc(fn)
+	n := webpush.NewNotifier(repo, webpush.VAPIDConfig{}, nil).WithSendFunc(fn)
 	if err := n.Send(context.Background(), makeNotif("kitchen", "rest-1")); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if *calls != 1 {
 		t.Fatalf("expected 1 push send for kitchen, got %d", *calls)
+	}
+}
+
+// One endpoint failing must not abort delivery to the remaining endpoints.
+func TestNotifier_Send_FailingEndpointDoesNotBlockOthers(t *testing.T) {
+	repo := newStubRepo()
+	repo.byOrderNumber["ORD-3"] = []*webpush.Subscription{
+		{Endpoint: "https://example.com/push/bad", AuthKey: "a", P256DHKey: "p"},
+		{Endpoint: "https://example.com/push/ok1", AuthKey: "a", P256DHKey: "p"},
+		{Endpoint: "https://example.com/push/ok2", AuthKey: "a", P256DHKey: "p"},
+	}
+
+	calls := 0
+	fn := func(_ []byte, sub *webpushlib.Subscription, _ *webpushlib.Options) (*http.Response, error) {
+		calls++
+		if sub.Endpoint == "https://example.com/push/bad" {
+			return nil, errors.New("simulated network failure")
+		}
+		return &http.Response{StatusCode: http.StatusCreated, Body: io.NopCloser(bytes.NewReader(nil))}, nil
+	}
+	n := webpush.NewNotifier(repo, webpush.VAPIDConfig{}, nil).WithSendFunc(fn)
+	if err := n.Send(context.Background(), makeNotif("customer", "ORD-3")); err != nil {
+		t.Fatalf("Send must not return error when individual endpoints fail: %v", err)
+	}
+	if calls != 3 {
+		t.Fatalf("expected all 3 endpoints to be attempted, got %d calls", calls)
 	}
 }

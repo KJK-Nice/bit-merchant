@@ -112,6 +112,7 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 		PrivateKey: cfg.VAPIDPrivateKey,
 		Subject:    cfg.VAPIDSubject,
 	}
+	warnIfVAPIDIncomplete(logger, vapidCfg)
 	orderEventsRouter, err = startOrderEventsRouter(ctx, cfg, eventBus, logger, sseHandler, repos.Order, pushRepo, vapidCfg)
 	if err != nil {
 		cleanupResources()
@@ -178,6 +179,31 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 	return application, cleanup, nil
 }
 
+// warnIfVAPIDIncomplete logs a startup warning when any VAPID field is blank.
+// With an empty public key the templates skip the subscribe script; with an
+// empty private key or subject the webpush library refuses to sign — either
+// way the whole feature silently no-ops, which is the most-asked debugging
+// question for this code path.
+func warnIfVAPIDIncomplete(logger *logging.Logger, v notifwebpush.VAPIDConfig) {
+	var missing []string
+	if v.PublicKey == "" {
+		missing = append(missing, "VAPID_PUBLIC_KEY")
+	}
+	if v.PrivateKey == "" {
+		missing = append(missing, "VAPID_PRIVATE_KEY")
+	}
+	if v.Subject == "" {
+		missing = append(missing, "VAPID_SUBJECT")
+	}
+	if len(missing) == 0 {
+		return
+	}
+	logger.Warn("web push notifications disabled — VAPID not fully configured",
+		"missing", missing,
+		"hint", "set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (run `npx web-push generate-vapid-keys`)",
+	)
+}
+
 func eventBusConfig(cfg Config) events.Config {
 	return events.Config{
 		Backend:           cfg.EventBusBackend,
@@ -241,7 +267,7 @@ func startOrderEventsRouter(
 	)
 	orderingservice.RegisterOrderSSEHandlers(orderEventsRouter, eventBus.Subscriber(), logger, sseHandler, orderRepo)
 
-	webPushNotifier := notifwebpush.NewNotifier(pushRepo, vapidCfg)
+	webPushNotifier := notifwebpush.NewNotifier(pushRepo, vapidCfg, logger.Logger)
 	notifSvc := notification.NewService(logger, webPushNotifier)
 	ordernotif.RegisterOrderNotificationHandlers(orderEventsRouter, eventBus.Subscriber(), logger, notifSvc)
 
