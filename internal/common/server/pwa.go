@@ -128,9 +128,12 @@ self.addEventListener('fetch', event => {
 
   if (url.pathname.startsWith('/static/')) {
     // Cache-first for static assets.
+    // Clone synchronously before the async caches.open — once return res hands
+    // the body to the browser, a later res.clone() would throw "body already used".
     event.respondWith(
       caches.match(request).then(cached => cached || fetch(request).then(res => {
-        caches.open(CACHE_NAME).then(c => c.put(request, res.clone()));
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(request, resClone));
         return res;
       }))
     );
@@ -158,6 +161,34 @@ self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+});
+
+self.addEventListener('push', event => {
+  const data = event.data ? event.data.json() : {};
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'BitMerchant', {
+      body:  data.body  || '',
+      icon:  '/static/pwa/icons/icon-192.png',
+      badge: '/static/pwa/icons/icon-192.png',
+      data:  { url: data.url || '/' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url === event.notification.data.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(event.notification.data.url);
+      }
+    })
+  );
 });
 `
 
