@@ -3,7 +3,7 @@ CREATE TABLE push_subscriptions (
     id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     role          TEXT        NOT NULL CHECK (role IN ('customer', 'kitchen')),
     order_number  TEXT,
-    restaurant_id UUID        REFERENCES restaurants(id) ON DELETE CASCADE,
+    restaurant_id TEXT        REFERENCES restaurants(id) ON DELETE CASCADE,
     endpoint      TEXT        NOT NULL,
     auth_key      TEXT        NOT NULL,
     p256dh_key    TEXT        NOT NULL,
