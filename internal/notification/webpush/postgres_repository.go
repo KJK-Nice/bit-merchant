@@ -20,15 +20,15 @@ func (r *PostgresRepository) Upsert(sub *Subscription) error {
 		s := string(sub.RestaurantID)
 		restaurantID = &s
 	}
+	// ON CONFLICT target matches push_subscriptions_unique_idx — keyed on the
+	// full scope (endpoint, role, order/restaurant) so the same browser endpoint
+	// can hold concurrent subscriptions for multiple orders without overwriting.
 	_, err := r.db.Exec(`
 		INSERT INTO push_subscriptions (role, order_number, restaurant_id, endpoint, auth_key, p256dh_key)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		ON CONFLICT (endpoint) DO UPDATE SET
-		    role          = EXCLUDED.role,
-		    order_number  = EXCLUDED.order_number,
-		    restaurant_id = EXCLUDED.restaurant_id,
-		    auth_key      = EXCLUDED.auth_key,
-		    p256dh_key    = EXCLUDED.p256dh_key`,
+		ON CONFLICT (endpoint, role, COALESCE(order_number, ''), COALESCE(restaurant_id, '')) DO UPDATE SET
+		    auth_key   = EXCLUDED.auth_key,
+		    p256dh_key = EXCLUDED.p256dh_key`,
 		sub.Role,
 		nullString(sub.OrderNumber),
 		restaurantID,

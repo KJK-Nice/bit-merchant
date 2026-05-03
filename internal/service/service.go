@@ -112,6 +112,16 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 		PrivateKey: cfg.VAPIDPrivateKey,
 		Subject:    cfg.VAPIDSubject,
 	}
+	// Surface mis-configuration loudly at startup. With any field empty the
+	// templates skip the subscribe script (public key) and / or the webpush
+	// library refuses to sign (private key, subject), so the whole feature
+	// silently no-ops — the most-asked debugging question for this code path.
+	if missing := missingVAPIDFields(vapidCfg); len(missing) > 0 {
+		logger.Warn("web push notifications disabled — VAPID not fully configured",
+			"missing", missing,
+			"hint", "set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (run `npx web-push generate-vapid-keys`)",
+		)
+	}
 	orderEventsRouter, err = startOrderEventsRouter(ctx, cfg, eventBus, logger, sseHandler, repos.Order, pushRepo, vapidCfg)
 	if err != nil {
 		cleanupResources()
@@ -178,6 +188,23 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 	return application, cleanup, nil
 }
 
+// missingVAPIDFields returns the names of any required VAPID config values
+// that are blank, in declaration order — used by the startup warning to tell
+// the operator exactly which env var to set.
+func missingVAPIDFields(v notifwebpush.VAPIDConfig) []string {
+	var missing []string
+	if v.PublicKey == "" {
+		missing = append(missing, "VAPID_PUBLIC_KEY")
+	}
+	if v.PrivateKey == "" {
+		missing = append(missing, "VAPID_PRIVATE_KEY")
+	}
+	if v.Subject == "" {
+		missing = append(missing, "VAPID_SUBJECT")
+	}
+	return missing
+}
+
 func eventBusConfig(cfg Config) events.Config {
 	return events.Config{
 		Backend:           cfg.EventBusBackend,
@@ -241,7 +268,7 @@ func startOrderEventsRouter(
 	)
 	orderingservice.RegisterOrderSSEHandlers(orderEventsRouter, eventBus.Subscriber(), logger, sseHandler, orderRepo)
 
-	webPushNotifier := notifwebpush.NewNotifier(pushRepo, vapidCfg)
+	webPushNotifier := notifwebpush.NewNotifier(pushRepo, vapidCfg, logger.Logger)
 	notifSvc := notification.NewService(logger, webPushNotifier)
 	ordernotif.RegisterOrderNotificationHandlers(orderEventsRouter, eventBus.Subscriber(), logger, notifSvc)
 

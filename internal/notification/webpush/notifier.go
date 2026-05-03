@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	webpushlib "github.com/SherClockHolmes/webpush-go"
@@ -25,13 +26,17 @@ type SendFunc func(message []byte, s *webpushlib.Subscription, options *webpushl
 
 // Notifier implements notification.Notifier using the Web Push protocol.
 type Notifier struct {
-	repo  Repository
-	vapid VAPIDConfig
-	send  SendFunc
+	repo   Repository
+	vapid  VAPIDConfig
+	send   SendFunc
+	logger *slog.Logger
 }
 
-func NewNotifier(repo Repository, vapid VAPIDConfig) *Notifier {
-	return &Notifier{repo: repo, vapid: vapid, send: webpushlib.SendNotification}
+func NewNotifier(repo Repository, vapid VAPIDConfig, logger *slog.Logger) *Notifier {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	return &Notifier{repo: repo, vapid: vapid, send: webpushlib.SendNotification, logger: logger}
 }
 
 func (n *Notifier) Name() string { return "web-push" }
@@ -54,9 +59,15 @@ func (n *Notifier) Send(ctx context.Context, notif notification.Notification) er
 		return fmt.Errorf("marshal push payload: %w", err)
 	}
 
+	// Per-subscription delivery is best-effort: a failure on one endpoint
+	// (network blip, expired credentials) must not block delivery to siblings.
 	for _, sub := range subs {
 		if sendErr := n.sendOne(sub, payload); sendErr != nil {
-			return sendErr
+			n.logger.Warn("web push delivery failed for endpoint",
+				"endpoint", sub.Endpoint,
+				"role", sub.Role,
+				"error", sendErr,
+			)
 		}
 	}
 	return nil
@@ -83,14 +94,19 @@ func (n *Notifier) sendOne(sub *Subscription, payload []byte) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusGone {
-		_ = n.repo.DeleteByEndpoint(sub.Endpoint)
+		if delErr := n.repo.DeleteByEndpoint(sub.Endpoint); delErr != nil {
+			n.logger.Warn("failed to delete expired push subscription",
+				"endpoint", sub.Endpoint,
+				"error", delErr,
+			)
+		}
 	}
 	return nil
 }
 
 // WithSendFunc returns a copy of the Notifier with a custom send function (for testing).
 func (n *Notifier) WithSendFunc(fn SendFunc) *Notifier {
-	return &Notifier{repo: n.repo, vapid: n.vapid, send: fn}
+	return &Notifier{repo: n.repo, vapid: n.vapid, send: fn, logger: n.logger}
 }
 
 func (n *Notifier) subscriptionsFor(notif notification.Notification) ([]*Subscription, error) {

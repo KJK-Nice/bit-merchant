@@ -523,10 +523,19 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 						for (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
 						return outputArray;
 					}
-					if ('serviceWorker' in navigator && 'PushManager' in navigator) {
+					if ('serviceWorker' in navigator && 'PushManager' in navigator && 'Notification' in window) {
+						// Don't pester the user once they've explicitly denied — re-prompts
+						// are blocked by the browser anyway and just spam the console.
+						if (Notification.permission === 'denied') return;
 						navigator.serviceWorker.ready.then(function(reg) {
 							return reg.pushManager.getSubscription().then(function(existing) {
 								if (existing) return existing;
+								if (Notification.permission === 'granted') {
+									return reg.pushManager.subscribe({
+										userVisibleOnly: true,
+										applicationServerKey: urlBase64ToUint8Array(cfg.vapidKey),
+									});
+								}
 								return Notification.requestPermission().then(function(perm) {
 									if (perm !== 'granted') return null;
 									return reg.pushManager.subscribe({
