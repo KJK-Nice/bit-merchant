@@ -44,7 +44,7 @@ func TestOrderEndpoints(t *testing.T) {
 	getCustomerOrdersUC := orderQuery.NewCustomerOrdersForSessionHandler(orderRepo, nil, nil)
 	cartService := cart.NewCartService()
 
-	h := orderinghttp.NewOrderHandler(createUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
+	h := orderinghttp.NewOrderHandler(createUC, getCustomerOrderUC, getCustomerOrdersUC, cartService, "")
 
 	e := echo.New()
 

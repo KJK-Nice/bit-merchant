@@ -68,6 +68,7 @@ type Ports struct {
 	Order     *orderinghttp.OrderHandler
 	Places    *placeshttp.PlacesHandler
 	Kitchen   *orderinghttp.KitchenHandler
+	Push      *orderinghttp.PushHandler
 	Admin     *restauranthttp.AdminHandler
 	Owner     *restauranthttp.OwnerHandler
 	Dashboard *dashboardhttp.DashboardHandler

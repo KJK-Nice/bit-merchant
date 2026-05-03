@@ -42,6 +42,7 @@ func New(
 	repos wiring.Repositories,
 	eventBus common.EventBus,
 	logger *logging.Logger,
+	vapidPublicKey string,
 ) Ordering {
 	cartService := orderCart.NewCartService()
 	createOrderUC := orderCmd.NewCreateOrderHandler(repos.Order, repos.Restaurant, eventBus, logger.Logger, nil)
@@ -64,8 +65,8 @@ func New(
 		GetCustomerOrders:  getCustomerOrdersUC,
 		GetKitchenOrders:   getKitchenOrdersUC,
 		CartHandler:        orderinghttp.NewCartHandler(cartService, repos.MenuItem),
-		OrderHandler:       orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, cartService),
-		KitchenHandler:     orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, repos.Restaurant, repos.Membership),
+		OrderHandler:       orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, cartService, vapidPublicKey),
+		KitchenHandler:     orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, repos.Restaurant, repos.Membership, vapidPublicKey),
 	}
 }
 

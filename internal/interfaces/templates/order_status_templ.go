@@ -335,7 +335,7 @@ func OrderStatus(order *order.Order) templ.Component {
 	})
 }
 
-func OrderStatusPage(order *order.Order) templ.Component {
+func OrderStatusPage(order *order.Order, vapidPublicKey string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -379,6 +379,16 @@ func OrderStatusPage(order *order.Order) templ.Component {
 			templ_7745c5c3_Err = footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", string(order.RestaurantID))}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if vapidPublicKey != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<script>\n\t\t\t\t(function() {\n\t\t\t\t\tfunction urlBase64ToUint8Array(base64String) {\n\t\t\t\t\t\tvar padding = '='.repeat((4 - base64String.length % 4) % 4);\n\t\t\t\t\t\tvar base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');\n\t\t\t\t\t\tvar rawData = atob(base64);\n\t\t\t\t\t\tvar outputArray = new Uint8Array(rawData.length);\n\t\t\t\t\t\tfor (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }\n\t\t\t\t\t\treturn outputArray;\n\t\t\t\t\t}\n\t\t\t\t\tif ('serviceWorker' in navigator && 'PushManager' in navigator) {\n\t\t\t\t\t\tnavigator.serviceWorker.ready.then(function(reg) {\n\t\t\t\t\t\t\treturn reg.pushManager.getSubscription().then(function(existing) {\n\t\t\t\t\t\t\t\tif (existing) return existing;\n\t\t\t\t\t\t\t\treturn Notification.requestPermission().then(function(perm) {\n\t\t\t\t\t\t\t\t\tif (perm !== 'granted') return null;\n\t\t\t\t\t\t\t\t\treturn reg.pushManager.subscribe({\n\t\t\t\t\t\t\t\t\t\tuserVisibleOnly: true,\n\t\t\t\t\t\t\t\t\t\tapplicationServerKey: urlBase64ToUint8Array('{ vapidPublicKey }'),\n\t\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t}).then(function(sub) {\n\t\t\t\t\t\t\t\tif (!sub) return;\n\t\t\t\t\t\t\t\treturn fetch('/push/subscribe', {\n\t\t\t\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\t\t\t\theaders: { 'Content-Type': 'application/json' },\n\t\t\t\t\t\t\t\t\tbody: JSON.stringify(Object.assign(sub.toJSON(), { orderNumber: '{ string(order.OrderNumber) }' })),\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t}).catch(function(err) { console.warn('Push subscription failed:', err); });\n\t\t\t\t\t}\n\t\t\t\t})();\n\t\t\t</script>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
 			return nil
 		})

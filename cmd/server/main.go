@@ -40,6 +40,9 @@ func main() {
 		NATSCloseTimeout:       cfg.NATSCloseTimeout,
 		NATSSubscribersCount:   cfg.NATSSubscribersCount,
 		NATSInstanceID:         cfg.NATSInstanceID,
+		VAPIDPublicKey:         cfg.VAPIDPublicKey,
+		VAPIDPrivateKey:        cfg.VAPIDPrivateKey,
+		VAPIDSubject:           cfg.VAPIDSubject,
 	})
 	if err != nil {
 		_, _ = os.Stderr.WriteString("failed to initialize application: " + err.Error() + "\n")
@@ -67,6 +70,7 @@ func main() {
 			Order:     application.Ports.Order,
 			Places:    application.Ports.Places,
 			Kitchen:   application.Ports.Kitchen,
+			Push:      application.Ports.Push,
 			Admin:     application.Ports.Admin,
 			Owner:     application.Ports.Owner,
 			Dashboard: application.Ports.Dashboard,

@@ -13,7 +13,11 @@ import (
 	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/infrastructure/qr"
 	menuservice "bitmerchant/internal/menu/service"
+	"bitmerchant/internal/notification"
+	notifwebpush "bitmerchant/internal/notification/webpush"
 	"bitmerchant/internal/ordering/domain/order"
+	orderinghttp "bitmerchant/internal/ordering/ports/http"
+	ordernotif "bitmerchant/internal/ordering/ports/notification"
 	orderingservice "bitmerchant/internal/ordering/service"
 	payAdapters "bitmerchant/internal/payment/adapters"
 	placeservice "bitmerchant/internal/places/service"
@@ -77,6 +81,11 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 		repos = wiring.NewPostgresRepositories(db)
 	}
 
+	var pushRepo notifwebpush.Repository = notifwebpush.NewMemoryRepository()
+	if db != nil {
+		pushRepo = notifwebpush.NewPostgresRepository(db)
+	}
+
 	wiring.SeedData(ctx, repos)
 
 	qrService := qr.NewQRCodeService()
@@ -84,7 +93,7 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 	sseHandler := commonhttp.NewSSEHandler()
 
 	placesSvc := placeservice.New(repos)
-	orderingSvc := orderingservice.New(repos, eventBus, logger)
+	orderingSvc := orderingservice.New(repos, eventBus, logger, cfg.VAPIDPublicKey)
 	menuSvc := menuservice.New(repos, photoStorage, cfg, orderingSvc.CartService, placesSvc.RecordMenuVisit)
 	restaurantSvc := restaurantservice.New(repos, cfg, qrService, menuSvc)
 	dashboardSvc := dashboardservice.New(repos, restaurantSvc.ToggleRestaurantOpen, logger.Logger)
@@ -98,7 +107,12 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 
 	authSvc := authservice.New(repos, webauthnSvc, logger.Logger, sessionOpts, restaurantSvc.CreateRestaurant)
 
-	orderEventsRouter, err = startOrderEventsRouter(ctx, cfg, eventBus, logger, sseHandler, repos.Order)
+	vapidCfg := notifwebpush.VAPIDConfig{
+		PublicKey:  cfg.VAPIDPublicKey,
+		PrivateKey: cfg.VAPIDPrivateKey,
+		Subject:    cfg.VAPIDSubject,
+	}
+	orderEventsRouter, err = startOrderEventsRouter(ctx, cfg, eventBus, logger, sseHandler, repos.Order, pushRepo, vapidCfg)
 	if err != nil {
 		cleanupResources()
 		return Application{}, nil, fmt.Errorf("init order events router: %w", err)
@@ -139,6 +153,7 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 			Order:          orderingSvc.OrderHandler,
 			Places:         placesSvc.HTTP,
 			Kitchen:        orderingSvc.KitchenHandler,
+			Push:           orderinghttp.NewPushHandler(pushRepo),
 			Admin:          restaurantSvc.Admin,
 			Owner:          restaurantSvc.Owner,
 			Dashboard:      dashboardSvc.HTTP,
@@ -203,6 +218,8 @@ func startOrderEventsRouter(
 	logger *logging.Logger,
 	sseHandler *commonhttp.SSEHandler,
 	orderRepo order.Repository,
+	pushRepo notifwebpush.Repository,
+	vapidCfg notifwebpush.VAPIDConfig,
 ) (*message.Router, error) {
 	wmLogger := watermill.NewStdLogger(false, false)
 	orderEventsRouter, err := message.NewRouter(message.RouterConfig{
@@ -223,6 +240,10 @@ func startOrderEventsRouter(
 		}.Middleware,
 	)
 	orderingservice.RegisterOrderSSEHandlers(orderEventsRouter, eventBus.Subscriber(), logger, sseHandler, orderRepo)
+
+	webPushNotifier := notifwebpush.NewNotifier(pushRepo, vapidCfg)
+	notifSvc := notification.NewService(logger, webPushNotifier)
+	ordernotif.RegisterOrderNotificationHandlers(orderEventsRouter, eventBus.Subscriber(), logger, notifSvc)
 
 	routerErrors := make(chan error, 1)
 	go func() {

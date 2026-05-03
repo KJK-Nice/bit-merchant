@@ -44,6 +44,10 @@ type serverConfig struct {
 	NATSCloseTimeout     time.Duration
 	NATSSubscribersCount int
 	NATSInstanceID       string
+
+	VAPIDPublicKey  string
+	VAPIDPrivateKey string
+	VAPIDSubject    string
 }
 
 func loadBaseURL() string {
@@ -185,6 +189,9 @@ func loadConfig() (serverConfig, error) {
 		NATSCloseTimeout:       resolveDuration("NATS_CLOSE_TIMEOUT", 30*time.Second),
 		NATSSubscribersCount:   resolveInt("NATS_SUBSCRIBERS_COUNT", 1),
 		NATSInstanceID:         resolveNATSInstanceID(),
+		VAPIDPublicKey:         strings.TrimSpace(os.Getenv("VAPID_PUBLIC_KEY")),
+		VAPIDPrivateKey:        strings.TrimSpace(os.Getenv("VAPID_PRIVATE_KEY")),
+		VAPIDSubject:           strings.TrimSpace(os.Getenv("VAPID_SUBJECT")),
 	}
 	if cfg.NATSURL == "" {
 		cfg.NATSURL = "nats://localhost:4222"

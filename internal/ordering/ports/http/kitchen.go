@@ -23,6 +23,7 @@ type KitchenHandler struct {
 	markCompletedUC orderCmd.MarkOrderCompletedHandler
 	restaurantRepo  restaurant.Repository
 	membershipRepo  membership.Repository
+	vapidPublicKey  string
 }
 
 func NewKitchenHandler(
@@ -33,6 +34,7 @@ func NewKitchenHandler(
 	markCompletedUC orderCmd.MarkOrderCompletedHandler,
 	restaurantRepo restaurant.Repository,
 	membershipRepo membership.Repository,
+	vapidPublicKey string,
 ) *KitchenHandler {
 	return &KitchenHandler{
 		getOrdersUC:     getOrdersUC,
@@ -42,6 +44,7 @@ func NewKitchenHandler(
 		markCompletedUC: markCompletedUC,
 		restaurantRepo:  restaurantRepo,
 		membershipRepo:  membershipRepo,
+		vapidPublicKey:  vapidPublicKey,
 	}
 }
 
@@ -60,7 +63,7 @@ func (h *KitchenHandler) GetKitchen(c echo.Context) error {
 	if sErr != nil {
 		return c.String(http.StatusInternalServerError, "Failed to load navigation")
 	}
-	return templates.KitchenPage(orders, commonhttp.CSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate).Render(c.Request().Context(), c.Response())
+	return templates.KitchenPage(orders, commonhttp.CSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate, h.vapidPublicKey).Render(c.Request().Context(), c.Response())
 }
 
 func (h *KitchenHandler) MarkPaid(c echo.Context) error {

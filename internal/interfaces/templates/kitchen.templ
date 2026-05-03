@@ -49,7 +49,7 @@ templ kitchenLaneColumn(key string, title string, subtitle string, emptyText str
 	</section>
 }
 
-templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
+templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, vapidPublicKey string) {
 	@layouts.Dashboard("Kitchen Display", "/kitchen", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div 
 			id="kitchen-display" 
@@ -504,5 +504,40 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 				});
 			})();
 		</script>
+		if vapidPublicKey != "" {
+			<script>
+				(function() {
+					function urlBase64ToUint8Array(base64String) {
+						var padding = '='.repeat((4 - base64String.length % 4) % 4);
+						var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+						var rawData = atob(base64);
+						var outputArray = new Uint8Array(rawData.length);
+						for (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+						return outputArray;
+					}
+					if ('serviceWorker' in navigator && 'PushManager' in navigator) {
+						navigator.serviceWorker.ready.then(function(reg) {
+							return reg.pushManager.getSubscription().then(function(existing) {
+								if (existing) return existing;
+								return Notification.requestPermission().then(function(perm) {
+									if (perm !== 'granted') return null;
+									return reg.pushManager.subscribe({
+										userVisibleOnly: true,
+										applicationServerKey: urlBase64ToUint8Array('{ vapidPublicKey }'),
+									});
+								});
+							}).then(function(sub) {
+								if (!sub) return;
+								return fetch('/kitchen/push/subscribe', {
+									method: 'POST',
+									headers: { 'Content-Type': 'application/json' },
+									body: JSON.stringify(sub.toJSON()),
+								});
+							});
+						}).catch(function(err) { console.warn('Push subscription failed:', err); });
+					}
+				})();
+			</script>
+		}
 	}
 }

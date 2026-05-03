@@ -96,7 +96,7 @@ func TestKitchenEndpoints(t *testing.T) {
 	markCompletedUC := kitchenCmd.NewMarkOrderCompletedHandler(mockRepo, mockBus, nil, nil)
 
 	// Setup Handler
-	h := orderinghttp.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, nil, nil)
+	h := orderinghttp.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, nil, nil, "")
 
 	// Routes
 	e.GET("/kitchen", h.GetKitchen)

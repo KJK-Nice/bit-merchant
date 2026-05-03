@@ -24,4 +24,8 @@ type Config struct {
 	NATSCloseTimeout     time.Duration
 	NATSSubscribersCount int
 	NATSInstanceID       string
+
+	VAPIDPublicKey  string
+	VAPIDPrivateKey string
+	VAPIDSubject    string
 }

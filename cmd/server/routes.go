@@ -21,6 +21,7 @@ type routeHandlers struct {
 	Order     *orderinghttp.OrderHandler
 	Places    *placeshttp.PlacesHandler
 	Kitchen   *orderinghttp.KitchenHandler
+	Push      *orderinghttp.PushHandler
 	Admin     *restauranthttp.AdminHandler
 	Owner     *restauranthttp.OwnerHandler
 	Dashboard *dashboardhttp.DashboardHandler
@@ -46,6 +47,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	e.POST("/order/create", handlers.Order.CreateOrder)
 	e.GET("/order/:orderNumber", handlers.Order.GetOrder)
 	e.GET("/order/:orderNumber/stream", handlers.SSE.OrderStatusStream)
+	e.POST("/push/subscribe", handlers.Push.SubscribeCustomer)
 
 	kitchenGroup := e.Group("/kitchen")
 	kitchenGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, common.RoleOwner, common.RoleKitchenStaff))
@@ -55,6 +57,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	kitchenGroup.POST("/order/:id/mark-preparing", handlers.Kitchen.MarkPreparing)
 	kitchenGroup.POST("/order/:id/mark-ready", handlers.Kitchen.MarkReady)
 	kitchenGroup.POST("/order/:id/mark-completed", handlers.Kitchen.MarkCompleted)
+	kitchenGroup.POST("/push/subscribe", handlers.Push.SubscribeKitchen)
 
 	adminGroup := e.Group("/admin")
 	adminGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, common.RoleOwner))

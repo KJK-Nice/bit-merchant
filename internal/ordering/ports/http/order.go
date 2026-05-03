@@ -21,6 +21,7 @@ type OrderHandler struct {
 	getCustomerOrderByLookup orderQuery.CustomerOrderByLookupHandler
 	getCustomerOrders        orderQuery.CustomerOrdersForSessionHandler
 	cartService              *cart.CartService
+	vapidPublicKey           string
 }
 
 // NewOrderHandler creates a new OrderHandler
@@ -29,12 +30,14 @@ func NewOrderHandler(
 	getCustomerOrderByLookup orderQuery.CustomerOrderByLookupHandler,
 	getCustomerOrders orderQuery.CustomerOrdersForSessionHandler,
 	cartService *cart.CartService,
+	vapidPublicKey string,
 ) *OrderHandler {
 	return &OrderHandler{
 		createOrder:              createOrder,
 		getCustomerOrderByLookup: getCustomerOrderByLookup,
 		getCustomerOrders:        getCustomerOrders,
 		cartService:              cartService,
+		vapidPublicKey:           vapidPublicKey,
 	}
 }
 
@@ -116,7 +119,7 @@ func (h *OrderHandler) GetOrder(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, cerr.Error())
 	}
 
-	return templates.OrderStatusPage(result).Render(c.Request().Context(), c.Response())
+	return templates.OrderStatusPage(result, h.vapidPublicKey).Render(c.Request().Context(), c.Response())
 }
 
 // GetLookup renders the lookup/history page (REPLACED functionality)

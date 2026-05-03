@@ -75,8 +75,8 @@ func TestKitchenWorkflow(t *testing.T) {
 	getMenuUC := menuQuery.NewMenuForCustomerHandler(menuCatRepo, menuItemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
 
 	// Handlers
-	kitchenHandler := orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, nil, nil)
-	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, cartService)
+	kitchenHandler := orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, nil, nil, "")
+	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, cartService, "")
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
 	_ = menuhttp.NewMenuHandler(getMenuUC, cartService, recordVisitUC)
