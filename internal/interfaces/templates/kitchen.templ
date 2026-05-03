@@ -505,8 +505,16 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 			})();
 		</script>
 		if vapidPublicKey != "" {
+			// Data attributes carry Go values into JS safely — templ does not
+			// interpolate { } inside <script> raw blocks.
+			<div
+				id="push-config"
+				data-vapid-key={ vapidPublicKey }
+				hidden
+			></div>
 			<script nonce={ templ.GetNonce(ctx) }>
 				(function() {
+					var cfg = document.getElementById('push-config').dataset;
 					function urlBase64ToUint8Array(base64String) {
 						var padding = '='.repeat((4 - base64String.length % 4) % 4);
 						var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -523,7 +531,7 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 									if (perm !== 'granted') return null;
 									return reg.pushManager.subscribe({
 										userVisibleOnly: true,
-										applicationServerKey: urlBase64ToUint8Array('{ vapidPublicKey }'),
+										applicationServerKey: urlBase64ToUint8Array(cfg.vapidKey),
 									});
 								});
 							}).then(function(sub) {

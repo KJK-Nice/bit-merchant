@@ -57,8 +57,17 @@ templ OrderStatusPage(order *order.Order, vapidPublicKey string) {
 		@OrderStatus(order)
 		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", string(order.RestaurantID))})
 		if vapidPublicKey != "" {
+			// Data attributes carry Go values into JS safely — templ does not
+			// interpolate { } inside <script> raw blocks.
+			<div
+				id="push-config"
+				data-vapid-key={ vapidPublicKey }
+				data-order-number={ string(order.OrderNumber) }
+				hidden
+			></div>
 			<script nonce={ templ.GetNonce(ctx) }>
 				(function() {
+					var cfg = document.getElementById('push-config').dataset;
 					function urlBase64ToUint8Array(base64String) {
 						var padding = '='.repeat((4 - base64String.length % 4) % 4);
 						var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -75,7 +84,7 @@ templ OrderStatusPage(order *order.Order, vapidPublicKey string) {
 									if (perm !== 'granted') return null;
 									return reg.pushManager.subscribe({
 										userVisibleOnly: true,
-										applicationServerKey: urlBase64ToUint8Array('{ vapidPublicKey }'),
+										applicationServerKey: urlBase64ToUint8Array(cfg.vapidKey),
 									});
 								});
 							}).then(function(sub) {
@@ -83,7 +92,7 @@ templ OrderStatusPage(order *order.Order, vapidPublicKey string) {
 								return fetch('/push/subscribe', {
 									method: 'POST',
 									headers: { 'Content-Type': 'application/json' },
-									body: JSON.stringify(Object.assign(sub.toJSON(), { orderNumber: '{ string(order.OrderNumber) }' })),
+									body: JSON.stringify(Object.assign(sub.toJSON(), { orderNumber: cfg.orderNumber })),
 								});
 							});
 						}).catch(function(err) { console.warn('Push subscription failed:', err); });

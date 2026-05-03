@@ -385,20 +385,46 @@ func OrderStatusPage(order *order.Order, vapidPublicKey string) templ.Component 
 				return templ_7745c5c3_Err
 			}
 			if vapidPublicKey != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<script nonce=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "  <div id=\"push-config\" data-vapid-key=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var19 string
-				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
+				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(vapidPublicKey)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 60, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 64, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">\n\t\t\t\t(function() {\n\t\t\t\t\tfunction urlBase64ToUint8Array(base64String) {\n\t\t\t\t\t\tvar padding = '='.repeat((4 - base64String.length % 4) % 4);\n\t\t\t\t\t\tvar base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');\n\t\t\t\t\t\tvar rawData = atob(base64);\n\t\t\t\t\t\tvar outputArray = new Uint8Array(rawData.length);\n\t\t\t\t\t\tfor (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }\n\t\t\t\t\t\treturn outputArray;\n\t\t\t\t\t}\n\t\t\t\t\tif ('serviceWorker' in navigator && 'PushManager' in navigator) {\n\t\t\t\t\t\tnavigator.serviceWorker.ready.then(function(reg) {\n\t\t\t\t\t\t\treturn reg.pushManager.getSubscription().then(function(existing) {\n\t\t\t\t\t\t\t\tif (existing) return existing;\n\t\t\t\t\t\t\t\treturn Notification.requestPermission().then(function(perm) {\n\t\t\t\t\t\t\t\t\tif (perm !== 'granted') return null;\n\t\t\t\t\t\t\t\t\treturn reg.pushManager.subscribe({\n\t\t\t\t\t\t\t\t\t\tuserVisibleOnly: true,\n\t\t\t\t\t\t\t\t\t\tapplicationServerKey: urlBase64ToUint8Array('{ vapidPublicKey }'),\n\t\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t}).then(function(sub) {\n\t\t\t\t\t\t\t\tif (!sub) return;\n\t\t\t\t\t\t\t\treturn fetch('/push/subscribe', {\n\t\t\t\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\t\t\t\theaders: { 'Content-Type': 'application/json' },\n\t\t\t\t\t\t\t\t\tbody: JSON.stringify(Object.assign(sub.toJSON(), { orderNumber: '{ string(order.OrderNumber) }' })),\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t}).catch(function(err) { console.warn('Push subscription failed:', err); });\n\t\t\t\t\t}\n\t\t\t\t})();\n\t\t\t</script>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" data-order-number=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var20 string
+				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(string(order.OrderNumber))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 65, Col: 49}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" hidden></div><script nonce=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var21 string
+				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 68, Col: 38}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\">\n\t\t\t\t(function() {\n\t\t\t\t\tvar cfg = document.getElementById('push-config').dataset;\n\t\t\t\t\tfunction urlBase64ToUint8Array(base64String) {\n\t\t\t\t\t\tvar padding = '='.repeat((4 - base64String.length % 4) % 4);\n\t\t\t\t\t\tvar base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');\n\t\t\t\t\t\tvar rawData = atob(base64);\n\t\t\t\t\t\tvar outputArray = new Uint8Array(rawData.length);\n\t\t\t\t\t\tfor (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }\n\t\t\t\t\t\treturn outputArray;\n\t\t\t\t\t}\n\t\t\t\t\tif ('serviceWorker' in navigator && 'PushManager' in navigator) {\n\t\t\t\t\t\tnavigator.serviceWorker.ready.then(function(reg) {\n\t\t\t\t\t\t\treturn reg.pushManager.getSubscription().then(function(existing) {\n\t\t\t\t\t\t\t\tif (existing) return existing;\n\t\t\t\t\t\t\t\treturn Notification.requestPermission().then(function(perm) {\n\t\t\t\t\t\t\t\t\tif (perm !== 'granted') return null;\n\t\t\t\t\t\t\t\t\treturn reg.pushManager.subscribe({\n\t\t\t\t\t\t\t\t\t\tuserVisibleOnly: true,\n\t\t\t\t\t\t\t\t\t\tapplicationServerKey: urlBase64ToUint8Array(cfg.vapidKey),\n\t\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t}).then(function(sub) {\n\t\t\t\t\t\t\t\tif (!sub) return;\n\t\t\t\t\t\t\t\treturn fetch('/push/subscribe', {\n\t\t\t\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\t\t\t\theaders: { 'Content-Type': 'application/json' },\n\t\t\t\t\t\t\t\t\tbody: JSON.stringify(Object.assign(sub.toJSON(), { orderNumber: cfg.orderNumber })),\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t}).catch(function(err) { console.warn('Push subscription failed:', err); });\n\t\t\t\t\t}\n\t\t\t\t})();\n\t\t\t</script>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
