@@ -164,7 +164,15 @@ self.addEventListener('message', event => {
 });
 
 self.addEventListener('push', event => {
-  const data = event.data ? event.data.json() : {};
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (_) {
+      // DevTools test pushes send plain text; treat it as the notification body.
+      data = { body: event.data.text() };
+    }
+  }
   event.waitUntil(
     self.registration.showNotification(data.title || 'BitMerchant', {
       body:  data.body  || '',
