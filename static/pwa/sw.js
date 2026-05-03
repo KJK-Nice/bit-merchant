@@ -47,6 +47,14 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Only cache GET requests. POST/PUT/DELETE requests (e.g. /push/subscribe)
+  // must pass through directly — trying to cache-match a POST consumes its
+  // body, causing a "Response body already used" clone error on the fallback
+  // fetch() call.
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {

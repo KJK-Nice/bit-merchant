@@ -505,7 +505,7 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 			})();
 		</script>
 		if vapidPublicKey != "" {
-			<script>
+			<script nonce={ templ.GetNonce(ctx) }>
 				(function() {
 					function urlBase64ToUint8Array(base64String) {
 						var padding = '='.repeat((4 - base64String.length % 4) % 4);

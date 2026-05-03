@@ -57,7 +57,7 @@ templ OrderStatusPage(order *order.Order, vapidPublicKey string) {
 		@OrderStatus(order)
 		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", string(order.RestaurantID))})
 		if vapidPublicKey != "" {
-			<script>
+			<script nonce={ templ.GetNonce(ctx) }>
 				(function() {
 					function urlBase64ToUint8Array(base64String) {
 						var padding = '='.repeat((4 - base64String.length % 4) % 4);
