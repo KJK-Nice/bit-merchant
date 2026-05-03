@@ -173,6 +173,11 @@ self.addEventListener('push', event => {
       data = { body: event.data.text() };
     }
   }
+  // DevTools console message — confirms a push reached the browser. If you
+  // never see this, the push service did not deliver (common causes: TTL
+  // expired while device asleep, VAPID mismatch, OS-level notification
+  // permission revoked, or for iOS PWAs not installed via Add to Home Screen).
+  console.info('[sw push] received', data);
   event.waitUntil(
     self.registration.showNotification(data.title || 'BitMerchant', {
       body:  data.body  || '',
