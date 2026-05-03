@@ -269,7 +269,10 @@ func startOrderEventsRouter(
 
 	webPushNotifier := notifwebpush.NewNotifier(pushRepo, vapidCfg, logger.Logger)
 	notifSvc := notification.NewService(logger, webPushNotifier)
-	ordernotif.RegisterOrderNotificationHandlers(orderEventsRouter, eventBus.Subscriber(), logger, notifSvc)
+	// Register notification handlers in a separate consumer group from SSE
+	// handlers — without this, NATS load-balances each event between the two
+	// sets and only one fires per message (see EventBus.SubscriberForGroup).
+	ordernotif.RegisterOrderNotificationHandlers(orderEventsRouter, eventBus.SubscriberForGroup("notif"), logger, notifSvc)
 
 	routerErrors := make(chan error, 1)
 	go func() {
