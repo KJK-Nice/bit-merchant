@@ -112,16 +112,7 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 		PrivateKey: cfg.VAPIDPrivateKey,
 		Subject:    cfg.VAPIDSubject,
 	}
-	// Surface mis-configuration loudly at startup. With any field empty the
-	// templates skip the subscribe script (public key) and / or the webpush
-	// library refuses to sign (private key, subject), so the whole feature
-	// silently no-ops — the most-asked debugging question for this code path.
-	if missing := missingVAPIDFields(vapidCfg); len(missing) > 0 {
-		logger.Warn("web push notifications disabled — VAPID not fully configured",
-			"missing", missing,
-			"hint", "set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (run `npx web-push generate-vapid-keys`)",
-		)
-	}
+	warnIfVAPIDIncomplete(logger, vapidCfg)
 	orderEventsRouter, err = startOrderEventsRouter(ctx, cfg, eventBus, logger, sseHandler, repos.Order, pushRepo, vapidCfg)
 	if err != nil {
 		cleanupResources()
@@ -188,10 +179,12 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 	return application, cleanup, nil
 }
 
-// missingVAPIDFields returns the names of any required VAPID config values
-// that are blank, in declaration order — used by the startup warning to tell
-// the operator exactly which env var to set.
-func missingVAPIDFields(v notifwebpush.VAPIDConfig) []string {
+// warnIfVAPIDIncomplete logs a startup warning when any VAPID field is blank.
+// With an empty public key the templates skip the subscribe script; with an
+// empty private key or subject the webpush library refuses to sign — either
+// way the whole feature silently no-ops, which is the most-asked debugging
+// question for this code path.
+func warnIfVAPIDIncomplete(logger *logging.Logger, v notifwebpush.VAPIDConfig) {
 	var missing []string
 	if v.PublicKey == "" {
 		missing = append(missing, "VAPID_PUBLIC_KEY")
@@ -202,7 +195,13 @@ func missingVAPIDFields(v notifwebpush.VAPIDConfig) []string {
 	if v.Subject == "" {
 		missing = append(missing, "VAPID_SUBJECT")
 	}
-	return missing
+	if len(missing) == 0 {
+		return
+	}
+	logger.Warn("web push notifications disabled — VAPID not fully configured",
+		"missing", missing,
+		"hint", "set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (run `npx web-push generate-vapid-keys`)",
+	)
 }
 
 func eventBusConfig(cfg Config) events.Config {
