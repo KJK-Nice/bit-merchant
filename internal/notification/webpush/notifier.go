@@ -42,10 +42,26 @@ func NewNotifier(repo Repository, vapid VAPIDConfig, logger *slog.Logger) *Notif
 func (n *Notifier) Name() string { return "web-push" }
 
 func (n *Notifier) Send(ctx context.Context, notif notification.Notification) error {
+	role := notif.Metadata["role"]
+	target := notif.Metadata["order_number"]
+	if role == "kitchen" {
+		target = notif.Metadata["restaurant_id"]
+	}
+
 	subs, err := n.subscriptionsFor(notif)
 	if err != nil {
 		return fmt.Errorf("query subscriptions: %w", err)
 	}
+	// Always log so the operator can tell whether a fired event reached the
+	// notifier, how many subscriptions matched, and whether the no-op was
+	// "no subs registered" vs "delivery failed". This is the difference
+	// between debugging the publisher pipeline and debugging push delivery.
+	n.logger.Info("web push send",
+		"role", role,
+		"target", target,
+		"title", notif.Title,
+		"subscriptions", len(subs),
+	)
 	if len(subs) == 0 {
 		return nil
 	}
@@ -86,12 +102,31 @@ func (n *Notifier) sendOne(sub *Subscription, payload []byte) error {
 		VAPIDPublicKey:  n.vapid.PublicKey,
 		VAPIDPrivateKey: n.vapid.PrivateKey,
 		Subscriber:      n.vapid.Subject,
-		TTL:             30,
+		// 1 hour: long enough that a phone backgrounded for a while will
+		// still receive the message when it next syncs. The previous 30s
+		// limit dropped messages whenever the device was asleep at send
+		// time, which on mobile is most of the time.
+		TTL: 3600,
 	})
 	if err != nil {
 		return fmt.Errorf("send push to %s: %w", sub.Endpoint, err)
 	}
 	defer resp.Body.Close()
+
+	// Surface non-2xx responses from the push service (FCM, Mozilla autopush,
+	// Apple Push Service). 2xx means the push service accepted the message
+	// for delivery; anything else explains why a notification never appeared.
+	if resp.StatusCode >= 300 {
+		n.logger.Warn("push service rejected delivery",
+			"endpoint", sub.Endpoint,
+			"status", resp.StatusCode,
+		)
+	} else {
+		n.logger.Debug("push service accepted delivery",
+			"endpoint", sub.Endpoint,
+			"status", resp.StatusCode,
+		)
+	}
 
 	if resp.StatusCode == http.StatusGone {
 		if delErr := n.repo.DeleteByEndpoint(sub.Endpoint); delErr != nil {
