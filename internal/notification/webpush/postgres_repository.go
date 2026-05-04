@@ -26,7 +26,7 @@ func (r *PostgresRepository) Upsert(sub *Subscription) error {
 	_, err := r.db.Exec(`
 		INSERT INTO push_subscriptions (role, order_number, restaurant_id, endpoint, auth_key, p256dh_key)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		ON CONFLICT (endpoint, role, COALESCE(order_number, ''), COALESCE(restaurant_id, '')) DO UPDATE SET
+		ON CONFLICT (endpoint, role, (COALESCE(order_number, '')), (COALESCE(restaurant_id, ''))) DO UPDATE SET
 		    auth_key   = EXCLUDED.auth_key,
 		    p256dh_key = EXCLUDED.p256dh_key`,
 		sub.Role,
