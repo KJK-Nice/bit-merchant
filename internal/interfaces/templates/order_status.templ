@@ -76,7 +76,7 @@ templ OrderStatusPage(order *order.Order, vapidPublicKey string) {
 						for (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
 						return outputArray;
 					}
-					if (!('serviceWorker' in navigator) || !('PushManager' in navigator) || !('Notification' in window)) {
+					if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
 						console.info('[push] browser does not support service workers or push notifications');
 						return;
 					}
