@@ -505,6 +505,19 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 			})();
 		</script>
 		if vapidPublicKey != "" {
+			<div id="push-prompt" hidden class="mt-4 space-y-2">
+				<button
+					id="enable-notifications"
+					type="button"
+					hidden
+					class="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border bg-background text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 cursor-pointer disabled:pointer-events-none disabled:opacity-50"
+				>
+					Enable kitchen notifications
+				</button>
+				<p id="ios-install-hint" hidden class="text-sm text-muted-foreground text-center">
+					Tip: to get notified on iPhone, tap Share → Add to Home Screen, then open the app from your home screen.
+				</p>
+			</div>
 			// Data attributes carry Go values into JS safely — templ does not
 			// interpolate { } inside <script> raw blocks.
 			<div
@@ -515,6 +528,9 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 			<script nonce={ templ.GetNonce(ctx) }>
 				(function() {
 					var cfg = document.getElementById('push-config').dataset;
+					var promptHost = document.getElementById('push-prompt');
+					var enableBtn = document.getElementById('enable-notifications');
+					var iosHint = document.getElementById('ios-install-hint');
 					function urlBase64ToUint8Array(base64String) {
 						var padding = '='.repeat((4 - base64String.length % 4) % 4);
 						var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -523,6 +539,12 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 						for (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
 						return outputArray;
 					}
+					function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent); }
+					function isStandalone() {
+						return navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+					}
+					function reveal(el) { if (el) el.hidden = false; }
+					function hide(el) { if (el) el.hidden = true; }
 					if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
 						console.info('[push] browser does not support service workers or push notifications');
 						return;
@@ -531,30 +553,11 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 						console.info('[push] notifications denied — skipping subscribe; re-enable in browser settings');
 						return;
 					}
-					navigator.serviceWorker.ready.then(function(reg) {
-						return reg.pushManager.getSubscription().then(function(existing) {
-							if (existing) {
-								console.info('[push] reusing existing subscription', existing.endpoint);
-								return existing;
-							}
-							if (Notification.permission === 'granted') {
-								console.info('[push] permission already granted, subscribing');
-								return reg.pushManager.subscribe({
-									userVisibleOnly: true,
-									applicationServerKey: urlBase64ToUint8Array(cfg.vapidKey),
-								});
-							}
-							console.info('[push] requesting permission');
-							return Notification.requestPermission().then(function(perm) {
-								console.info('[push] permission =', perm);
-								if (perm !== 'granted') return null;
-								return reg.pushManager.subscribe({
-									userVisibleOnly: true,
-									applicationServerKey: urlBase64ToUint8Array(cfg.vapidKey),
-								});
-							});
+					function subscribeAndPost(reg) {
+						return reg.pushManager.subscribe({
+							userVisibleOnly: true,
+							applicationServerKey: urlBase64ToUint8Array(cfg.vapidKey),
 						}).then(function(sub) {
-							if (!sub) return;
 							console.info('[push] POST /kitchen/push/subscribe', sub.endpoint);
 							return fetch('/kitchen/push/subscribe', {
 								method: 'POST',
@@ -563,6 +566,42 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 							}).then(function(res) {
 								console.info('[push] subscribe response', res.status);
 								if (!res.ok) console.warn('[push] subscribe failed with status', res.status);
+							});
+						});
+					}
+					navigator.serviceWorker.ready.then(function(reg) {
+						return reg.pushManager.getSubscription().then(function(existing) {
+							if (existing) {
+								console.info('[push] reusing existing subscription', existing.endpoint);
+								return;
+							}
+							if (Notification.permission === 'granted') {
+								console.info('[push] permission already granted, subscribing');
+								return subscribeAndPost(reg);
+							}
+							if (isIOS() && !isStandalone()) {
+								console.info('[push] iOS Safari — showing install hint (Add to Home Screen required)');
+								reveal(promptHost);
+								reveal(iosHint);
+								return;
+							}
+							console.info('[push] showing enable button (waiting for user gesture)');
+							reveal(promptHost);
+							reveal(enableBtn);
+							enableBtn.addEventListener('click', function() {
+								enableBtn.disabled = true;
+								console.info('[push] requesting permission');
+								Notification.requestPermission().then(function(perm) {
+									console.info('[push] permission =', perm);
+									if (perm !== 'granted') {
+										enableBtn.disabled = false;
+										return;
+									}
+									return subscribeAndPost(reg).finally(function() { hide(promptHost); });
+								}).catch(function(err) {
+									console.warn('[push] permission request failed:', err);
+									enableBtn.disabled = false;
+								});
 							});
 						});
 					}).catch(function(err) { console.warn('[push] subscription pipeline failed:', err); });
