@@ -116,13 +116,16 @@ func (n *Notifier) sendOne(sub *Subscription, payload []byte) error {
 	// Surface non-2xx responses from the push service (FCM, Mozilla autopush,
 	// Apple Push Service). 2xx means the push service accepted the message
 	// for delivery; anything else explains why a notification never appeared.
+	// Both branches log at Info: when notifications mysteriously don't arrive,
+	// the operator needs to see "did the push service accept this?" without
+	// reconfiguring log levels — the volume is bounded by status-change events.
 	if resp.StatusCode >= 300 {
 		n.logger.Warn("push service rejected delivery",
 			"endpoint", sub.Endpoint,
 			"status", resp.StatusCode,
 		)
 	} else {
-		n.logger.Debug("push service accepted delivery",
+		n.logger.Info("push service accepted delivery",
 			"endpoint", sub.Endpoint,
 			"status", resp.StatusCode,
 		)
