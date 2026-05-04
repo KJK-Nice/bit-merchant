@@ -3,6 +3,7 @@ package adapters
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"bitmerchant/internal/common"
@@ -20,6 +21,25 @@ func NewPostgresOrderRepository(db *sql.DB) *PostgresOrderRepository {
 const orderColumns = `id, order_number, restaurant_id, session_id, total_amount, fiat_amount,
 	payment_method, payment_status, fulfillment_status,
 	created_at, updated_at, paid_at, preparing_at, ready_at, completed_at`
+
+// NextOrderNumber atomically allocates the next order number for restaurantID.
+// Race-free: the UPDATE in ON CONFLICT takes the row lock, so concurrent
+// callers serialize on Postgres rather than racing in the application.
+func (r *PostgresOrderRepository) NextOrderNumber(restaurantID common.RestaurantID) (int, error) {
+	var n int
+	err := r.db.QueryRow(`
+		INSERT INTO restaurant_order_counters (restaurant_id, last_number)
+		VALUES ($1, 1)
+		ON CONFLICT (restaurant_id) DO UPDATE
+			SET last_number = restaurant_order_counters.last_number + 1
+		RETURNING last_number`,
+		string(restaurantID),
+	).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("allocate order number for restaurant %s: %w", restaurantID, err)
+	}
+	return n, nil
+}
 
 func (r *PostgresOrderRepository) Save(o *order.Order) error {
 	tx, err := r.db.Begin()

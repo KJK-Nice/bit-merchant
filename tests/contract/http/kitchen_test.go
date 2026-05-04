@@ -58,6 +58,9 @@ func (m *mockKitchenOrderRepo) FindByRestaurantID(rid common.RestaurantID) ([]*o
 func (m *mockKitchenOrderRepo) FindBySessionID(sessionID string) ([]*order.Order, error) {
 	return nil, nil
 }
+func (m *mockKitchenOrderRepo) NextOrderNumber(rid common.RestaurantID) (int, error) {
+	return 1, nil
+}
 
 // Mock EventBus
 type mockKitchenEventBus struct{}

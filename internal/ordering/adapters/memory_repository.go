@@ -9,14 +9,27 @@ import (
 )
 
 type MemoryOrderRepository struct {
-	mu     sync.RWMutex
-	orders map[common.OrderID]*order.Order
+	mu       sync.RWMutex
+	orders   map[common.OrderID]*order.Order
+	counters map[common.RestaurantID]int
 }
 
 func NewMemoryOrderRepository() *MemoryOrderRepository {
 	return &MemoryOrderRepository{
-		orders: make(map[common.OrderID]*order.Order),
+		orders:   make(map[common.OrderID]*order.Order),
+		counters: make(map[common.RestaurantID]int),
 	}
+}
+
+// NextOrderNumber mirrors the Postgres implementation's contract: monotonic
+// per restaurant, no duplicates under concurrent callers. Held under the same
+// write mutex that guards orders, so a Save() following NextOrderNumber()
+// observes a consistent state in tests that exercise both.
+func (r *MemoryOrderRepository) NextOrderNumber(restaurantID common.RestaurantID) (int, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.counters[restaurantID]++
+	return r.counters[restaurantID], nil
 }
 
 func (r *MemoryOrderRepository) Save(o *order.Order) error {

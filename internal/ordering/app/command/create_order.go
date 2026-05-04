@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"math/rand"
 	"time"
 
 	"bitmerchant/internal/common"
@@ -67,7 +66,12 @@ func (h createOrderHandler) Handle(ctx context.Context, cmd CreateOrder) (*Creat
 	}
 
 	orderID := common.OrderID(fmt.Sprintf("ord_%d", time.Now().UnixNano()))
-	orderNumber := common.OrderNumber(fmt.Sprintf("%04d", rand.Intn(10000)))
+	n, err := h.orderRepo.NextOrderNumber(cmd.RestaurantID)
+	if err != nil {
+		return nil, fmt.Errorf("next order number: %w", err)
+	}
+	// %04d pads short numbers; long numbers (>9999) flow through unchanged.
+	orderNumber := common.OrderNumber(fmt.Sprintf("%04d", n))
 
 	orderItems, err := h.createOrderItems(cmd.Cart.Items, orderID)
 	if err != nil {
