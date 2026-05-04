@@ -54,15 +54,18 @@ func (h *PushHandler) SubscribeCustomer(c echo.Context) error {
 	}
 
 	sub := &webpush.Subscription{
-		Role:        "customer",
-		OrderNumber: req.OrderNumber,
-		Endpoint:    req.Endpoint,
-		AuthKey:     keys.Auth,
-		P256DHKey:   keys.P256dh,
+		Role:      "customer",
+		Endpoint:  req.Endpoint,
+		AuthKey:   keys.Auth,
+		P256DHKey: keys.P256dh,
 	}
 	if err := h.repo.Upsert(sub); err != nil {
 		h.logger.Error("push subscribe: repo upsert failed", "role", "customer", "error", err)
 		return c.String(http.StatusInternalServerError, "failed to save subscription")
+	}
+	if err := h.repo.AddScope(sub.ID, webpush.ScopeTypeOrder, req.OrderNumber); err != nil {
+		h.logger.Error("push subscribe: add scope failed", "role", "customer", "order_number", req.OrderNumber, "error", err)
+		return c.String(http.StatusInternalServerError, "failed to save subscription scope")
 	}
 	h.logger.Info("push subscribe stored",
 		"role", "customer",
@@ -97,15 +100,18 @@ func (h *PushHandler) SubscribeKitchen(c echo.Context) error {
 	}
 
 	sub := &webpush.Subscription{
-		Role:         "kitchen",
-		RestaurantID: restaurantID,
-		Endpoint:     req.Endpoint,
-		AuthKey:      keys.Auth,
-		P256DHKey:    keys.P256dh,
+		Role:      "kitchen",
+		Endpoint:  req.Endpoint,
+		AuthKey:   keys.Auth,
+		P256DHKey: keys.P256dh,
 	}
 	if err := h.repo.Upsert(sub); err != nil {
 		h.logger.Error("push subscribe: repo upsert failed", "role", "kitchen", "error", err)
 		return c.String(http.StatusInternalServerError, "failed to save subscription")
+	}
+	if err := h.repo.AddScope(sub.ID, webpush.ScopeTypeRestaurant, string(restaurantID)); err != nil {
+		h.logger.Error("push subscribe: add scope failed", "role", "kitchen", "restaurant_id", string(restaurantID), "error", err)
+		return c.String(http.StatusInternalServerError, "failed to save subscription scope")
 	}
 	h.logger.Info("push subscribe stored",
 		"role", "kitchen",

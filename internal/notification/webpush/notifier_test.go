@@ -30,6 +30,9 @@ func newStubRepo() *stubRepo {
 }
 
 func (r *stubRepo) Upsert(sub *webpush.Subscription) error { return nil }
+func (r *stubRepo) AddScope(_ string, _ webpush.ScopeType, _ string) error {
+	return nil
+}
 func (r *stubRepo) FindByOrderNumber(n string) ([]*webpush.Subscription, error) {
 	return r.byOrderNumber[n], nil
 }

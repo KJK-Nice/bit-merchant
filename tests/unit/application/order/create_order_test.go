@@ -12,6 +12,7 @@ import (
 	orderCmd "bitmerchant/internal/ordering/app/command"
 	"bitmerchant/internal/restaurant/domain/restaurant"
 	"context"
+	"sync"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -69,4 +70,54 @@ func TestCreateOrderHandler(t *testing.T) {
 		assert.Equal(t, int64(2000), savedOrder.TotalAmount) // 20.0 * 100
 		assert.Equal(t, 20.0, savedOrder.FiatAmount)
 	})
+}
+
+// Regression: replaces a previously-random rand.Intn(10000) generator that
+// hit the (restaurant_id, order_number) UNIQUE constraint under concurrent
+// load (birthday paradox). With per-restaurant atomic counters, N concurrent
+// CreateOrder calls for the same restaurant must yield N distinct numbers.
+func TestCreateOrderHandler_ConcurrentNumbersAreUnique(t *testing.T) {
+	orderRepo := memory.NewMemoryOrderRepository()
+	restRepo := memory.NewMemoryRestaurantRepository()
+	eventBus := events.NewEventBus()
+	logger := logging.NewLogger()
+
+	restID := common.RestaurantID("r1")
+	rest, _ := restaurant.NewRestaurant(restID, "Test Rest")
+	require.NoError(t, restRepo.Save(rest))
+
+	uc := orderCmd.NewCreateOrderHandler(orderRepo, restRepo, eventBus, logger.Logger, nil)
+
+	const concurrency = 25
+	results := make([]string, concurrency)
+	var wg sync.WaitGroup
+	for i := 0; i < concurrency; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			cartSvc := cart.NewCartService()
+			sessionID := "sess_" + string(rune('A'+idx))
+			item, _ := menu.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
+			require.NoError(t, cartSvc.AddItem(sessionID, item, 1))
+			req := orderCmd.CreateOrder{
+				RestaurantID:  restID,
+				SessionID:     sessionID,
+				Cart:          cartSvc.GetCart(sessionID),
+				PaymentMethod: common.PaymentMethodTypeCash,
+			}
+			resp, err := uc.Handle(context.Background(), req)
+			require.NoError(t, err)
+			results[idx] = string(resp.OrderNumber)
+		}(i)
+	}
+	wg.Wait()
+
+	seen := make(map[string]struct{}, concurrency)
+	for _, n := range results {
+		assert.NotEmpty(t, n)
+		_, dup := seen[n]
+		assert.Falsef(t, dup, "duplicate order number %q", n)
+		seen[n] = struct{}{}
+	}
+	assert.Len(t, seen, concurrency)
 }

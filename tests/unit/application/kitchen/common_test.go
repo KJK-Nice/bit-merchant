@@ -67,6 +67,10 @@ func (m *mockOrderRepo) Update(order *order.Order) error {
 	return nil
 }
 
+func (m *mockOrderRepo) NextOrderNumber(restaurantID common.RestaurantID) (int, error) {
+	return 1, nil
+}
+
 type mockEventBus struct {
 	publishFn func(ctx context.Context, topic string, event interface{}) error
 }
