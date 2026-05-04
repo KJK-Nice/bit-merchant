@@ -5,6 +5,9 @@ import (
 
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/notification/webpush"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // The headline UX win of the per-device + scopes model: a single browser
@@ -19,13 +22,9 @@ func TestMemoryRepository_OneDeviceManyOrders(t *testing.T) {
 		AuthKey:   "auth",
 		P256DHKey: "p256dh",
 	}
-	if err := repo.Upsert(sub); err != nil {
-		t.Fatalf("upsert: %v", err)
-	}
+	require.NoError(t, repo.Upsert(sub))
 	first := sub.ID
-	if first == "" {
-		t.Fatal("upsert must populate sub.ID")
-	}
+	require.NotEmpty(t, first, "upsert must populate sub.ID")
 
 	// Subscribe again for the same device (idempotent re-subscribe). The ID
 	// must not change — that's what proves "one row per device".
@@ -35,30 +34,18 @@ func TestMemoryRepository_OneDeviceManyOrders(t *testing.T) {
 		AuthKey:   "auth-rotated",
 		P256DHKey: "p256dh-rotated",
 	}
-	if err := repo.Upsert(again); err != nil {
-		t.Fatalf("re-upsert: %v", err)
-	}
-	if again.ID != first {
-		t.Fatalf("re-upsert must return same id: got %q want %q", again.ID, first)
-	}
+	require.NoError(t, repo.Upsert(again))
+	assert.Equal(t, first, again.ID, "re-upsert must return same id")
 
 	for _, order := range []string{"0215", "0216"} {
-		if err := repo.AddScope(first, webpush.ScopeTypeOrder, order); err != nil {
-			t.Fatalf("add scope %s: %v", order, err)
-		}
+		require.NoError(t, repo.AddScope(first, webpush.ScopeTypeOrder, order))
 	}
 
 	for _, order := range []string{"0215", "0216"} {
 		subs, err := repo.FindByOrderNumber(order)
-		if err != nil {
-			t.Fatalf("find %s: %v", order, err)
-		}
-		if len(subs) != 1 {
-			t.Fatalf("find %s: want 1 sub, got %d", order, len(subs))
-		}
-		if subs[0].Endpoint != sub.Endpoint {
-			t.Fatalf("find %s: wrong endpoint %q", order, subs[0].Endpoint)
-		}
+		require.NoError(t, err)
+		require.Len(t, subs, 1, "find %s", order)
+		assert.Equal(t, sub.Endpoint, subs[0].Endpoint, "find %s endpoint", order)
 	}
 }
 
@@ -70,30 +57,24 @@ func TestMemoryRepository_RoleSeparation(t *testing.T) {
 
 	customer := &webpush.Subscription{Role: "customer", Endpoint: endpoint, AuthKey: "a", P256DHKey: "p"}
 	kitchen := &webpush.Subscription{Role: "kitchen", Endpoint: endpoint, AuthKey: "a", P256DHKey: "p"}
-	if err := repo.Upsert(customer); err != nil {
-		t.Fatalf("customer upsert: %v", err)
-	}
-	if err := repo.Upsert(kitchen); err != nil {
-		t.Fatalf("kitchen upsert: %v", err)
-	}
-	if customer.ID == "" || kitchen.ID == "" || customer.ID == kitchen.ID {
-		t.Fatalf("customer and kitchen rows must be distinct: customer=%q kitchen=%q", customer.ID, kitchen.ID)
-	}
-	if err := repo.AddScope(customer.ID, webpush.ScopeTypeOrder, "0215"); err != nil {
-		t.Fatal(err)
-	}
-	if err := repo.AddScope(kitchen.ID, webpush.ScopeTypeRestaurant, "rest-1"); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, repo.Upsert(customer))
+	require.NoError(t, repo.Upsert(kitchen))
+	require.NotEmpty(t, customer.ID)
+	require.NotEmpty(t, kitchen.ID)
+	assert.NotEqual(t, customer.ID, kitchen.ID, "customer and kitchen rows must be distinct")
 
-	custResults, _ := repo.FindByOrderNumber("0215")
-	kitResults, _ := repo.FindByRestaurantID(common.RestaurantID("rest-1"))
-	if len(custResults) != 1 || custResults[0].Role != "customer" {
-		t.Fatalf("FindByOrderNumber must return only the customer row, got %+v", custResults)
-	}
-	if len(kitResults) != 1 || kitResults[0].Role != "kitchen" {
-		t.Fatalf("FindByRestaurantID must return only the kitchen row, got %+v", kitResults)
-	}
+	require.NoError(t, repo.AddScope(customer.ID, webpush.ScopeTypeOrder, "0215"))
+	require.NoError(t, repo.AddScope(kitchen.ID, webpush.ScopeTypeRestaurant, "rest-1"))
+
+	custResults, err := repo.FindByOrderNumber("0215")
+	require.NoError(t, err)
+	require.Len(t, custResults, 1)
+	assert.Equal(t, "customer", custResults[0].Role)
+
+	kitResults, err := repo.FindByRestaurantID(common.RestaurantID("rest-1"))
+	require.NoError(t, err)
+	require.Len(t, kitResults, 1)
+	assert.Equal(t, "kitchen", kitResults[0].Role)
 }
 
 // 410 Gone cleanup must drop the subscription and all of its scopes — mirrors
@@ -101,17 +82,11 @@ func TestMemoryRepository_RoleSeparation(t *testing.T) {
 func TestMemoryRepository_DeleteByEndpointCascadesScopes(t *testing.T) {
 	repo := webpush.NewMemoryRepository()
 	sub := &webpush.Subscription{Role: "customer", Endpoint: "https://example.com/dead", AuthKey: "a", P256DHKey: "p"}
-	if err := repo.Upsert(sub); err != nil {
-		t.Fatal(err)
-	}
-	if err := repo.AddScope(sub.ID, webpush.ScopeTypeOrder, "0215"); err != nil {
-		t.Fatal(err)
-	}
-	if err := repo.DeleteByEndpoint(sub.Endpoint); err != nil {
-		t.Fatal(err)
-	}
-	results, _ := repo.FindByOrderNumber("0215")
-	if len(results) != 0 {
-		t.Fatalf("after delete, find must return zero subs, got %d", len(results))
-	}
+	require.NoError(t, repo.Upsert(sub))
+	require.NoError(t, repo.AddScope(sub.ID, webpush.ScopeTypeOrder, "0215"))
+	require.NoError(t, repo.DeleteByEndpoint(sub.Endpoint))
+
+	results, err := repo.FindByOrderNumber("0215")
+	require.NoError(t, err)
+	assert.Empty(t, results, "after delete, find must return zero subs")
 }
