@@ -1,11 +1,19 @@
 package components
 
 import (
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/ordering/app/cart"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"fmt"
 )
+
+func cartCurrency(c *cart.Cart) money.Currency {
+	if c == nil || c.Currency.IsZero() {
+		return money.USD
+	}
+	return c.Currency
+}
 
 templ CartSummary(cart *cart.Cart, showCheckout bool) {
 	@card.Card(card.Props{ID: "cart-summary", Class: "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"}) {
@@ -21,7 +29,7 @@ templ CartSummary(cart *cart.Cart, showCheckout bool) {
 						<div class="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0">
 							<div class="flex-1 min-w-0 pr-3">
 								<p class="font-medium truncate">{ item.Name }</p>
-								<p class="text-sm text-muted-foreground">{ fmt.Sprintf("$%.2f each", item.UnitPrice) }</p>
+								<p class="text-sm text-muted-foreground">{ money.FromMajor(item.UnitPrice, cartCurrency(cart)).Format() } each</p>
 							</div>
 							<div class="flex items-center gap-2 shrink-0">
 								<!-- qty stepper -->
@@ -50,7 +58,7 @@ templ CartSummary(cart *cart.Cart, showCheckout bool) {
 										<span class="text-base leading-none select-none">+</span>
 									}
 								</div>
-								<span class="font-semibold w-16 text-right">{ fmt.Sprintf("$%.2f", item.Subtotal) }</span>
+								<span class="font-semibold w-16 text-right">{ money.FromMajor(item.Subtotal, cartCurrency(cart)).Format() }</span>
 							</div>
 						</div>
 					}
@@ -60,7 +68,7 @@ templ CartSummary(cart *cart.Cart, showCheckout bool) {
 		if len(cart.Items) > 0 {
 			@card.Footer(card.FooterProps{Class: "justify-between border-t pt-4"}) {
 				<div class="text-lg font-bold">
-					Total: { fmt.Sprintf("$%.2f", cart.Total) }
+					Total: { cart.Money().Format() }
 				</div>
 				if showCheckout {
 					@button.Button(button.Props{
@@ -98,7 +106,7 @@ templ CartFloatingButton(cart *cart.Cart) {
 						</div>
 						<span class="font-bold">View Cart</span>
 					</div>
-					<span class="font-bold">{ fmt.Sprintf("$%.2f", cart.Total) }</span>
+					<span class="font-bold">{ cart.Money().Format() }</span>
 				}
 			</div>
 		}

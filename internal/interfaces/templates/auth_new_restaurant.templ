@@ -1,12 +1,25 @@
 package templates
 
 import (
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
 	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/layouts"
 )
+
+func currencyOptionLabel(c money.Currency) string {
+	switch c.Code {
+	case money.SAT.Code:
+		return "Satoshi (sats) — Bitcoin Lightning"
+	case money.THB.Code:
+		return "Thai Baht (฿)"
+	default:
+		return "US Dollar ($)"
+	}
+}
 
 templ AuthNewRestaurantPage(csrfToken string, currentPath string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, memberships []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
 	@layouts.Dashboard("New restaurant", currentPath, activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, memberships, activeRestaurantRole, canCreateRestaurant) {
@@ -40,6 +53,17 @@ templ AuthNewRestaurantPage(csrfToken string, currentPath string, activeRestaura
 								Required:    true,
 							})
 						}
+						<div class="space-y-2">
+							@label.Label(label.Props{For: "restaurant-base-currency"}) {
+								Base currency
+							}
+							<select id="restaurant-base-currency" name="baseCurrency" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+								for _, c := range money.All() {
+									<option value={ c.Code }>{ currencyOptionLabel(c) }</option>
+								}
+							</select>
+							<p class="text-xs text-muted-foreground">All menu items, orders, and payments use this currency. Pick Satoshi if you plan to accept Bitcoin Lightning.</p>
+						</div>
 						<div class="flex flex-wrap gap-2">
 							@button.Button(button.Props{Type: "submit"}) {
 								Create restaurant

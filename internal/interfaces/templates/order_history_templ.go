@@ -219,9 +219,9 @@ func OrderHistoryPage(orders []*order.Order) templ.Component {
 								return templ_7745c5c3_Err
 							}
 							var templ_7745c5c3_Var13 string
-							templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", order.FiatAmount))
+							templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(order.Total().Format())
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 46, Col: 84}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_history.templ`, Line: 46, Col: 68}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 							if templ_7745c5c3_Err != nil {

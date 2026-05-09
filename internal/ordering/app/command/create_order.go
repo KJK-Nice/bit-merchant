@@ -8,6 +8,7 @@ import (
 
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/common/decorator"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/ordering/app/cart"
 	"bitmerchant/internal/ordering/app/event"
 	"bitmerchant/internal/ordering/domain/order"
@@ -73,19 +74,23 @@ func (h createOrderHandler) Handle(ctx context.Context, cmd CreateOrder) (*Creat
 	// %04d pads short numbers; long numbers (>9999) flow through unchanged.
 	orderNumber := common.OrderNumber(fmt.Sprintf("%04d", n))
 
-	orderItems, err := h.createOrderItems(cmd.Cart.Items, orderID)
+	currency := rest.BaseCurrency
+	if currency.IsZero() {
+		currency = money.USD
+	}
+
+	orderItems, err := h.createOrderItems(cmd.Cart.Items, orderID, currency)
 	if err != nil {
 		return nil, err
 	}
 
-	fiatAmount := cmd.Cart.Total
-	totalAmount := int64(fiatAmount * 100)
+	cartTotal := money.FromMajor(cmd.Cart.Total, currency)
 
-	o, err := order.NewOrder(orderID, orderNumber, cmd.RestaurantID, cmd.SessionID, orderItems, totalAmount, cmd.PaymentMethod)
+	o, err := order.NewOrderWithCurrency(orderID, orderNumber, cmd.RestaurantID, cmd.SessionID, orderItems, cartTotal.Amount, cmd.PaymentMethod, currency)
 	if err != nil {
 		return nil, err
 	}
-	o.FiatAmount = fiatAmount
+	o.FiatAmount = cmd.Cart.Total
 
 	if err := h.orderRepo.Save(o); err != nil {
 		return nil, err
@@ -102,11 +107,11 @@ func (h createOrderHandler) Handle(ctx context.Context, cmd CreateOrder) (*Creat
 	}, nil
 }
 
-func (h createOrderHandler) createOrderItems(cartItems []cart.CartItem, orderID common.OrderID) ([]order.OrderItem, error) {
+func (h createOrderHandler) createOrderItems(cartItems []cart.CartItem, orderID common.OrderID, currency money.Currency) ([]order.OrderItem, error) {
 	var orderItems []order.OrderItem
 	for _, item := range cartItems {
 		orderItemID := common.OrderItemID(fmt.Sprintf("oi_%d_%s", time.Now().UnixNano(), item.ItemID))
-		oi, err := order.NewOrderItem(orderItemID, orderID, item.ItemID, item.Name, item.Quantity, item.UnitPrice)
+		oi, err := order.NewOrderItemWithCurrency(orderItemID, orderID, item.ItemID, item.Name, item.Quantity, item.UnitPrice, currency)
 		if err != nil {
 			return nil, err
 		}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/menu/domain/menu"
 )
 
@@ -17,17 +18,22 @@ func NewPostgresItemRepository(db *sql.DB) *PostgresItemRepository {
 	return &PostgresItemRepository{db: db}
 }
 
+const itemSelectCols = `id, category_id, restaurant_id, name, description, price, COALESCE(currency, 'USD'), COALESCE(price_minor, 0), photo_url, photo_original_url, is_available, display_order, created_at, updated_at`
+
 func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
+	currency, priceMinor := itemCurrencyAndMinor(item)
 	_, err := r.db.Exec(
-		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, currency, price_minor, photo_url, photo_original_url, is_available, display_order, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		 ON CONFLICT (id) DO UPDATE
 		 SET category_id = EXCLUDED.category_id, name = EXCLUDED.name,
 		     description = EXCLUDED.description, price = EXCLUDED.price,
+		     currency = EXCLUDED.currency, price_minor = EXCLUDED.price_minor,
 		     photo_url = EXCLUDED.photo_url, photo_original_url = EXCLUDED.photo_original_url,
 		     is_available = EXCLUDED.is_available, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at`,
 		string(item.ID), string(item.CategoryID), string(item.RestaurantID),
 		item.Name, item.Description, item.Price,
+		currency.Code, priceMinor,
 		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder,
 		item.CreatedAt, item.UpdatedAt)
 	return err
@@ -35,27 +41,29 @@ func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
 
 func (r *PostgresItemRepository) FindByID(id common.ItemID) (*menu.MenuItem, error) {
 	row := r.db.QueryRow(
-		`SELECT id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at
+		`SELECT `+itemSelectCols+`
 		 FROM menu_items WHERE id = $1`, string(id))
 	return scanItem(row)
 }
 
 func (r *PostgresItemRepository) FindByCategoryID(categoryID common.CategoryID) ([]*menu.MenuItem, error) {
-	return r.queryItems(`SELECT id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at FROM menu_items WHERE category_id = $1`, string(categoryID))
+	return r.queryItems(`SELECT `+itemSelectCols+` FROM menu_items WHERE category_id = $1`, string(categoryID))
 }
 
 func (r *PostgresItemRepository) FindByRestaurantID(restaurantID common.RestaurantID) ([]*menu.MenuItem, error) {
-	return r.queryItems(`SELECT id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at FROM menu_items WHERE restaurant_id = $1`, string(restaurantID))
+	return r.queryItems(`SELECT `+itemSelectCols+` FROM menu_items WHERE restaurant_id = $1`, string(restaurantID))
 }
 
 func (r *PostgresItemRepository) FindAvailableByRestaurantID(restaurantID common.RestaurantID) ([]*menu.MenuItem, error) {
-	return r.queryItems(`SELECT id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at FROM menu_items WHERE restaurant_id = $1 AND is_available = true`, string(restaurantID))
+	return r.queryItems(`SELECT `+itemSelectCols+` FROM menu_items WHERE restaurant_id = $1 AND is_available = true`, string(restaurantID))
 }
 
 func (r *PostgresItemRepository) Update(item *menu.MenuItem) error {
+	currency, priceMinor := itemCurrencyAndMinor(item)
 	result, err := r.db.Exec(
-		`UPDATE menu_items SET category_id=$2, name=$3, description=$4, price=$5, photo_url=$6, photo_original_url=$7, is_available=$8, display_order=$9, updated_at=$10 WHERE id=$1`,
+		`UPDATE menu_items SET category_id=$2, name=$3, description=$4, price=$5, currency=$6, price_minor=$7, photo_url=$8, photo_original_url=$9, is_available=$10, display_order=$11, updated_at=$12 WHERE id=$1`,
 		string(item.ID), string(item.CategoryID), item.Name, item.Description, item.Price,
+		currency.Code, priceMinor,
 		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder, item.UpdatedAt)
 	if err != nil {
 		return err
@@ -181,49 +189,57 @@ func (r *PostgresItemRepository) queryItems(query string, args ...interface{}) (
 	return result, rows.Err()
 }
 
+type itemRowFields struct {
+	id, catID, restID, name string
+	description             sql.NullString
+	price                   float64
+	currencyCode            string
+	priceMinor              int64
+	photoURL, photoOrigURL  sql.NullString
+	isAvailable             bool
+	displayOrder            int
+	createdAt, updatedAt    time.Time
+}
+
+func (f *itemRowFields) toMenuItem() *menu.MenuItem {
+	currency, err := money.Parse(f.currencyCode)
+	if err != nil {
+		currency = money.USD
+	}
+	return &menu.MenuItem{
+		ID: common.ItemID(f.id), CategoryID: common.CategoryID(f.catID),
+		RestaurantID: common.RestaurantID(f.restID), Name: f.name,
+		Description: f.description.String, Price: f.price, Currency: currency,
+		PhotoURL: f.photoURL.String, PhotoOriginalURL: f.photoOrigURL.String,
+		IsAvailable: f.isAvailable, DisplayOrder: f.displayOrder,
+		CreatedAt: f.createdAt, UpdatedAt: f.updatedAt,
+	}
+}
+
 func scanItem(row *sql.Row) (*menu.MenuItem, error) {
-	var (
-		id, catID, restID, name string
-		description             sql.NullString
-		price                   float64
-		photoURL, photoOrigURL  sql.NullString
-		isAvailable             bool
-		displayOrder            int
-		createdAt, updatedAt    time.Time
-	)
-	if err := row.Scan(&id, &catID, &restID, &name, &description, &price, &photoURL, &photoOrigURL, &isAvailable, &displayOrder, &createdAt, &updatedAt); err != nil {
+	var f itemRowFields
+	if err := row.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("menu item not found")
 		}
 		return nil, err
 	}
-	return &menu.MenuItem{
-		ID: common.ItemID(id), CategoryID: common.CategoryID(catID),
-		RestaurantID: common.RestaurantID(restID), Name: name,
-		Description: description.String, Price: price,
-		PhotoURL: photoURL.String, PhotoOriginalURL: photoOrigURL.String,
-		IsAvailable: isAvailable, DisplayOrder: displayOrder, CreatedAt: createdAt, UpdatedAt: updatedAt,
-	}, nil
+	return f.toMenuItem(), nil
 }
 
 func scanItemRows(rows *sql.Rows) (*menu.MenuItem, error) {
-	var (
-		id, catID, restID, name string
-		description             sql.NullString
-		price                   float64
-		photoURL, photoOrigURL  sql.NullString
-		isAvailable             bool
-		displayOrder            int
-		createdAt, updatedAt    time.Time
-	)
-	if err := rows.Scan(&id, &catID, &restID, &name, &description, &price, &photoURL, &photoOrigURL, &isAvailable, &displayOrder, &createdAt, &updatedAt); err != nil {
+	var f itemRowFields
+	if err := rows.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt); err != nil {
 		return nil, err
 	}
-	return &menu.MenuItem{
-		ID: common.ItemID(id), CategoryID: common.CategoryID(catID),
-		RestaurantID: common.RestaurantID(restID), Name: name,
-		Description: description.String, Price: price,
-		PhotoURL: photoURL.String, PhotoOriginalURL: photoOrigURL.String,
-		IsAvailable: isAvailable, DisplayOrder: displayOrder, CreatedAt: createdAt, UpdatedAt: updatedAt,
-	}, nil
+	return f.toMenuItem(), nil
+}
+
+func itemCurrencyAndMinor(item *menu.MenuItem) (money.Currency, int64) {
+	currency := item.Currency
+	if currency.IsZero() {
+		currency = money.USD
+	}
+	priceMinor := money.FromMajor(item.Price, currency).Amount
+	return currency, priceMinor
 }

@@ -16,6 +16,7 @@ import (
 type CompleteSignupNewRestaurant struct {
 	OwnerUserID    common.UserID
 	RestaurantName string
+	CurrencyCode   string
 }
 
 type CompleteSignupNewRestaurantHandler decorator.CommandResultHandler[CompleteSignupNewRestaurant, RegistrationOutcome]
@@ -34,7 +35,7 @@ func NewCompleteSignupNewRestaurantHandler(memRepo membership.Repository, create
 }
 
 func (h completeSignupNewRestaurantHandler) Handle(ctx context.Context, cmd CompleteSignupNewRestaurant) (RegistrationOutcome, error) {
-	rest, err := h.createRestaurant.Handle(ctx, restaurantCmd.CreateRestaurant{Name: cmd.RestaurantName})
+	rest, err := h.createRestaurant.Handle(ctx, restaurantCmd.CreateRestaurant{Name: cmd.RestaurantName, CurrencyCode: cmd.CurrencyCode})
 	if err != nil {
 		return RegistrationOutcome{}, err
 	}

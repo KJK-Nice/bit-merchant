@@ -9,11 +9,19 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/ordering/app/cart"
 	"fmt"
 )
+
+func cartCurrency(c *cart.Cart) money.Currency {
+	if c == nil || c.Currency.IsZero() {
+		return money.USD
+	}
+	return c.Currency
+}
 
 func CartSummary(cart *cart.Cart, showCheckout bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -122,7 +130,7 @@ func CartSummary(cart *cart.Cart, showCheckout bool) templ.Component {
 						var templ_7745c5c3_Var6 string
 						templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 23, Col: 51}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 31, Col: 51}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 						if templ_7745c5c3_Err != nil {
@@ -133,15 +141,15 @@ func CartSummary(cart *cart.Cart, showCheckout bool) templ.Component {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var7 string
-						templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f each", item.UnitPrice))
+						templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(money.FromMajor(item.UnitPrice, cartCurrency(cart)).Format())
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 24, Col: 92}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 32, Col: 111}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</p></div><div class=\"flex items-center gap-2 shrink-0\"><!-- qty stepper --><div class=\"flex items-center gap-1.5\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, " each</p></div><div class=\"flex items-center gap-2 shrink-0\"><!-- qty stepper --><div class=\"flex items-center gap-1.5\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -182,7 +190,7 @@ func CartSummary(cart *cart.Cart, showCheckout bool) templ.Component {
 						var templ_7745c5c3_Var9 string
 						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", item.Quantity))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 40, Col: 111}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 48, Col: 111}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 						if templ_7745c5c3_Err != nil {
@@ -227,9 +235,9 @@ func CartSummary(cart *cart.Cart, showCheckout bool) templ.Component {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var11 string
-						templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", item.Subtotal))
+						templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(money.FromMajor(item.Subtotal, cartCurrency(cart)).Format())
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 53, Col: 89}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 61, Col: 113}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 						if templ_7745c5c3_Err != nil {
@@ -273,9 +281,9 @@ func CartSummary(cart *cart.Cart, showCheckout bool) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var13 string
-					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", cart.Total))
+					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(cart.Money().Format())
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 63, Col: 46}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 71, Col: 35}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 					if templ_7745c5c3_Err != nil {
@@ -386,7 +394,7 @@ func CartFloatingButton(cart *cart.Cart) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", getTotalQuantity(cart)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 97, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 105, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -397,9 +405,9 @@ func CartFloatingButton(cart *cart.Cart) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var18 string
-				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", cart.Total))
+				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(cart.Money().Format())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 101, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/components/cart_summary.templ`, Line: 109, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {

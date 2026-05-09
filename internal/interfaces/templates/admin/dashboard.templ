@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"bitmerchant/internal/common/money"
 	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/layouts"
@@ -15,9 +16,38 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
 	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
-	"fmt"
 	"strconv"
 )
+
+// menuCurrency returns the restaurant's base currency, defaulting to USD.
+func menuCurrency(data *menuQuery.MenuResponse) money.Currency {
+	if data == nil || data.Restaurant == nil || data.Restaurant.BaseCurrency.IsZero() {
+		return money.USD
+	}
+	return data.Restaurant.BaseCurrency
+}
+
+// priceInputStep returns the HTML <input type=number step="..."> value for a
+// currency. SAT inputs are whole numbers, fiat allows two decimals.
+func priceInputStep(c money.Currency) string {
+	if c.Code == money.SAT.Code {
+		return "1"
+	}
+	return "0.01"
+}
+
+// priceInputLabel returns the label suffix for a price input ("Price (USD)",
+// "Price (sats)", etc.).
+func priceInputLabel(c money.Currency) string {
+	switch c.Code {
+	case money.SAT.Code:
+		return "Price (sats)"
+	case money.THB.Code:
+		return "Price (฿)"
+	default:
+		return "Price ($)"
+	}
+}
 
 templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, menuError string) {
 	@layouts.Dashboard("Menu Management", "/admin/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
@@ -157,9 +187,9 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 												</div>
 												<div class="space-y-2">
 													@label.Label(label.Props{For: "add-item-price-" + string(catData.Category.ID)}) {
-														Price
+														{ priceInputLabel(menuCurrency(menuData)) }
 													}
-													@input.Input(input.Props{Type: "number", Step: "0.01", ID: "add-item-price-" + string(catData.Category.ID), Name: "price", Placeholder: "Price", Required: true})
+													@input.Input(input.Props{Type: "number", Step: priceInputStep(menuCurrency(menuData)), ID: "add-item-price-" + string(catData.Category.ID), Name: "price", Placeholder: "Price", Required: true})
 												</div>
 											</div>
 											<div class="space-y-2">
@@ -236,7 +266,7 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 												@table.Cell(table.CellProps{Class: "font-medium min-w-0 max-w-md align-middle"}) {
 													<span class="break-words">{ item.Name }</span>
 												}
-												@table.Cell() { { fmt.Sprintf("$%.2f", item.Price) } }
+												@table.Cell() { { item.Money().Format() } }
 												@table.Cell() {
 													if item.IsAvailable {
 														@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
@@ -369,7 +399,7 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 																			@label.Label(label.Props{For: "edit-item-price-" + string(item.ID)}) {
 																				Price
 																			}
-																			@input.Input(input.Props{Type: "number", Step: "0.01", ID: "edit-item-price-" + string(item.ID), Name: "price", Required: true, Value: strconv.FormatFloat(item.Price, 'f', 2, 64)})
+																			@input.Input(input.Props{Type: "number", Step: priceInputStep(item.Money().Currency), ID: "edit-item-price-" + string(item.ID), Name: "price", Required: true, Value: item.Money().FormatNoSymbol()})
 																		</div>
 																	</div>
 																	<div class="space-y-2">
