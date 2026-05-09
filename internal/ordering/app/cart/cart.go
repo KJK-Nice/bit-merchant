@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/menu/domain/menu"
 )
 
@@ -17,11 +18,22 @@ type CartItem struct {
 	Subtotal  float64
 }
 
-// Cart represents a shopping cart.
+// Cart represents a shopping cart. Currency is set from the first item added
+// (all items in a cart share the restaurant's base currency).
 type Cart struct {
 	RestaurantID common.RestaurantID
 	Items        []CartItem
 	Total        float64
+	Currency     money.Currency
+}
+
+// Money returns the cart total as money.Money.
+func (c *Cart) Money() money.Money {
+	cur := c.Currency
+	if cur.IsZero() {
+		cur = money.USD
+	}
+	return money.FromMajor(c.Total, cur)
 }
 
 // CartService manages session-based carts.
@@ -64,6 +76,7 @@ func (s *CartService) AddItem(sessionID string, item *menu.MenuItem, quantity in
 		cart.Items = nil
 		cart.Total = 0
 		cart.RestaurantID = ""
+		cart.Currency = money.Currency{}
 	}
 
 	found := false
@@ -87,6 +100,9 @@ func (s *CartService) AddItem(sessionID string, item *menu.MenuItem, quantity in
 	}
 
 	cart.RestaurantID = item.RestaurantID
+	if !item.Currency.IsZero() {
+		cart.Currency = item.Currency
+	}
 	s.recalculateTotal(cart)
 	return nil
 }
@@ -109,6 +125,7 @@ func (s *CartService) RemoveItem(sessionID string, itemID common.ItemID) error {
 	cart.Items = newItems
 	if len(cart.Items) == 0 {
 		cart.RestaurantID = ""
+		cart.Currency = money.Currency{}
 	}
 	s.recalculateTotal(cart)
 	return nil
@@ -138,6 +155,7 @@ func (s *CartService) DecrementItem(sessionID string, itemID common.ItemID) erro
 	cart.Items = newItems
 	if len(cart.Items) == 0 {
 		cart.RestaurantID = ""
+		cart.Currency = money.Currency{}
 	}
 	s.recalculateTotal(cart)
 	return nil
@@ -161,6 +179,7 @@ func (s *CartService) copyCart(cart *Cart) *Cart {
 	newCart := &Cart{
 		RestaurantID: cart.RestaurantID,
 		Total:        cart.Total,
+		Currency:     cart.Currency,
 		Items:        make([]CartItem, len(cart.Items)),
 	}
 	copy(newCart.Items, cart.Items)

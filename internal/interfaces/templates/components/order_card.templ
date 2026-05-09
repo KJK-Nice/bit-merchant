@@ -97,7 +97,7 @@ templ OrderCard(order *order.Order) {
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			<div class="flex items-center justify-between text-sm">
 				<span class="font-medium text-muted-foreground">{ fmt.Sprintf("%d items", kitchenItemCount(order)) }</span>
-				<span class="font-semibold tabular-nums">{ fmt.Sprintf("$%.2f", order.FiatAmount) }</span>
+				<span class="font-semibold tabular-nums">{ order.Total().Format() }</span>
 			</div>
 			<ul class="space-y-2 text-sm">
 				for _, item := range order.Items {

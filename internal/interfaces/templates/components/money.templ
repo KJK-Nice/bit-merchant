@@ -1,0 +1,17 @@
+package components
+
+import (
+	"bitmerchant/internal/common/money"
+)
+
+// Money renders a money.Money value with the correct symbol/suffix per
+// currency (e.g. "$12.34", "฿420.00", "5,000 sats").
+templ Money(m money.Money) {
+	{ m.Format() }
+}
+
+// MoneyAmount renders a major-unit float in the given currency. Handy for
+// templates that still hold legacy float fields and need to format on the fly.
+templ MoneyAmount(amount float64, currency money.Currency) {
+	{ money.FromMajor(amount, currency).Format() }
+}

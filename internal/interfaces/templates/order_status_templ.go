@@ -303,9 +303,9 @@ func OrderStatus(order *order.Order) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var16 string
-				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", order.FiatAmount))
+				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(order.Total().Format())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 48, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 48, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -369,16 +369,20 @@ func OrderStatusPage(order *order.Order, vapidPublicKey string) templ.Component 
 			}
 			ctx = templ.InitializeContext(ctx)
 			if vapidPublicKey != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div id=\"push-prompt\" hidden class=\"container mx-auto px-4 max-w-2xl pt-4 space-y-2\"><button id=\"enable-notifications\" type=\"button\" hidden class=\"inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border bg-background text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 cursor-pointer disabled:pointer-events-none disabled:opacity-50\">Enable order notifications</button><p id=\"ios-install-hint\" hidden class=\"text-sm text-muted-foreground text-center\">Tip: to get notified on iPhone, tap Share → Add to Home Screen, then open the app from your home screen.</p></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div id=\"push-prompt\" hidden class=\"container mx-auto px-4 max-w-2xl pt-4 space-y-2\"><button id=\"enable-notifications\" type=\"button\" hidden class=\"inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border bg-background text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 cursor-pointer disabled:pointer-events-none disabled:opacity-50\">Enable order notifications</button><p id=\"ios-install-hint\" hidden class=\"text-sm text-muted-foreground text-center\">Tip: to get notified on iPhone, tap Share → Add to Home Screen, then open the app from your home screen.</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = OrderStatus(order).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, " ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -386,51 +390,51 @@ func OrderStatusPage(order *order.Order, vapidPublicKey string) templ.Component 
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, " ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if vapidPublicKey != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "  <div id=\"push-config\" data-vapid-key=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "  <div id=\"push-config\" data-vapid-key=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(vapidPublicKey)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 64, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 79, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" data-order-number=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" data-order-number=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(string(order.OrderNumber))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 65, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 80, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" hidden></div><script nonce=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\" hidden></div><script nonce=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 68, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/order_status.templ`, Line: 83, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\">\n\t\t\t\t(function() {\n\t\t\t\t\tvar cfg = document.getElementById('push-config').dataset;\n\t\t\t\t\tvar promptHost = document.getElementById('push-prompt');\n\t\t\t\t\tvar enableBtn = document.getElementById('enable-notifications');\n\t\t\t\t\tvar iosHint = document.getElementById('ios-install-hint');\n\t\t\t\t\tfunction urlBase64ToUint8Array(base64String) {\n\t\t\t\t\t\tvar padding = '='.repeat((4 - base64String.length % 4) % 4);\n\t\t\t\t\t\tvar base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');\n\t\t\t\t\t\tvar rawData = atob(base64);\n\t\t\t\t\t\tvar outputArray = new Uint8Array(rawData.length);\n\t\t\t\t\t\tfor (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }\n\t\t\t\t\t\treturn outputArray;\n\t\t\t\t\t}\n\t\t\t\t\tfunction isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent); }\n\t\t\t\t\tfunction isStandalone() {\n\t\t\t\t\t\treturn navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);\n\t\t\t\t\t}\n\t\t\t\t\tfunction reveal(el) { if (el) el.hidden = false; }\n\t\t\t\t\tfunction hide(el) { if (el) el.hidden = true; }\n\t\t\t\t\tif (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {\n\t\t\t\t\t\tconsole.info('[push] browser does not support service workers or push notifications');\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tif (Notification.permission === 'denied') {\n\t\t\t\t\t\tconsole.info('[push] notifications denied — skipping subscribe; re-enable in browser settings');\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tfunction subscribeAndPost(reg) {\n\t\t\t\t\t\treturn reg.pushManager.subscribe({\n\t\t\t\t\t\t\tuserVisibleOnly: true,\n\t\t\t\t\t\t\tapplicationServerKey: urlBase64ToUint8Array(cfg.vapidKey),\n\t\t\t\t\t\t}).then(function(sub) {\n\t\t\t\t\t\t\tconsole.info('[push] POST /push/subscribe', sub.endpoint);\n\t\t\t\t\t\t\treturn fetch('/push/subscribe', {\n\t\t\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\t\t\theaders: { 'Content-Type': 'application/json' },\n\t\t\t\t\t\t\t\tbody: JSON.stringify(Object.assign(sub.toJSON(), { orderNumber: cfg.orderNumber })),\n\t\t\t\t\t\t\t}).then(function(res) {\n\t\t\t\t\t\t\t\tconsole.info('[push] subscribe response', res.status);\n\t\t\t\t\t\t\t\tif (!res.ok) console.warn('[push] subscribe failed with status', res.status);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\t\t\t\t\tnavigator.serviceWorker.ready.then(function(reg) {\n\t\t\t\t\t\treturn reg.pushManager.getSubscription().then(function(existing) {\n\t\t\t\t\t\t\tif (existing) {\n\t\t\t\t\t\t\t\tconsole.info('[push] reusing existing subscription', existing.endpoint);\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tif (Notification.permission === 'granted') {\n\t\t\t\t\t\t\t\tconsole.info('[push] permission already granted, subscribing');\n\t\t\t\t\t\t\t\treturn subscribeAndPost(reg);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tif (isIOS() && !isStandalone()) {\n\t\t\t\t\t\t\t\tconsole.info('[push] iOS Safari — showing install hint (Add to Home Screen required)');\n\t\t\t\t\t\t\t\treveal(promptHost);\n\t\t\t\t\t\t\t\treveal(iosHint);\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tconsole.info('[push] showing enable button (waiting for user gesture)');\n\t\t\t\t\t\t\treveal(promptHost);\n\t\t\t\t\t\t\treveal(enableBtn);\n\t\t\t\t\t\t\tenableBtn.addEventListener('click', function() {\n\t\t\t\t\t\t\t\tenableBtn.disabled = true;\n\t\t\t\t\t\t\t\tconsole.info('[push] requesting permission');\n\t\t\t\t\t\t\t\tNotification.requestPermission().then(function(perm) {\n\t\t\t\t\t\t\t\t\tconsole.info('[push] permission =', perm);\n\t\t\t\t\t\t\t\t\tif (perm !== 'granted') {\n\t\t\t\t\t\t\t\t\t\tenableBtn.disabled = false;\n\t\t\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\treturn subscribeAndPost(reg).finally(function() { hide(promptHost); });\n\t\t\t\t\t\t\t\t}).catch(function(err) {\n\t\t\t\t\t\t\t\t\tconsole.warn('[push] permission request failed:', err);\n\t\t\t\t\t\t\t\t\tenableBtn.disabled = false;\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t\t}).catch(function(err) { console.warn('[push] subscription pipeline failed:', err); });\n\t\t\t\t})();\n\t\t\t</script>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\">\n\t\t\t\t(function() {\n\t\t\t\t\tvar cfg = document.getElementById('push-config').dataset;\n\t\t\t\t\tvar promptHost = document.getElementById('push-prompt');\n\t\t\t\t\tvar enableBtn = document.getElementById('enable-notifications');\n\t\t\t\t\tvar iosHint = document.getElementById('ios-install-hint');\n\t\t\t\t\tfunction urlBase64ToUint8Array(base64String) {\n\t\t\t\t\t\tvar padding = '='.repeat((4 - base64String.length % 4) % 4);\n\t\t\t\t\t\tvar base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');\n\t\t\t\t\t\tvar rawData = atob(base64);\n\t\t\t\t\t\tvar outputArray = new Uint8Array(rawData.length);\n\t\t\t\t\t\tfor (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }\n\t\t\t\t\t\treturn outputArray;\n\t\t\t\t\t}\n\t\t\t\t\tfunction isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent); }\n\t\t\t\t\tfunction isStandalone() {\n\t\t\t\t\t\treturn navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);\n\t\t\t\t\t}\n\t\t\t\t\tfunction reveal(el) { if (el) el.hidden = false; }\n\t\t\t\t\tfunction hide(el) { if (el) el.hidden = true; }\n\t\t\t\t\tif (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {\n\t\t\t\t\t\tconsole.info('[push] browser does not support service workers or push notifications');\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tif (Notification.permission === 'denied') {\n\t\t\t\t\t\tconsole.info('[push] notifications denied — skipping subscribe; re-enable in browser settings');\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tfunction subscribeAndPost(reg) {\n\t\t\t\t\t\treturn reg.pushManager.subscribe({\n\t\t\t\t\t\t\tuserVisibleOnly: true,\n\t\t\t\t\t\t\tapplicationServerKey: urlBase64ToUint8Array(cfg.vapidKey),\n\t\t\t\t\t\t}).then(function(sub) {\n\t\t\t\t\t\t\tconsole.info('[push] POST /push/subscribe', sub.endpoint);\n\t\t\t\t\t\t\treturn fetch('/push/subscribe', {\n\t\t\t\t\t\t\t\tmethod: 'POST',\n\t\t\t\t\t\t\t\theaders: { 'Content-Type': 'application/json' },\n\t\t\t\t\t\t\t\tbody: JSON.stringify(Object.assign(sub.toJSON(), { orderNumber: cfg.orderNumber })),\n\t\t\t\t\t\t\t}).then(function(res) {\n\t\t\t\t\t\t\t\tconsole.info('[push] subscribe response', res.status);\n\t\t\t\t\t\t\t\tif (!res.ok) console.warn('[push] subscribe failed with status', res.status);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\t\t\t\t\tnavigator.serviceWorker.ready.then(function(reg) {\n\t\t\t\t\t\treturn reg.pushManager.getSubscription().then(function(existing) {\n\t\t\t\t\t\t\tif (existing) {\n\t\t\t\t\t\t\t\tconsole.info('[push] reusing existing subscription', existing.endpoint);\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tif (Notification.permission === 'granted') {\n\t\t\t\t\t\t\t\tconsole.info('[push] permission already granted, subscribing');\n\t\t\t\t\t\t\t\treturn subscribeAndPost(reg);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tif (isIOS() && !isStandalone()) {\n\t\t\t\t\t\t\t\tconsole.info('[push] iOS Safari — showing install hint (Add to Home Screen required)');\n\t\t\t\t\t\t\t\treveal(promptHost);\n\t\t\t\t\t\t\t\treveal(iosHint);\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tconsole.info('[push] showing enable button (waiting for user gesture)');\n\t\t\t\t\t\t\treveal(promptHost);\n\t\t\t\t\t\t\treveal(enableBtn);\n\t\t\t\t\t\t\tenableBtn.addEventListener('click', function() {\n\t\t\t\t\t\t\t\tenableBtn.disabled = true;\n\t\t\t\t\t\t\t\tconsole.info('[push] requesting permission');\n\t\t\t\t\t\t\t\tNotification.requestPermission().then(function(perm) {\n\t\t\t\t\t\t\t\t\tconsole.info('[push] permission =', perm);\n\t\t\t\t\t\t\t\t\tif (perm !== 'granted') {\n\t\t\t\t\t\t\t\t\t\tenableBtn.disabled = false;\n\t\t\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\treturn subscribeAndPost(reg).finally(function() { hide(promptHost); });\n\t\t\t\t\t\t\t\t}).catch(function(err) {\n\t\t\t\t\t\t\t\t\tconsole.warn('[push] permission request failed:', err);\n\t\t\t\t\t\t\t\t\tenableBtn.disabled = false;\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t\t}).catch(function(err) { console.warn('[push] subscription pipeline failed:', err); });\n\t\t\t\t})();\n\t\t\t</script>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

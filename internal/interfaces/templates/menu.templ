@@ -97,7 +97,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 												<div class="rounded-xl p-3 flex flex-col gap-2.5 bg-white/60 backdrop-blur-md dark:bg-black/65 dark:backdrop-blur-none">
 													<h3 class="text-base font-semibold leading-snug line-clamp-2 text-foreground dark:text-white">{ item.Name }</h3>
 													<div class="flex items-center justify-between gap-3">
-														<span class="text-lg font-semibold tracking-tight text-foreground dark:text-white">{ fmt.Sprintf("$%.2f", item.Price) }</span>
+														<span class="text-lg font-semibold tracking-tight text-foreground dark:text-white">{ item.Money().Format() }</span>
 														if item.IsAvailable && data.Restaurant.IsOpen {
 															// "Add to Cart" — visible when qty == 0
 															<div
@@ -171,7 +171,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 												}
 											}
 											@card.Footer(card.FooterProps{Class: "justify-between items-center border-t pt-4"}) {
-												<span class="text-xl font-bold tracking-tight">{ fmt.Sprintf("$%.2f", item.Price) }</span>
+												<span class="text-xl font-bold tracking-tight">{ item.Money().Format() }</span>
 												if item.IsAvailable && data.Restaurant.IsOpen {
 													// "Add to Cart" — visible when qty == 0
 													<div

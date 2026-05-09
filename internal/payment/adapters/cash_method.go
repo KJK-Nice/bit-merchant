@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/payment/domain/payment"
 )
 
@@ -15,9 +16,9 @@ func NewCashPaymentMethod() *CashPaymentMethod {
 	return &CashPaymentMethod{}
 }
 
-func (p *CashPaymentMethod) ProcessPayment(ctx context.Context, orderID common.OrderID, restaurantID common.RestaurantID, fiatAmount float64) (*payment.Payment, error) {
+func (p *CashPaymentMethod) ProcessPayment(ctx context.Context, orderID common.OrderID, restaurantID common.RestaurantID, amount money.Money) (*payment.Payment, error) {
 	paymentID := common.PaymentID(fmt.Sprintf("pay_%d", time.Now().UnixNano()))
-	return payment.NewPayment(paymentID, orderID, restaurantID, common.PaymentMethodTypeCash, fiatAmount)
+	return payment.NewPaymentWithCurrency(paymentID, orderID, restaurantID, common.PaymentMethodTypeCash, amount.Major(), amount.Currency)
 }
 
 func (p *CashPaymentMethod) ValidatePayment(ctx context.Context, orderID common.OrderID) error {

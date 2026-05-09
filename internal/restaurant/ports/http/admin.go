@@ -221,12 +221,15 @@ func (h *AdminHandler) CreateItem(c echo.Context) error {
 
 	available := c.FormValue("available") == "on"
 
+	currencyCode := h.restaurantCurrencyCode(restaurantID)
+
 	req := menuCmd.CreateMenuItem{
 		RestaurantID: restaurantID,
 		CategoryID:   categoryID,
 		Name:         name,
 		Description:  description,
 		Price:        price,
+		CurrencyCode: currencyCode,
 		Available:    available,
 	}
 
@@ -235,6 +238,20 @@ func (h *AdminHandler) CreateItem(c echo.Context) error {
 	}
 
 	return c.Redirect(http.StatusFound, adminMenuDashboardPath)
+}
+
+// restaurantCurrencyCode returns the restaurant's base currency code, or
+// "USD" if the restaurant cannot be loaded (the menu commands re-validate
+// via money.Parse so an empty/unknown code is rejected upstream too).
+func (h *AdminHandler) restaurantCurrencyCode(restaurantID common.RestaurantID) string {
+	if h.restaurantRepo == nil {
+		return ""
+	}
+	rest, err := h.restaurantRepo.FindByID(restaurantID)
+	if err != nil || rest == nil {
+		return ""
+	}
+	return rest.BaseCurrency.Code
 }
 
 // UpdateItem handles POST /admin/item/:id/update

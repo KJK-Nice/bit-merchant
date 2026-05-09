@@ -45,7 +45,7 @@ templ OrderStatus(order *order.Order) {
 			}
 			@card.Footer(card.FooterProps{Class: "justify-end pt-6"}) {
 				<div class="text-xl font-bold">
-					Total: { fmt.Sprintf("$%.2f", order.FiatAmount) }
+					Total: { order.Total().Format() }
 				</div>
 			}
 		}

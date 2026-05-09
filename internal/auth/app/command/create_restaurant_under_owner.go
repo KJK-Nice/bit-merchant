@@ -18,11 +18,13 @@ import (
 var ErrNotRestaurantOwner = errors.New("only owners can create restaurants")
 
 // CreateRestaurantUnderOwner creates a new restaurant while the user is acting as owner
-// of an existing restaurant (additional location).
+// of an existing restaurant (additional location). CurrencyCode is the new
+// restaurant's base currency; empty defaults to USD.
 type CreateRestaurantUnderOwner struct {
 	OwnerUserID              common.UserID
 	OwnerContextRestaurantID common.RestaurantID
 	Name                     string
+	CurrencyCode             string
 }
 
 type CreateRestaurantUnderOwnerHandler decorator.CommandResultHandler[CreateRestaurantUnderOwner, *restaurant.Restaurant]
@@ -46,7 +48,7 @@ func (h createRestaurantUnderOwnerHandler) Handle(ctx context.Context, cmd Creat
 		return nil, ErrNotRestaurantOwner
 	}
 
-	rest, err := h.createRestaurant.Handle(ctx, restaurantCmd.CreateRestaurant{Name: cmd.Name})
+	rest, err := h.createRestaurant.Handle(ctx, restaurantCmd.CreateRestaurant{Name: cmd.Name, CurrencyCode: cmd.CurrencyCode})
 	if err != nil {
 		return nil, err
 	}

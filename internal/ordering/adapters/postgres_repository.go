@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/ordering/domain/order"
 )
 
@@ -18,7 +19,7 @@ func NewPostgresOrderRepository(db *sql.DB) *PostgresOrderRepository {
 	return &PostgresOrderRepository{db: db}
 }
 
-const orderColumns = `id, order_number, restaurant_id, session_id, total_amount, fiat_amount,
+const orderColumns = `id, order_number, restaurant_id, session_id, total_amount, fiat_amount, COALESCE(currency, 'USD'),
 	payment_method, payment_status, fulfillment_status,
 	created_at, updated_at, paid_at, preparing_at, ready_at, completed_at`
 
@@ -48,19 +49,24 @@ func (r *PostgresOrderRepository) Save(o *order.Order) error {
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	currency := o.Currency
+	if currency.IsZero() {
+		currency = money.USD
+	}
 	_, err = tx.Exec(
-		`INSERT INTO orders (id, order_number, restaurant_id, session_id, total_amount, fiat_amount,
+		`INSERT INTO orders (id, order_number, restaurant_id, session_id, total_amount, fiat_amount, currency,
 			payment_method, payment_status, fulfillment_status,
 			created_at, updated_at, paid_at, preparing_at, ready_at, completed_at)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
 		 ON CONFLICT (id) DO UPDATE SET
 		   order_number=EXCLUDED.order_number,
 		   total_amount=EXCLUDED.total_amount, fiat_amount=EXCLUDED.fiat_amount,
+		   currency=EXCLUDED.currency,
 		   payment_status=EXCLUDED.payment_status, fulfillment_status=EXCLUDED.fulfillment_status,
 		   updated_at=EXCLUDED.updated_at, paid_at=EXCLUDED.paid_at,
 		   preparing_at=EXCLUDED.preparing_at, ready_at=EXCLUDED.ready_at, completed_at=EXCLUDED.completed_at`,
 		string(o.ID), string(o.OrderNumber), string(o.RestaurantID), o.SessionID,
-		o.TotalAmount, o.FiatAmount,
+		o.TotalAmount, o.FiatAmount, currency.Code,
 		string(o.PaymentMethod), string(o.PaymentStatus), string(o.FulfillmentStatus),
 		o.CreatedAt, o.UpdatedAt, o.PaidAt, o.PreparingAt, o.ReadyAt, o.CompletedAt)
 	if err != nil {
@@ -68,12 +74,19 @@ func (r *PostgresOrderRepository) Save(o *order.Order) error {
 	}
 
 	for _, item := range o.Items {
+		itemCur := item.Currency
+		if itemCur.IsZero() {
+			itemCur = currency
+		}
+		unitPriceMinor := money.FromMajor(item.UnitPrice, itemCur).Amount
+		subtotalMinor := money.FromMajor(item.Subtotal, itemCur).Amount
 		_, err = tx.Exec(
-			`INSERT INTO order_items (id, order_id, menu_item_id, name, quantity, unit_price, subtotal)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7)
+			`INSERT INTO order_items (id, order_id, menu_item_id, name, quantity, unit_price, subtotal, currency, unit_price_minor, subtotal_minor)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
 			 ON CONFLICT (id) DO NOTHING`,
 			string(item.ID), string(item.OrderID), string(item.MenuItemID),
-			item.Name, item.Quantity, item.UnitPrice, item.Subtotal)
+			item.Name, item.Quantity, item.UnitPrice, item.Subtotal,
+			itemCur.Code, unitPriceMinor, subtotalMinor)
 		if err != nil {
 			return err
 		}
@@ -130,12 +143,16 @@ func (r *PostgresOrderRepository) FindBySessionID(sessionID string) ([]*order.Or
 }
 
 func (r *PostgresOrderRepository) Update(o *order.Order) error {
+	currency := o.Currency
+	if currency.IsZero() {
+		currency = money.USD
+	}
 	result, err := r.db.Exec(
-		`UPDATE orders SET order_number=$2, total_amount=$3, fiat_amount=$4,
-		   payment_method=$5, payment_status=$6, fulfillment_status=$7,
-		   updated_at=$8, paid_at=$9, preparing_at=$10, ready_at=$11, completed_at=$12
+		`UPDATE orders SET order_number=$2, total_amount=$3, fiat_amount=$4, currency=$5,
+		   payment_method=$6, payment_status=$7, fulfillment_status=$8,
+		   updated_at=$9, paid_at=$10, preparing_at=$11, ready_at=$12, completed_at=$13
 		 WHERE id=$1`,
-		string(o.ID), string(o.OrderNumber), o.TotalAmount, o.FiatAmount,
+		string(o.ID), string(o.OrderNumber), o.TotalAmount, o.FiatAmount, currency.Code,
 		string(o.PaymentMethod), string(o.PaymentStatus), string(o.FulfillmentStatus),
 		o.UpdatedAt, o.PaidAt, o.PreparingAt, o.ReadyAt, o.CompletedAt)
 	if err != nil {
@@ -180,7 +197,7 @@ func (r *PostgresOrderRepository) queryOrders(query string, args ...interface{})
 
 func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, error) {
 	rows, err := r.db.Query(
-		`SELECT id, order_id, menu_item_id, name, quantity, unit_price, subtotal
+		`SELECT id, order_id, menu_item_id, name, quantity, unit_price, subtotal, COALESCE(currency, 'USD')
 		 FROM order_items WHERE order_id = $1`, orderID)
 	if err != nil {
 		return nil, err
@@ -193,9 +210,14 @@ func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, 
 			id, oid, menuItemID, name string
 			quantity                  int
 			unitPrice, subtotal       float64
+			currencyCode              string
 		)
-		if err := rows.Scan(&id, &oid, &menuItemID, &name, &quantity, &unitPrice, &subtotal); err != nil {
+		if err := rows.Scan(&id, &oid, &menuItemID, &name, &quantity, &unitPrice, &subtotal, &currencyCode); err != nil {
 			return nil, err
+		}
+		currency, err := money.Parse(currencyCode)
+		if err != nil {
+			currency = money.USD
 		}
 		items = append(items, order.OrderItem{
 			ID:         common.OrderItemID(id),
@@ -205,6 +227,7 @@ func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, 
 			Quantity:   quantity,
 			UnitPrice:  unitPrice,
 			Subtotal:   subtotal,
+			Currency:   currency,
 		})
 	}
 	return items, rows.Err()
@@ -215,11 +238,12 @@ func scanOrderRow(row *sql.Row) (*order.Order, error) {
 		id, orderNum, restID, sessionID           string
 		totalAmount                               int64
 		fiatAmount                                float64
+		currencyCode                              string
 		payMethod, payStatus, fulStatus           string
 		createdAt, updatedAt                      time.Time
 		paidAt, preparingAt, readyAt, completedAt sql.NullTime
 	)
-	if err := row.Scan(&id, &orderNum, &restID, &sessionID, &totalAmount, &fiatAmount,
+	if err := row.Scan(&id, &orderNum, &restID, &sessionID, &totalAmount, &fiatAmount, &currencyCode,
 		&payMethod, &payStatus, &fulStatus,
 		&createdAt, &updatedAt, &paidAt, &preparingAt, &readyAt, &completedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -227,7 +251,7 @@ func scanOrderRow(row *sql.Row) (*order.Order, error) {
 		}
 		return nil, err
 	}
-	return buildOrder(id, orderNum, restID, sessionID, totalAmount, fiatAmount,
+	return buildOrder(id, orderNum, restID, sessionID, totalAmount, fiatAmount, currencyCode,
 		payMethod, payStatus, fulStatus, createdAt, updatedAt, paidAt, preparingAt, readyAt, completedAt), nil
 }
 
@@ -236,23 +260,28 @@ func scanOrderRows(rows *sql.Rows) (*order.Order, error) {
 		id, orderNum, restID, sessionID           string
 		totalAmount                               int64
 		fiatAmount                                float64
+		currencyCode                              string
 		payMethod, payStatus, fulStatus           string
 		createdAt, updatedAt                      time.Time
 		paidAt, preparingAt, readyAt, completedAt sql.NullTime
 	)
-	if err := rows.Scan(&id, &orderNum, &restID, &sessionID, &totalAmount, &fiatAmount,
+	if err := rows.Scan(&id, &orderNum, &restID, &sessionID, &totalAmount, &fiatAmount, &currencyCode,
 		&payMethod, &payStatus, &fulStatus,
 		&createdAt, &updatedAt, &paidAt, &preparingAt, &readyAt, &completedAt); err != nil {
 		return nil, err
 	}
-	return buildOrder(id, orderNum, restID, sessionID, totalAmount, fiatAmount,
+	return buildOrder(id, orderNum, restID, sessionID, totalAmount, fiatAmount, currencyCode,
 		payMethod, payStatus, fulStatus, createdAt, updatedAt, paidAt, preparingAt, readyAt, completedAt), nil
 }
 
-func buildOrder(id, orderNum, restID, sessionID string, totalAmount int64, fiatAmount float64,
+func buildOrder(id, orderNum, restID, sessionID string, totalAmount int64, fiatAmount float64, currencyCode string,
 	payMethod, payStatus, fulStatus string, createdAt, updatedAt time.Time,
 	paidAt, preparingAt, readyAt, completedAt sql.NullTime) *order.Order {
 
+	currency, err := money.Parse(currencyCode)
+	if err != nil {
+		currency = money.USD
+	}
 	o := &order.Order{
 		ID:                common.OrderID(id),
 		OrderNumber:       common.OrderNumber(orderNum),
@@ -260,6 +289,7 @@ func buildOrder(id, orderNum, restID, sessionID string, totalAmount int64, fiatA
 		SessionID:         sessionID,
 		TotalAmount:       totalAmount,
 		FiatAmount:        fiatAmount,
+		Currency:          currency,
 		PaymentMethod:     common.PaymentMethodType(payMethod),
 		PaymentStatus:     common.PaymentStatus(payStatus),
 		FulfillmentStatus: common.FulfillmentStatus(fulStatus),

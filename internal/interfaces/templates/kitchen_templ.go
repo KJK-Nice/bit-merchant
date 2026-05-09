@@ -353,18 +353,14 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 				return templ_7745c5c3_Err
 			}
 			if vapidPublicKey != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div id=\"push-prompt\" hidden class=\"mt-4 space-y-2\"><button id=\"enable-notifications\" type=\"button\" hidden class=\"inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border bg-background text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 cursor-pointer disabled:pointer-events-none disabled:opacity-50\">Enable kitchen notifications</button><p id=\"ios-install-hint\" hidden class=\"text-sm text-muted-foreground text-center\">Tip: to get notified on iPhone, tap Share → Add to Home Screen, then open the app from your home screen.</p></div>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "  <div id=\"push-config\" data-vapid-key=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<div id=\"push-prompt\" hidden class=\"mt-4 space-y-2\"><button id=\"enable-notifications\" type=\"button\" hidden class=\"inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md border bg-background text-sm font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 cursor-pointer disabled:pointer-events-none disabled:opacity-50\">Enable kitchen notifications</button><p id=\"ios-install-hint\" hidden class=\"text-sm text-muted-foreground text-center\">Tip: to get notified on iPhone, tap Share → Add to Home Screen, then open the app from your home screen.</p></div>  <div id=\"push-config\" data-vapid-key=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(vapidPublicKey)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 512, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 525, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -377,7 +373,7 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 515, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 528, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {

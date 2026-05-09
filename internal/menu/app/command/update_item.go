@@ -51,7 +51,13 @@ func (h updateMenuItemHandler) Handle(ctx context.Context, cmd UpdateMenuItem) e
 	if err := validateItemAndCategoryOwnership(item, cat, cmd.RestaurantID); err != nil {
 		return err
 	}
-	if err := validateUpdateMenuItem(cmd); err != nil {
+	if err := menu.ValidateItemName(cmd.Name); err != nil {
+		return err
+	}
+	if err := menu.ValidatePriceForCurrency(cmd.Price, item.Currency); err != nil {
+		return err
+	}
+	if err := menu.ValidateDescription(cmd.Description); err != nil {
 		return err
 	}
 
@@ -79,19 +85,6 @@ func validateItemAndCategoryOwnership(item *menu.MenuItem, cat *menu.MenuCategor
 	}
 	if cat.RestaurantID != restaurantID {
 		return fmt.Errorf("category does not belong to restaurant")
-	}
-	return nil
-}
-
-func validateUpdateMenuItem(cmd UpdateMenuItem) error {
-	if err := menu.ValidateItemName(cmd.Name); err != nil {
-		return err
-	}
-	if err := menu.ValidatePrice(cmd.Price); err != nil {
-		return err
-	}
-	if err := menu.ValidateDescription(cmd.Description); err != nil {
-		return err
 	}
 	return nil
 }
