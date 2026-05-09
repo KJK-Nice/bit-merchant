@@ -140,9 +140,9 @@ test.describe("Kitchen order lifecycle", () => {
 
     const orderNumber = await customer.asks(ExtractOrderNumberFromURL());
     expect(orderNumber).not.toBe("");
-    const customerStatus = customer.page.locator("#status-display");
-    await expect(customerStatus).toContainText("UNPAID");
-    await expect(customerStatus).toContainText("paid");
+    const customerStatus = customer.page.locator("#order-status");
+    await expect(customerStatus).toContainText("Cash · unpaid");
+    await expect(customerStatus).toContainText("Sent to kitchen");
 
     await kitchenStaff.attemptsTo(OpenRoute("merchant", "/kitchen"));
     const kitchenOrderCard = kitchenStaff.page.locator("div[id^='order-']").filter({ hasText: `Order #${orderNumber}` });
@@ -151,13 +151,14 @@ test.describe("Kitchen order lifecycle", () => {
     await kitchenOrderCard.getByRole("button", { name: "Mark Paid" }).click();
     await expect(kitchenOrderCard).toHaveAttribute("data-kitchen-status", "waiting-start");
     await expect(kitchenOrderCard.getByRole("button", { name: "Start Preparing" })).toBeVisible();
-    await expect(customerStatus).toContainText("PAID");
+    await expect(customerStatus).toContainText("Paid");
+    await expect(customerStatus).not.toContainText("Cash · unpaid");
 
     await kitchenOrderCard.getByRole("button", { name: "Start Preparing" }).click();
-    await expect(customerStatus).toContainText("preparing");
+    await expect(customerStatus).toContainText("Cooking now");
 
     await kitchenOrderCard.getByRole("button", { name: "Mark Ready" }).click();
-    await expect(customerStatus).toContainText("ready");
+    await expect(customerStatus).toContainText("Ready to serve");
 
     await ownerContext.close();
     await kitchenContext.close();
