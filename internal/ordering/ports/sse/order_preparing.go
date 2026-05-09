@@ -3,11 +3,9 @@ package sse
 import (
 	"bytes"
 	"context"
-	"fmt"
 
 	commonhttp "bitmerchant/internal/common/http"
 	"bitmerchant/internal/infrastructure/logging"
-	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/ordering/app/event"
 	"bitmerchant/internal/ordering/domain/order"
@@ -43,11 +41,6 @@ func (h *OrderPreparingHandler) Handle(ctx context.Context, ev event.OrderPrepar
 		h.sse.Broadcast(commonhttp.TopicKitchen, msg)
 	}
 
-	var bufStatus bytes.Buffer
-	if err := templates.OrderStatus(order).Render(ctx, &bufStatus); err == nil {
-		msg := commonhttp.FormatDatastarEvent(bufStatus.String())
-		h.sse.Broadcast(fmt.Sprintf(commonhttp.TopicOrder, order.OrderNumber), msg)
-	}
-
+	broadcastCustomerStatus(ctx, h.logger, h.sse, h.repo, order)
 	return nil
 }

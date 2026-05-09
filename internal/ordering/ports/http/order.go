@@ -10,6 +10,7 @@ import (
 	// OrderHandler handles order-related HTTP requests
 	orderCmd "bitmerchant/internal/ordering/app/command"
 	orderQuery "bitmerchant/internal/ordering/app/query"
+	"bitmerchant/internal/ordering/domain/order"
 	"fmt"
 
 	"github.com/labstack/echo/v4"
@@ -20,6 +21,7 @@ type OrderHandler struct {
 	createOrder              orderCmd.CreateOrderHandler
 	getCustomerOrderByLookup orderQuery.CustomerOrderByLookupHandler
 	getCustomerOrders        orderQuery.CustomerOrdersForSessionHandler
+	orderRepo                order.Repository
 	cartService              *cart.CartService
 	vapidPublicKey           string
 }
@@ -29,6 +31,7 @@ func NewOrderHandler(
 	createOrder orderCmd.CreateOrderHandler,
 	getCustomerOrderByLookup orderQuery.CustomerOrderByLookupHandler,
 	getCustomerOrders orderQuery.CustomerOrdersForSessionHandler,
+	orderRepo order.Repository,
 	cartService *cart.CartService,
 	vapidPublicKey string,
 ) *OrderHandler {
@@ -36,6 +39,7 @@ func NewOrderHandler(
 		createOrder:              createOrder,
 		getCustomerOrderByLookup: getCustomerOrderByLookup,
 		getCustomerOrders:        getCustomerOrders,
+		orderRepo:                orderRepo,
 		cartService:              cartService,
 		vapidPublicKey:           vapidPublicKey,
 	}
@@ -119,7 +123,12 @@ func (h *OrderHandler) GetOrder(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, cerr.Error())
 	}
 
-	return templates.OrderStatusPage(result, h.vapidPublicKey).Render(c.Request().Context(), c.Response())
+	view, verr := orderQuery.BuildOrderStatusView(h.orderRepo, result, orderQuery.DefaultPrepTarget)
+	if verr != nil {
+		return c.String(http.StatusInternalServerError, verr.Error())
+	}
+
+	return templates.OrderStatusPage(view, h.vapidPublicKey).Render(c.Request().Context(), c.Response())
 }
 
 // GetLookup renders the lookup/history page (REPLACED functionality)
