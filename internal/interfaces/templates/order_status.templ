@@ -3,59 +3,229 @@ package templates
 import (
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
-	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
-	"bitmerchant/internal/ordering/domain/order"
+	"bitmerchant/internal/ordering/app/query"
 	"fmt"
+	"time"
 )
 
-templ OrderStatus(order *order.Order) {
-	<div 
+type statusStep struct {
+	Label   string
+	When    string
+	Done    bool
+	Current bool
+}
+
+func buildStatusSteps(view *query.OrderStatusView) []statusStep {
+	steps := []statusStep{
+		{Label: "Sent to kitchen"},
+		{Label: "Preparing"},
+		{Label: "Ready to serve"},
+		{Label: "Delivered to table"},
+	}
+	if view == nil || view.Order == nil {
+		return steps
+	}
+	o := view.Order
+
+	steps[0].When = fmtClock(o.CreatedAt)
+	steps[0].Done = true
+
+	if o.PreparingAt != nil {
+		steps[1].When = fmtClock(*o.PreparingAt)
+	} else if !view.IsTerminal() {
+		steps[1].When = "~" + fmtClock(view.EstimatedReadyAt.Add(-view.PrepTarget))
+	}
+	if o.ReadyAt != nil {
+		steps[2].When = fmtClock(*o.ReadyAt)
+	} else if !view.IsTerminal() {
+		steps[2].When = "~" + fmtClock(view.EstimatedReadyAt)
+	}
+	if o.CompletedAt != nil {
+		steps[3].When = fmtClock(*o.CompletedAt)
+	}
+
+	switch o.FulfillmentStatus {
+	case common.FulfillmentStatusPreparing:
+		steps[1].Done = true
+		steps[1].Current = true
+	case common.FulfillmentStatusReady:
+		steps[1].Done = true
+		steps[2].Done = true
+		steps[2].Current = true
+	case common.FulfillmentStatusCompleted:
+		steps[1].Done = true
+		steps[2].Done = true
+		steps[3].Done = true
+		steps[3].Current = true
+	default:
+		steps[0].Current = true
+	}
+	return steps
+}
+
+func fmtClock(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format("3:04 PM")
+}
+
+func headerCopy(view *query.OrderStatusView) (string, string) {
+	if view == nil || view.Order == nil {
+		return "Order received", ""
+	}
+	switch view.Order.FulfillmentStatus {
+	case common.FulfillmentStatusPreparing:
+		return "Cooking now", fmt.Sprintf("Should be ready at %s · ~%s",
+			fmtClock(view.EstimatedReadyAt), humanDuration(time.Until(view.EstimatedReadyAt)))
+	case common.FulfillmentStatusReady:
+		return "Ready to serve", "Your server is bringing it to your table."
+	case common.FulfillmentStatusCompleted:
+		return "Delivered", "Thanks — enjoy!"
+	default:
+		return "Sent to kitchen", fmt.Sprintf("In queue · ready around %s", fmtClock(view.EstimatedReadyAt))
+	}
+}
+
+func humanDuration(d time.Duration) string {
+	if d <= 0 {
+		return "any moment"
+	}
+	mins := int(d.Round(time.Minute) / time.Minute)
+	if mins <= 0 {
+		mins = 1
+	}
+	return fmt.Sprintf("%d min", mins)
+}
+
+func paymentBadgeTone(view *query.OrderStatusView) badge.Variant {
+	if view != nil && view.Order != nil && view.Order.PaymentStatus == common.PaymentStatusPaid {
+		return badge.VariantSecondary
+	}
+	return badge.VariantOutline
+}
+
+func paymentBadgeText(view *query.OrderStatusView) string {
+	if view == nil || view.Order == nil {
+		return ""
+	}
+	if view.Order.PaymentStatus == common.PaymentStatusPaid {
+		return "Paid"
+	}
+	return "Cash · unpaid"
+}
+
+templ OrderStatus(view *query.OrderStatusView) {
+	<div
 		id="order-status"
-		data-init={ fmt.Sprintf("@get('/order/%s/stream')", order.OrderNumber) }
-		class="container mx-auto p-4 max-w-2xl pb-24 md:pb-8"
+		data-init={ fmt.Sprintf("@get('/order/%s/stream')", view.Order.OrderNumber) }
+		class="container mx-auto px-4 max-w-md pb-24 md:pb-8"
 	>
-		@card.Card() {
-			@card.Header() {
-				@card.Title(card.TitleProps{Class: "text-2xl"}) { Order #{ string(order.OrderNumber) } }
-				@card.Description() { Track your order status in real-time. }
-			}
-			@card.Content() {
-				<div id="status-display" class="flex gap-2 mb-6">
-					@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-lg px-3 py-1"}) {
-						{ string(order.FulfillmentStatus) }
-					}
-					if order.PaymentStatus == common.PaymentStatusPaid {
-						@badge.Badge(badge.Props{Variant: badge.VariantDefault, Class: "text-lg px-3 py-1 bg-green-600"}) { PAID }
-					} else {
-						@badge.Badge(badge.Props{Variant: badge.VariantDestructive, Class: "text-lg px-3 py-1"}) { UNPAID }
-					}
-				</div>
-				
-				<div class="border rounded-md p-4">
-					<h3 class="font-semibold mb-3">Items</h3>
-					<ul class="space-y-2">
-						for _, item := range order.Items {
-							<li class="flex justify-between">
-								<span>{ item.Name } <span class="text-muted-foreground">x{ fmt.Sprintf("%d", item.Quantity) }</span></span>
-							</li>
-						}
-					</ul>
-				</div>
-			}
-			@card.Footer(card.FooterProps{Class: "justify-end pt-6"}) {
-				<div class="text-xl font-bold">
-					Total: { order.Total().Format() }
-				</div>
-			}
+		@orderStatusHeader(view)
+		if !view.IsTerminal() && view.PositionLabel() > 0 {
+			@queueCard(view)
+		}
+		@statusTimeline(view)
+		@orderSummaryCard(view)
+	</div>
+}
+
+templ orderStatusHeader(view *query.OrderStatusView) {
+	{{ title, sub := headerCopy(view) }}
+	<div class="pt-4 pb-2">
+		<div class="text-xs uppercase tracking-widest font-bold text-muted-foreground">
+			Order #{ string(view.Order.OrderNumber) }
+		</div>
+		<h1 class="text-2xl font-bold mt-1">{ title }</h1>
+		if sub != "" {
+			<p class="text-sm text-muted-foreground mt-1">{ sub }</p>
 		}
 	</div>
 }
 
-templ OrderStatusPage(order *order.Order, vapidPublicKey string) {
+templ queueCard(view *query.OrderStatusView) {
+	<div class="mt-3 mb-4 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/30">
+		<div class="text-sm leading-tight">
+			<div class="font-bold">Position in queue</div>
+			<div class="text-muted-foreground">
+				if view.QueueAhead == 0 {
+					You're up next
+				} else {
+					{ fmt.Sprintf("%d ahead of you", view.QueueAhead) }
+				}
+			</div>
+		</div>
+		<div class="font-mono text-3xl font-bold tabular-nums">
+			#{ fmt.Sprintf("%d", view.PositionLabel()) }
+		</div>
+	</div>
+}
+
+templ statusTimeline(view *query.OrderStatusView) {
+	<ol class="mt-4">
+		{{ steps := buildStatusSteps(view) }}
+		for i, s := range steps {
+			<li class="flex gap-3 items-start pb-4 relative">
+				<div class="flex flex-col items-center">
+					if s.Done {
+						<span class={ "inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold",
+							templ.KV("ring-4 ring-primary/20", s.Current) }>
+							✓
+						</span>
+					} else {
+						<span class="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted bg-background"></span>
+					}
+					if i < len(steps)-1 {
+						<span class={ "w-0.5 flex-1 min-h-7 mt-1",
+							templ.KV("bg-primary", s.Done),
+							templ.KV("bg-muted", !s.Done) }></span>
+					}
+				</div>
+				<div class="flex-1 pt-0.5">
+					<div class={ "text-sm font-bold",
+						templ.KV("text-foreground", s.Done),
+						templ.KV("text-muted-foreground", !s.Done) }>
+						{ s.Label }
+					</div>
+					if s.When != "" {
+						<div class="text-xs text-muted-foreground">{ s.When }</div>
+					}
+				</div>
+			</li>
+		}
+	</ol>
+}
+
+templ orderSummaryCard(view *query.OrderStatusView) {
+	<div id="status-display" class="mt-2 rounded-xl border p-4">
+		<div class="flex items-center justify-between mb-3">
+			<div class="text-sm font-bold">Your order</div>
+			@badge.Badge(badge.Props{Variant: paymentBadgeTone(view)}) {
+				{ paymentBadgeText(view) }
+			}
+		</div>
+		<ul class="space-y-1 text-sm">
+			for _, item := range view.Order.Items {
+				<li class="flex justify-between gap-2">
+					<span>
+						{ item.Name }
+						<span class="text-muted-foreground">× { fmt.Sprintf("%d", item.Quantity) }</span>
+					</span>
+				</li>
+			}
+		</ul>
+		<div class="flex justify-between items-center mt-3 pt-3 border-t text-base font-bold">
+			<span>Total</span>
+			<span>{ view.Order.Total().Format() }</span>
+		</div>
+	</div>
+}
+
+templ OrderStatusPage(view *query.OrderStatusView, vapidPublicKey string) {
 	@Layout("Order Status") {
 		if vapidPublicKey != "" {
-			<div id="push-prompt" hidden class="container mx-auto px-4 max-w-2xl pt-4 space-y-2">
+			<div id="push-prompt" hidden class="container mx-auto px-4 max-w-md pt-4 space-y-2">
 				<button
 					id="enable-notifications"
 					type="button"
@@ -69,15 +239,13 @@ templ OrderStatusPage(order *order.Order, vapidPublicKey string) {
 				</p>
 			</div>
 		}
-		@OrderStatus(order)
-		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", string(order.RestaurantID))})
+		@OrderStatus(view)
+		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/lookup", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", string(view.Order.RestaurantID))})
 		if vapidPublicKey != "" {
-			// Data attributes carry Go values into JS safely — templ does not
-			// interpolate { } inside <script> raw blocks.
 			<div
 				id="push-config"
 				data-vapid-key={ vapidPublicKey }
-				data-order-number={ string(order.OrderNumber) }
+				data-order-number={ string(view.Order.OrderNumber) }
 				hidden
 			></div>
 			<script nonce={ templ.GetNonce(ctx) }>
@@ -165,3 +333,4 @@ templ OrderStatusPage(order *order.Order, vapidPublicKey string) {
 		}
 	}
 }
+

@@ -11,8 +11,16 @@ import (
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/interfaces/templates"
+	"bitmerchant/internal/ordering/app/query"
 	"bitmerchant/internal/ordering/domain/order"
 )
+
+func mustView(t *testing.T, o *order.Order) *query.OrderStatusView {
+	t.Helper()
+	v, err := query.BuildOrderStatusView(nil, o, query.DefaultPrepTarget)
+	require.NoError(t, err)
+	return v
+}
 
 // TestOrderStatus_RendersSatosheTotal proves the niche-currency wiring
 // reaches the templated UI: an Order with SAT currency formats as
@@ -29,7 +37,7 @@ func TestOrderStatus_RendersSatoshiTotal(t *testing.T) {
 	require.NoError(t, err)
 
 	var sb strings.Builder
-	require.NoError(t, templates.OrderStatus(o).Render(context.Background(), &sb))
+	require.NoError(t, templates.OrderStatus(mustView(t, o)).Render(context.Background(), &sb))
 
 	out := sb.String()
 	assert.Contains(t, out, "15,000 sats", "rendered HTML must show satoshi-formatted total")
@@ -47,7 +55,7 @@ func TestOrderStatus_RendersFiatTotal(t *testing.T) {
 	require.NoError(t, err)
 
 	var sb strings.Builder
-	require.NoError(t, templates.OrderStatus(o).Render(context.Background(), &sb))
+	require.NoError(t, templates.OrderStatus(mustView(t, o)).Render(context.Background(), &sb))
 
 	assert.Contains(t, sb.String(), "$20.00")
 }

@@ -65,7 +65,7 @@ func New(
 		GetCustomerOrders:  getCustomerOrdersUC,
 		GetKitchenOrders:   getKitchenOrdersUC,
 		CartHandler:        orderinghttp.NewCartHandler(cartService, repos.MenuItem),
-		OrderHandler:       orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, cartService, vapidPublicKey),
+		OrderHandler:       orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, repos.Order, cartService, vapidPublicKey),
 		KitchenHandler:     orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, repos.Restaurant, repos.Membership, vapidPublicKey),
 	}
 }
