@@ -220,6 +220,9 @@ func (h *AdminHandler) CreateItem(c echo.Context) error {
 	price, _ := strconv.ParseFloat(c.FormValue("price"), 64)
 
 	available := c.FormValue("available") == "on"
+	isVegetarian := c.FormValue("is_vegetarian") == "on"
+	isGlutenFree := c.FormValue("is_gluten_free") == "on"
+	isSpicy := c.FormValue("is_spicy") == "on"
 
 	currencyCode := h.restaurantCurrencyCode(restaurantID)
 
@@ -231,6 +234,9 @@ func (h *AdminHandler) CreateItem(c echo.Context) error {
 		Price:        price,
 		CurrencyCode: currencyCode,
 		Available:    available,
+		IsVegetarian: isVegetarian,
+		IsGlutenFree: isGlutenFree,
+		IsSpicy:      isSpicy,
 	}
 
 	if _, err = h.createItemUC.Handle(c.Request().Context(), req); err != nil {
@@ -266,6 +272,9 @@ func (h *AdminHandler) UpdateItem(c echo.Context) error {
 	description := c.FormValue("description")
 	price, _ := strconv.ParseFloat(c.FormValue("price"), 64)
 	available := c.FormValue("available") == "on"
+	isVegetarian := c.FormValue("is_vegetarian") == "on"
+	isGlutenFree := c.FormValue("is_gluten_free") == "on"
+	isSpicy := c.FormValue("is_spicy") == "on"
 
 	req := menuCmd.UpdateMenuItem{
 		RestaurantID: restaurantID,
@@ -275,6 +284,9 @@ func (h *AdminHandler) UpdateItem(c echo.Context) error {
 		Description:  description,
 		Price:        price,
 		Available:    available,
+		IsVegetarian: isVegetarian,
+		IsGlutenFree: isGlutenFree,
+		IsSpicy:      isSpicy,
 	}
 	if err := h.updateItemUC.Handle(c.Request().Context(), req); err != nil {
 		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuActionFailed))

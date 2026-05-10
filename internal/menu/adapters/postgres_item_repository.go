@@ -18,24 +18,27 @@ func NewPostgresItemRepository(db *sql.DB) *PostgresItemRepository {
 	return &PostgresItemRepository{db: db}
 }
 
-const itemSelectCols = `id, category_id, restaurant_id, name, description, price, COALESCE(currency, 'USD'), COALESCE(price_minor, 0), photo_url, photo_original_url, is_available, display_order, created_at, updated_at`
+const itemSelectCols = `id, category_id, restaurant_id, name, description, price, COALESCE(currency, 'USD'), COALESCE(price_minor, 0), photo_url, photo_original_url, is_available, display_order, created_at, updated_at, COALESCE(is_vegetarian, false), COALESCE(is_gluten_free, false), COALESCE(is_spicy, false)`
 
 func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
 	currency, priceMinor := itemCurrencyAndMinor(item)
 	_, err := r.db.Exec(
-		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, currency, price_minor, photo_url, photo_original_url, is_available, display_order, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, currency, price_minor, photo_url, photo_original_url, is_available, display_order, created_at, updated_at, is_vegetarian, is_gluten_free, is_spicy)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 		 ON CONFLICT (id) DO UPDATE
 		 SET category_id = EXCLUDED.category_id, name = EXCLUDED.name,
 		     description = EXCLUDED.description, price = EXCLUDED.price,
 		     currency = EXCLUDED.currency, price_minor = EXCLUDED.price_minor,
 		     photo_url = EXCLUDED.photo_url, photo_original_url = EXCLUDED.photo_original_url,
-		     is_available = EXCLUDED.is_available, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at`,
+		     is_available = EXCLUDED.is_available, display_order = EXCLUDED.display_order,
+		     is_vegetarian = EXCLUDED.is_vegetarian, is_gluten_free = EXCLUDED.is_gluten_free,
+		     is_spicy = EXCLUDED.is_spicy, updated_at = EXCLUDED.updated_at`,
 		string(item.ID), string(item.CategoryID), string(item.RestaurantID),
 		item.Name, item.Description, item.Price,
 		currency.Code, priceMinor,
 		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder,
-		item.CreatedAt, item.UpdatedAt)
+		item.CreatedAt, item.UpdatedAt,
+		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy)
 	return err
 }
 
@@ -61,10 +64,11 @@ func (r *PostgresItemRepository) FindAvailableByRestaurantID(restaurantID common
 func (r *PostgresItemRepository) Update(item *menu.MenuItem) error {
 	currency, priceMinor := itemCurrencyAndMinor(item)
 	result, err := r.db.Exec(
-		`UPDATE menu_items SET category_id=$2, name=$3, description=$4, price=$5, currency=$6, price_minor=$7, photo_url=$8, photo_original_url=$9, is_available=$10, display_order=$11, updated_at=$12 WHERE id=$1`,
+		`UPDATE menu_items SET category_id=$2, name=$3, description=$4, price=$5, currency=$6, price_minor=$7, photo_url=$8, photo_original_url=$9, is_available=$10, display_order=$11, is_vegetarian=$12, is_gluten_free=$13, is_spicy=$14, updated_at=$15 WHERE id=$1`,
 		string(item.ID), string(item.CategoryID), item.Name, item.Description, item.Price,
 		currency.Code, priceMinor,
-		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder, item.UpdatedAt)
+		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder,
+		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy, item.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -199,6 +203,9 @@ type itemRowFields struct {
 	isAvailable             bool
 	displayOrder            int
 	createdAt, updatedAt    time.Time
+	isVegetarian            bool
+	isGlutenFree            bool
+	isSpicy                 bool
 }
 
 func (f *itemRowFields) toMenuItem() *menu.MenuItem {
@@ -212,13 +219,14 @@ func (f *itemRowFields) toMenuItem() *menu.MenuItem {
 		Description: f.description.String, Price: f.price, Currency: currency,
 		PhotoURL: f.photoURL.String, PhotoOriginalURL: f.photoOrigURL.String,
 		IsAvailable: f.isAvailable, DisplayOrder: f.displayOrder,
+		IsVegetarian: f.isVegetarian, IsGlutenFree: f.isGlutenFree, IsSpicy: f.isSpicy,
 		CreatedAt: f.createdAt, UpdatedAt: f.updatedAt,
 	}
 }
 
 func scanItem(row *sql.Row) (*menu.MenuItem, error) {
 	var f itemRowFields
-	if err := row.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt); err != nil {
+	if err := row.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt, &f.isVegetarian, &f.isGlutenFree, &f.isSpicy); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("menu item not found")
 		}
@@ -229,7 +237,7 @@ func scanItem(row *sql.Row) (*menu.MenuItem, error) {
 
 func scanItemRows(rows *sql.Rows) (*menu.MenuItem, error) {
 	var f itemRowFields
-	if err := rows.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt); err != nil {
+	if err := rows.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt, &f.isVegetarian, &f.isGlutenFree, &f.isSpicy); err != nil {
 		return nil, err
 	}
 	return f.toMenuItem(), nil

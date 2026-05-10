@@ -31,28 +31,59 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 							}
 						</div>
 					</div>
-						if len(data.Categories) > 0 {
-							<div class="overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-								@tabs.Tabs(tabs.Props{
-									ID:    "menu-category-tabs",
-									Class: "w-max",
-								}) {
-									@tabs.List() {
-										for i, cat := range data.Categories {
-											@tabs.Trigger(tabs.TriggerProps{
-												Value:    fmt.Sprintf("cat-%d", i),
-												IsActive: i == 0,
-												Class:    "flex-none shrink-0",
-												Attributes: templ.Attributes{
-													"data-cat-target": fmt.Sprintf("cat-%d", i),
-												},
-											}) {
-												{ cat.Category.Name }
-											}
+					<div class="relative">
+						<input
+							id="menu-search"
+							type="search"
+							placeholder="Search dishes, ingredients…"
+							autocomplete="off"
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+						/>
+					</div>
+					<div class="flex gap-2 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-0.5">
+						<button
+							data-filter="vegetarian"
+							aria-pressed="false"
+							class="menu-filter-chip inline-flex items-center gap-1 rounded-full border border-input bg-background px-3 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+						>🥬 Vegetarian</button>
+						<button
+							data-filter="gluten_free"
+							aria-pressed="false"
+							class="menu-filter-chip inline-flex items-center gap-1 rounded-full border border-input bg-background px-3 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+						>GF Gluten-free</button>
+						<button
+							data-filter="spicy"
+							aria-pressed="false"
+							class="menu-filter-chip inline-flex items-center gap-1 rounded-full border border-input bg-background px-3 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+						>🌶 Spicy</button>
+						<button
+							data-filter="under10"
+							aria-pressed="false"
+							class="menu-filter-chip inline-flex items-center gap-1 rounded-full border border-input bg-background px-3 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+						>Under $10</button>
+					</div>
+					if len(data.Categories) > 0 {
+						<div class="overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+							@tabs.Tabs(tabs.Props{
+								ID:    "menu-category-tabs",
+								Class: "w-max",
+							}) {
+								@tabs.List() {
+									for i, cat := range data.Categories {
+										@tabs.Trigger(tabs.TriggerProps{
+											Value:    fmt.Sprintf("cat-%d", i),
+											IsActive: i == 0,
+											Class:    "flex-none shrink-0",
+											Attributes: templ.Attributes{
+												"data-cat-target": fmt.Sprintf("cat-%d", i),
+											},
+										}) {
+											{ cat.Category.Name }
 										}
 									}
 								}
-						</div>
+							}
+					</div>
 					}
 				</div>
 			</div>
@@ -71,20 +102,35 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 					}
 				</div>
 			}
-			
+
 			<div class="hidden md:block sticky top-4 z-10">
 				@components.CartSummary(cart, true)
 			</div>
 
+			<div id="menu-no-results" style="display:none;" class="py-16 text-center space-y-3">
+				<p class="text-muted-foreground text-base">No matches — try different keywords or filters.</p>
+				<button
+					id="menu-clear-filters"
+					class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+				>Clear filters</button>
+			</div>
+
 				<div class="space-y-8 relative z-0">
 					for i, cat := range data.Categories {
-						<section id={ fmt.Sprintf("cat-%d", i) } class="space-y-3 scroll-mt-40 md:scroll-mt-24 relative z-0">
+						<section id={ fmt.Sprintf("cat-%d", i) } class="space-y-3 scroll-mt-40 md:scroll-mt-24 relative z-0" data-menu-section>
 						<div class="flex items-center justify-between gap-3">
 							<h2 class="text-2xl font-semibold tracking-tight">{ cat.Category.Name }</h2>
 						</div>
 						<div class="-mx-4 flex gap-3 overflow-x-auto snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 							for j, item := range cat.Items {
-								<div class={ "snap-start shrink-0 md:w-auto md:max-w-none", templ.KV("ms-4 md:ms-0", j == 0) } style="width:min(84vw,24rem);">
+								<div
+									class={ "snap-start shrink-0 md:w-auto md:max-w-none", templ.KV("ms-4 md:ms-0", j == 0) }
+									style="width:min(84vw,24rem);"
+									data-item-name={ item.Name }
+									data-item-desc={ item.Description }
+									data-item-tags={ item.DietaryTagsString() }
+									data-item-price={ fmt.Sprintf("%.2f", item.Price) }
+								>
 									if item.PhotoURL != "" {
 										@card.Card(card.Props{
 											Class: "relative overflow-hidden border-0 shadow-none",
@@ -94,8 +140,24 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 										}) {
 											<img src={ item.PhotoURL } alt={ item.Name } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="400" height="300"/>
 											<div class="p-3" style="position:absolute;left:0;right:0;bottom:0;">
-												<div class="rounded-xl p-3 flex flex-col gap-2.5 bg-white/60 backdrop-blur-md dark:bg-black/65 dark:backdrop-blur-none">
+												<div class="rounded-xl p-3 flex flex-col gap-2 bg-white/60 backdrop-blur-md dark:bg-black/65 dark:backdrop-blur-none">
 													<h3 class="text-base font-semibold leading-snug line-clamp-2 text-foreground dark:text-white">{ item.Name }</h3>
+													if item.Description != "" {
+														<p class="text-xs text-foreground/75 dark:text-white/75 line-clamp-1">{ item.Description }</p>
+													}
+													if item.IsVegetarian || item.IsGlutenFree || item.IsSpicy {
+														<div class="flex flex-wrap gap-1">
+															if item.IsVegetarian {
+																@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}) { 🥬 Veg }
+															}
+															if item.IsGlutenFree {
+																@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}) { GF }
+															}
+															if item.IsSpicy {
+																@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}) { 🌶 Spicy }
+															}
+														</div>
+													}
 													<div class="flex items-center justify-between gap-3">
 														<span class="text-lg font-semibold tracking-tight text-foreground dark:text-white">{ item.Money().Format() }</span>
 														if item.IsAvailable && data.Restaurant.IsOpen {
@@ -165,9 +227,22 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 											@card.Header(card.HeaderProps{Class: "pb-3"}) {
 												@card.Title(card.TitleProps{Class: "leading-snug line-clamp-2"}) { { item.Name } }
 											}
-											@card.Content(card.ContentProps{Class: "flex-grow pt-0"}) {
+											@card.Content(card.ContentProps{Class: "flex-grow pt-0 space-y-2"}) {
 												if item.Description != "" {
 													<p class="text-sm text-muted-foreground line-clamp-3">{ item.Description }</p>
+												}
+												if item.IsVegetarian || item.IsGlutenFree || item.IsSpicy {
+													<div class="flex flex-wrap gap-1">
+														if item.IsVegetarian {
+															@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4"}) { 🥬 Veg }
+														}
+														if item.IsGlutenFree {
+															@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4"}) { GF }
+														}
+														if item.IsSpicy {
+															@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4"}) { 🌶 Spicy }
+														}
+													</div>
 												}
 											}
 											@card.Footer(card.FooterProps{Class: "justify-between items-center border-t pt-4"}) {
@@ -239,7 +314,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 		<div data-init="@get('/cart')"></div>
 
 		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/menu", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", string(data.Restaurant.ID))})
-		
+
 		<div id="pwa-install-btn" class="hidden fixed bottom-32 right-4 z-50 md:bottom-20">
 			<button onclick="installPWA()" class="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full p-4 shadow-lg flex items-center gap-2 transition-all">
 				@icon.Icon("download")(icon.Props{Class: "h-6 w-6"})
@@ -334,6 +409,127 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 					installBtn.classList.add('hidden');
 				}
 			}
+
+			// ── Search + dietary filter ──────────────────────────────────────────
+			(function () {
+				const params = new URLSearchParams(window.location.search);
+				let searchQuery = params.get('q') || '';
+				const activeFilters = new Set((params.get('filters') || '').split(',').filter(Boolean));
+				let under10 = params.has('under10');
+
+				function setChipActive(chip, active) {
+					if (active) {
+						chip.classList.remove('bg-background', 'text-foreground');
+						chip.classList.add('bg-primary', 'text-primary-foreground', 'border-primary');
+					} else {
+						chip.classList.remove('bg-primary', 'text-primary-foreground', 'border-primary');
+						chip.classList.add('bg-background', 'text-foreground');
+					}
+					chip.setAttribute('aria-pressed', active ? 'true' : 'false');
+				}
+
+				function updateURL() {
+					const p = new URLSearchParams(window.location.search);
+					if (searchQuery) { p.set('q', searchQuery); } else { p.delete('q'); }
+					const filters = Array.from(activeFilters);
+					if (filters.length) { p.set('filters', filters.join(',')); } else { p.delete('filters'); }
+					if (under10) { p.set('under10', '1'); } else { p.delete('under10'); }
+					const qs = p.toString();
+					window.history.replaceState(null, '', (qs ? '?' + qs : window.location.pathname) + window.location.hash);
+				}
+
+				function applyFilters() {
+					const q = searchQuery.toLowerCase().trim();
+					const menuSections = document.querySelectorAll('[data-menu-section]');
+					let anyVisible = false;
+
+					for (const section of menuSections) {
+						const cards = section.querySelectorAll('[data-item-name]');
+						let sectionVisible = false;
+
+						for (const card of cards) {
+							const name = (card.getAttribute('data-item-name') || '').toLowerCase();
+							const desc = (card.getAttribute('data-item-desc') || '').toLowerCase();
+							const tags = (card.getAttribute('data-item-tags') || '').split(' ').filter(Boolean);
+							const price = parseFloat(card.getAttribute('data-item-price') || '0');
+
+							const matchSearch = !q || name.includes(q) || desc.includes(q);
+							const matchTags = activeFilters.size === 0 || [...activeFilters].every(f => tags.includes(f));
+							const matchPrice = !under10 || price < 10;
+
+							const visible = matchSearch && matchTags && matchPrice;
+							card.style.display = visible ? '' : 'none';
+							if (visible) sectionVisible = true;
+						}
+
+						section.style.display = sectionVisible ? '' : 'none';
+						if (sectionVisible) anyVisible = true;
+
+						// sync tab trigger visibility
+						const tabTrigger = document.querySelector('[data-cat-target="' + section.id + '"]');
+						if (tabTrigger) {
+							tabTrigger.style.display = sectionVisible ? '' : 'none';
+						}
+					}
+
+					const noResults = document.getElementById('menu-no-results');
+					if (noResults) noResults.style.display = anyVisible ? 'none' : '';
+
+					updateURL();
+				}
+
+				document.addEventListener('DOMContentLoaded', function () {
+					// Restore search input
+					const searchInput = document.getElementById('menu-search');
+					if (searchInput) {
+						if (searchQuery) searchInput.value = searchQuery;
+						searchInput.addEventListener('input', function (e) {
+							searchQuery = e.target.value;
+							applyFilters();
+						});
+					}
+
+					// Restore + wire filter chips
+					for (const chip of document.querySelectorAll('.menu-filter-chip[data-filter]')) {
+						const filter = chip.getAttribute('data-filter');
+						const isActive = filter === 'under10' ? under10 : activeFilters.has(filter);
+						setChipActive(chip, isActive);
+
+						chip.addEventListener('click', function () {
+							if (filter === 'under10') {
+								under10 = !under10;
+								setChipActive(chip, under10);
+							} else {
+								const nowActive = !activeFilters.has(filter);
+								if (nowActive) { activeFilters.add(filter); } else { activeFilters.delete(filter); }
+								setChipActive(chip, nowActive);
+							}
+							applyFilters();
+						});
+					}
+
+					// Clear-filters button (inside no-results state)
+					const clearBtn = document.getElementById('menu-clear-filters');
+					if (clearBtn) {
+						clearBtn.addEventListener('click', function () {
+							searchQuery = '';
+							activeFilters.clear();
+							under10 = false;
+							const si = document.getElementById('menu-search');
+							if (si) si.value = '';
+							for (const chip of document.querySelectorAll('.menu-filter-chip[data-filter]')) {
+								setChipActive(chip, false);
+							}
+							applyFilters();
+						});
+					}
+
+					// Apply initial state from URL params
+					if (searchQuery || activeFilters.size > 0 || under10) {
+						applyFilters();
+					}
+				});
+			})();
 		</script>
 	}
 }
