@@ -9,6 +9,22 @@ import (
 	"bitmerchant/internal/common/money"
 )
 
+// Option is a single selectable choice within an OptionGroup.
+type Option struct {
+	ID         string
+	Name       string
+	PriceDelta float64 // additional cost; 0 means no surcharge
+}
+
+// OptionGroup is a set of choices attached to a menu item.
+// Required groups are single-select (radio); optional groups are multi-select (checkbox).
+type OptionGroup struct {
+	ID       string
+	Name     string
+	Required bool
+	Options  []Option
+}
+
 // MenuItem represents a food/drink item.
 type MenuItem struct {
 	ID               common.ItemID
@@ -25,8 +41,14 @@ type MenuItem struct {
 	IsVegetarian     bool
 	IsGlutenFree     bool
 	IsSpicy          bool
+	OptionGroups     []OptionGroup
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
+}
+
+// HasOptionGroups reports whether the item has any modifier groups.
+func (m *MenuItem) HasOptionGroups() bool {
+	return len(m.OptionGroups) > 0
 }
 
 // Money returns the price as a money.Money value, falling back to USD when

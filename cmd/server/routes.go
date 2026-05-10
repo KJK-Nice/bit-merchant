@@ -36,8 +36,11 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	e.GET("/my-places", handlers.Places.GetMyPlaces)
 	e.GET("/scan", handlers.Places.GetScanQR)
 
+	e.GET("/menu/item/:itemID", handlers.Cart.GetItemDetail)
+
 	e.GET("/cart", handlers.Cart.GetCart)
 	e.POST("/cart/add", handlers.Cart.AddToCart)
+	e.POST("/cart/add-redirect", handlers.Cart.AddToCartAndRedirect)
 	e.POST("/cart/decrement", handlers.Cart.DecrementFromCart)
 	e.POST("/cart/remove", handlers.Cart.RemoveFromCart)
 

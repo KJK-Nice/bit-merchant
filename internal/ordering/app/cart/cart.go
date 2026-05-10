@@ -9,13 +9,25 @@ import (
 	"bitmerchant/internal/menu/domain/menu"
 )
 
+// CartItemModifier captures a single selected option from an option group.
+type CartItemModifier struct {
+	GroupID    string
+	GroupName  string
+	OptionID   string
+	OptionName string
+	PriceDelta float64
+}
+
 // CartItem represents an item in the cart.
 type CartItem struct {
-	ItemID    common.ItemID
-	Name      string
-	Quantity  int
-	UnitPrice float64
-	Subtotal  float64
+	ItemID              common.ItemID
+	Name                string
+	Quantity            int
+	UnitPrice           float64 // base item price (without modifiers)
+	ModifierPrice       float64 // sum of selected modifier PriceDeltas
+	Subtotal            float64 // (UnitPrice + ModifierPrice) * Quantity
+	Modifiers           []CartItemModifier
+	SpecialInstructions string
 }
 
 // Cart represents a shopping cart. Currency is set from the first item added
@@ -58,7 +70,15 @@ func (s *CartService) GetCart(sessionID string) *Cart {
 	return s.copyCart(cart)
 }
 
+// AddItem adds an item to the cart without modifiers.
 func (s *CartService) AddItem(sessionID string, item *menu.MenuItem, quantity int) error {
+	return s.AddItemWithModifiers(sessionID, item, quantity, nil, "")
+}
+
+// AddItemWithModifiers adds an item with selected modifier options and a special note.
+// If the item is already in the cart (same ItemID), quantity increments; modifiers are
+// kept from the first add (first-add-wins for modifier snapshot).
+func (s *CartService) AddItemWithModifiers(sessionID string, item *menu.MenuItem, quantity int, modifiers []CartItemModifier, specialInstructions string) error {
 	if quantity <= 0 {
 		return errors.New("quantity must be greater than 0")
 	}
@@ -66,37 +86,12 @@ func (s *CartService) AddItem(sessionID string, item *menu.MenuItem, quantity in
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	cart, exists := s.carts[sessionID]
-	if !exists {
-		cart = &Cart{Items: []CartItem{}, Total: 0, RestaurantID: ""}
-		s.carts[sessionID] = cart
-	}
+	cart := s.getOrCreateCart(sessionID)
+	s.clearIfRestaurantChanged(cart, item.RestaurantID)
 
-	if len(cart.Items) > 0 && cart.RestaurantID != "" && cart.RestaurantID != item.RestaurantID {
-		cart.Items = nil
-		cart.Total = 0
-		cart.RestaurantID = ""
-		cart.Currency = money.Currency{}
-	}
-
-	found := false
-	for i := range cart.Items {
-		if cart.Items[i].ItemID == item.ID {
-			cart.Items[i].Quantity += quantity
-			cart.Items[i].Subtotal = float64(cart.Items[i].Quantity) * cart.Items[i].UnitPrice
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		cart.Items = append(cart.Items, CartItem{
-			ItemID:    item.ID,
-			Name:      item.Name,
-			Quantity:  quantity,
-			UnitPrice: item.Price,
-			Subtotal:  float64(quantity) * item.Price,
-		})
+	modifierTotal := sumModifierPrices(modifiers)
+	if !s.incrementExisting(cart, item.ID, quantity) {
+		cart.Items = append(cart.Items, newCartItem(item, quantity, modifiers, modifierTotal, specialInstructions))
 	}
 
 	cart.RestaurantID = item.RestaurantID
@@ -105,6 +100,58 @@ func (s *CartService) AddItem(sessionID string, item *menu.MenuItem, quantity in
 	}
 	s.recalculateTotal(cart)
 	return nil
+}
+
+func (s *CartService) getOrCreateCart(sessionID string) *Cart {
+	cart, exists := s.carts[sessionID]
+	if !exists {
+		cart = &Cart{Items: []CartItem{}, Total: 0, RestaurantID: ""}
+		s.carts[sessionID] = cart
+	}
+	return cart
+}
+
+func (s *CartService) clearIfRestaurantChanged(cart *Cart, restaurantID common.RestaurantID) {
+	if len(cart.Items) > 0 && cart.RestaurantID != "" && cart.RestaurantID != restaurantID {
+		cart.Items = nil
+		cart.Total = 0
+		cart.RestaurantID = ""
+		cart.Currency = money.Currency{}
+	}
+}
+
+func (s *CartService) incrementExisting(cart *Cart, itemID common.ItemID, quantity int) bool {
+	for i := range cart.Items {
+		if cart.Items[i].ItemID == itemID {
+			cart.Items[i].Quantity += quantity
+			effPrice := cart.Items[i].UnitPrice + cart.Items[i].ModifierPrice
+			cart.Items[i].Subtotal = float64(cart.Items[i].Quantity) * effPrice
+			return true
+		}
+	}
+	return false
+}
+
+func sumModifierPrices(modifiers []CartItemModifier) float64 {
+	total := 0.0
+	for _, m := range modifiers {
+		total += m.PriceDelta
+	}
+	return total
+}
+
+func newCartItem(item *menu.MenuItem, quantity int, modifiers []CartItemModifier, modifierTotal float64, specialInstructions string) CartItem {
+	effPrice := item.Price + modifierTotal
+	return CartItem{
+		ItemID:              item.ID,
+		Name:                item.Name,
+		Quantity:            quantity,
+		UnitPrice:           item.Price,
+		ModifierPrice:       modifierTotal,
+		Subtotal:            float64(quantity) * effPrice,
+		Modifiers:           modifiers,
+		SpecialInstructions: specialInstructions,
+	}
 }
 
 func (s *CartService) RemoveItem(sessionID string, itemID common.ItemID) error {
@@ -148,7 +195,7 @@ func (s *CartService) DecrementItem(sessionID string, itemID common.ItemID) erro
 			if item.Quantity <= 0 {
 				continue
 			}
-			item.Subtotal = float64(item.Quantity) * item.UnitPrice
+			item.Subtotal = float64(item.Quantity) * (item.UnitPrice + item.ModifierPrice)
 		}
 		newItems = append(newItems, item)
 	}

@@ -29,7 +29,21 @@ templ CartSummary(cart *cart.Cart, showCheckout bool) {
 						<div class="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0">
 							<div class="flex-1 min-w-0 pr-3">
 								<p class="font-medium truncate">{ item.Name }</p>
-								<p class="text-sm text-muted-foreground">{ money.FromMajor(item.UnitPrice, cartCurrency(cart)).Format() } each</p>
+								if len(item.Modifiers) > 0 {
+									<ul class="mt-0.5 space-y-0.5">
+										for _, mod := range item.Modifiers {
+											<li class="text-xs text-muted-foreground">{ mod.OptionName }
+												if mod.PriceDelta > 0 {
+													<span class="text-xs"> (+{ money.FromMajor(mod.PriceDelta, cartCurrency(cart)).Format() })</span>
+												}
+											</li>
+										}
+									</ul>
+								}
+								if item.SpecialInstructions != "" {
+									<p class="text-xs text-muted-foreground/80 italic mt-0.5">Note: { item.SpecialInstructions }</p>
+								}
+								<p class="text-sm text-muted-foreground mt-0.5">{ money.FromMajor(item.UnitPrice+item.ModifierPrice, cartCurrency(cart)).Format() } each</p>
 							</div>
 							<div class="flex items-center gap-2 shrink-0">
 								<!-- qty stepper -->
