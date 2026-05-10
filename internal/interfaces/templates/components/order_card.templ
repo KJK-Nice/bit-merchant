@@ -101,15 +101,27 @@ templ OrderCard(order *order.Order) {
 			</div>
 			<ul class="space-y-2 text-sm">
 				for _, item := range order.Items {
-					<li class="flex items-start justify-between gap-3 rounded-md bg-muted/40 px-3 py-2">
-						<span class="font-medium text-foreground">{ fmt.Sprintf("%dx", item.Quantity) }</span>
-						<span class="flex-1 text-right text-muted-foreground">
-							if item.Name != "" {
-								{ item.Name }
-							} else {
-								Item
-							}
-						</span>
+					<li class="rounded-md bg-muted/40 px-3 py-2 space-y-1">
+						<div class="flex items-start justify-between gap-3">
+							<span class="font-medium text-foreground">{ fmt.Sprintf("%dx", item.Quantity) }</span>
+							<span class="flex-1 text-right text-muted-foreground">
+								if item.Name != "" {
+									{ item.Name }
+								} else {
+									Item
+								}
+							</span>
+						</div>
+						if len(item.Modifiers) > 0 {
+							<ul class="pl-6 space-y-0.5">
+								for _, mod := range item.Modifiers {
+									<li class="text-xs text-muted-foreground">{ mod.GroupName }: { mod.OptionName }</li>
+								}
+							</ul>
+						}
+						if item.SpecialInstructions != "" {
+							<p class="pl-6 text-xs text-muted-foreground italic">Note: { item.SpecialInstructions }</p>
+						}
 					</li>
 				}
 			</ul>

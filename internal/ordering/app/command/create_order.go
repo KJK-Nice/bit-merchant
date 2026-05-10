@@ -111,7 +111,16 @@ func (h createOrderHandler) createOrderItems(cartItems []cart.CartItem, orderID 
 	var orderItems []order.OrderItem
 	for _, item := range cartItems {
 		orderItemID := common.OrderItemID(fmt.Sprintf("oi_%d_%s", time.Now().UnixNano(), item.ItemID))
-		oi, err := order.NewOrderItemWithCurrency(orderItemID, orderID, item.ItemID, item.Name, item.Quantity, item.UnitPrice, currency)
+		effectiveUnitPrice := item.UnitPrice + item.ModifierPrice
+		mods := make([]order.OrderItemModifier, len(item.Modifiers))
+		for i, m := range item.Modifiers {
+			mods[i] = order.OrderItemModifier{
+				GroupName:  m.GroupName,
+				OptionName: m.OptionName,
+				PriceDelta: m.PriceDelta,
+			}
+		}
+		oi, err := order.NewOrderItemWithCurrency(orderItemID, orderID, item.ItemID, item.Name, item.Quantity, effectiveUnitPrice, currency, mods, item.SpecialInstructions)
 		if err != nil {
 			return nil, err
 		}

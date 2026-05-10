@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -80,13 +81,18 @@ func (r *PostgresOrderRepository) Save(o *order.Order) error {
 		}
 		unitPriceMinor := money.FromMajor(item.UnitPrice, itemCur).Amount
 		subtotalMinor := money.FromMajor(item.Subtotal, itemCur).Amount
+		modifiersJSON, merr := marshalOrderModifiers(item.Modifiers)
+		if merr != nil {
+			return merr
+		}
 		_, err = tx.Exec(
-			`INSERT INTO order_items (id, order_id, menu_item_id, name, quantity, unit_price, subtotal, currency, unit_price_minor, subtotal_minor)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+			`INSERT INTO order_items (id, order_id, menu_item_id, name, quantity, unit_price, subtotal, currency, unit_price_minor, subtotal_minor, modifiers, special_instructions)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
 			 ON CONFLICT (id) DO NOTHING`,
 			string(item.ID), string(item.OrderID), string(item.MenuItemID),
 			item.Name, item.Quantity, item.UnitPrice, item.Subtotal,
-			itemCur.Code, unitPriceMinor, subtotalMinor)
+			itemCur.Code, unitPriceMinor, subtotalMinor,
+			modifiersJSON, item.SpecialInstructions)
 		if err != nil {
 			return err
 		}
@@ -197,7 +203,8 @@ func (r *PostgresOrderRepository) queryOrders(query string, args ...interface{})
 
 func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, error) {
 	rows, err := r.db.Query(
-		`SELECT id, order_id, menu_item_id, name, quantity, unit_price, subtotal, COALESCE(currency, 'USD')
+		`SELECT id, order_id, menu_item_id, name, quantity, unit_price, subtotal, COALESCE(currency, 'USD'),
+		        COALESCE(modifiers, '[]'::jsonb), COALESCE(special_instructions, '')
 		 FROM order_items WHERE order_id = $1`, orderID)
 	if err != nil {
 		return nil, err
@@ -211,8 +218,10 @@ func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, 
 			quantity                  int
 			unitPrice, subtotal       float64
 			currencyCode              string
+			modifiersJSON             []byte
+			specialInstructions       string
 		)
-		if err := rows.Scan(&id, &oid, &menuItemID, &name, &quantity, &unitPrice, &subtotal, &currencyCode); err != nil {
+		if err := rows.Scan(&id, &oid, &menuItemID, &name, &quantity, &unitPrice, &subtotal, &currencyCode, &modifiersJSON, &specialInstructions); err != nil {
 			return nil, err
 		}
 		currency, err := money.Parse(currencyCode)
@@ -220,17 +229,52 @@ func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, 
 			currency = money.USD
 		}
 		items = append(items, order.OrderItem{
-			ID:         common.OrderItemID(id),
-			OrderID:    common.OrderID(oid),
-			MenuItemID: common.ItemID(menuItemID),
-			Name:       name,
-			Quantity:   quantity,
-			UnitPrice:  unitPrice,
-			Subtotal:   subtotal,
-			Currency:   currency,
+			ID:                  common.OrderItemID(id),
+			OrderID:             common.OrderID(oid),
+			MenuItemID:          common.ItemID(menuItemID),
+			Name:                name,
+			Quantity:            quantity,
+			UnitPrice:           unitPrice,
+			Subtotal:            subtotal,
+			Currency:            currency,
+			Modifiers:           unmarshalOrderModifiers(modifiersJSON),
+			SpecialInstructions: specialInstructions,
 		})
 	}
 	return items, rows.Err()
+}
+
+// jsonOrderModifier mirrors order.OrderItemModifier for JSON.
+type jsonOrderModifier struct {
+	GroupName  string  `json:"group_name"`
+	OptionName string  `json:"option_name"`
+	PriceDelta float64 `json:"price_delta"`
+}
+
+func marshalOrderModifiers(mods []order.OrderItemModifier) ([]byte, error) {
+	if len(mods) == 0 {
+		return []byte("[]"), nil
+	}
+	jms := make([]jsonOrderModifier, len(mods))
+	for i, m := range mods {
+		jms[i] = jsonOrderModifier{GroupName: m.GroupName, OptionName: m.OptionName, PriceDelta: m.PriceDelta}
+	}
+	return json.Marshal(jms)
+}
+
+func unmarshalOrderModifiers(data []byte) []order.OrderItemModifier {
+	if len(data) == 0 {
+		return nil
+	}
+	var jms []jsonOrderModifier
+	if err := json.Unmarshal(data, &jms); err != nil {
+		return nil
+	}
+	mods := make([]order.OrderItemModifier, len(jms))
+	for i, jm := range jms {
+		mods[i] = order.OrderItemModifier{GroupName: jm.GroupName, OptionName: jm.OptionName, PriceDelta: jm.PriceDelta}
+	}
+	return mods
 }
 
 func scanOrderRow(row *sql.Row) (*order.Order, error) {

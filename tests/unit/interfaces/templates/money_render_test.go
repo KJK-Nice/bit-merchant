@@ -62,7 +62,7 @@ func TestOrderStatus_RendersFiatTotal(t *testing.T) {
 
 func mustOrderItemSAT(t *testing.T, id, oid, mid, name string, qty int, unitPrice float64) order.OrderItem {
 	t.Helper()
-	oi, err := order.NewOrderItemWithCurrency(common.OrderItemID(id), common.OrderID(oid), common.ItemID(mid), name, qty, unitPrice, money.SAT)
+	oi, err := order.NewOrderItemWithCurrency(common.OrderItemID(id), common.OrderID(oid), common.ItemID(mid), name, qty, unitPrice, money.SAT, nil, "")
 	require.NoError(t, err)
 	return *oi
 }
