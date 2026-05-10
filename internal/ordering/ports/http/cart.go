@@ -2,7 +2,9 @@ package http
 
 import (
 	"bitmerchant/internal/common"
+	commonhttp "bitmerchant/internal/common/http"
 
+	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/menu/domain/menu"
 
@@ -13,6 +15,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -74,43 +77,137 @@ func (h *CartHandler) writeCartSSE(c echo.Context, updatedCart *cart.Cart, zeroe
 	return nil
 }
 
-// AddToCart handles POST /cart/add
-func (h *CartHandler) AddToCart(c echo.Context) error {
-	type AddToCartRequest struct {
-		ItemID   string `json:"itemID" form:"itemID"`
-		Quantity string `json:"quantity" form:"quantity"`
+// GetItemDetail handles GET /menu/item/:itemID — full item-detail page with
+// modifier groups, special instructions, and qty stepper.
+func (h *CartHandler) GetItemDetail(c echo.Context) error {
+	itemID := c.Param("itemID")
+	if itemID == "" {
+		return c.String(http.StatusBadRequest, "itemID required")
 	}
+	item, err := h.itemRepo.FindByID(common.ItemID(itemID))
+	if err != nil {
+		return c.String(http.StatusNotFound, "Item not found")
+	}
+	restaurantID := c.QueryParam("restaurantID")
+	tableLabel := c.QueryParam("table")
+	csrfToken := commonhttp.CSRFToken(c)
+	return templates.ItemDetailPage(item, restaurantID, tableLabel, csrfToken).Render(c.Request().Context(), c.Response())
+}
 
-	req := new(AddToCartRequest)
-	if err := c.Bind(req); err != nil {
-		return c.String(http.StatusBadRequest, "Invalid request")
-	}
+// AddToCartAndRedirect handles POST /cart/add-redirect — used by the item-detail
+// page form. Adds item (with modifiers) to cart then redirects back to the menu.
+func (h *CartHandler) AddToCartAndRedirect(c echo.Context) error {
+	itemID := c.FormValue("itemID")
+	restaurantID := c.FormValue("restaurantID")
+	tableLabel := c.FormValue("tableLabel")
 
-	if req.ItemID == "" {
-		req.ItemID = c.QueryParam("itemID")
-	}
-	if req.Quantity == "" {
-		req.Quantity = c.QueryParam("quantity")
-	}
-
-	quantity, _ := strconv.Atoi(req.Quantity)
+	quantityStr := c.FormValue("quantity")
+	quantity, _ := strconv.Atoi(quantityStr)
 	if quantity <= 0 {
 		quantity = 1
 	}
 
+	specialInstructions := c.FormValue("specialInstructions")
 	sessionID := c.Get("sessionID").(string)
 
-	item, err := h.itemRepo.FindByID(common.ItemID(req.ItemID))
+	item, err := h.itemRepo.FindByID(common.ItemID(itemID))
 	if err != nil {
 		return c.String(http.StatusBadRequest, "Item not found")
 	}
 
-	if err := h.cartService.AddItem(sessionID, item, quantity); err != nil {
+	modifiers := parseModifiers(c, item)
+
+	if err := h.cartService.AddItemWithModifiers(sessionID, item, quantity, modifiers, specialInstructions); err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	redirectURL := fmt.Sprintf("/menu?restaurantID=%s", strings.ReplaceAll(restaurantID, " ", "+"))
+	if tableLabel != "" {
+		redirectURL += "&table=" + strings.ReplaceAll(tableLabel, " ", "+")
+	}
+	return c.Redirect(http.StatusFound, redirectURL)
+}
+
+// AddToCart handles POST /cart/add
+func (h *CartHandler) AddToCart(c echo.Context) error {
+	itemID := c.FormValue("itemID")
+	if itemID == "" {
+		itemID = c.QueryParam("itemID")
+	}
+	quantityStr := c.FormValue("quantity")
+	if quantityStr == "" {
+		quantityStr = c.QueryParam("quantity")
+	}
+	quantity, _ := strconv.Atoi(quantityStr)
+	if quantity <= 0 {
+		quantity = 1
+	}
+
+	specialInstructions := c.FormValue("specialInstructions")
+
+	sessionID := c.Get("sessionID").(string)
+
+	item, err := h.itemRepo.FindByID(common.ItemID(itemID))
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Item not found")
+	}
+
+	modifiers := parseModifiers(c, item)
+
+	if err := h.cartService.AddItemWithModifiers(sessionID, item, quantity, modifiers, specialInstructions); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	updatedCart := h.cartService.GetCart(sessionID)
 	return h.writeCartSSE(c, updatedCart)
+}
+
+// parseModifiers reads form values named "mod_{groupID}" and converts them to
+// CartItemModifier slices. Radio groups produce one modifier; checkbox groups
+// can produce multiple (same field name, multiple values).
+func parseModifiers(c echo.Context, item *menu.MenuItem) []cart.CartItemModifier {
+	if len(item.OptionGroups) == 0 {
+		return nil
+	}
+
+	// Index option groups and options for fast lookup.
+	type optKey struct{ groupID, optionID string }
+	type optInfo struct {
+		groupName, optName string
+		delta              float64
+	}
+	byOpt := map[optKey]optInfo{}
+	for _, g := range item.OptionGroups {
+		for _, o := range g.Options {
+			byOpt[optKey{g.ID, o.ID}] = optInfo{g.Name, o.Name, o.PriceDelta}
+		}
+	}
+
+	if err := c.Request().ParseForm(); err != nil {
+		return nil
+	}
+
+	var mods []cart.CartItemModifier
+	for key, vals := range c.Request().Form {
+		if !strings.HasPrefix(key, "mod_") {
+			continue
+		}
+		groupID := strings.TrimPrefix(key, "mod_")
+		for _, optionID := range vals {
+			info, ok := byOpt[optKey{groupID, optionID}]
+			if !ok {
+				continue
+			}
+			mods = append(mods, cart.CartItemModifier{
+				GroupID:    groupID,
+				GroupName:  info.groupName,
+				OptionID:   optionID,
+				OptionName: info.optName,
+				PriceDelta: info.delta,
+			})
+		}
+	}
+	return mods
 }
 
 // DecrementFromCart handles POST /cart/decrement — reduces qty by 1, removes item at 0.

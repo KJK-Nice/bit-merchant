@@ -108,3 +108,19 @@ func (r *MemoryOrderRepository) Update(o *order.Order) error {
 	r.orders[o.ID] = o
 	return nil
 }
+
+func (r *MemoryOrderRepository) UpdateItemPrepComplete(orderID common.OrderID, itemID common.OrderItemID, complete bool) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	o, exists := r.orders[orderID]
+	if !exists {
+		return errors.New("order not found")
+	}
+	for i := range o.Items {
+		if o.Items[i].ID == itemID {
+			o.Items[i].PrepComplete = complete
+			return nil
+		}
+	}
+	return errors.New("order item not found")
+}

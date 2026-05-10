@@ -63,8 +63,24 @@
     return container?.querySelector('[data-tui-selectbox-content]') || null;
   }
 
+  // Popover may portal the content out of .select-container on first open,
+  // so resolve trigger <-> content via the popover ID linkage as a fallback.
   function getContentFromTrigger(trigger) {
-    return getContentFromContainer(getContainer(trigger));
+    const local = getContentFromContainer(getContainer(trigger));
+    if (local) return local;
+    const popoverTrigger = trigger.closest('[data-tui-popover-trigger]');
+    const id = popoverTrigger?.getAttribute('data-tui-popover-trigger');
+    return id ? document.getElementById(id) : null;
+  }
+
+  function getTriggerFromItem(item) {
+    const localTrigger = getTriggerFromContainer(getContainer(item));
+    if (localTrigger) return localTrigger;
+    const content = item.closest('[data-tui-selectbox-content]');
+    const id = content?.getAttribute('data-tui-popover-id') || content?.id;
+    if (!id) return null;
+    const popoverTrigger = document.querySelector(`[data-tui-popover-trigger="${id}"]`);
+    return popoverTrigger?.querySelector('button.select-trigger') || null;
   }
 
   function syncContentWidth(trigger) {
@@ -256,9 +272,9 @@
   // Helper to select/deselect item
   function toggleItem(item) {
     if (item.getAttribute('data-tui-selectbox-disabled') === 'true') return;
-    
+
     const content = item.closest('[data-tui-selectbox-content]');
-    const trigger = getTriggerFromContainer(getContainer(item));
+    const trigger = getTriggerFromItem(item);
     if (!trigger) return;
     
     const isMultiple = trigger.getAttribute('data-tui-selectbox-multiple') === 'true';

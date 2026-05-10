@@ -12,9 +12,6 @@ func kitchenStatusForSummary(order *order.Order) string {
 	if order == nil {
 		return "waiting-start"
 	}
-	if order.PaymentStatus != common.PaymentStatusPaid {
-		return "pending-payment"
-	}
 	switch order.FulfillmentStatus {
 	case common.FulfillmentStatusPreparing:
 		return "preparing"
@@ -23,6 +20,16 @@ func kitchenStatusForSummary(order *order.Order) string {
 	default:
 		return "waiting-start"
 	}
+}
+
+func kitchenUnpaidCount(orders []*order.Order) int {
+	total := 0
+	for _, current := range orders {
+		if current.PaymentStatus != common.PaymentStatusPaid {
+			total += 1
+		}
+	}
+	return total
 }
 
 func kitchenCountByStatus(orders []*order.Order, status string) int {
@@ -69,6 +76,26 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 						</div>
 						<div class="flex items-center gap-2">
 							<button
+								id="kitchen-sound-toggle"
+								type="button"
+								class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
+								aria-label="Toggle sound alerts"
+								aria-pressed="true"
+								title="Toggle sound alerts"
+								data-sound-state="on"
+							>
+								<svg data-sound-icon="on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+									<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+									<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+								</svg>
+								<svg data-sound-icon="off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 hidden" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+									<line x1="22" y1="9" x2="16" y2="15"></line>
+									<line x1="16" y1="9" x2="22" y2="15"></line>
+								</svg>
+							</button>
+							<button
 								id="kitchen-stream-reconnect"
 								type="button"
 								class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
@@ -104,8 +131,8 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="total">{ fmt.Sprintf("%d", len(orders)) }</p>
 					</div>
 					<div class="kitchen-summary-card rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-2 md:px-3">
-						<p class="text-xs font-medium uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300">Payment pending</p>
-						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="pending-payment">{ fmt.Sprintf("%d", kitchenCountByStatus(orders, "pending-payment")) }</p>
+						<p class="text-xs font-medium uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300">Unpaid</p>
+						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="unpaid">{ fmt.Sprintf("%d", kitchenUnpaidCount(orders)) }</p>
 					</div>
 					<div class="kitchen-summary-card rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2 py-2 md:px-3">
 						<p class="text-xs font-medium uppercase tracking-[0.08em] text-indigo-700 dark:text-indigo-300">Waiting to start</p>
@@ -123,8 +150,7 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 			</section>
 
 			<div id="kitchen-lanes" class="kitchen-lanes">
-				@kitchenLaneColumn("pending-payment", "Payment Needed", "Confirm payment before cooking.", "No unpaid tickets in queue.", "from-amber-500/5 to-background")
-				@kitchenLaneColumn("waiting-start", "Ready To Cook", "Paid orders waiting for prep.", "No paid tickets waiting to start.", "from-indigo-500/5 to-background")
+				@kitchenLaneColumn("waiting-start", "Ready To Cook", "Tickets waiting for prep. Unpaid orders show an UNPAID badge.", "No tickets waiting to start.", "from-indigo-500/5 to-background")
 				@kitchenLaneColumn("preparing", "Preparing", "Orders currently being made.", "Nothing is currently in preparation.", "from-sky-500/5 to-background")
 				@kitchenLaneColumn("ready", "Ready For Pickup", "Keep this list visible to runners.", "No orders ready for pickup.", "from-emerald-500/5 to-background")
 			</div>
@@ -229,7 +255,6 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 				if (!root) return;
 
 				const laneElements = {
-					"pending-payment": document.getElementById("lane-pending-payment"),
 					"waiting-start": document.getElementById("lane-waiting-start"),
 					"preparing": document.getElementById("lane-preparing"),
 					"ready": document.getElementById("lane-ready"),
@@ -241,7 +266,7 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 
 				const summaryCountElements = {
 					total: root.querySelector('[data-summary-count="total"]'),
-					"pending-payment": root.querySelector('[data-summary-count="pending-payment"]'),
+					unpaid: root.querySelector('[data-summary-count="unpaid"]'),
 					"waiting-start": root.querySelector('[data-summary-count="waiting-start"]'),
 					preparing: root.querySelector('[data-summary-count="preparing"]'),
 					ready: root.querySelector('[data-summary-count="ready"]'),
@@ -331,7 +356,6 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 
 				function updateCountsAndEmptyStates() {
 					const counts = {
-						"pending-payment": 0,
 						"waiting-start": 0,
 						preparing: 0,
 						ready: 0,
@@ -345,7 +369,8 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 						if (laneEmptyElements[key]) laneEmptyElements[key].classList.toggle("hidden", value > 0);
 					});
 
-					counts.total = counts["pending-payment"] + counts["waiting-start"] + counts.preparing + counts.ready;
+					counts.total = counts["waiting-start"] + counts.preparing + counts.ready;
+					counts.unpaid = allCards().filter((c) => c.getAttribute("data-order-unpaid") === "true").length;
 					Object.keys(summaryCountElements).forEach((key) => {
 						const node = summaryCountElements[key];
 					if (!node) return;
@@ -462,8 +487,6 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 
 				function labelForAction(action) {
 					switch (action) {
-					case "mark-paid":
-						return "Mark Paid";
 					case "mark-preparing":
 						return "Start Preparing";
 					case "mark-ready":
@@ -500,6 +523,154 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 				window.addEventListener("beforeunload", () => {
 					if (streamProbe) {
 						streamProbe.close();
+					}
+				});
+			})();
+		</script>
+		<script nonce={ templ.GetNonce(ctx) }>
+			(function () {
+				// Kitchen audio: short bell on new ticket, distinct chime on overdue (>12m).
+				// Persist toggle per device. Honor autoplay. Dedup via BroadcastChannel.
+				const root = document.getElementById("kitchen-display");
+				const toggle = document.getElementById("kitchen-sound-toggle");
+				if (!root || !toggle) return;
+
+				const STORAGE_KEY = "kitchen-sound-on";
+				const OVERDUE_MINUTES = 12;
+				const stored = window.localStorage.getItem(STORAGE_KEY);
+				let soundOn = stored === null ? true : stored === "true";
+
+				function setIcon() {
+					const onIcon = toggle.querySelector('[data-sound-icon="on"]');
+					const offIcon = toggle.querySelector('[data-sound-icon="off"]');
+					if (onIcon) onIcon.classList.toggle("hidden", !soundOn);
+					if (offIcon) offIcon.classList.toggle("hidden", soundOn);
+					toggle.setAttribute("aria-pressed", String(soundOn));
+					toggle.setAttribute("data-sound-state", soundOn ? "on" : "off");
+					toggle.title = soundOn ? "Mute alerts" : "Unmute alerts";
+				}
+				setIcon();
+
+				let audioCtx = null;
+				function ensureCtx() {
+					if (audioCtx) return audioCtx;
+					const Ctor = window.AudioContext || window.webkitAudioContext;
+					if (!Ctor) return null;
+					try { audioCtx = new Ctor(); } catch (_) { audioCtx = null; }
+					return audioCtx;
+				}
+				// Unlock audio on the first interaction anywhere in the document.
+				function unlock() {
+					const ctx = ensureCtx();
+					if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
+					document.removeEventListener("click", unlock, true);
+					document.removeEventListener("keydown", unlock, true);
+				}
+				document.addEventListener("click", unlock, true);
+				document.addEventListener("keydown", unlock, true);
+
+				function tone(freq, durationMs, type) {
+					const ctx = ensureCtx();
+					if (!ctx) return;
+					const osc = ctx.createOscillator();
+					const gain = ctx.createGain();
+					osc.type = type || "sine";
+					osc.frequency.value = freq;
+					gain.gain.value = 0.0001;
+					osc.connect(gain).connect(ctx.destination);
+					const now = ctx.currentTime;
+					gain.gain.exponentialRampToValueAtTime(0.4, now + 0.01);
+					gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+					osc.start(now);
+					osc.stop(now + durationMs / 1000 + 0.02);
+				}
+
+				function playBell() { tone(880, 150, "sine"); }
+				function playChime() {
+					tone(659, 180, "triangle");
+					setTimeout(() => tone(523, 220, "triangle"), 180);
+				}
+
+				let channel = null;
+				try { channel = new BroadcastChannel("kitchen-audio"); } catch (_) { channel = null; }
+				const recentlyPlayed = new Map();
+				function shouldPlay(kind, key) {
+					const now = Date.now();
+					const id = kind + ":" + key;
+					const last = recentlyPlayed.get(id) || 0;
+					if (now - last < 1500) return false;
+					recentlyPlayed.set(id, now);
+					return true;
+				}
+				if (channel) {
+					channel.onmessage = (ev) => {
+						if (!ev.data || !ev.data.id) return;
+						recentlyPlayed.set(ev.data.id, ev.data.ts || Date.now());
+					};
+				}
+
+				function announce(kind, key) {
+					const id = kind + ":" + key;
+					if (channel) channel.postMessage({ id: id, ts: Date.now() });
+				}
+
+				function shouldEmit() {
+					if (!soundOn) return false;
+					if (document.hidden) return false;
+					return true;
+				}
+
+				const seenOrders = new Set();
+				root.querySelectorAll(".kitchen-order-card").forEach((c) => {
+					const id = c.getAttribute("data-order-number");
+					if (id) seenOrders.add(id);
+				});
+				const overdueFired = new Set();
+
+				function checkNewTickets() {
+					root.querySelectorAll(".kitchen-order-card").forEach((c) => {
+						const id = c.getAttribute("data-order-number");
+						if (!id || seenOrders.has(id)) return;
+						seenOrders.add(id);
+						const key = "new:" + id;
+						if (!shouldEmit()) return;
+						if (!shouldPlay("new", id)) return;
+						announce("new", id);
+						playBell();
+					});
+				}
+
+				function checkOverdue() {
+					const nowUnix = Math.floor(Date.now() / 1000);
+					root.querySelectorAll(".kitchen-order-card").forEach((c) => {
+						const status = (c.getAttribute("data-kitchen-status") || "").toLowerCase();
+						if (status === "ready" || status === "completed") return;
+						const ts = Number.parseInt(c.getAttribute("data-order-created-at") || "0", 10);
+						if (!Number.isFinite(ts) || ts <= 0) return;
+						const minutes = Math.floor((nowUnix - ts) / 60);
+						if (minutes < OVERDUE_MINUTES) return;
+						const id = c.getAttribute("data-order-number");
+						if (!id || overdueFired.has(id)) return;
+						overdueFired.add(id);
+						if (!shouldEmit()) return;
+						if (!shouldPlay("overdue", id)) return;
+						announce("overdue", id);
+						playChime();
+					});
+				}
+
+				const observer = new MutationObserver(checkNewTickets);
+				observer.observe(root, { childList: true, subtree: true });
+				window.setInterval(checkOverdue, 5000);
+
+				toggle.addEventListener("click", () => {
+					soundOn = !soundOn;
+					window.localStorage.setItem(STORAGE_KEY, String(soundOn));
+					setIcon();
+					if (soundOn) {
+						const ctx = ensureCtx();
+						if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
+						playBell();
 					}
 				});
 			})();

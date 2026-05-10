@@ -2,11 +2,28 @@ package menu
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/common/money"
 )
+
+// Option is a single selectable choice within an OptionGroup.
+type Option struct {
+	ID         string
+	Name       string
+	PriceDelta float64 // additional cost; 0 means no surcharge
+}
+
+// OptionGroup is a set of choices attached to a menu item.
+// Required groups are single-select (radio); optional groups are multi-select (checkbox).
+type OptionGroup struct {
+	ID       string
+	Name     string
+	Required bool
+	Options  []Option
+}
 
 // MenuItem represents a food/drink item.
 type MenuItem struct {
@@ -21,8 +38,17 @@ type MenuItem struct {
 	PhotoOriginalURL string
 	IsAvailable      bool
 	DisplayOrder     int
+	IsVegetarian     bool
+	IsGlutenFree     bool
+	IsSpicy          bool
+	OptionGroups     []OptionGroup
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
+}
+
+// HasOptionGroups reports whether the item has any modifier groups.
+func (m *MenuItem) HasOptionGroups() bool {
+	return len(m.OptionGroups) > 0
 }
 
 // Money returns the price as a money.Money value, falling back to USD when
@@ -158,4 +184,26 @@ func (m *MenuItem) MakeUnavailable() {
 func (m *MenuItem) SetAvailable(isAvailable bool) {
 	m.IsAvailable = isAvailable
 	m.UpdatedAt = time.Now()
+}
+
+func (m *MenuItem) SetDietaryTags(isVegetarian, isGlutenFree, isSpicy bool) {
+	m.IsVegetarian = isVegetarian
+	m.IsGlutenFree = isGlutenFree
+	m.IsSpicy = isSpicy
+	m.UpdatedAt = time.Now()
+}
+
+// DietaryTagsString returns space-separated tag keys for use as a data attribute.
+func (m *MenuItem) DietaryTagsString() string {
+	var tags []string
+	if m.IsVegetarian {
+		tags = append(tags, "vegetarian")
+	}
+	if m.IsGlutenFree {
+		tags = append(tags, "gluten_free")
+	}
+	if m.IsSpicy {
+		tags = append(tags, "spicy")
+	}
+	return strings.Join(tags, " ")
 }

@@ -203,6 +203,23 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 													Rows:        4,
 												})
 											</div>
+											<div class="space-y-2">
+												@label.Label(label.Props{}) { Dietary tags }
+												<div class="flex flex-wrap gap-4">
+													<div class="flex items-center gap-2">
+														@checkbox.Checkbox(checkbox.Props{ID: "add-item-veg-" + string(catData.Category.ID), Name: "is_vegetarian"})
+														@label.Label(label.Props{For: "add-item-veg-" + string(catData.Category.ID), Class: "cursor-pointer"}) { Vegetarian }
+													</div>
+													<div class="flex items-center gap-2">
+														@checkbox.Checkbox(checkbox.Props{ID: "add-item-gf-" + string(catData.Category.ID), Name: "is_gluten_free"})
+														@label.Label(label.Props{For: "add-item-gf-" + string(catData.Category.ID), Class: "cursor-pointer"}) { Gluten-free }
+													</div>
+													<div class="flex items-center gap-2">
+														@checkbox.Checkbox(checkbox.Props{ID: "add-item-spicy-" + string(catData.Category.ID), Name: "is_spicy"})
+														@label.Label(label.Props{For: "add-item-spicy-" + string(catData.Category.ID), Class: "cursor-pointer"}) { Spicy }
+													</div>
+												</div>
+											</div>
 											<div class="flex items-center space-x-2">
 												@checkbox.Checkbox(checkbox.Props{
 													ID:      "add-item-available-" + string(catData.Category.ID),
@@ -413,6 +430,23 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 																			Rows:        4,
 																			Value:       item.Description,
 																		})
+																	</div>
+																	<div class="space-y-2">
+																		@label.Label(label.Props{}) { Dietary tags }
+																		<div class="flex flex-wrap gap-4">
+																			<div class="flex items-center gap-2">
+																				@checkbox.Checkbox(checkbox.Props{ID: "edit-item-veg-" + string(item.ID), Name: "is_vegetarian", Checked: item.IsVegetarian})
+																				@label.Label(label.Props{For: "edit-item-veg-" + string(item.ID), Class: "cursor-pointer"}) { Vegetarian }
+																			</div>
+																			<div class="flex items-center gap-2">
+																				@checkbox.Checkbox(checkbox.Props{ID: "edit-item-gf-" + string(item.ID), Name: "is_gluten_free", Checked: item.IsGlutenFree})
+																				@label.Label(label.Props{For: "edit-item-gf-" + string(item.ID), Class: "cursor-pointer"}) { Gluten-free }
+																			</div>
+																			<div class="flex items-center gap-2">
+																				@checkbox.Checkbox(checkbox.Props{ID: "edit-item-spicy-" + string(item.ID), Name: "is_spicy", Checked: item.IsSpicy})
+																				@label.Label(label.Props{For: "edit-item-spicy-" + string(item.ID), Class: "cursor-pointer"}) { Spicy }
+																			</div>
+																		</div>
 																	</div>
 																	<div class="flex items-center space-x-2">
 																		@checkbox.Checkbox(checkbox.Props{

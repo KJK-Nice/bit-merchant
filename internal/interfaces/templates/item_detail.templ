@@ -1,0 +1,258 @@
+package templates
+
+import (
+	"fmt"
+	"net/url"
+	"strings"
+
+	"bitmerchant/internal/interfaces/templates/components/ui/badge"
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/checkbox"
+	"bitmerchant/internal/interfaces/templates/components/ui/icon"
+	"bitmerchant/internal/interfaces/templates/components/ui/label"
+	"bitmerchant/internal/interfaces/templates/components/ui/radio"
+	"bitmerchant/internal/menu/domain/menu"
+)
+
+// itemDetailRequiredGroupIDs returns comma-separated IDs of required option groups.
+func itemDetailRequiredGroupIDs(item *menu.MenuItem) string {
+	var ids []string
+	for _, g := range item.OptionGroups {
+		if g.Required {
+			ids = append(ids, g.ID)
+		}
+	}
+	return strings.Join(ids, ",")
+}
+
+// ItemDetailPage renders the full item-detail screen.
+templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken string) {
+	@Layout(item.Name + " · Customize") {
+		<div class="container mx-auto max-w-lg pb-32">
+			<!-- sticky header / back -->
+			<div class="sticky top-0 z-10 bg-background/95 backdrop-blur border-b px-4 py-3 flex items-center gap-3">
+				@button.Button(button.Props{
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Href:    fmt.Sprintf("/menu?restaurantID=%s&table=%s", url.QueryEscape(restaurantID), url.QueryEscape(tableLabel)),
+					Class:   "-ml-2 shrink-0",
+				}) {
+					@icon.Icon("chevron-left")(icon.Props{Class: "h-5 w-5"})
+				}
+				<h1 class="text-lg font-semibold truncate">{ item.Name }</h1>
+			</div>
+
+			<!-- hero photo -->
+			if item.PhotoURL != "" {
+				<div class="relative overflow-hidden" style="height:220px;">
+					<img
+						src={ item.PhotoURL }
+						alt={ item.Name }
+						class="h-full w-full object-cover"
+					/>
+				</div>
+			}
+
+			<div class="px-4 pt-4 space-y-5">
+				<!-- name + description + base price -->
+				<div class="space-y-1">
+					<h2 class="text-2xl font-bold leading-snug">{ item.Name }</h2>
+					if item.Description != "" {
+						<p class="text-sm text-muted-foreground">{ item.Description }</p>
+					}
+					<p class="text-xl font-semibold">{ item.Money().Format() }</p>
+				</div>
+
+				<!-- dietary badges -->
+				if item.IsVegetarian || item.IsGlutenFree || item.IsSpicy {
+					<div class="flex flex-wrap gap-1.5">
+						if item.IsVegetarian {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { 🥬 Vegetarian }
+						}
+						if item.IsGlutenFree {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { GF Gluten-free }
+						}
+						if item.IsSpicy {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { 🌶 Spicy }
+						}
+					</div>
+				}
+
+				<!-- modifier form -->
+				<form id="item-detail-form" action="/cart/add-redirect" method="POST" class="space-y-5">
+					<input type="hidden" name="csrf" value={ csrfToken }/>
+					<input type="hidden" name="itemID" value={ string(item.ID) }/>
+					<input type="hidden" name="restaurantID" value={ restaurantID }/>
+					<input type="hidden" name="tableLabel" value={ tableLabel }/>
+					<input type="hidden" id="item-detail-qty" name="quantity" value="1"/>
+
+					for _, group := range item.OptionGroups {
+						<fieldset
+							id={ fmt.Sprintf("group-%s", group.ID) }
+							class="space-y-2"
+							data-group-required={ fmt.Sprintf("%v", group.Required) }
+							data-group-id={ group.ID }
+						>
+							<legend class="text-sm font-semibold flex items-center gap-2">
+								{ group.Name }
+								if group.Required {
+									<span id={ fmt.Sprintf("group-%s-err", group.ID) } class="text-xs font-normal text-destructive hidden">Required</span>
+								} else {
+									<span class="text-xs font-normal text-muted-foreground">Optional</span>
+								}
+							</legend>
+							<div class="space-y-2 rounded-lg border p-3">
+								for _, opt := range group.Options {
+									<div class="flex items-center justify-between gap-3">
+										<div class="flex items-center gap-2">
+											if group.Required {
+												@radio.Radio(radio.Props{
+													ID:    fmt.Sprintf("opt-%s-%s", group.ID, opt.ID),
+													Name:  fmt.Sprintf("mod_%s", group.ID),
+													Value: opt.ID,
+													Attributes: templ.Attributes{
+														"data-price-delta": fmt.Sprintf("%.4f", opt.PriceDelta),
+														"onchange":         "updateItemDetailTotal()",
+													},
+												})
+											} else {
+												@checkbox.Checkbox(checkbox.Props{
+													ID:    fmt.Sprintf("opt-%s-%s", group.ID, opt.ID),
+													Name:  fmt.Sprintf("mod_%s", group.ID),
+													Value: opt.ID,
+													Attributes: templ.Attributes{
+														"data-price-delta": fmt.Sprintf("%.4f", opt.PriceDelta),
+														"onchange":         "updateItemDetailTotal()",
+													},
+												})
+											}
+											@label.Label(label.Props{For: fmt.Sprintf("opt-%s-%s", group.ID, opt.ID), Class: "cursor-pointer"}) {
+												{ opt.Name }
+											}
+										</div>
+										if opt.PriceDelta > 0 {
+											<span class="text-sm text-muted-foreground shrink-0">
+												+{ item.Currency.Code } { fmt.Sprintf("%.2f", opt.PriceDelta) }
+											</span>
+										}
+									</div>
+								}
+							</div>
+						</fieldset>
+					}
+
+					<!-- special instructions -->
+					<div class="space-y-1.5">
+						<label for="item-detail-instructions" class="text-sm font-semibold">Special instructions</label>
+						<textarea
+							id="item-detail-instructions"
+							name="specialInstructions"
+							rows="2"
+							placeholder="e.g. no cilantro, please"
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+						></textarea>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- sticky footer -->
+		<div
+			class="fixed inset-x-0 bottom-0 z-20 border-t bg-background px-4 py-3 flex items-center gap-3"
+			style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom))"
+		>
+			<div class="flex items-center gap-1.5 shrink-0">
+				@button.Button(button.Props{
+					Variant:    button.VariantOutline,
+					Size:       button.SizeIcon,
+					Class:      "h-10 w-10 rounded-full",
+					Attributes: templ.Attributes{"type": "button", "onclick": "changeItemDetailQty(-1)"},
+				}) {
+					<span class="text-base leading-none select-none">−</span>
+				}
+				<span id="item-detail-qty-display" class="min-w-[2rem] text-center font-bold text-lg tabular-nums">1</span>
+				@button.Button(button.Props{
+					Variant:    button.VariantOutline,
+					Size:       button.SizeIcon,
+					Class:      "h-10 w-10 rounded-full",
+					Attributes: templ.Attributes{"type": "button", "onclick": "changeItemDetailQty(1)"},
+				}) {
+					<span class="text-base leading-none select-none">+</span>
+				}
+			</div>
+			@button.Button(button.Props{
+				Type:  "submit",
+				Class: "flex-1 py-3 text-base font-semibold",
+				Attributes: templ.Attributes{
+					"id":      "item-detail-submit",
+					"form":    "item-detail-form",
+					"onclick": "return validateItemDetail()",
+				},
+			}) {
+				<span id="item-detail-btn-label">Add to cart · { item.Money().Format() }</span>
+			}
+		</div>
+
+		<script nonce={ templ.GetNonce(ctx) }>
+			(function () {
+				var basePrice = { fmt.Sprintf("%.4f", item.Price) };
+				var currencyCode = '{ item.Currency.Code }';
+				if (!currencyCode) currencyCode = 'USD';
+				var qty = 1;
+
+				function fmtMoney(amount) {
+					try {
+						return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);
+					} catch (e) {
+						return '$' + amount.toFixed(2);
+					}
+				}
+
+				window.updateItemDetailTotal = function () {
+					var modTotal = 0;
+					var form = document.getElementById('item-detail-form');
+					if (!form) return;
+					for (var el of form.elements) {
+						if (!el.name || !el.name.startsWith('mod_')) continue;
+						if ((el.type === 'radio' || el.type === 'checkbox') && el.checked) {
+							modTotal += parseFloat(el.getAttribute('data-price-delta') || '0');
+						}
+					}
+					var total = (basePrice + modTotal) * qty;
+					var lbl = document.getElementById('item-detail-btn-label');
+					if (lbl) lbl.textContent = 'Add to cart · ' + fmtMoney(total);
+				};
+
+				window.changeItemDetailQty = function (delta) {
+					qty = Math.max(1, qty + delta);
+					var display = document.getElementById('item-detail-qty-display');
+					var input = document.getElementById('item-detail-qty');
+					if (display) display.textContent = qty;
+					if (input) input.value = qty;
+					window.updateItemDetailTotal();
+				};
+
+				window.validateItemDetail = function () {
+					var form = document.getElementById('item-detail-form');
+					if (!form) return true;
+					var fieldsets = form.querySelectorAll('fieldset[data-group-required="true"]');
+					var ok = true;
+					for (var fs of fieldsets) {
+						var groupID = fs.getAttribute('data-group-id');
+						var checked = fs.querySelector('input[type="radio"]:checked');
+						var errEl = document.getElementById('group-' + groupID + '-err');
+						if (!checked) {
+							if (errEl) errEl.classList.remove('hidden');
+							fs.scrollIntoView({ behavior: 'smooth', block: 'center' });
+							ok = false;
+							break;
+						} else {
+							if (errEl) errEl.classList.add('hidden');
+						}
+					}
+					return ok;
+				};
+			})();
+		</script>
+	}
+}
