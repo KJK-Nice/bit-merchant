@@ -116,7 +116,7 @@ templ OrderCard(o *order.Order) {
 								class={ "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background", templ.KV("bg-emerald-500 border-emerald-500 text-white", item.PrepComplete) }
 								aria-label="Toggle prep complete"
 								data-kitchen-item-toggle={ orderItemIDStr(item.ID) }
-								data-on:click={ fmt.Sprintf("@post('/kitchen/order/%s/item/%s/toggle-prep', {body: 'complete=%t'})", o.ID, item.ID, !item.PrepComplete) }
+								data-on:click={ fmt.Sprintf("@post('/kitchen/order/%s/item/%s/toggle-prep')", o.ID, item.ID) }
 							>
 								if item.PrepComplete {
 									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -13,10 +13,10 @@ import (
 )
 
 // ToggleOrderItemPrep flips the prep_complete flag on a single line item.
+// Server reads current state and toggles; the client doesn't carry intent.
 type ToggleOrderItemPrep struct {
-	OrderID  common.OrderID
-	ItemID   common.OrderItemID
-	Complete bool
+	OrderID common.OrderID
+	ItemID  common.OrderItemID
 }
 
 type ToggleOrderItemPrepHandler decorator.CommandResultHandler[ToggleOrderItemPrep, *order.Order]
@@ -42,10 +42,15 @@ func (h toggleOrderItemPrepHandler) Handle(ctx context.Context, cmd ToggleOrderI
 	if o == nil {
 		return nil, errors.New("order not found")
 	}
-	if !o.SetItemPrepComplete(cmd.ItemID, cmd.Complete) {
+	current, found := o.ItemPrepComplete(cmd.ItemID)
+	if !found {
 		return nil, errors.New("order item not found")
 	}
-	if err := h.repo.UpdateItemPrepComplete(o.ID, cmd.ItemID, cmd.Complete); err != nil {
+	next := !current
+	if !o.SetItemPrepComplete(cmd.ItemID, next) {
+		return nil, errors.New("order item not found")
+	}
+	if err := h.repo.UpdateItemPrepComplete(o.ID, cmd.ItemID, next); err != nil {
 		return nil, err
 	}
 
@@ -54,7 +59,7 @@ func (h toggleOrderItemPrepHandler) Handle(ctx context.Context, cmd ToggleOrderI
 		RestaurantID: o.RestaurantID,
 		OrderNumber:  o.OrderNumber,
 		ItemID:       cmd.ItemID,
-		PrepComplete: cmd.Complete,
+		PrepComplete: next,
 		ToggledAt:    time.Now(),
 	}
 	if err := h.eventBus.Publish(ctx, ev.EventName(), ev); err != nil {

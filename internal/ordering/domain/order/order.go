@@ -90,6 +90,17 @@ func (o *Order) AllItemsPrepComplete() bool {
 	return true
 }
 
+// ItemPrepComplete reports the current prep_complete flag for a line item.
+// Returns ok=false if the item ID is not part of this order.
+func (o *Order) ItemPrepComplete(itemID common.OrderItemID) (bool, bool) {
+	for i := range o.Items {
+		if o.Items[i].ID == itemID {
+			return o.Items[i].PrepComplete, true
+		}
+	}
+	return false, false
+}
+
 // SetItemPrepComplete sets the prep_complete flag for a single line item.
 // Returns ok=false if the item ID is not part of this order.
 func (o *Order) SetItemPrepComplete(itemID common.OrderItemID, complete bool) bool {

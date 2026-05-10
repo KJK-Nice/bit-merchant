@@ -99,11 +99,9 @@ func (h *KitchenHandler) MarkCompleted(c echo.Context) error {
 func (h *KitchenHandler) ToggleItemPrep(c echo.Context) error {
 	orderID := c.Param("id")
 	itemID := c.Param("itemID")
-	complete := c.FormValue("complete") == "true"
 	order, err := h.toggleItemPrepUC.Handle(c.Request().Context(), orderCmd.ToggleOrderItemPrep{
-		OrderID:  common.OrderID(orderID),
-		ItemID:   common.OrderItemID(itemID),
-		Complete: complete,
+		OrderID: common.OrderID(orderID),
+		ItemID:  common.OrderItemID(itemID),
 	})
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
