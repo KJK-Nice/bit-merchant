@@ -22,6 +22,9 @@ type CreateMenuItem struct {
 	Price        float64
 	CurrencyCode string
 	Available    bool
+	IsVegetarian bool
+	IsGlutenFree bool
+	IsSpicy      bool
 }
 
 type CreateMenuItemHandler decorator.CommandResultHandler[CreateMenuItem, *menu.MenuItem]
@@ -55,6 +58,7 @@ func (h createMenuItemHandler) Handle(ctx context.Context, cmd CreateMenuItem) (
 		return nil, err
 	}
 	item.SetAvailable(cmd.Available)
+	item.SetDietaryTags(cmd.IsVegetarian, cmd.IsGlutenFree, cmd.IsSpicy)
 
 	maxOrder := -1
 	siblings, err := h.repo.FindByCategoryID(cmd.CategoryID)

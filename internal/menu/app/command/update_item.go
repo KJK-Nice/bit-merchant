@@ -19,6 +19,9 @@ type UpdateMenuItem struct {
 	Description  string
 	Price        float64
 	Available    bool
+	IsVegetarian bool
+	IsGlutenFree bool
+	IsSpicy      bool
 }
 
 type UpdateMenuItemHandler decorator.CommandHandler[UpdateMenuItem]
@@ -69,6 +72,7 @@ func (h updateMenuItemHandler) Handle(ctx context.Context, cmd UpdateMenuItem) e
 	if err := item.SetDescription(cmd.Description); err != nil {
 		return err
 	}
+	item.SetDietaryTags(cmd.IsVegetarian, cmd.IsGlutenFree, cmd.IsSpicy)
 
 	if oldCat != cmd.CategoryID {
 		if err := h.moveItemToCategoryEnd(item, cmd.CategoryID); err != nil {

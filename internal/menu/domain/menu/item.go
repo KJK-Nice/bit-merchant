@@ -2,6 +2,7 @@ package menu
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"bitmerchant/internal/common"
@@ -21,6 +22,9 @@ type MenuItem struct {
 	PhotoOriginalURL string
 	IsAvailable      bool
 	DisplayOrder     int
+	IsVegetarian     bool
+	IsGlutenFree     bool
+	IsSpicy          bool
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -158,4 +162,26 @@ func (m *MenuItem) MakeUnavailable() {
 func (m *MenuItem) SetAvailable(isAvailable bool) {
 	m.IsAvailable = isAvailable
 	m.UpdatedAt = time.Now()
+}
+
+func (m *MenuItem) SetDietaryTags(isVegetarian, isGlutenFree, isSpicy bool) {
+	m.IsVegetarian = isVegetarian
+	m.IsGlutenFree = isGlutenFree
+	m.IsSpicy = isSpicy
+	m.UpdatedAt = time.Now()
+}
+
+// DietaryTagsString returns space-separated tag keys for use as a data attribute.
+func (m *MenuItem) DietaryTagsString() string {
+	var tags []string
+	if m.IsVegetarian {
+		tags = append(tags, "vegetarian")
+	}
+	if m.IsGlutenFree {
+		tags = append(tags, "gluten_free")
+	}
+	if m.IsSpicy {
+		tags = append(tags, "spicy")
+	}
+	return strings.Join(tags, " ")
 }
