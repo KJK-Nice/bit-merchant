@@ -3,12 +3,12 @@ package templates
 import (
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
-	"bitmerchant/internal/interfaces/templates/components/ui/popover"
 	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
 	"bitmerchant/internal/interfaces/templates/components/ui/selectbox"
 )
 
 templ AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options []RestaurantOption) {
+	{{ submitDisabled := currentRestaurantID == "" || len(options) == 0 }}
 	@Layout("Select Restaurant - BitMerchant") {
 		<div class="max-w-xl mx-auto mt-10 md:mt-14">
 			@card.Card() {
@@ -21,7 +21,7 @@ templ AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options
 					}
 				}
 				@card.Content() {
-					<form action="/auth/select-restaurant" method="post" class="space-y-5">
+					<form id="select-restaurant-form" action="/auth/select-restaurant" method="post" class="space-y-5">
 						<input type="hidden" name="csrf" value={ csrfToken }/>
 						@primitives.Field(primitives.FieldProps{
 							ID:       "restaurantID",
@@ -53,14 +53,31 @@ templ AuthSelectRestaurant(csrfToken string, currentRestaurantID string, options
 								}
 							}
 						}
-						@button.Button(button.Props{Type: "submit", Class: "w-full"}) {
+						@button.Button(button.Props{
+							ID:       "select-restaurant-submit",
+							Type:     "submit",
+							Class:    "w-full",
+							Disabled: submitDisabled,
+						}) {
 							Use this restaurant
 						}
 					</form>
 				}
 			}
 		</div>
-		@popover.Script()
 		@selectbox.Script()
+		<script nonce={ templ.GetNonce(ctx) }>
+			(function () {
+				const form = document.getElementById('select-restaurant-form');
+				if (!form) return;
+				const hidden = form.querySelector('input[name="restaurantID"]');
+				const submit = document.getElementById('select-restaurant-submit');
+				if (!hidden || !submit) return;
+				const sync = () => { submit.disabled = !hidden.value; };
+				hidden.addEventListener('input', sync);
+				hidden.addEventListener('change', sync);
+				sync();
+			})();
+		</script>
 	}
 }
