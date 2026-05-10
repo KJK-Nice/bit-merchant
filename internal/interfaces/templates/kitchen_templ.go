@@ -247,27 +247,27 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p></div><div class=\"kitchen-summary-card rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-2 md:px-3\"><p class=\"text-xs font-medium uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300\">Unpaid</p><p class=\"mt-0.5 text-xl font-semibold tabular-nums md:text-2xl\" data-summary-count=\"unpaid\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p></div><a href=\"/server\" title=\"Open Server / FOH view to mark orders paid\" class=\"kitchen-summary-card rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-2 md:px-3 transition hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500\"><p class=\"text-xs font-medium uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300\">Unpaid</p><p class=\"mt-0.5 text-xl font-semibold tabular-nums md:text-2xl\" data-summary-count=\"unpaid\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", kitchenUnpaidCount(orders)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 135, Col: 146}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 139, Col: 146}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p></div><div class=\"kitchen-summary-card rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2 py-2 md:px-3\"><p class=\"text-xs font-medium uppercase tracking-[0.08em] text-indigo-700 dark:text-indigo-300\">Waiting to start</p><p class=\"mt-0.5 text-xl font-semibold tabular-nums md:text-2xl\" data-summary-count=\"waiting-start\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p></a><div class=\"kitchen-summary-card rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2 py-2 md:px-3\"><p class=\"text-xs font-medium uppercase tracking-[0.08em] text-indigo-700 dark:text-indigo-300\">Waiting to start</p><p class=\"mt-0.5 text-xl font-semibold tabular-nums md:text-2xl\" data-summary-count=\"waiting-start\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", kitchenCountByStatus(orders, "waiting-start")))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 139, Col: 172}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 143, Col: 172}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -280,7 +280,7 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", kitchenCountByStatus(orders, "preparing")))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 143, Col: 164}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 147, Col: 164}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -293,7 +293,7 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", kitchenCountByStatus(orders, "ready")))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 147, Col: 156}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 151, Col: 156}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -332,7 +332,7 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 164, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 168, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -345,7 +345,7 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 252, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 256, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -358,7 +358,7 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 530, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 534, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -376,7 +376,7 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(vapidPublicKey)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 696, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 700, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -389,7 +389,7 @@ func KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 699, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/kitchen.templ`, Line: 703, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {

@@ -130,10 +130,14 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 						<p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Active orders</p>
 						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="total">{ fmt.Sprintf("%d", len(orders)) }</p>
 					</div>
-					<div class="kitchen-summary-card rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-2 md:px-3">
+					<a
+						href="/server"
+						title="Open Server / FOH view to mark orders paid"
+						class="kitchen-summary-card rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-2 md:px-3 transition hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
+					>
 						<p class="text-xs font-medium uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300">Unpaid</p>
 						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="unpaid">{ fmt.Sprintf("%d", kitchenUnpaidCount(orders)) }</p>
-					</div>
+					</a>
 					<div class="kitchen-summary-card rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2 py-2 md:px-3">
 						<p class="text-xs font-medium uppercase tracking-[0.08em] text-indigo-700 dark:text-indigo-300">Waiting to start</p>
 						<p class="mt-0.5 text-xl font-semibold tabular-nums md:text-2xl" data-summary-count="waiting-start">{ fmt.Sprintf("%d", kitchenCountByStatus(orders, "waiting-start")) }</p>
