@@ -14,6 +14,14 @@
       "port": 7331
     },
     {
+      "name": "Server (memory backend)",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["run", "./cmd/server"],
+      "env": { "EVENT_BUS_BACKEND": "memory" },
+      "port": 18181,
+      "autoPort": true
+    },
+    {
       "name": "Tailwind CSS (watcher)",
       "runtimeExecutable": "tailwindcss",
       "runtimeArgs": [
