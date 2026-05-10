@@ -1,4 +1,11 @@
+-- +goose Up
 ALTER TABLE menu_items
     ADD COLUMN IF NOT EXISTS is_vegetarian BOOLEAN NOT NULL DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS is_gluten_free BOOLEAN NOT NULL DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS is_spicy BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- +goose Down
+ALTER TABLE menu_items
+    DROP COLUMN IF EXISTS is_vegetarian,
+    DROP COLUMN IF EXISTS is_gluten_free,
+    DROP COLUMN IF EXISTS is_spicy;
