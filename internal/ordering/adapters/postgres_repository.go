@@ -86,13 +86,13 @@ func (r *PostgresOrderRepository) Save(o *order.Order) error {
 			return merr
 		}
 		_, err = tx.Exec(
-			`INSERT INTO order_items (id, order_id, menu_item_id, name, quantity, unit_price, subtotal, currency, unit_price_minor, subtotal_minor, modifiers, special_instructions)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+			`INSERT INTO order_items (id, order_id, menu_item_id, name, quantity, unit_price, subtotal, currency, unit_price_minor, subtotal_minor, modifiers, special_instructions, prep_complete)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
 			 ON CONFLICT (id) DO NOTHING`,
 			string(item.ID), string(item.OrderID), string(item.MenuItemID),
 			item.Name, item.Quantity, item.UnitPrice, item.Subtotal,
 			itemCur.Code, unitPriceMinor, subtotalMinor,
-			modifiersJSON, item.SpecialInstructions)
+			modifiersJSON, item.SpecialInstructions, item.PrepComplete)
 		if err != nil {
 			return err
 		}
@@ -171,6 +171,20 @@ func (r *PostgresOrderRepository) Update(o *order.Order) error {
 	return nil
 }
 
+func (r *PostgresOrderRepository) UpdateItemPrepComplete(orderID common.OrderID, itemID common.OrderItemID, complete bool) error {
+	result, err := r.db.Exec(
+		`UPDATE order_items SET prep_complete = $3 WHERE id = $1 AND order_id = $2`,
+		string(itemID), string(orderID), complete)
+	if err != nil {
+		return err
+	}
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		return errors.New("order item not found")
+	}
+	return nil
+}
+
 func (r *PostgresOrderRepository) queryOrders(query string, args ...interface{}) ([]*order.Order, error) {
 	rows, err := r.db.Query(query, args...)
 	if err != nil {
@@ -204,7 +218,7 @@ func (r *PostgresOrderRepository) queryOrders(query string, args ...interface{})
 func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, error) {
 	rows, err := r.db.Query(
 		`SELECT id, order_id, menu_item_id, name, quantity, unit_price, subtotal, COALESCE(currency, 'USD'),
-		        COALESCE(modifiers, '[]'::jsonb), COALESCE(special_instructions, '')
+		        COALESCE(modifiers, '[]'::jsonb), COALESCE(special_instructions, ''), COALESCE(prep_complete, false)
 		 FROM order_items WHERE order_id = $1`, orderID)
 	if err != nil {
 		return nil, err
@@ -220,8 +234,9 @@ func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, 
 			currencyCode              string
 			modifiersJSON             []byte
 			specialInstructions       string
+			prepComplete              bool
 		)
-		if err := rows.Scan(&id, &oid, &menuItemID, &name, &quantity, &unitPrice, &subtotal, &currencyCode, &modifiersJSON, &specialInstructions); err != nil {
+		if err := rows.Scan(&id, &oid, &menuItemID, &name, &quantity, &unitPrice, &subtotal, &currencyCode, &modifiersJSON, &specialInstructions, &prepComplete); err != nil {
 			return nil, err
 		}
 		currency, err := money.Parse(currencyCode)
@@ -239,6 +254,7 @@ func (r *PostgresOrderRepository) loadItems(orderID string) ([]order.OrderItem, 
 			Currency:            currency,
 			Modifiers:           unmarshalOrderModifiers(modifiersJSON),
 			SpecialInstructions: specialInstructions,
+			PrepComplete:        prepComplete,
 		})
 	}
 	return items, rows.Err()

@@ -26,6 +26,7 @@ type OrderItem struct {
 	Currency            money.Currency
 	Modifiers           []OrderItemModifier
 	SpecialInstructions string
+	PrepComplete        bool
 }
 
 // NewOrderItem creates a new OrderItem. Currency defaults to USD.

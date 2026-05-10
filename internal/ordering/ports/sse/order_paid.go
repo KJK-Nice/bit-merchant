@@ -3,6 +3,7 @@ package sse
 import (
 	"bytes"
 	"context"
+	"fmt"
 
 	commonhttp "bitmerchant/internal/common/http"
 	"bitmerchant/internal/infrastructure/logging"
@@ -40,6 +41,11 @@ func (h *OrderPaidHandler) Handle(ctx context.Context, ev event.OrderPaid) error
 		msg := commonhttp.FormatDatastarEvent(bufCard.String())
 		h.sse.Broadcast(commonhttp.TopicKitchen, msg)
 	}
+
+	// Remove the now-paid card from the FOH/server view.
+	removalSelector := fmt.Sprintf("#server-order-%s", order.ID)
+	removalMsg := commonhttp.FormatDatastarPatch("", removalSelector, "remove")
+	h.sse.Broadcast(commonhttp.TopicServer, removalMsg)
 
 	broadcastCustomerStatus(ctx, h.logger, h.sse, h.repo, order)
 	return nil

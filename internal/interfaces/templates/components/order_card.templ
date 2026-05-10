@@ -10,14 +10,11 @@ import (
 	"time"
 )
 
-func kitchenStatusForOrder(order *order.Order) string {
-	if order == nil {
+func kitchenStatusForOrder(o *order.Order) string {
+	if o == nil {
 		return "waiting-start"
 	}
-	if order.PaymentStatus != common.PaymentStatusPaid {
-		return "pending-payment"
-	}
-	switch order.FulfillmentStatus {
+	switch o.FulfillmentStatus {
 	case common.FulfillmentStatusPreparing:
 		return "preparing"
 	case common.FulfillmentStatusReady:
@@ -31,8 +28,6 @@ func kitchenStatusForOrder(order *order.Order) string {
 
 func kitchenStatusLabel(status string) string {
 	switch status {
-	case "pending-payment":
-		return "Payment pending"
 	case "preparing":
 		return "Preparing"
 	case "ready":
@@ -46,8 +41,6 @@ func kitchenStatusLabel(status string) string {
 
 func kitchenStatusAccentClass(status string) string {
 	switch status {
-	case "pending-payment":
-		return "border-l-amber-500 bg-amber-500/5"
 	case "preparing":
 		return "border-l-sky-500 bg-sky-500/5"
 	case "ready":
@@ -66,29 +59,41 @@ func kitchenCreatedAtUnix(createdAt time.Time) string {
 	return strconv.FormatInt(createdAt.Unix(), 10)
 }
 
-func kitchenItemCount(order *order.Order) int {
+func kitchenItemCount(o *order.Order) int {
 	total := 0
-	for _, item := range order.Items {
+	for _, item := range o.Items {
 		total += item.Quantity
 	}
 	return total
 }
 
-templ OrderCard(order *order.Order) {
-	{{ statusKey := kitchenStatusForOrder(order) }}
+func orderItemIDStr(id common.OrderItemID) string {
+	return string(id)
+}
+
+templ OrderCard(o *order.Order) {
+	{{ statusKey := kitchenStatusForOrder(o) }}
+	{{ unpaid := o.PaymentStatus != common.PaymentStatusPaid }}
+	{{ allDone := o.AllItemsPrepComplete() }}
 	@card.Card(card.Props{
-		ID:    fmt.Sprintf("order-%s", order.ID),
+		ID:    fmt.Sprintf("order-%s", o.ID),
 		Class: fmt.Sprintf("kitchen-order-card mb-4 border-l-4 shadow-sm transition-all %s", kitchenStatusAccentClass(statusKey)),
 		Attributes: templ.Attributes{
 			"data-kitchen-status":   statusKey,
-			"data-order-number":     string(order.OrderNumber),
-			"data-order-created-at": kitchenCreatedAtUnix(order.CreatedAt),
+			"data-order-number":     string(o.OrderNumber),
+			"data-order-created-at": kitchenCreatedAtUnix(o.CreatedAt),
+			"data-order-unpaid":     fmt.Sprintf("%t", unpaid),
 		},
 	}) {
 		@card.Header(card.HeaderProps{Class: "space-y-3 pb-3"}) {
 			<div class="flex items-start justify-between gap-3">
 				<div class="space-y-1">
-					@card.Title(card.TitleProps{Class: "text-xl tracking-tight"}) { Order #{ string(order.OrderNumber) } }
+					<div class="flex items-center gap-2">
+						@card.Title(card.TitleProps{Class: "text-xl tracking-tight"}) { Order #{ string(o.OrderNumber) } }
+						if unpaid {
+							<span class="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300" title="Awaiting front-of-house payment confirmation">UNPAID</span>
+						}
+					</div>
 					<p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{ kitchenStatusLabel(statusKey) }</p>
 				</div>
 				<span class="rounded-full border border-border bg-background/70 px-2 py-1 text-xs font-semibold text-muted-foreground tabular-nums" data-order-age>New</span>
@@ -96,13 +101,29 @@ templ OrderCard(order *order.Order) {
 		}
 		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
 			<div class="flex items-center justify-between text-sm">
-				<span class="font-medium text-muted-foreground">{ fmt.Sprintf("%d items", kitchenItemCount(order)) }</span>
-				<span class="font-semibold tabular-nums">{ order.Total().Format() }</span>
+				<span class="font-medium text-muted-foreground">{ fmt.Sprintf("%d items", kitchenItemCount(o)) }</span>
+				<span class="font-semibold tabular-nums">{ o.Total().Format() }</span>
 			</div>
 			<ul class="space-y-2 text-sm">
-				for _, item := range order.Items {
-					<li class="rounded-md bg-muted/40 px-3 py-2 space-y-1">
-						<div class="flex items-start justify-between gap-3">
+				for _, item := range o.Items {
+					<li
+						id={ fmt.Sprintf("order-item-%s", orderItemIDStr(item.ID)) }
+						class={ "rounded-md bg-muted/40 px-3 py-2 space-y-1 transition-opacity", templ.KV("opacity-60 line-through", item.PrepComplete) }
+					>
+						<div class="flex items-start gap-3">
+							<button
+								type="button"
+								class={ "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background", templ.KV("bg-emerald-500 border-emerald-500 text-white", item.PrepComplete) }
+								aria-label="Toggle prep complete"
+								data-kitchen-item-toggle={ orderItemIDStr(item.ID) }
+								data-on:click={ fmt.Sprintf("@post('/kitchen/order/%s/item/%s/toggle-prep', {body: 'complete=%t'})", o.ID, item.ID, !item.PrepComplete) }
+							>
+								if item.PrepComplete {
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								}
+							</button>
 							<span class="font-medium text-foreground">{ fmt.Sprintf("%dx", item.Quantity) }</span>
 							<span class="flex-1 text-right text-muted-foreground">
 								if item.Name != "" {
@@ -113,14 +134,14 @@ templ OrderCard(order *order.Order) {
 							</span>
 						</div>
 						if len(item.Modifiers) > 0 {
-							<ul class="pl-6 space-y-0.5">
+							<ul class="pl-9 space-y-0.5">
 								for _, mod := range item.Modifiers {
 									<li class="text-xs text-muted-foreground">{ mod.GroupName }: { mod.OptionName }</li>
 								}
 							</ul>
 						}
 						if item.SpecialInstructions != "" {
-							<p class="pl-6 text-xs text-muted-foreground italic">Note: { item.SpecialInstructions }</p>
+							<p class="pl-9 text-xs text-muted-foreground italic">Note: { item.SpecialInstructions }</p>
 						}
 					</li>
 				}
@@ -128,50 +149,64 @@ templ OrderCard(order *order.Order) {
 		}
 		@card.Footer(card.FooterProps{Class: "pt-2"}) {
 			<div class="w-full">
-				if order.PaymentStatus == common.PaymentStatusPending {
-					@button.Button(button.Props{
-						Variant:   button.VariantDefault,
-						FullWidth: true,
-						Class:     "border border-emerald-300 bg-emerald-200 text-zinc-950 font-semibold shadow-sm hover:bg-emerald-300 dark:border-emerald-300/40 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-400 disabled:opacity-100 disabled:brightness-95 disabled:text-zinc-950 dark:disabled:text-white",
-						Attributes: templ.Attributes{
-							"data-kitchen-action": "mark-paid",
-							"data-on:click":       fmt.Sprintf("@post('/kitchen/order/%s/mark-paid')", order.ID),
-						},
-					}) {
-						Mark Paid
-					}
-				} else if order.FulfillmentStatus == common.FulfillmentStatusPaid {
-					@button.Button(button.Props{
-						Variant:   button.VariantDefault,
-						FullWidth: true,
-						Class:     "border border-sky-300 bg-sky-200 text-zinc-950 font-semibold shadow-sm hover:bg-sky-300 dark:border-sky-300/40 dark:bg-sky-500 dark:text-white dark:hover:bg-sky-400 disabled:opacity-100 disabled:brightness-95 disabled:text-zinc-950 dark:disabled:text-white",
-						Attributes: templ.Attributes{
+				if o.FulfillmentStatus == common.FulfillmentStatusPaid {
+					{{
+						attrs := templ.Attributes{
 							"data-kitchen-action": "mark-preparing",
-							"data-on:click":       fmt.Sprintf("@post('/kitchen/order/%s/mark-preparing')", order.ID),
-						},
-					}) {
-						Start Preparing
-					}
-				} else if order.FulfillmentStatus == common.FulfillmentStatusPreparing {
+							"data-on:click":       fmt.Sprintf("@post('/kitchen/order/%s/mark-preparing')", o.ID),
+						}
+						if unpaid {
+							attrs["disabled"] = ""
+							attrs["aria-disabled"] = "true"
+							attrs["title"] = "Awaiting payment confirmation from FOH"
+						}
+					}}
 					@button.Button(button.Props{
-						Variant:   button.VariantDefault,
-						FullWidth: true,
-						Class:     "border border-indigo-300 bg-indigo-200 text-zinc-950 font-semibold shadow-sm hover:bg-indigo-300 dark:border-indigo-300/40 dark:bg-indigo-500 dark:text-white dark:hover:bg-indigo-400 disabled:opacity-100 disabled:brightness-95 disabled:text-zinc-950 dark:disabled:text-white",
-						Attributes: templ.Attributes{
-							"data-kitchen-action": "mark-ready",
-							"data-on:click":       fmt.Sprintf("@post('/kitchen/order/%s/mark-ready')", order.ID),
-						},
+						Variant:    button.VariantDefault,
+						FullWidth:  true,
+						Disabled:   unpaid,
+						Class:      "border border-sky-300 bg-sky-200 text-zinc-950 font-semibold shadow-sm hover:bg-sky-300 dark:border-sky-300/40 dark:bg-sky-500 dark:text-white dark:hover:bg-sky-400 disabled:opacity-100 disabled:brightness-95 disabled:text-zinc-950 dark:disabled:text-white",
+						Attributes: attrs,
 					}) {
-						Mark Ready
+						if unpaid {
+							Awaiting Payment
+						} else {
+							Start Preparing
+						}
 					}
-				} else if order.FulfillmentStatus == common.FulfillmentStatusReady {
+				} else if o.FulfillmentStatus == common.FulfillmentStatusPreparing {
+					{{
+						label := "Mark Ready"
+						if allDone {
+							label = "Bump → Pass"
+						}
+						readyAttrs := templ.Attributes{
+							"data-kitchen-action": "mark-ready",
+							"data-on:click":       fmt.Sprintf("@post('/kitchen/order/%s/mark-ready')", o.ID),
+						}
+						if !allDone {
+							readyAttrs["disabled"] = ""
+							readyAttrs["aria-disabled"] = "true"
+							readyAttrs["title"] = "Tick every item before bumping"
+						}
+					}}
+					@button.Button(button.Props{
+						Variant:    button.VariantDefault,
+						FullWidth:  true,
+						Disabled:   !allDone,
+						Class:      "border border-indigo-300 bg-indigo-200 text-zinc-950 font-semibold shadow-sm hover:bg-indigo-300 dark:border-indigo-300/40 dark:bg-indigo-500 dark:text-white dark:hover:bg-indigo-400 disabled:opacity-100 disabled:brightness-95 disabled:text-zinc-950 dark:disabled:text-white",
+						Attributes: readyAttrs,
+					}) {
+						{ label }
+					}
+				} else if o.FulfillmentStatus == common.FulfillmentStatusReady {
 					@button.Button(button.Props{
 						Variant:   button.VariantDefault,
 						FullWidth: true,
 						Class:     "border border-zinc-300 bg-zinc-200 text-zinc-950 font-semibold shadow-sm hover:bg-zinc-300 dark:border-zinc-300/40 dark:bg-zinc-500 dark:text-white dark:hover:bg-zinc-400 disabled:opacity-100 disabled:brightness-95 disabled:text-zinc-950 dark:disabled:text-white",
 						Attributes: templ.Attributes{
 							"data-kitchen-action": "mark-completed",
-							"data-on:click":       fmt.Sprintf("@post('/kitchen/order/%s/mark-completed')", order.ID),
+							"data-on:click":       fmt.Sprintf("@post('/kitchen/order/%s/mark-completed')", o.ID),
 						},
 					}) {
 						Close Ticket

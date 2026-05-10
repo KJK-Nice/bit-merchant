@@ -154,6 +154,7 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 			Order:          orderingSvc.OrderHandler,
 			Places:         placesSvc.HTTP,
 			Kitchen:        orderingSvc.KitchenHandler,
+			Server:         orderingSvc.ServerHandler,
 			Push:           orderinghttp.NewPushHandler(pushRepo, logger.Logger),
 			Admin:          restaurantSvc.Admin,
 			Owner:          restaurantSvc.Owner,

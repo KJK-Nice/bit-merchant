@@ -62,3 +62,16 @@ type OrderCompleted struct {
 
 func (e OrderCompleted) EventName() string     { return common.EventOrderCompleted }
 func (e OrderCompleted) OccurredAt() time.Time { return e.CompletedAt }
+
+// OrderItemPrepToggled is published when a kitchen toggles a line item's prep_complete flag.
+type OrderItemPrepToggled struct {
+	OrderID      common.OrderID
+	RestaurantID common.RestaurantID
+	OrderNumber  common.OrderNumber
+	ItemID       common.OrderItemID
+	PrepComplete bool
+	ToggledAt    time.Time
+}
+
+func (e OrderItemPrepToggled) EventName() string     { return common.EventOrderItemPrepToggled }
+func (e OrderItemPrepToggled) OccurredAt() time.Time { return e.ToggledAt }

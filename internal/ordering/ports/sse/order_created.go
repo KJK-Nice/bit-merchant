@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 
+	"bitmerchant/internal/common"
 	commonhttp "bitmerchant/internal/common/http"
 	"bitmerchant/internal/infrastructure/logging"
 	"bitmerchant/internal/interfaces/templates/components"
@@ -47,6 +48,14 @@ func (h *OrderCreatedHandler) Handle(ctx context.Context, ev event.OrderCreated)
 
 	msg := commonhttp.FormatDatastarPatch(buf.String(), "#orders-list", "prepend")
 	h.sse.Broadcast(commonhttp.TopicKitchen, msg)
+
+	if order.PaymentStatus != common.PaymentStatusPaid {
+		var serverBuf bytes.Buffer
+		if err := components.ServerOrderCard(order).Render(ctx, &serverBuf); err == nil {
+			serverMsg := commonhttp.FormatDatastarPatch(serverBuf.String(), "#server-orders", "prepend")
+			h.sse.Broadcast(commonhttp.TopicServer, serverMsg)
+		}
+	}
 
 	return nil
 }

@@ -70,6 +70,7 @@ func main() {
 			Order:     application.Ports.Order,
 			Places:    application.Ports.Places,
 			Kitchen:   application.Ports.Kitchen,
+			Server:    application.Ports.Server,
 			Push:      application.Ports.Push,
 			Admin:     application.Ports.Admin,
 			Owner:     application.Ports.Owner,

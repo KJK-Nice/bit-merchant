@@ -61,6 +61,19 @@ func (m *mockKitchenOrderRepo) FindBySessionID(sessionID string) ([]*order.Order
 func (m *mockKitchenOrderRepo) NextOrderNumber(rid common.RestaurantID) (int, error) {
 	return 1, nil
 }
+func (m *mockKitchenOrderRepo) UpdateItemPrepComplete(orderID common.OrderID, itemID common.OrderItemID, complete bool) error {
+	for _, o := range m.orders {
+		if o.ID == orderID {
+			for i := range o.Items {
+				if o.Items[i].ID == itemID {
+					o.Items[i].PrepComplete = complete
+					return nil
+				}
+			}
+		}
+	}
+	return nil
+}
 
 // Mock EventBus
 type mockKitchenEventBus struct{}
@@ -97,16 +110,19 @@ func TestKitchenEndpoints(t *testing.T) {
 	markPreparingUC := kitchenCmd.NewMarkOrderPreparingHandler(mockRepo, mockBus, nil, nil)
 	markReadyUC := kitchenCmd.NewMarkOrderReadyHandler(mockRepo, mockBus, nil, nil)
 	markCompletedUC := kitchenCmd.NewMarkOrderCompletedHandler(mockRepo, mockBus, nil, nil)
+	toggleItemPrepUC := kitchenCmd.NewToggleOrderItemPrepHandler(mockRepo, mockBus, nil, nil)
+	getUnpaidServerUC := kitchenQuery.NewUnpaidServerOrdersHandler(mockRepo, nil, nil)
 
 	// Setup Handler
-	h := orderinghttp.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, nil, nil, "")
+	h := orderinghttp.NewKitchenHandler(getOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, toggleItemPrepUC, nil, nil, "")
+	srv := orderinghttp.NewServerHandler(getUnpaidServerUC, markPaidUC, nil, nil)
 
 	// Routes
 	e.GET("/kitchen", h.GetKitchen)
-	e.POST("/kitchen/order/:id/mark-paid", h.MarkPaid)
 	e.POST("/kitchen/order/:id/mark-preparing", h.MarkPreparing)
 	e.POST("/kitchen/order/:id/mark-ready", h.MarkReady)
 	e.POST("/kitchen/order/:id/mark-completed", h.MarkCompleted)
+	e.POST("/server/order/:id/mark-paid", srv.MarkPaid)
 
 	t.Run("GET /kitchen returns orders", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/kitchen", nil)
@@ -116,19 +132,18 @@ func TestKitchenEndpoints(t *testing.T) {
 
 		if assert.NoError(t, h.GetKitchen(c)) {
 			assert.Equal(t, http.StatusOK, rec.Code)
-			// assert.Contains(t, rec.Body.String(), "Kitchen Display") // Template not impl yet
 		}
 	})
 
-	t.Run("POST /kitchen/order/:id/mark-paid updates status", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/kitchen/order/order-1/mark-paid", nil)
+	t.Run("POST /server/order/:id/mark-paid updates status", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/server/order/order-1/mark-paid", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		c.SetPath("/kitchen/order/:id/mark-paid")
+		c.SetPath("/server/order/:id/mark-paid")
 		c.SetParamNames("id")
 		c.SetParamValues("order-1")
 
-		if assert.NoError(t, h.MarkPaid(c)) {
+		if assert.NoError(t, srv.MarkPaid(c)) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 			// Verify repo update
 			order, _ := mockRepo.FindByID("order-1")

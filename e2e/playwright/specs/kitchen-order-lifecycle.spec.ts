@@ -148,16 +148,39 @@ test.describe("Kitchen order lifecycle", () => {
     const kitchenOrderCard = kitchenStaff.page.locator("div[id^='order-']").filter({ hasText: `Order #${orderNumber}` });
     await expect(kitchenOrderCard).toBeVisible();
 
-    await kitchenOrderCard.getByRole("button", { name: "Mark Paid" }).click();
-    await expect(kitchenOrderCard).toHaveAttribute("data-kitchen-status", "waiting-start");
-    await expect(kitchenOrderCard.getByRole("button", { name: "Start Preparing" })).toBeVisible();
+    // Cook must NOT see Mark Paid on the kitchen board.
+    await expect(kitchenOrderCard.getByRole("button", { name: "Mark Paid" })).toHaveCount(0);
+    // Order should appear with the UNPAID badge while waiting for FOH.
+    await expect(kitchenOrderCard).toContainText("UNPAID");
+    // Start Preparing must be disabled until payment is confirmed.
+    await expect(kitchenOrderCard.getByRole("button", { name: /Awaiting Payment|Start Preparing/ })).toBeDisabled();
+
+    // Owner acts as FOH on the server tablet to mark the order paid.
+    await owner.attemptsTo(OpenRoute("merchant", "/server"));
+    const serverOrderCard = owner.page.locator(`#server-order-${"" /* placeholder */}`);
+    void serverOrderCard;
+    const serverCardByNumber = owner.page.locator("div[id^='server-order-']").filter({ hasText: `Order #${orderNumber}` });
+    await expect(serverCardByNumber).toBeVisible();
+    await serverCardByNumber.getByRole("button", { name: "Mark Paid" }).click();
+    await expect(serverCardByNumber).toBeHidden();
+
+    // Back to the cook: badge should clear, Start Preparing now enabled.
+    await expect(kitchenOrderCard).not.toContainText("UNPAID");
+    await expect(kitchenOrderCard.getByRole("button", { name: "Start Preparing" })).toBeEnabled();
     await expect(customerStatus).toContainText("Paid");
     await expect(customerStatus).not.toContainText("Cash · unpaid");
 
     await kitchenOrderCard.getByRole("button", { name: "Start Preparing" }).click();
     await expect(customerStatus).toContainText("Cooking now");
 
-    await kitchenOrderCard.getByRole("button", { name: "Mark Ready" }).click();
+    // Tick every line item to unlock Bump → Pass.
+    const itemToggles = kitchenOrderCard.locator("[data-kitchen-item-toggle]");
+    const toggleCount = await itemToggles.count();
+    for (let i = 0; i < toggleCount; i++) {
+      await itemToggles.nth(i).click();
+    }
+
+    await kitchenOrderCard.getByRole("button", { name: /Bump → Pass|Mark Ready/ }).click();
     await expect(customerStatus).toContainText("Ready to serve");
 
     await ownerContext.close();

@@ -15,6 +15,7 @@ const (
 
 	// Topic names for internal broadcasting
 	TopicKitchen = "kitchen"
+	TopicServer  = "server"
 	// TopicOrder is a format string for orderNumber.
 	TopicOrder = "order:%s"
 )
@@ -45,6 +46,11 @@ func (h *SSEHandler) OrderStatusStream(c echo.Context) error {
 // KitchenStream handles GET /kitchen/stream
 func (h *SSEHandler) KitchenStream(c echo.Context) error {
 	return h.handleStream(c, TopicKitchen)
+}
+
+// ServerStream handles GET /server/stream
+func (h *SSEHandler) ServerStream(c echo.Context) error {
+	return h.handleStream(c, TopicServer)
 }
 
 func (h *SSEHandler) handleStream(c echo.Context, topic string) error {

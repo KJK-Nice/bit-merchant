@@ -76,6 +76,33 @@ func NewOrderWithCurrency(id common.OrderID, orderNumber common.OrderNumber, res
 	}, nil
 }
 
+// AllItemsPrepComplete reports whether every line item is marked prep complete.
+// An order with no items returns false (defensive — should not occur in practice).
+func (o *Order) AllItemsPrepComplete() bool {
+	if len(o.Items) == 0 {
+		return false
+	}
+	for _, item := range o.Items {
+		if !item.PrepComplete {
+			return false
+		}
+	}
+	return true
+}
+
+// SetItemPrepComplete sets the prep_complete flag for a single line item.
+// Returns ok=false if the item ID is not part of this order.
+func (o *Order) SetItemPrepComplete(itemID common.OrderItemID, complete bool) bool {
+	for i := range o.Items {
+		if o.Items[i].ID == itemID {
+			o.Items[i].PrepComplete = complete
+			o.UpdatedAt = time.Now()
+			return true
+		}
+	}
+	return false
+}
+
 // MarkPaid transitions payment status to paid.
 func (o *Order) MarkPaid() {
 	o.PaymentStatus = common.PaymentStatusPaid

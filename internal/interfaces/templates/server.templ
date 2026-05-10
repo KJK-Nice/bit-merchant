@@ -1,0 +1,146 @@
+package templates
+
+import (
+	"bitmerchant/internal/interfaces/templates/components"
+	"bitmerchant/internal/interfaces/templates/layouts"
+	"bitmerchant/internal/ordering/domain/order"
+	"fmt"
+)
+
+templ ServerPage(orders []*order.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
+	@layouts.Dashboard("Server / FOH", "/server", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
+		<div
+			id="server-display"
+			data-init="@get('/server/stream')"
+			class="space-y-6 mt-4 pb-6"
+		>
+			<section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-muted/50 p-5">
+				<div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(245,158,11,0.12),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(16,185,129,0.1),transparent_45%)]"></div>
+				<div class="relative space-y-2">
+					<div class="flex flex-wrap items-center justify-between gap-2">
+						<div class="flex flex-wrap items-center gap-2">
+							<h1 class="text-2xl font-bold tracking-tight">Server / FOH</h1>
+							<div id="server-stream-state" class="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 px-2 py-1">
+								<span id="server-stream-dot" class="kitchen-stream-dot" data-state="connecting"></span>
+								<span id="server-stream-label" class="text-[10px] font-semibold uppercase tracking-[0.06em] leading-none text-muted-foreground">Checking live updates...</span>
+							</div>
+						</div>
+						<button
+							id="server-refetch"
+							type="button"
+							class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
+							aria-label="Refresh server tablet"
+							title="Refresh"
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M21 12a9 9 0 1 1-2.64-6.36" />
+								<path d="M21 3v6h-6" />
+							</svg>
+						</button>
+					</div>
+					<p class="text-sm text-muted-foreground">Confirm payment for unpaid tickets. Cooks see paid orders only.</p>
+				</div>
+				<div class="relative mt-4">
+					<div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 inline-block">
+						<p class="text-xs font-medium uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300">Awaiting payment</p>
+						<p class="mt-0.5 text-xl font-semibold tabular-nums" data-server-count="unpaid">{ fmt.Sprintf("%d", len(orders)) }</p>
+					</div>
+				</div>
+			</section>
+
+			<div id="server-orders" class="server-orders space-y-3">
+				for _, o := range orders {
+					@components.ServerOrderCard(o)
+				}
+			</div>
+			<p
+				id="server-empty"
+				class={ templ.KV("hidden", len(orders) > 0), "rounded-md border border-dashed border-border/80 bg-background/60 px-3 py-6 text-center text-sm text-muted-foreground" }
+			>
+				No unpaid tickets. Nice work.
+			</p>
+		</div>
+		<style nonce={ templ.GetNonce(ctx) }>
+			.server-orders { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+			@media (min-width: 768px) { .server-orders { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+			@media (min-width: 1280px) { .server-orders { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+		</style>
+		<script nonce={ templ.GetNonce(ctx) }>
+			(function () {
+				const root = document.getElementById("server-display");
+				if (!root) return;
+				const list = document.getElementById("server-orders");
+				const emptyEl = document.getElementById("server-empty");
+				const countEl = root.querySelector('[data-server-count="unpaid"]');
+				const streamDot = document.getElementById("server-stream-dot");
+				const streamLabel = document.getElementById("server-stream-label");
+				const refetchButton = document.getElementById("server-refetch");
+
+				function updateCount() {
+					if (!list) return;
+					const n = list.querySelectorAll(".server-order-card").length;
+					if (countEl) countEl.textContent = String(n);
+					if (emptyEl) emptyEl.classList.toggle("hidden", n > 0);
+				}
+
+				function ageLabel(minutes) {
+					if (minutes < 1) return "now";
+					if (minutes < 60) return `${minutes}m`;
+					const hours = Math.floor(minutes / 60);
+					const remaining = minutes % 60;
+					if (hours < 24) return remaining === 0 ? `${hours}h` : `${hours}h ${remaining}m`;
+					return `${Math.floor(hours / 24)}d`;
+				}
+
+				function updateAges() {
+					const nowUnix = Math.floor(Date.now() / 1000);
+					root.querySelectorAll(".server-order-card").forEach((card) => {
+						const ageNode = card.querySelector("[data-order-age]");
+						if (!ageNode) return;
+						const ts = Number.parseInt(card.getAttribute("data-order-created-at") || "0", 10);
+						if (!Number.isFinite(ts) || ts <= 0) {
+							ageNode.textContent = "Unknown";
+							return;
+						}
+						const minutes = Math.max(0, Math.floor((nowUnix - ts) / 60));
+						ageNode.textContent = ageLabel(minutes);
+					});
+				}
+
+				function setStreamStatus(status) {
+					if (!streamDot || !streamLabel) return;
+					const map = {
+						connected:    ["connected",    "Live updates on"],
+						connecting:   ["connecting",   "Connecting live updates..."],
+						disconnected: ["disconnected", "Live updates offline"],
+						unsupported:  ["unsupported",  "Live updates unavailable"],
+					};
+					const v = map[status] || map.unsupported;
+					streamDot.setAttribute("data-state", v[0]);
+					streamLabel.textContent = v[1];
+				}
+
+				let probe = null;
+				function connect() {
+					if (!window.EventSource) { setStreamStatus("unsupported"); return; }
+					if (probe) probe.close();
+					setStreamStatus("connecting");
+					probe = new EventSource("/server/stream");
+					probe.onopen = () => setStreamStatus("connected");
+					probe.onerror = () => setStreamStatus("disconnected");
+				}
+
+				if (refetchButton) refetchButton.addEventListener("click", () => window.location.reload());
+
+				const observer = new MutationObserver(() => { updateCount(); updateAges(); });
+				if (list) observer.observe(list, { childList: true, subtree: false });
+
+				connect();
+				updateCount();
+				updateAges();
+				window.setInterval(updateAges, 60000);
+				window.addEventListener("beforeunload", () => { if (probe) probe.close(); });
+			})();
+		</script>
+	}
+}
