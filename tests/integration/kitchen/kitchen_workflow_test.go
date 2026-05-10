@@ -72,10 +72,14 @@ func TestKitchenWorkflow(t *testing.T) {
 	markPreparingUC := orderCmd.NewMarkOrderPreparingHandler(orderRepo, eventBus, logger.Logger, nil)
 	markReadyUC := orderCmd.NewMarkOrderReadyHandler(orderRepo, eventBus, logger.Logger, nil)
 	markCompletedUC := orderCmd.NewMarkOrderCompletedHandler(orderRepo, eventBus, logger.Logger, nil)
+	toggleItemPrepUC := orderCmd.NewToggleOrderItemPrepHandler(orderRepo, eventBus, logger.Logger, nil)
 	getMenuUC := menuQuery.NewMenuForCustomerHandler(menuCatRepo, menuItemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
 
+	getUnpaidServerUC := orderQuery.NewUnpaidServerOrdersHandler(orderRepo, nil, nil)
+
 	// Handlers
-	kitchenHandler := orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, nil, nil, "")
+	kitchenHandler := orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, toggleItemPrepUC, nil, nil, "")
+	serverHandler := orderinghttp.NewServerHandler(getUnpaidServerUC, markPaidUC, nil, nil)
 	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, orderRepo, cartService, "")
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
@@ -122,10 +126,10 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Routes
 	e.POST("/order/create", orderHandler.CreateOrder)
 	e.GET("/kitchen", kitchenHandler.GetKitchen)
-	e.POST("/kitchen/order/:id/mark-paid", kitchenHandler.MarkPaid)
 	e.POST("/kitchen/order/:id/mark-preparing", kitchenHandler.MarkPreparing)
 	e.POST("/kitchen/order/:id/mark-ready", kitchenHandler.MarkReady)
 	e.POST("/kitchen/order/:id/mark-completed", kitchenHandler.MarkCompleted)
+	e.POST("/server/order/:id/mark-paid", serverHandler.MarkPaid)
 
 	// --- Test Execution ---
 
@@ -178,20 +182,20 @@ func TestKitchenWorkflow(t *testing.T) {
 	}
 
 	assert.Contains(t, rec.Body.String(), string(orderNumber))
-	assert.Contains(t, rec.Body.String(), "Payment pending")
+	assert.Contains(t, rec.Body.String(), "UNPAID")
+	assert.NotContains(t, rec.Body.String(), "Mark Paid", "kitchen view must not expose Mark Paid")
 
-	// 3. Kitchen Marks Paid
-	req = httptest.NewRequest(http.MethodPost, "/kitchen/order/"+string(orderID)+"/mark-paid", nil)
+	// 3. FOH (server) Marks Paid
+	req = httptest.NewRequest(http.MethodPost, "/server/order/"+string(orderID)+"/mark-paid", nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-	c.SetPath("/kitchen/order/:id/mark-paid")
+	c.SetPath("/server/order/:id/mark-paid")
 	c.SetParamNames("id")
 	c.SetParamValues(string(orderID))
 
-	err = kitchenHandler.MarkPaid(c)
+	err = serverHandler.MarkPaid(c)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, rec.Code)
-	assert.Contains(t, rec.Body.String(), "Start Preparing")
 
 	updatedOrder, _ := orderRepo.FindByID(orderID)
 	assert.Equal(t, common.PaymentStatusPaid, updatedOrder.PaymentStatus)

@@ -16,14 +16,15 @@ import (
 )
 
 type KitchenHandler struct {
-	getOrdersUC     orderQuery.ActiveKitchenOrdersHandler
-	markPaidUC      orderCmd.MarkOrderPaidHandler
-	markPreparingUC orderCmd.MarkOrderPreparingHandler
-	markReadyUC     orderCmd.MarkOrderReadyHandler
-	markCompletedUC orderCmd.MarkOrderCompletedHandler
-	restaurantRepo  restaurant.Repository
-	membershipRepo  membership.Repository
-	vapidPublicKey  string
+	getOrdersUC      orderQuery.ActiveKitchenOrdersHandler
+	markPaidUC       orderCmd.MarkOrderPaidHandler
+	markPreparingUC  orderCmd.MarkOrderPreparingHandler
+	markReadyUC      orderCmd.MarkOrderReadyHandler
+	markCompletedUC  orderCmd.MarkOrderCompletedHandler
+	toggleItemPrepUC orderCmd.ToggleOrderItemPrepHandler
+	restaurantRepo   restaurant.Repository
+	membershipRepo   membership.Repository
+	vapidPublicKey   string
 }
 
 func NewKitchenHandler(
@@ -32,19 +33,21 @@ func NewKitchenHandler(
 	markPreparingUC orderCmd.MarkOrderPreparingHandler,
 	markReadyUC orderCmd.MarkOrderReadyHandler,
 	markCompletedUC orderCmd.MarkOrderCompletedHandler,
+	toggleItemPrepUC orderCmd.ToggleOrderItemPrepHandler,
 	restaurantRepo restaurant.Repository,
 	membershipRepo membership.Repository,
 	vapidPublicKey string,
 ) *KitchenHandler {
 	return &KitchenHandler{
-		getOrdersUC:     getOrdersUC,
-		markPaidUC:      markPaidUC,
-		markPreparingUC: markPreparingUC,
-		markReadyUC:     markReadyUC,
-		markCompletedUC: markCompletedUC,
-		restaurantRepo:  restaurantRepo,
-		membershipRepo:  membershipRepo,
-		vapidPublicKey:  vapidPublicKey,
+		getOrdersUC:      getOrdersUC,
+		markPaidUC:       markPaidUC,
+		markPreparingUC:  markPreparingUC,
+		markReadyUC:      markReadyUC,
+		markCompletedUC:  markCompletedUC,
+		toggleItemPrepUC: toggleItemPrepUC,
+		restaurantRepo:   restaurantRepo,
+		membershipRepo:   membershipRepo,
+		vapidPublicKey:   vapidPublicKey,
 	}
 }
 
@@ -64,15 +67,6 @@ func (h *KitchenHandler) GetKitchen(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to load navigation")
 	}
 	return templates.KitchenPage(orders, commonhttp.CSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate, h.vapidPublicKey).Render(c.Request().Context(), c.Response())
-}
-
-func (h *KitchenHandler) MarkPaid(c echo.Context) error {
-	id := c.Param("id")
-	order, err := h.markPaidUC.Handle(c.Request().Context(), orderCmd.MarkOrderPaid{OrderID: common.OrderID(id)})
-	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
-	}
-	return components.OrderCard(order).Render(c.Request().Context(), c.Response())
 }
 
 func (h *KitchenHandler) MarkPreparing(c echo.Context) error {
@@ -96,6 +90,19 @@ func (h *KitchenHandler) MarkReady(c echo.Context) error {
 func (h *KitchenHandler) MarkCompleted(c echo.Context) error {
 	id := c.Param("id")
 	order, err := h.markCompletedUC.Handle(c.Request().Context(), orderCmd.MarkOrderCompleted{OrderID: common.OrderID(id)})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	return components.OrderCard(order).Render(c.Request().Context(), c.Response())
+}
+
+func (h *KitchenHandler) ToggleItemPrep(c echo.Context) error {
+	orderID := c.Param("id")
+	itemID := c.Param("itemID")
+	order, err := h.toggleItemPrepUC.Handle(c.Request().Context(), orderCmd.ToggleOrderItemPrep{
+		OrderID: common.OrderID(orderID),
+		ItemID:  common.OrderItemID(itemID),
+	})
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}

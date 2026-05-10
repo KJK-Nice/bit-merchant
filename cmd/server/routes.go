@@ -21,6 +21,7 @@ type routeHandlers struct {
 	Order     *orderinghttp.OrderHandler
 	Places    *placeshttp.PlacesHandler
 	Kitchen   *orderinghttp.KitchenHandler
+	Server    *orderinghttp.ServerHandler
 	Push      *orderinghttp.PushHandler
 	Admin     *restauranthttp.AdminHandler
 	Owner     *restauranthttp.OwnerHandler
@@ -56,11 +57,17 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	kitchenGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, common.RoleOwner, common.RoleKitchenStaff))
 	kitchenGroup.GET("", handlers.Kitchen.GetKitchen)
 	kitchenGroup.GET("/stream", handlers.SSE.KitchenStream)
-	kitchenGroup.POST("/order/:id/mark-paid", handlers.Kitchen.MarkPaid)
 	kitchenGroup.POST("/order/:id/mark-preparing", handlers.Kitchen.MarkPreparing)
 	kitchenGroup.POST("/order/:id/mark-ready", handlers.Kitchen.MarkReady)
 	kitchenGroup.POST("/order/:id/mark-completed", handlers.Kitchen.MarkCompleted)
+	kitchenGroup.POST("/order/:id/item/:itemID/toggle-prep", handlers.Kitchen.ToggleItemPrep)
 	kitchenGroup.POST("/push/subscribe", handlers.Push.SubscribeKitchen)
+
+	serverGroup := e.Group("/server")
+	serverGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, common.RoleOwner, common.RoleServer))
+	serverGroup.GET("", handlers.Server.GetServer)
+	serverGroup.GET("/stream", handlers.SSE.ServerStream)
+	serverGroup.POST("/order/:id/mark-paid", handlers.Server.MarkPaid)
 
 	adminGroup := e.Group("/admin")
 	adminGroup.Use(middleware.RequireAuth(), middleware.RequireRole(membershipRepo, common.RoleOwner))

@@ -36,6 +36,7 @@ type MemberRole string
 const (
 	RoleOwner        MemberRole = "owner"
 	RoleKitchenStaff MemberRole = "kitchen_staff"
+	RoleServer       MemberRole = "server"
 	RoleCustomer     MemberRole = "customer"
 )
 
