@@ -42,6 +42,9 @@ templ FooterNav(props Props) {
 			@NavItem(props.CurrentPath, "/kitchen", "Kitchen") {
 				@icon.Utensils(icon.Props{Class: "size-5"})
 			}
+			@NavItem(props.CurrentPath, "/server", "Server") {
+				@icon.ConciergeBell(icon.Props{Class: "size-5"})
+			}
 			@NavItem(props.CurrentPath, "/admin/dashboard", "Menu") {
 				@icon.Menu(icon.Props{Class: "size-5"})
 			}
