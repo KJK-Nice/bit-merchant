@@ -4,21 +4,38 @@ import (
 	"errors"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 )
+
+// OrderItemModifier captures a modifier choice that was active when the order was placed.
+type OrderItemModifier struct {
+	GroupName  string
+	OptionName string
+	PriceDelta float64
+}
 
 // OrderItem represents an individual item within an order.
 type OrderItem struct {
-	ID         common.OrderItemID
-	OrderID    common.OrderID
-	MenuItemID common.ItemID
-	Name       string
-	Quantity   int
-	UnitPrice  float64
-	Subtotal   float64
+	ID                  common.OrderItemID
+	OrderID             common.OrderID
+	MenuItemID          common.ItemID
+	Name                string
+	Quantity            int
+	UnitPrice           float64
+	Subtotal            float64
+	Currency            money.Currency
+	Modifiers           []OrderItemModifier
+	SpecialInstructions string
+	PrepComplete        bool
 }
 
-// NewOrderItem creates a new OrderItem.
+// NewOrderItem creates a new OrderItem. Currency defaults to USD.
 func NewOrderItem(id common.OrderItemID, orderID common.OrderID, menuItemID common.ItemID, name string, quantity int, unitPrice float64) (*OrderItem, error) {
+	return NewOrderItemWithCurrency(id, orderID, menuItemID, name, quantity, unitPrice, money.USD, nil, "")
+}
+
+// NewOrderItemWithCurrency creates an OrderItem pinned to the order's currency.
+func NewOrderItemWithCurrency(id common.OrderItemID, orderID common.OrderID, menuItemID common.ItemID, name string, quantity int, unitPrice float64, currency money.Currency, modifiers []OrderItemModifier, specialInstructions string) (*OrderItem, error) {
 	if quantity <= 0 {
 		return nil, errors.New("quantity must be greater than 0")
 	}
@@ -28,15 +45,21 @@ func NewOrderItem(id common.OrderItemID, orderID common.OrderID, menuItemID comm
 	if name == "" {
 		return nil, errors.New("name must not be empty")
 	}
+	if currency.IsZero() {
+		currency = money.USD
+	}
 
 	subtotal := float64(quantity) * unitPrice
 	return &OrderItem{
-		ID:         id,
-		OrderID:    orderID,
-		MenuItemID: menuItemID,
-		Name:       name,
-		Quantity:   quantity,
-		UnitPrice:  unitPrice,
-		Subtotal:   subtotal,
+		ID:                  id,
+		OrderID:             orderID,
+		MenuItemID:          menuItemID,
+		Name:                name,
+		Quantity:            quantity,
+		UnitPrice:           unitPrice,
+		Subtotal:            subtotal,
+		Currency:            currency,
+		Modifiers:           modifiers,
+		SpecialInstructions: specialInstructions,
 	}, nil
 }

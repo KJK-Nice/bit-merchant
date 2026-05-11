@@ -3,6 +3,8 @@
 package selectbox
 
 import (
+	"context"
+
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
@@ -10,6 +12,10 @@ import (
 	"bitmerchant/internal/interfaces/templates/utils"
 	"strconv"
 )
+
+type contextKey string
+
+var contentIDKey contextKey = "contentID"
 
 type Props struct {
 	ID         string
@@ -74,6 +80,8 @@ templ SelectBox(props ...Props) {
 		if len(props) > 0 {
 			p = props[0]
 		}
+		contentID := utils.RandomID()
+		ctx = context.WithValue(ctx, contentIDKey, contentID)
 	}}
 	<div
 		if p.ID != "" {
@@ -172,8 +180,10 @@ templ Trigger(props ...TriggerProps) {
 		if p.ShowPills {
 			p.Multiple = true
 		}
+		contentID, _ := ctx.Value(contentIDKey).(string)
 	}}
 	@popover.Trigger(popover.TriggerProps{
+		For:         contentID,
 		TriggerType: popover.TriggerTypeClick,
 	}) {
 		@button.Button(button.Props{
@@ -263,7 +273,9 @@ templ Content(props ...ContentProps) {
 	if len(props) > 0 {
 		{{ p = props[0] }}
 	}
+	{{ contentID, _ := ctx.Value(contentIDKey).(string) }}
 	@popover.Content(popover.ContentProps{
+		ID:         contentID,
 		Placement:  popover.PlacementBottomStart,
 		Offset:     4,
 		DisableESC: !p.NoSearch,

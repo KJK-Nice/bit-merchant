@@ -22,19 +22,22 @@ import (
 type Ordering struct {
 	CartService *orderCart.CartService
 
-	CreateOrder        orderCmd.CreateOrderHandler
-	MarkOrderPaid      orderCmd.MarkOrderPaidHandler
-	MarkOrderPreparing orderCmd.MarkOrderPreparingHandler
-	MarkOrderReady     orderCmd.MarkOrderReadyHandler
-	MarkOrderCompleted orderCmd.MarkOrderCompletedHandler
+	CreateOrder         orderCmd.CreateOrderHandler
+	MarkOrderPaid       orderCmd.MarkOrderPaidHandler
+	MarkOrderPreparing  orderCmd.MarkOrderPreparingHandler
+	MarkOrderReady      orderCmd.MarkOrderReadyHandler
+	MarkOrderCompleted  orderCmd.MarkOrderCompletedHandler
+	ToggleOrderItemPrep orderCmd.ToggleOrderItemPrepHandler
 
 	GetCustomerOrder  orderQuery.CustomerOrderByLookupHandler
 	GetCustomerOrders orderQuery.CustomerOrdersForSessionHandler
 	GetKitchenOrders  orderQuery.ActiveKitchenOrdersHandler
+	GetUnpaidServer   orderQuery.UnpaidServerOrdersHandler
 
 	CartHandler    *orderinghttp.CartHandler
 	OrderHandler   *orderinghttp.OrderHandler
 	KitchenHandler *orderinghttp.KitchenHandler
+	ServerHandler  *orderinghttp.ServerHandler
 }
 
 // New wires ordering bounded-context handlers and HTTP ports.
@@ -49,24 +52,29 @@ func New(
 	getCustomerOrderByNumberUC := orderQuery.NewCustomerOrderByLookupHandler(repos.Order, nil, nil)
 	getCustomerOrdersUC := orderQuery.NewCustomerOrdersForSessionHandler(repos.Order, nil, nil)
 	getKitchenOrdersUC := orderQuery.NewActiveKitchenOrdersHandler(repos.Order, nil, nil)
+	getUnpaidServerUC := orderQuery.NewUnpaidServerOrdersHandler(repos.Order, nil, nil)
 	markPaidUC := orderCmd.NewMarkOrderPaidHandler(repos.Order, eventBus, logger.Logger, nil)
 	markPreparingUC := orderCmd.NewMarkOrderPreparingHandler(repos.Order, eventBus, logger.Logger, nil)
 	markReadyUC := orderCmd.NewMarkOrderReadyHandler(repos.Order, eventBus, logger.Logger, nil)
 	markCompletedUC := orderCmd.NewMarkOrderCompletedHandler(repos.Order, eventBus, logger.Logger, nil)
+	toggleItemPrepUC := orderCmd.NewToggleOrderItemPrepHandler(repos.Order, eventBus, logger.Logger, nil)
 
 	return Ordering{
-		CartService:        cartService,
-		CreateOrder:        createOrderUC,
-		MarkOrderPaid:      markPaidUC,
-		MarkOrderPreparing: markPreparingUC,
-		MarkOrderReady:     markReadyUC,
-		MarkOrderCompleted: markCompletedUC,
-		GetCustomerOrder:   getCustomerOrderByNumberUC,
-		GetCustomerOrders:  getCustomerOrdersUC,
-		GetKitchenOrders:   getKitchenOrdersUC,
-		CartHandler:        orderinghttp.NewCartHandler(cartService, repos.MenuItem),
-		OrderHandler:       orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, cartService, vapidPublicKey),
-		KitchenHandler:     orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, repos.Restaurant, repos.Membership, vapidPublicKey),
+		CartService:         cartService,
+		CreateOrder:         createOrderUC,
+		MarkOrderPaid:       markPaidUC,
+		MarkOrderPreparing:  markPreparingUC,
+		MarkOrderReady:      markReadyUC,
+		MarkOrderCompleted:  markCompletedUC,
+		ToggleOrderItemPrep: toggleItemPrepUC,
+		GetCustomerOrder:    getCustomerOrderByNumberUC,
+		GetCustomerOrders:   getCustomerOrdersUC,
+		GetKitchenOrders:    getKitchenOrdersUC,
+		GetUnpaidServer:     getUnpaidServerUC,
+		CartHandler:         orderinghttp.NewCartHandler(cartService, repos.MenuItem),
+		OrderHandler:        orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, repos.Order, cartService, vapidPublicKey),
+		KitchenHandler:      orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, toggleItemPrepUC, repos.Restaurant, repos.Membership, vapidPublicKey),
+		ServerHandler:       orderinghttp.NewServerHandler(getUnpaidServerUC, markPaidUC, repos.Restaurant, repos.Membership),
 	}
 }
 
@@ -77,6 +85,7 @@ func RegisterOrderSSEHandlers(router *message.Router, subscriber message.Subscri
 	orderPreparingHandler := ordersse.NewOrderPreparingHandler(logger, sseHandler, orderRepo)
 	orderReadyHandler := ordersse.NewOrderReadyHandler(logger, sseHandler, orderRepo)
 	orderCompletedHandler := ordersse.NewOrderCompletedHandler(logger, sseHandler, orderRepo)
+	orderItemPrepToggledHandler := ordersse.NewOrderItemPrepToggledHandler(logger, sseHandler, orderRepo)
 
 	router.AddConsumerHandler("sse_order_created", common.EventOrderCreated, subscriber, func(msg *message.Message) error {
 		var event orderevent.OrderCreated
@@ -121,5 +130,14 @@ func RegisterOrderSSEHandlers(router *message.Router, subscriber message.Subscri
 			return nil
 		}
 		return orderCompletedHandler.Handle(msg.Context(), event)
+	})
+
+	router.AddConsumerHandler("sse_order_item_prep_toggled", common.EventOrderItemPrepToggled, subscriber, func(msg *message.Message) error {
+		var event orderevent.OrderItemPrepToggled
+		if err := json.Unmarshal(msg.Payload, &event); err != nil {
+			logger.Warn("Skipping malformed order item prep toggled event", "error", err)
+			return nil
+		}
+		return orderItemPrepToggledHandler.Handle(msg.Context(), event)
 	})
 }

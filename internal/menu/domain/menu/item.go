@@ -2,10 +2,28 @@ package menu
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 )
+
+// Option is a single selectable choice within an OptionGroup.
+type Option struct {
+	ID         string
+	Name       string
+	PriceDelta float64 // additional cost; 0 means no surcharge
+}
+
+// OptionGroup is a set of choices attached to a menu item.
+// Required groups are single-select (radio); optional groups are multi-select (checkbox).
+type OptionGroup struct {
+	ID       string
+	Name     string
+	Required bool
+	Options  []Option
+}
 
 // MenuItem represents a food/drink item.
 type MenuItem struct {
@@ -15,19 +33,49 @@ type MenuItem struct {
 	Name             string
 	Description      string
 	Price            float64
+	Currency         money.Currency
 	PhotoURL         string
 	PhotoOriginalURL string
 	IsAvailable      bool
 	DisplayOrder     int
+	IsVegetarian     bool
+	IsGlutenFree     bool
+	IsSpicy          bool
+	OptionGroups     []OptionGroup
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
 
+// HasOptionGroups reports whether the item has any modifier groups.
+func (m *MenuItem) HasOptionGroups() bool {
+	return len(m.OptionGroups) > 0
+}
+
+// Money returns the price as a money.Money value, falling back to USD when
+// the item was loaded from a row that predates currency support.
+func (m *MenuItem) Money() money.Money {
+	c := m.Currency
+	if c.IsZero() {
+		c = money.USD
+	}
+	return money.FromMajor(m.Price, c)
+}
+
 func NewMenuItem(id common.ItemID, categoryID common.CategoryID, restaurantID common.RestaurantID, name string, price float64) (*MenuItem, error) {
+	return NewMenuItemWithCurrency(id, categoryID, restaurantID, name, price, money.USD)
+}
+
+// NewMenuItemWithCurrency creates a menu item priced in the given currency.
+// For SAT, price is the whole-sat count (no decimals) — pass e.g. 5000 for
+// 5,000 sats.
+func NewMenuItemWithCurrency(id common.ItemID, categoryID common.CategoryID, restaurantID common.RestaurantID, name string, price float64, currency money.Currency) (*MenuItem, error) {
 	if err := ValidateItemName(name); err != nil {
 		return nil, err
 	}
-	if err := ValidatePrice(price); err != nil {
+	if currency.IsZero() {
+		currency = money.USD
+	}
+	if err := ValidatePriceForCurrency(price, currency); err != nil {
 		return nil, err
 	}
 
@@ -38,6 +86,7 @@ func NewMenuItem(id common.ItemID, categoryID common.CategoryID, restaurantID co
 		RestaurantID: restaurantID,
 		Name:         name,
 		Price:        price,
+		Currency:     currency,
 		IsAvailable:  true,
 		DisplayOrder: 0,
 		CreatedAt:    now,
@@ -70,8 +119,26 @@ func ValidateItemName(name string) error {
 }
 
 func ValidatePrice(price float64) error {
+	return ValidatePriceForCurrency(price, money.USD)
+}
+
+// ValidatePriceForCurrency enforces sane bounds per currency. SAT prices
+// must be whole numbers (no fractional sats); fiat prices allow decimals
+// down to one minor unit.
+func ValidatePriceForCurrency(price float64, currency money.Currency) error {
 	if price <= 0 {
 		return errors.New("price must be greater than 0")
+	}
+	if currency.Code == money.SAT.Code {
+		if price != float64(int64(price)) {
+			return errors.New("sat price must be a whole number")
+		}
+		// 21M BTC = 2.1e15 sats — well within int64 but cap at 1B sats per
+		// item as a sanity bound (~ $1M USD-equivalent at $100k/BTC).
+		if price > 1_000_000_000 {
+			return errors.New("sat price must be less than 1,000,000,000")
+		}
+		return nil
 	}
 	if price > 100_000_000 {
 		return errors.New("price must be less than 100,000,000")
@@ -117,4 +184,26 @@ func (m *MenuItem) MakeUnavailable() {
 func (m *MenuItem) SetAvailable(isAvailable bool) {
 	m.IsAvailable = isAvailable
 	m.UpdatedAt = time.Now()
+}
+
+func (m *MenuItem) SetDietaryTags(isVegetarian, isGlutenFree, isSpicy bool) {
+	m.IsVegetarian = isVegetarian
+	m.IsGlutenFree = isGlutenFree
+	m.IsSpicy = isSpicy
+	m.UpdatedAt = time.Now()
+}
+
+// DietaryTagsString returns space-separated tag keys for use as a data attribute.
+func (m *MenuItem) DietaryTagsString() string {
+	var tags []string
+	if m.IsVegetarian {
+		tags = append(tags, "vegetarian")
+	}
+	if m.IsGlutenFree {
+		tags = append(tags, "gluten_free")
+	}
+	if m.IsSpicy {
+		tags = append(tags, "spicy")
+	}
+	return strings.Join(tags, " ")
 }

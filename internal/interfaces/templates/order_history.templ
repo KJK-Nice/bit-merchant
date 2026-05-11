@@ -43,7 +43,7 @@ templ OrderHistoryPage(orders []*order.Order) {
 									</div>
 									<div class="flex justify-between items-center text-sm mt-4">
 										<span class="text-muted-foreground">{ fmt.Sprintf("%d items", len(order.Items)) }</span>
-										<span class="font-bold text-base">{ fmt.Sprintf("$%.2f", order.FiatAmount) }</span>
+										<span class="font-bold text-base">{ order.Total().Format() }</span>
 									</div>
 								}
 							}

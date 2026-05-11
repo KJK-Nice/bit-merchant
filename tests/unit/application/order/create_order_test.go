@@ -2,6 +2,7 @@ package order_test
 
 import (
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 
 	"bitmerchant/internal/infrastructure/events"
 	"bitmerchant/internal/infrastructure/logging"
@@ -67,9 +68,49 @@ func TestCreateOrderHandler(t *testing.T) {
 		// Verify Order Saved
 		savedOrder, _ := orderRepo.FindByID(resp.OrderID)
 		assert.Equal(t, common.PaymentStatusPending, savedOrder.PaymentStatus)
-		assert.Equal(t, int64(2000), savedOrder.TotalAmount) // 20.0 * 100
+		assert.Equal(t, int64(2000), savedOrder.TotalAmount) // 20.0 * 100 (USD cents)
 		assert.Equal(t, 20.0, savedOrder.FiatAmount)
+		assert.Equal(t, money.USD, savedOrder.Currency)
+		assert.Equal(t, "$20.00", savedOrder.Total().Format())
 	})
+}
+
+// TestCreateOrderHandler_SatoshiRestaurant exercises the niche-defining SAT
+// path: a Lightning-priced restaurant with whole-sat amounts. Verifies that
+// totals stay integer-clean (no float drift) and format with thousands
+// separators and the "sats" suffix.
+func TestCreateOrderHandler_SatoshiRestaurant(t *testing.T) {
+	orderRepo := memory.NewMemoryOrderRepository()
+	restRepo := memory.NewMemoryRestaurantRepository()
+	eventBus := events.NewEventBus()
+	logger := logging.NewLogger()
+
+	restID := common.RestaurantID("r_sat")
+	rest, err := restaurant.NewRestaurantWithCurrency(restID, "Lightning Cafe", money.SAT)
+	require.NoError(t, err)
+	require.NoError(t, restRepo.Save(rest))
+
+	uc := orderCmd.NewCreateOrderHandler(orderRepo, restRepo, eventBus, logger.Logger, nil)
+
+	cartSvc := cart.NewCartService()
+	sessionID := "sess_sat"
+	item, err := menu.NewMenuItemWithCurrency("i1", "c1", restID, "Espresso", 5_000, money.SAT)
+	require.NoError(t, err)
+	require.NoError(t, cartSvc.AddItem(sessionID, item, 3))
+
+	resp, err := uc.Handle(context.Background(), orderCmd.CreateOrder{
+		RestaurantID:  restID,
+		SessionID:     sessionID,
+		Cart:          cartSvc.GetCart(sessionID),
+		PaymentMethod: common.PaymentMethodTypeCash,
+	})
+	require.NoError(t, err)
+
+	saved, err := orderRepo.FindByID(resp.OrderID)
+	require.NoError(t, err)
+	assert.Equal(t, money.SAT, saved.Currency)
+	assert.Equal(t, int64(15_000), saved.TotalAmount, "3 × 5,000 sats = 15,000 sats (whole units, no scale)")
+	assert.Equal(t, "15,000 sats", saved.Total().Format())
 }
 
 // Regression: replaces a previously-random rand.Intn(10000) generator that

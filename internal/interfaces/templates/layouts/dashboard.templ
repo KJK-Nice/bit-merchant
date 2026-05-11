@@ -197,6 +197,16 @@ templ Dashboard(title string, currentPath string, activeRestaurantLabel string, 
 										<span>Kitchen Display</span>
 									}
 								}
+								@sidebar.MenuItem() {
+									@sidebar.MenuButton(sidebar.MenuButtonProps{
+										Href:     "/server",
+										IsActive: currentPath == "/server",
+										Tooltip:  "Server / FOH",
+									}) {
+										@icon.ConciergeBell(icon.Props{Class: "size-4"})
+										<span>Server</span>
+									}
+								}
 							}
 						}
 						@sidebar.Separator()

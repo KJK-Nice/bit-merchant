@@ -1360,9 +1360,9 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 										}
 										ctx = templ.InitializeContext(ctx)
 										var templ_7745c5c3_Var67 string
-										templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", order.FiatAmount))
+										templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(order.Total().Format())
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 188, Col: 66}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 188, Col: 50}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 										if templ_7745c5c3_Err != nil {

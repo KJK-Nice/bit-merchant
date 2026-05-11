@@ -7,7 +7,6 @@ import (
 
 	commonhttp "bitmerchant/internal/common/http"
 	"bitmerchant/internal/infrastructure/logging"
-	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/ordering/app/event"
 	"bitmerchant/internal/ordering/domain/order"
@@ -43,11 +42,11 @@ func (h *OrderPaidHandler) Handle(ctx context.Context, ev event.OrderPaid) error
 		h.sse.Broadcast(commonhttp.TopicKitchen, msg)
 	}
 
-	var bufStatus bytes.Buffer
-	if err := templates.OrderStatus(order).Render(ctx, &bufStatus); err == nil {
-		msg := commonhttp.FormatDatastarEvent(bufStatus.String())
-		h.sse.Broadcast(fmt.Sprintf(commonhttp.TopicOrder, order.OrderNumber), msg)
-	}
+	// Remove the now-paid card from the FOH/server view.
+	removalSelector := fmt.Sprintf("#server-order-%s", order.ID)
+	removalMsg := commonhttp.FormatDatastarPatch("", removalSelector, "remove")
+	h.sse.Broadcast(commonhttp.TopicServer, removalMsg)
 
+	broadcastCustomerStatus(ctx, h.logger, h.sse, h.repo, order)
 	return nil
 }

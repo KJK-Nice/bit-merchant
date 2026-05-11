@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/payment/domain/payment"
 )
 
@@ -17,36 +18,43 @@ func NewPostgresPaymentRepository(db *sql.DB) *PostgresPaymentRepository {
 	return &PostgresPaymentRepository{db: db}
 }
 
+const paymentSelectCols = `id, order_id, restaurant_id, method, amount, COALESCE(currency, 'USD'), status, created_at, paid_at, failed_at, failure_reason`
+
 func (r *PostgresPaymentRepository) Save(p *payment.Payment) error {
+	currency := p.Currency
+	if currency.IsZero() {
+		currency = money.USD
+	}
+	amountMinor := money.FromMajor(p.Amount, currency).Amount
 	_, err := r.db.Exec(
-		`INSERT INTO payments (id, order_id, restaurant_id, method, amount, status, created_at, paid_at, failed_at, failure_reason)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		`INSERT INTO payments (id, order_id, restaurant_id, method, amount, currency, amount_minor, status, created_at, paid_at, failed_at, failure_reason)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
 		 ON CONFLICT (id) DO UPDATE SET
 		   order_id=EXCLUDED.order_id, status=EXCLUDED.status, paid_at=EXCLUDED.paid_at,
 		   failed_at=EXCLUDED.failed_at, failure_reason=EXCLUDED.failure_reason`,
 		string(p.ID), string(p.OrderID), string(p.RestaurantID),
-		string(p.Method), p.Amount, string(p.Status),
+		string(p.Method), p.Amount, currency.Code, amountMinor, string(p.Status),
 		p.CreatedAt, p.PaidAt, p.FailedAt, p.FailureReason)
 	return err
 }
 
 func (r *PostgresPaymentRepository) FindByID(id common.PaymentID) (*payment.Payment, error) {
 	row := r.db.QueryRow(
-		`SELECT id, order_id, restaurant_id, method, amount, status, created_at, paid_at, failed_at, failure_reason
+		`SELECT `+paymentSelectCols+`
 		 FROM payments WHERE id = $1`, string(id))
 	return scanPayment(row)
 }
 
 func (r *PostgresPaymentRepository) FindByOrderID(orderID common.OrderID) (*payment.Payment, error) {
 	row := r.db.QueryRow(
-		`SELECT id, order_id, restaurant_id, method, amount, status, created_at, paid_at, failed_at, failure_reason
+		`SELECT `+paymentSelectCols+`
 		 FROM payments WHERE order_id = $1 LIMIT 1`, string(orderID))
 	return scanPayment(row)
 }
 
 func (r *PostgresPaymentRepository) FindByRestaurantID(restaurantID common.RestaurantID) ([]*payment.Payment, error) {
 	rows, err := r.db.Query(
-		`SELECT id, order_id, restaurant_id, method, amount, status, created_at, paid_at, failed_at, failure_reason
+		`SELECT `+paymentSelectCols+`
 		 FROM payments WHERE restaurant_id = $1`, string(restaurantID))
 	if err != nil {
 		return nil, err
@@ -81,38 +89,44 @@ func scanPayment(row *sql.Row) (*payment.Payment, error) {
 	var (
 		id, orderID, restID, method, status string
 		amount                              float64
+		currencyCode                        string
 		createdAt                           time.Time
 		paidAt, failedAt                    sql.NullTime
 		failureReason                       sql.NullString
 	)
-	if err := row.Scan(&id, &orderID, &restID, &method, &amount, &status, &createdAt, &paidAt, &failedAt, &failureReason); err != nil {
+	if err := row.Scan(&id, &orderID, &restID, &method, &amount, &currencyCode, &status, &createdAt, &paidAt, &failedAt, &failureReason); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("payment not found")
 		}
 		return nil, err
 	}
-	return buildPayment(id, orderID, restID, method, amount, status, createdAt, paidAt, failedAt, failureReason), nil
+	return buildPayment(id, orderID, restID, method, amount, currencyCode, status, createdAt, paidAt, failedAt, failureReason), nil
 }
 
 func scanPaymentRows(rows *sql.Rows) (*payment.Payment, error) {
 	var (
 		id, orderID, restID, method, status string
 		amount                              float64
+		currencyCode                        string
 		createdAt                           time.Time
 		paidAt, failedAt                    sql.NullTime
 		failureReason                       sql.NullString
 	)
-	if err := rows.Scan(&id, &orderID, &restID, &method, &amount, &status, &createdAt, &paidAt, &failedAt, &failureReason); err != nil {
+	if err := rows.Scan(&id, &orderID, &restID, &method, &amount, &currencyCode, &status, &createdAt, &paidAt, &failedAt, &failureReason); err != nil {
 		return nil, err
 	}
-	return buildPayment(id, orderID, restID, method, amount, status, createdAt, paidAt, failedAt, failureReason), nil
+	return buildPayment(id, orderID, restID, method, amount, currencyCode, status, createdAt, paidAt, failedAt, failureReason), nil
 }
 
-func buildPayment(id, orderID, restID, method string, amount float64, status string, createdAt time.Time, paidAt, failedAt sql.NullTime, failureReason sql.NullString) *payment.Payment {
+func buildPayment(id, orderID, restID, method string, amount float64, currencyCode, status string, createdAt time.Time, paidAt, failedAt sql.NullTime, failureReason sql.NullString) *payment.Payment {
+	currency, err := money.Parse(currencyCode)
+	if err != nil {
+		currency = money.USD
+	}
 	p := &payment.Payment{
 		ID: common.PaymentID(id), OrderID: common.OrderID(orderID),
 		RestaurantID: common.RestaurantID(restID),
-		Method:       common.PaymentMethodType(method), Amount: amount,
+		Method:       common.PaymentMethodType(method), Amount: amount, Currency: currency,
 		Status: common.PaymentStatus(status), CreatedAt: createdAt,
 		FailureReason: failureReason.String,
 	}

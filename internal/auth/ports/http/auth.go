@@ -364,11 +364,13 @@ func (h *AuthHandler) PostNewRestaurant(c echo.Context) error {
 	if name == "" {
 		return c.String(http.StatusBadRequest, "restaurant name is required")
 	}
+	currencyCode := strings.TrimSpace(c.FormValue("baseCurrency"))
 
 	rest, err := h.app.Commands.CreateRestaurantUnderOwner.Handle(c.Request().Context(), authcommand.CreateRestaurantUnderOwner{
 		OwnerUserID:              user.ID,
 		OwnerContextRestaurantID: restaurantID,
 		Name:                     name,
+		CurrencyCode:             currencyCode,
 	})
 	if err != nil {
 		if errors.Is(err, authcommand.ErrNotRestaurantOwner) {

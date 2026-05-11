@@ -19,6 +19,9 @@ type UpdateMenuItem struct {
 	Description  string
 	Price        float64
 	Available    bool
+	IsVegetarian bool
+	IsGlutenFree bool
+	IsSpicy      bool
 }
 
 type UpdateMenuItemHandler decorator.CommandHandler[UpdateMenuItem]
@@ -51,7 +54,13 @@ func (h updateMenuItemHandler) Handle(ctx context.Context, cmd UpdateMenuItem) e
 	if err := validateItemAndCategoryOwnership(item, cat, cmd.RestaurantID); err != nil {
 		return err
 	}
-	if err := validateUpdateMenuItem(cmd); err != nil {
+	if err := menu.ValidateItemName(cmd.Name); err != nil {
+		return err
+	}
+	if err := menu.ValidatePriceForCurrency(cmd.Price, item.Currency); err != nil {
+		return err
+	}
+	if err := menu.ValidateDescription(cmd.Description); err != nil {
 		return err
 	}
 
@@ -63,6 +72,7 @@ func (h updateMenuItemHandler) Handle(ctx context.Context, cmd UpdateMenuItem) e
 	if err := item.SetDescription(cmd.Description); err != nil {
 		return err
 	}
+	item.SetDietaryTags(cmd.IsVegetarian, cmd.IsGlutenFree, cmd.IsSpicy)
 
 	if oldCat != cmd.CategoryID {
 		if err := h.moveItemToCategoryEnd(item, cmd.CategoryID); err != nil {
@@ -79,19 +89,6 @@ func validateItemAndCategoryOwnership(item *menu.MenuItem, cat *menu.MenuCategor
 	}
 	if cat.RestaurantID != restaurantID {
 		return fmt.Errorf("category does not belong to restaurant")
-	}
-	return nil
-}
-
-func validateUpdateMenuItem(cmd UpdateMenuItem) error {
-	if err := menu.ValidateItemName(cmd.Name); err != nil {
-		return err
-	}
-	if err := menu.ValidatePrice(cmd.Price); err != nil {
-		return err
-	}
-	if err := menu.ValidateDescription(cmd.Description); err != nil {
-		return err
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 )
 
 const (
@@ -18,6 +19,7 @@ var ErrInvalidTableCount = errors.New("invalid table count")
 type Restaurant struct {
 	ID             common.RestaurantID
 	Name           string
+	BaseCurrency   money.Currency
 	TableCount     int
 	IsOpen         bool
 	ClosedMessage  string
@@ -26,20 +28,31 @@ type Restaurant struct {
 	UpdatedAt      time.Time
 }
 
-// NewRestaurant creates a new Restaurant with validation.
+// NewRestaurant creates a new Restaurant with validation. The currency
+// defaults to USD; use NewRestaurantWithCurrency to pick THB or SAT.
 func NewRestaurant(id common.RestaurantID, name string) (*Restaurant, error) {
+	return NewRestaurantWithCurrency(id, name, money.USD)
+}
+
+// NewRestaurantWithCurrency creates a Restaurant priced in the given base
+// currency. All menu items, orders, and payments inherit this currency.
+func NewRestaurantWithCurrency(id common.RestaurantID, name string, currency money.Currency) (*Restaurant, error) {
 	if err := ValidateRestaurantName(name); err != nil {
 		return nil, err
+	}
+	if currency.IsZero() {
+		currency = money.USD
 	}
 
 	now := time.Now()
 	return &Restaurant{
-		ID:         id,
-		Name:       name,
-		TableCount: MinTableCount,
-		IsOpen:     true,
-		CreatedAt:  now,
-		UpdatedAt:  now,
+		ID:           id,
+		Name:         name,
+		BaseCurrency: currency,
+		TableCount:   MinTableCount,
+		IsOpen:       true,
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}, nil
 }
 

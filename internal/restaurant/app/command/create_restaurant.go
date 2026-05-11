@@ -7,13 +7,17 @@ import (
 
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/common/decorator"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/restaurant/domain/restaurant"
 	"log/slog"
 )
 
-// CreateRestaurant registers a new restaurant (command payload).
+// CreateRestaurant registers a new restaurant (command payload). CurrencyCode
+// is the base currency the restaurant prices its menu in (USD/THB/SAT). An
+// empty value defaults to USD.
 type CreateRestaurant struct {
-	Name string
+	Name         string
+	CurrencyCode string
 }
 
 type CreateRestaurantHandler decorator.CommandResultHandler[CreateRestaurant, *restaurant.Restaurant]
@@ -34,7 +38,12 @@ func (h createRestaurantHandler) Handle(ctx context.Context, cmd CreateRestauran
 	_ = ctx
 	id := common.RestaurantID(fmt.Sprintf("rest_%d", time.Now().UnixNano()))
 
-	r, err := restaurant.NewRestaurant(id, cmd.Name)
+	currency, err := money.Parse(cmd.CurrencyCode)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := restaurant.NewRestaurantWithCurrency(id, cmd.Name, currency)
 	if err != nil {
 		return nil, err
 	}

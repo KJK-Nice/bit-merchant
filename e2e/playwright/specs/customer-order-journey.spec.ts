@@ -33,8 +33,8 @@ test.describe("Customer full journey", () => {
 
     const statusHeadingVisible = await customer.asks(TextVisible(`Order #${orderNumber}`));
     expect(statusHeadingVisible).toBeTruthy();
-    await expect(customer.page.getByText("Total:")).toBeVisible();
-    await expect(customer.page.getByText("Items")).toBeVisible();
+    await expect(customer.page.getByText("Total", { exact: true })).toBeVisible();
+    await expect(customer.page.getByText("Your order")).toBeVisible();
 
     await context.close();
   });

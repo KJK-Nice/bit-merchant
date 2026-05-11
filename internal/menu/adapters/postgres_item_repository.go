@@ -2,10 +2,12 @@ package adapters
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"time"
 
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/menu/domain/menu"
 )
 
@@ -17,46 +19,66 @@ func NewPostgresItemRepository(db *sql.DB) *PostgresItemRepository {
 	return &PostgresItemRepository{db: db}
 }
 
+const itemSelectCols = `id, category_id, restaurant_id, name, description, price, COALESCE(currency, 'USD'), COALESCE(price_minor, 0), photo_url, photo_original_url, is_available, display_order, created_at, updated_at, COALESCE(is_vegetarian, false), COALESCE(is_gluten_free, false), COALESCE(is_spicy, false), COALESCE(option_groups, '[]'::jsonb)`
+
 func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
-	_, err := r.db.Exec(
-		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	currency, priceMinor := itemCurrencyAndMinor(item)
+	optionGroupsJSON, err := marshalOptionGroups(item.OptionGroups)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.Exec(
+		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, currency, price_minor, photo_url, photo_original_url, is_available, display_order, created_at, updated_at, is_vegetarian, is_gluten_free, is_spicy, option_groups)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		 ON CONFLICT (id) DO UPDATE
 		 SET category_id = EXCLUDED.category_id, name = EXCLUDED.name,
 		     description = EXCLUDED.description, price = EXCLUDED.price,
+		     currency = EXCLUDED.currency, price_minor = EXCLUDED.price_minor,
 		     photo_url = EXCLUDED.photo_url, photo_original_url = EXCLUDED.photo_original_url,
-		     is_available = EXCLUDED.is_available, display_order = EXCLUDED.display_order, updated_at = EXCLUDED.updated_at`,
+		     is_available = EXCLUDED.is_available, display_order = EXCLUDED.display_order,
+		     is_vegetarian = EXCLUDED.is_vegetarian, is_gluten_free = EXCLUDED.is_gluten_free,
+		     is_spicy = EXCLUDED.is_spicy, option_groups = EXCLUDED.option_groups,
+		     updated_at = EXCLUDED.updated_at`,
 		string(item.ID), string(item.CategoryID), string(item.RestaurantID),
 		item.Name, item.Description, item.Price,
+		currency.Code, priceMinor,
 		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder,
-		item.CreatedAt, item.UpdatedAt)
+		item.CreatedAt, item.UpdatedAt,
+		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy, optionGroupsJSON)
 	return err
 }
 
 func (r *PostgresItemRepository) FindByID(id common.ItemID) (*menu.MenuItem, error) {
 	row := r.db.QueryRow(
-		`SELECT id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at
+		`SELECT `+itemSelectCols+`
 		 FROM menu_items WHERE id = $1`, string(id))
 	return scanItem(row)
 }
 
 func (r *PostgresItemRepository) FindByCategoryID(categoryID common.CategoryID) ([]*menu.MenuItem, error) {
-	return r.queryItems(`SELECT id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at FROM menu_items WHERE category_id = $1`, string(categoryID))
+	return r.queryItems(`SELECT `+itemSelectCols+` FROM menu_items WHERE category_id = $1`, string(categoryID))
 }
 
 func (r *PostgresItemRepository) FindByRestaurantID(restaurantID common.RestaurantID) ([]*menu.MenuItem, error) {
-	return r.queryItems(`SELECT id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at FROM menu_items WHERE restaurant_id = $1`, string(restaurantID))
+	return r.queryItems(`SELECT `+itemSelectCols+` FROM menu_items WHERE restaurant_id = $1`, string(restaurantID))
 }
 
 func (r *PostgresItemRepository) FindAvailableByRestaurantID(restaurantID common.RestaurantID) ([]*menu.MenuItem, error) {
-	return r.queryItems(`SELECT id, category_id, restaurant_id, name, description, price, photo_url, photo_original_url, is_available, display_order, created_at, updated_at FROM menu_items WHERE restaurant_id = $1 AND is_available = true`, string(restaurantID))
+	return r.queryItems(`SELECT `+itemSelectCols+` FROM menu_items WHERE restaurant_id = $1 AND is_available = true`, string(restaurantID))
 }
 
 func (r *PostgresItemRepository) Update(item *menu.MenuItem) error {
+	currency, priceMinor := itemCurrencyAndMinor(item)
+	optionGroupsJSON, err := marshalOptionGroups(item.OptionGroups)
+	if err != nil {
+		return err
+	}
 	result, err := r.db.Exec(
-		`UPDATE menu_items SET category_id=$2, name=$3, description=$4, price=$5, photo_url=$6, photo_original_url=$7, is_available=$8, display_order=$9, updated_at=$10 WHERE id=$1`,
+		`UPDATE menu_items SET category_id=$2, name=$3, description=$4, price=$5, currency=$6, price_minor=$7, photo_url=$8, photo_original_url=$9, is_available=$10, display_order=$11, is_vegetarian=$12, is_gluten_free=$13, is_spicy=$14, option_groups=$15, updated_at=$16 WHERE id=$1`,
 		string(item.ID), string(item.CategoryID), item.Name, item.Description, item.Price,
-		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder, item.UpdatedAt)
+		currency.Code, priceMinor,
+		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder,
+		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy, optionGroupsJSON, item.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -181,49 +203,112 @@ func (r *PostgresItemRepository) queryItems(query string, args ...interface{}) (
 	return result, rows.Err()
 }
 
+type itemRowFields struct {
+	id, catID, restID, name string
+	description             sql.NullString
+	price                   float64
+	currencyCode            string
+	priceMinor              int64
+	photoURL, photoOrigURL  sql.NullString
+	isAvailable             bool
+	displayOrder            int
+	createdAt, updatedAt    time.Time
+	isVegetarian            bool
+	isGlutenFree            bool
+	isSpicy                 bool
+	optionGroupsJSON        []byte
+}
+
+func (f *itemRowFields) toMenuItem() *menu.MenuItem {
+	currency, err := money.Parse(f.currencyCode)
+	if err != nil {
+		currency = money.USD
+	}
+	groups := unmarshalOptionGroups(f.optionGroupsJSON)
+	return &menu.MenuItem{
+		ID: common.ItemID(f.id), CategoryID: common.CategoryID(f.catID),
+		RestaurantID: common.RestaurantID(f.restID), Name: f.name,
+		Description: f.description.String, Price: f.price, Currency: currency,
+		PhotoURL: f.photoURL.String, PhotoOriginalURL: f.photoOrigURL.String,
+		IsAvailable: f.isAvailable, DisplayOrder: f.displayOrder,
+		IsVegetarian: f.isVegetarian, IsGlutenFree: f.isGlutenFree, IsSpicy: f.isSpicy,
+		OptionGroups: groups,
+		CreatedAt:    f.createdAt, UpdatedAt: f.updatedAt,
+	}
+}
+
 func scanItem(row *sql.Row) (*menu.MenuItem, error) {
-	var (
-		id, catID, restID, name string
-		description             sql.NullString
-		price                   float64
-		photoURL, photoOrigURL  sql.NullString
-		isAvailable             bool
-		displayOrder            int
-		createdAt, updatedAt    time.Time
-	)
-	if err := row.Scan(&id, &catID, &restID, &name, &description, &price, &photoURL, &photoOrigURL, &isAvailable, &displayOrder, &createdAt, &updatedAt); err != nil {
+	var f itemRowFields
+	if err := row.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt, &f.isVegetarian, &f.isGlutenFree, &f.isSpicy, &f.optionGroupsJSON); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("menu item not found")
 		}
 		return nil, err
 	}
-	return &menu.MenuItem{
-		ID: common.ItemID(id), CategoryID: common.CategoryID(catID),
-		RestaurantID: common.RestaurantID(restID), Name: name,
-		Description: description.String, Price: price,
-		PhotoURL: photoURL.String, PhotoOriginalURL: photoOrigURL.String,
-		IsAvailable: isAvailable, DisplayOrder: displayOrder, CreatedAt: createdAt, UpdatedAt: updatedAt,
-	}, nil
+	return f.toMenuItem(), nil
 }
 
 func scanItemRows(rows *sql.Rows) (*menu.MenuItem, error) {
-	var (
-		id, catID, restID, name string
-		description             sql.NullString
-		price                   float64
-		photoURL, photoOrigURL  sql.NullString
-		isAvailable             bool
-		displayOrder            int
-		createdAt, updatedAt    time.Time
-	)
-	if err := rows.Scan(&id, &catID, &restID, &name, &description, &price, &photoURL, &photoOrigURL, &isAvailable, &displayOrder, &createdAt, &updatedAt); err != nil {
+	var f itemRowFields
+	if err := rows.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt, &f.isVegetarian, &f.isGlutenFree, &f.isSpicy, &f.optionGroupsJSON); err != nil {
 		return nil, err
 	}
-	return &menu.MenuItem{
-		ID: common.ItemID(id), CategoryID: common.CategoryID(catID),
-		RestaurantID: common.RestaurantID(restID), Name: name,
-		Description: description.String, Price: price,
-		PhotoURL: photoURL.String, PhotoOriginalURL: photoOrigURL.String,
-		IsAvailable: isAvailable, DisplayOrder: displayOrder, CreatedAt: createdAt, UpdatedAt: updatedAt,
-	}, nil
+	return f.toMenuItem(), nil
+}
+
+// jsonOptionGroup mirrors menu.OptionGroup for JSON serialisation (snake_case keys).
+type jsonOptionGroup struct {
+	ID       string       `json:"id"`
+	Name     string       `json:"name"`
+	Required bool         `json:"required"`
+	Options  []jsonOption `json:"options"`
+}
+
+type jsonOption struct {
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	PriceDelta float64 `json:"price_delta"`
+}
+
+func marshalOptionGroups(groups []menu.OptionGroup) ([]byte, error) {
+	if len(groups) == 0 {
+		return []byte("[]"), nil
+	}
+	jgs := make([]jsonOptionGroup, len(groups))
+	for i, g := range groups {
+		jos := make([]jsonOption, len(g.Options))
+		for j, o := range g.Options {
+			jos[j] = jsonOption{ID: o.ID, Name: o.Name, PriceDelta: o.PriceDelta}
+		}
+		jgs[i] = jsonOptionGroup{ID: g.ID, Name: g.Name, Required: g.Required, Options: jos}
+	}
+	return json.Marshal(jgs)
+}
+
+func unmarshalOptionGroups(data []byte) []menu.OptionGroup {
+	if len(data) == 0 {
+		return nil
+	}
+	var jgs []jsonOptionGroup
+	if err := json.Unmarshal(data, &jgs); err != nil {
+		return nil
+	}
+	groups := make([]menu.OptionGroup, len(jgs))
+	for i, jg := range jgs {
+		opts := make([]menu.Option, len(jg.Options))
+		for j, jo := range jg.Options {
+			opts[j] = menu.Option{ID: jo.ID, Name: jo.Name, PriceDelta: jo.PriceDelta}
+		}
+		groups[i] = menu.OptionGroup{ID: jg.ID, Name: jg.Name, Required: jg.Required, Options: opts}
+	}
+	return groups
+}
+
+func itemCurrencyAndMinor(item *menu.MenuItem) (money.Currency, int64) {
+	currency := item.Currency
+	if currency.IsZero() {
+		currency = money.USD
+	}
+	priceMinor := money.FromMajor(item.Price, currency).Amount
+	return currency, priceMinor
 }

@@ -2,9 +2,11 @@ package domain_test
 
 import (
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/menu/domain/menu"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
@@ -64,7 +66,25 @@ func TestNewMenuItem(t *testing.T) {
 		assert.Equal(t, id, item.ID)
 		assert.Equal(t, name, item.Name)
 		assert.Equal(t, price, item.Price)
+		assert.Equal(t, money.USD, item.Currency, "default currency must be USD for legacy callers")
 		assert.True(t, item.IsAvailable)
+	})
+
+	t.Run("should create satoshi-priced item", func(t *testing.T) {
+		item, err := menu.NewMenuItemWithCurrency("item_sat", "cat", "rest", "Espresso", 5_000, money.SAT)
+		require.NoError(t, err)
+		assert.Equal(t, money.SAT, item.Currency)
+		assert.Equal(t, "5,000 sats", item.Money().Format())
+	})
+
+	t.Run("should reject fractional sat prices", func(t *testing.T) {
+		_, err := menu.NewMenuItemWithCurrency("id", "cat", "rest", "n", 0.5, money.SAT)
+		assert.Error(t, err)
+	})
+
+	t.Run("should reject sat prices above the cap", func(t *testing.T) {
+		_, err := menu.NewMenuItemWithCurrency("id", "cat", "rest", "n", 2_000_000_000, money.SAT)
+		assert.Error(t, err)
 	})
 
 	t.Run("should fail with invalid price", func(t *testing.T) {

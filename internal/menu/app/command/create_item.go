@@ -7,18 +7,24 @@ import (
 
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/common/decorator"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/menu/domain/menu"
 	"log/slog"
 )
 
-// CreateMenuItem creates a new menu item in a category.
+// CreateMenuItem creates a new menu item in a category. CurrencyCode is the
+// currency the price is denominated in; empty defaults to USD.
 type CreateMenuItem struct {
 	RestaurantID common.RestaurantID
 	CategoryID   common.CategoryID
 	Name         string
 	Description  string
 	Price        float64
+	CurrencyCode string
 	Available    bool
+	IsVegetarian bool
+	IsGlutenFree bool
+	IsSpicy      bool
 }
 
 type CreateMenuItemHandler decorator.CommandResultHandler[CreateMenuItem, *menu.MenuItem]
@@ -39,7 +45,11 @@ func (h createMenuItemHandler) Handle(ctx context.Context, cmd CreateMenuItem) (
 	_ = ctx
 	id := common.ItemID(fmt.Sprintf("item_%d", time.Now().UnixNano()))
 
-	item, err := menu.NewMenuItem(id, cmd.CategoryID, cmd.RestaurantID, cmd.Name, cmd.Price)
+	currency, err := money.Parse(cmd.CurrencyCode)
+	if err != nil {
+		return nil, err
+	}
+	item, err := menu.NewMenuItemWithCurrency(id, cmd.CategoryID, cmd.RestaurantID, cmd.Name, cmd.Price, currency)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +58,7 @@ func (h createMenuItemHandler) Handle(ctx context.Context, cmd CreateMenuItem) (
 		return nil, err
 	}
 	item.SetAvailable(cmd.Available)
+	item.SetDietaryTags(cmd.IsVegetarian, cmd.IsGlutenFree, cmd.IsSpicy)
 
 	maxOrder := -1
 	siblings, err := h.repo.FindByCategoryID(cmd.CategoryID)
