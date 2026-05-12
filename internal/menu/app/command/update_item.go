@@ -59,26 +59,11 @@ func NewUpdateMenuItemHandler(itemRepo menu.ItemRepository, catRepo menu.Categor
 
 func (h updateMenuItemHandler) Handle(ctx context.Context, cmd UpdateMenuItem) error {
 	_ = ctx
-	item, err := h.itemRepo.FindByID(cmd.ItemID)
+	item, cat, err := h.loadItemAndCategory(cmd)
 	if err != nil {
 		return err
 	}
-
-	cat, err := h.catRepo.FindByID(cmd.CategoryID)
-	if err != nil {
-		return err
-	}
-
-	if err := validateItemAndCategoryOwnership(item, cat, cmd.RestaurantID); err != nil {
-		return err
-	}
-	if err := menu.ValidateItemName(cmd.Name); err != nil {
-		return err
-	}
-	if err := menu.ValidatePriceForCurrency(cmd.Price, item.Currency); err != nil {
-		return err
-	}
-	if err := menu.ValidateDescription(cmd.Description); err != nil {
+	if err := validateUpdateMenuItem(cmd, item, cat); err != nil {
 		return err
 	}
 
@@ -105,25 +90,89 @@ func (h updateMenuItemHandler) Handle(ctx context.Context, cmd UpdateMenuItem) e
 	return h.itemRepo.Update(item)
 }
 
+func (h updateMenuItemHandler) loadItemAndCategory(cmd UpdateMenuItem) (*menu.MenuItem, *menu.MenuCategory, error) {
+	item, err := h.itemRepo.FindByID(cmd.ItemID)
+	if err != nil {
+		return nil, nil, err
+	}
+	cat, err := h.catRepo.FindByID(cmd.CategoryID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return item, cat, nil
+}
+
+func validateUpdateMenuItem(cmd UpdateMenuItem, item *menu.MenuItem, cat *menu.MenuCategory) error {
+	if err := validateItemAndCategoryOwnership(item, cat, cmd.RestaurantID); err != nil {
+		return err
+	}
+	if err := menu.ValidateItemName(cmd.Name); err != nil {
+		return err
+	}
+	if err := menu.ValidatePriceForCurrency(cmd.Price, item.Currency); err != nil {
+		return err
+	}
+	return menu.ValidateDescription(cmd.Description)
+}
+
 // applyOptionalFields applies the editor-only overlay fields. Nil pointers /
 // nil slices leave the existing value untouched so callers that don't know
 // about the new fields keep working.
 func applyOptionalFields(item *menu.MenuItem, cmd UpdateMenuItem) error {
-	if cmd.SpiceLevel != nil {
-		if err := item.SetSpiceLevel(*cmd.SpiceLevel); err != nil {
+	if err := applyOptionalValidatedSetters(item, cmd); err != nil {
+		return err
+	}
+	applyOptionalFlags(item, cmd)
+	return nil
+}
+
+func applyOptionalValidatedSetters(item *menu.MenuItem, cmd UpdateMenuItem) error {
+	for _, step := range optionalSetters(cmd) {
+		if step.set == nil {
+			continue
+		}
+		if err := step.set(item); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// optionalSetters returns the slice of per-field setters that need to run when
+// the cmd carries a non-nil pointer for that field. A nil function means "skip".
+func optionalSetters(cmd UpdateMenuItem) []struct {
+	set func(*menu.MenuItem) error
+} {
+	type step = struct{ set func(*menu.MenuItem) error }
+	steps := []step{{}, {}, {}, {}, {}, {}}
+	if cmd.SpiceLevel != nil {
+		v := *cmd.SpiceLevel
+		steps[0].set = func(m *menu.MenuItem) error { return m.SetSpiceLevel(v) }
 	}
 	if cmd.Schedule != nil {
-		if err := item.SetSchedule(*cmd.Schedule); err != nil {
-			return err
-		}
+		v := *cmd.Schedule
+		steps[1].set = func(m *menu.MenuItem) error { return m.SetSchedule(v) }
 	}
 	if cmd.SKU != nil {
-		if err := item.SetSKU(*cmd.SKU); err != nil {
-			return err
-		}
+		v := *cmd.SKU
+		steps[2].set = func(m *menu.MenuItem) error { return m.SetSKU(v) }
 	}
+	if cmd.Allergens != nil {
+		v := *cmd.Allergens
+		steps[3].set = func(m *menu.MenuItem) error { return m.SetAllergens(v) }
+	}
+	if cmd.Badges != nil {
+		v := *cmd.Badges
+		steps[4].set = func(m *menu.MenuItem) error { return m.SetBadges(v) }
+	}
+	if cmd.OptionGroups != nil {
+		v := *cmd.OptionGroups
+		steps[5].set = func(m *menu.MenuItem) error { return m.SetOptionGroups(v) }
+	}
+	return steps
+}
+
+func applyOptionalFlags(item *menu.MenuItem, cmd UpdateMenuItem) {
 	if cmd.IsVegan != nil {
 		item.IsVegan = *cmd.IsVegan
 	}
@@ -136,25 +185,9 @@ func applyOptionalFields(item *menu.MenuItem, cmd UpdateMenuItem) error {
 	if cmd.IsNutFree != nil {
 		item.IsNutFree = *cmd.IsNutFree
 	}
-	if cmd.Allergens != nil {
-		if err := item.SetAllergens(*cmd.Allergens); err != nil {
-			return err
-		}
-	}
-	if cmd.Badges != nil {
-		if err := item.SetBadges(*cmd.Badges); err != nil {
-			return err
-		}
-	}
 	if cmd.AllowSpecialInstructions != nil {
 		item.SetAllowSpecialInstructions(*cmd.AllowSpecialInstructions)
 	}
-	if cmd.OptionGroups != nil {
-		if err := item.SetOptionGroups(*cmd.OptionGroups); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func validateItemAndCategoryOwnership(item *menu.MenuItem, cat *menu.MenuCategory, restaurantID common.RestaurantID) error {

@@ -357,6 +357,22 @@ func NormalizeAllergens(in []string) ([]string, error) {
 // ValidateOptionGroupRules enforces: MinSelections >= 0, MaxSelections >= MinSelections when MaxSelections > 0,
 // Required => MinSelections >= 1, DefaultOptionID (if set) references an Option in the group, and option IDs are unique.
 func ValidateOptionGroupRules(g OptionGroup) error {
+	if err := validateOptionGroupHeader(g); err != nil {
+		return err
+	}
+	ids, err := validateOptionGroupOptions(g.Options)
+	if err != nil {
+		return err
+	}
+	if g.DefaultOptionID != nil {
+		if _, ok := ids[*g.DefaultOptionID]; !ok {
+			return errors.New("default option id must reference an option in the group")
+		}
+	}
+	return nil
+}
+
+func validateOptionGroupHeader(g OptionGroup) error {
 	if strings.TrimSpace(g.Name) == "" {
 		return errors.New("option group name must not be empty")
 	}
@@ -369,26 +385,32 @@ func ValidateOptionGroupRules(g OptionGroup) error {
 	if g.Required && g.MinSelections < 1 {
 		return errors.New("required option group must have MinSelections >= 1")
 	}
-	seen := map[string]struct{}{}
-	for _, o := range g.Options {
-		if strings.TrimSpace(o.Name) == "" {
-			return errors.New("option name must not be empty")
-		}
-		if o.PriceDelta < 0 {
-			return errors.New("option price delta must be >= 0")
-		}
-		if o.ID == "" {
-			return errors.New("option id must not be empty")
+	return nil
+}
+
+func validateOptionGroupOptions(opts []Option) (map[string]struct{}, error) {
+	seen := make(map[string]struct{}, len(opts))
+	for _, o := range opts {
+		if err := validateOption(o); err != nil {
+			return nil, err
 		}
 		if _, dup := seen[o.ID]; dup {
-			return errors.New("option ids must be unique within a group")
+			return nil, errors.New("option ids must be unique within a group")
 		}
 		seen[o.ID] = struct{}{}
 	}
-	if g.DefaultOptionID != nil {
-		if _, ok := seen[*g.DefaultOptionID]; !ok {
-			return errors.New("default option id must reference an option in the group")
-		}
+	return seen, nil
+}
+
+func validateOption(o Option) error {
+	if strings.TrimSpace(o.Name) == "" {
+		return errors.New("option name must not be empty")
+	}
+	if o.PriceDelta < 0 {
+		return errors.New("option price delta must be >= 0")
+	}
+	if o.ID == "" {
+		return errors.New("option id must not be empty")
 	}
 	return nil
 }
