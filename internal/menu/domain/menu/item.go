@@ -17,33 +17,74 @@ type Option struct {
 }
 
 // OptionGroup is a set of choices attached to a menu item.
-// Required groups are single-select (radio); optional groups are multi-select (checkbox).
+// Required groups must have MinSelections >= 1; MaxSelections caps multi-select groups.
+// DefaultOptionID, when non-nil, must reference an option present in Options.
 type OptionGroup struct {
-	ID       string
-	Name     string
-	Required bool
-	Options  []Option
+	ID              string
+	Name            string
+	Required        bool
+	MinSelections   int
+	MaxSelections   int
+	DefaultOptionID *string
+	Options         []Option
 }
+
+// Spice level values. Empty string ("") means unspecified — render no chip.
+const (
+	SpiceLevelMild   = "MILD"
+	SpiceLevelMedium = "MEDIUM"
+	SpiceLevelHot    = "HOT"
+)
+
+// Schedule values.
+const (
+	ScheduleAllDay  = "ALL_DAY"
+	ScheduleLunch   = "LUNCH"
+	ScheduleDinner  = "DINNER"
+	ScheduleWeekend = "WEEKEND"
+)
+
+// AllergenKeys is the canonical set of allergens a menu item may declare.
+var AllergenKeys = []string{"Gluten", "Soy", "Sesame", "Peanut", "Egg", "Dairy", "Shellfish"}
+
+// MaxBadges caps how many free-text badges an item may carry.
+const MaxBadges = 3
+
+// MaxBadgeLength caps the length of any single badge.
+const MaxBadgeLength = 24
+
+// MaxSKULength caps the length of an SKU.
+const MaxSKULength = 32
 
 // MenuItem represents a food/drink item.
 type MenuItem struct {
-	ID               common.ItemID
-	CategoryID       common.CategoryID
-	RestaurantID     common.RestaurantID
-	Name             string
-	Description      string
-	Price            float64
-	Currency         money.Currency
-	PhotoURL         string
-	PhotoOriginalURL string
-	IsAvailable      bool
-	DisplayOrder     int
-	IsVegetarian     bool
-	IsGlutenFree     bool
-	IsSpicy          bool
-	OptionGroups     []OptionGroup
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	ID                       common.ItemID
+	CategoryID               common.CategoryID
+	RestaurantID             common.RestaurantID
+	Name                     string
+	Description              string
+	Price                    float64
+	Currency                 money.Currency
+	PhotoURL                 string
+	PhotoOriginalURL         string
+	IsAvailable              bool
+	DisplayOrder             int
+	IsVegetarian             bool
+	IsGlutenFree             bool
+	IsSpicy                  bool // deprecated; use SpiceLevel. Kept for one release.
+	IsVegan                  bool
+	IsDairyFree              bool
+	IsHalal                  bool
+	IsNutFree                bool
+	SpiceLevel               string
+	Schedule                 string
+	SKU                      string
+	Allergens                []string
+	Badges                   []string
+	AllowSpecialInstructions bool
+	OptionGroups             []OptionGroup
+	CreatedAt                time.Time
+	UpdatedAt                time.Time
 }
 
 // HasOptionGroups reports whether the item has any modifier groups.
@@ -81,16 +122,18 @@ func NewMenuItemWithCurrency(id common.ItemID, categoryID common.CategoryID, res
 
 	now := time.Now()
 	return &MenuItem{
-		ID:           id,
-		CategoryID:   categoryID,
-		RestaurantID: restaurantID,
-		Name:         name,
-		Price:        price,
-		Currency:     currency,
-		IsAvailable:  true,
-		DisplayOrder: 0,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:                       id,
+		CategoryID:               categoryID,
+		RestaurantID:             restaurantID,
+		Name:                     name,
+		Price:                    price,
+		Currency:                 currency,
+		IsAvailable:              true,
+		DisplayOrder:             0,
+		Schedule:                 ScheduleAllDay,
+		AllowSpecialInstructions: true,
+		CreatedAt:                now,
+		UpdatedAt:                now,
 	}, nil
 }
 
@@ -193,17 +236,229 @@ func (m *MenuItem) SetDietaryTags(isVegetarian, isGlutenFree, isSpicy bool) {
 	m.UpdatedAt = time.Now()
 }
 
+// SetDietaryFlags assigns the full dietary set in one call.
+func (m *MenuItem) SetDietaryFlags(isVegetarian, isVegan, isGlutenFree, isDairyFree, isHalal, isNutFree bool) {
+	m.IsVegetarian = isVegetarian
+	m.IsVegan = isVegan
+	m.IsGlutenFree = isGlutenFree
+	m.IsDairyFree = isDairyFree
+	m.IsHalal = isHalal
+	m.IsNutFree = isNutFree
+	m.UpdatedAt = time.Now()
+}
+
 // DietaryTagsString returns space-separated tag keys for use as a data attribute.
 func (m *MenuItem) DietaryTagsString() string {
 	var tags []string
 	if m.IsVegetarian {
 		tags = append(tags, "vegetarian")
 	}
+	if m.IsVegan {
+		tags = append(tags, "vegan")
+	}
 	if m.IsGlutenFree {
 		tags = append(tags, "gluten_free")
+	}
+	if m.IsDairyFree {
+		tags = append(tags, "dairy_free")
+	}
+	if m.IsHalal {
+		tags = append(tags, "halal")
+	}
+	if m.IsNutFree {
+		tags = append(tags, "nut_free")
 	}
 	if m.IsSpicy {
 		tags = append(tags, "spicy")
 	}
 	return strings.Join(tags, " ")
+}
+
+// ValidateSpiceLevel accepts "" (unspecified) or one of MILD/MEDIUM/HOT.
+func ValidateSpiceLevel(level string) error {
+	switch level {
+	case "", SpiceLevelMild, SpiceLevelMedium, SpiceLevelHot:
+		return nil
+	}
+	return errors.New("spice level must be one of MILD, MEDIUM, HOT")
+}
+
+// ValidateSchedule accepts one of ALL_DAY/LUNCH/DINNER/WEEKEND. Empty maps to ALL_DAY at the caller.
+func ValidateSchedule(schedule string) error {
+	switch schedule {
+	case ScheduleAllDay, ScheduleLunch, ScheduleDinner, ScheduleWeekend:
+		return nil
+	}
+	return errors.New("schedule must be one of ALL_DAY, LUNCH, DINNER, WEEKEND")
+}
+
+// ValidateSKU enforces optional, ASCII, length cap.
+func ValidateSKU(sku string) error {
+	if len(sku) > MaxSKULength {
+		return errors.New("sku must be <= 32 characters")
+	}
+	for _, r := range sku {
+		if r > 0x7E || r < 0x20 {
+			return errors.New("sku must be printable ASCII")
+		}
+	}
+	return nil
+}
+
+// NormalizeBadges trims, drops empties, de-duplicates (case-sensitive), and enforces caps.
+func NormalizeBadges(in []string) ([]string, error) {
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(in))
+	for _, b := range in {
+		b = strings.TrimSpace(b)
+		if b == "" {
+			continue
+		}
+		if len(b) > MaxBadgeLength {
+			return nil, errors.New("badge must be <= 24 characters")
+		}
+		if _, dup := seen[b]; dup {
+			continue
+		}
+		seen[b] = struct{}{}
+		out = append(out, b)
+	}
+	if len(out) > MaxBadges {
+		return nil, errors.New("at most 3 badges allowed")
+	}
+	return out, nil
+}
+
+// NormalizeAllergens validates against AllergenKeys and de-duplicates.
+func NormalizeAllergens(in []string) ([]string, error) {
+	allowed := map[string]struct{}{}
+	for _, k := range AllergenKeys {
+		allowed[k] = struct{}{}
+	}
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(in))
+	for _, a := range in {
+		a = strings.TrimSpace(a)
+		if a == "" {
+			continue
+		}
+		if _, ok := allowed[a]; !ok {
+			return nil, errors.New("unknown allergen: " + a)
+		}
+		if _, dup := seen[a]; dup {
+			continue
+		}
+		seen[a] = struct{}{}
+		out = append(out, a)
+	}
+	return out, nil
+}
+
+// ValidateOptionGroupRules enforces: MinSelections >= 0, MaxSelections >= MinSelections when MaxSelections > 0,
+// Required => MinSelections >= 1, DefaultOptionID (if set) references an Option in the group, and option IDs are unique.
+func ValidateOptionGroupRules(g OptionGroup) error {
+	if strings.TrimSpace(g.Name) == "" {
+		return errors.New("option group name must not be empty")
+	}
+	if g.MinSelections < 0 {
+		return errors.New("option group MinSelections must be >= 0")
+	}
+	if g.MaxSelections > 0 && g.MaxSelections < g.MinSelections {
+		return errors.New("option group MaxSelections must be >= MinSelections")
+	}
+	if g.Required && g.MinSelections < 1 {
+		return errors.New("required option group must have MinSelections >= 1")
+	}
+	seen := map[string]struct{}{}
+	for _, o := range g.Options {
+		if strings.TrimSpace(o.Name) == "" {
+			return errors.New("option name must not be empty")
+		}
+		if o.PriceDelta < 0 {
+			return errors.New("option price delta must be >= 0")
+		}
+		if o.ID == "" {
+			return errors.New("option id must not be empty")
+		}
+		if _, dup := seen[o.ID]; dup {
+			return errors.New("option ids must be unique within a group")
+		}
+		seen[o.ID] = struct{}{}
+	}
+	if g.DefaultOptionID != nil {
+		if _, ok := seen[*g.DefaultOptionID]; !ok {
+			return errors.New("default option id must reference an option in the group")
+		}
+	}
+	return nil
+}
+
+// SetSpiceLevel validates and assigns the spice level.
+func (m *MenuItem) SetSpiceLevel(level string) error {
+	if err := ValidateSpiceLevel(level); err != nil {
+		return err
+	}
+	m.SpiceLevel = level
+	m.UpdatedAt = time.Now()
+	return nil
+}
+
+// SetSchedule validates and assigns the schedule.
+func (m *MenuItem) SetSchedule(schedule string) error {
+	if err := ValidateSchedule(schedule); err != nil {
+		return err
+	}
+	m.Schedule = schedule
+	m.UpdatedAt = time.Now()
+	return nil
+}
+
+// SetSKU validates and assigns the SKU.
+func (m *MenuItem) SetSKU(sku string) error {
+	if err := ValidateSKU(sku); err != nil {
+		return err
+	}
+	m.SKU = sku
+	m.UpdatedAt = time.Now()
+	return nil
+}
+
+// SetBadges normalises and assigns the badges.
+func (m *MenuItem) SetBadges(badges []string) error {
+	normalised, err := NormalizeBadges(badges)
+	if err != nil {
+		return err
+	}
+	m.Badges = normalised
+	m.UpdatedAt = time.Now()
+	return nil
+}
+
+// SetAllergens normalises and assigns the allergens.
+func (m *MenuItem) SetAllergens(allergens []string) error {
+	normalised, err := NormalizeAllergens(allergens)
+	if err != nil {
+		return err
+	}
+	m.Allergens = normalised
+	m.UpdatedAt = time.Now()
+	return nil
+}
+
+// SetAllowSpecialInstructions toggles the per-item special-instructions textarea.
+func (m *MenuItem) SetAllowSpecialInstructions(allow bool) {
+	m.AllowSpecialInstructions = allow
+	m.UpdatedAt = time.Now()
+}
+
+// SetOptionGroups validates each group and replaces the slice wholesale.
+func (m *MenuItem) SetOptionGroups(groups []OptionGroup) error {
+	for _, g := range groups {
+		if err := ValidateOptionGroupRules(g); err != nil {
+			return err
+		}
+	}
+	m.OptionGroups = groups
+	m.UpdatedAt = time.Now()
+	return nil
 }
