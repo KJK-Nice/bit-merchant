@@ -31,19 +31,21 @@ test.describe("Customer order resilience", () => {
     await context.close();
   });
 
-  test("customer can remove an item at confirmation and cart updates to empty state", async ({ browser }) => {
+  test("customer can navigate back to menu from confirmation to edit cart", async ({ browser }) => {
     const context = await browser.newContext();
     const customer = await CustomerActor(context);
 
     await customer.attemptsTo(OpenRoute("customer", "/menu?restaurantID=restaurant_1"));
     await customer.attemptsTo(AddMenuItemToCart(), ProceedToCheckout());
-    await expect(customer.page).toHaveURL(/\/order\/confirm$/);
-    await expect(customer.page.getByRole("button", { name: "Place Order" })).toBeVisible();
+    await expect(customer.page).toHaveURL(/\/order\/confirm(\?.*)?$/);
+    await expect(customer.page.getByRole("button", { name: /Send to kitchen/ })).toBeVisible();
 
-    await customer.page.getByRole("button", { name: "Decrease quantity" }).first().click();
-    await expect(customer.page.getByText("Your cart is empty.")).toBeVisible();
-    await expect(customer.page.getByRole("button", { name: "Decrease quantity" })).toHaveCount(0);
-    await expect(customer.page.getByText("Total:")).toHaveCount(0);
+    // "Edit cart" returns to the menu with restaurant context preserved so the
+    // customer can adjust quantities on the menu's cart drawer/floating button.
+    await Promise.all([
+      customer.page.waitForURL(/\/menu\?.*restaurantID=restaurant_1.*/),
+      customer.page.getByRole("link", { name: "Edit cart" }).click(),
+    ]);
 
     await context.close();
   });

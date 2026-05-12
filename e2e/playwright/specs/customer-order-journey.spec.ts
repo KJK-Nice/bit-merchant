@@ -18,8 +18,8 @@ test.describe("Customer full journey", () => {
     await expect(customer.page.getByRole("heading", { name: "BitMerchant Cafe" })).toBeVisible();
 
     await customer.attemptsTo(AddMenuItemToCart(), ProceedToCheckout());
-    await expect(customer.page).toHaveURL(/\/order\/confirm$/);
-    await expect(customer.page.getByRole("heading", { name: "Confirm Order" })).toBeVisible();
+    await expect(customer.page).toHaveURL(/\/order\/confirm(\?.*)?$/);
+    await expect(customer.page.getByRole("heading", { name: "Review your order" })).toBeVisible();
 
     await customer.attemptsTo(PlaceCashOrder());
     const path = await customer.asks(CurrentPathname());
