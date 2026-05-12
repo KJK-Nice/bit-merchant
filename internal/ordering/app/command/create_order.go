@@ -21,6 +21,9 @@ type CreateOrder struct {
 	SessionID     string
 	Cart          *cart.Cart
 	PaymentMethod common.PaymentMethodType
+	CustomerName  string
+	TableLabel    string
+	TipPercent    int // one of cart.AllowedTipPercents
 }
 
 // CreateOrderResult is returned after a successful create.
@@ -66,6 +69,11 @@ func (h createOrderHandler) Handle(ctx context.Context, cmd CreateOrder) (*Creat
 		return nil, fmt.Errorf("restaurant is currently closed")
 	}
 
+	tipPercent := cmd.TipPercent
+	if !cart.IsAllowedTipPercent(tipPercent) {
+		return nil, fmt.Errorf("invalid tip percent: %d", tipPercent)
+	}
+
 	orderID := common.OrderID(fmt.Sprintf("ord_%d", time.Now().UnixNano()))
 	n, err := h.orderRepo.NextOrderNumber(cmd.RestaurantID)
 	if err != nil {
@@ -84,13 +92,18 @@ func (h createOrderHandler) Handle(ctx context.Context, cmd CreateOrder) (*Creat
 		return nil, err
 	}
 
-	cartTotal := money.FromMajor(cmd.Cart.Total, currency)
+	bd := cart.ComputeBreakdown(cmd.Cart, rest.TaxRate, tipPercent)
 
-	o, err := order.NewOrderWithCurrency(orderID, orderNumber, cmd.RestaurantID, cmd.SessionID, orderItems, cartTotal.Amount, cmd.PaymentMethod, currency)
+	o, err := order.NewOrderWithCurrency(
+		orderID, orderNumber, cmd.RestaurantID, cmd.SessionID, orderItems,
+		bd.Subtotal.Amount, bd.Total.Amount, bd.Tax.Amount, bd.Tip.Amount,
+		cmd.CustomerName, cmd.TableLabel,
+		cmd.PaymentMethod, currency,
+	)
 	if err != nil {
 		return nil, err
 	}
-	o.FiatAmount = cmd.Cart.Total
+	o.FiatAmount = bd.Total.Major()
 
 	if err := h.orderRepo.Save(o); err != nil {
 		return nil, err

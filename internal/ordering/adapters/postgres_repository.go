@@ -20,7 +20,10 @@ func NewPostgresOrderRepository(db *sql.DB) *PostgresOrderRepository {
 	return &PostgresOrderRepository{db: db}
 }
 
-const orderColumns = `id, order_number, restaurant_id, session_id, total_amount, fiat_amount, COALESCE(currency, 'USD'),
+const orderColumns = `id, order_number, restaurant_id, session_id,
+	COALESCE(subtotal_amount, total_amount), total_amount, COALESCE(tax_amount, 0), COALESCE(tip_amount, 0),
+	fiat_amount, COALESCE(currency, 'USD'),
+	COALESCE(customer_name, ''), COALESCE(table_label, ''),
 	payment_method, payment_status, fulfillment_status,
 	created_at, updated_at, paid_at, preparing_at, ready_at, completed_at`
 
@@ -55,19 +58,26 @@ func (r *PostgresOrderRepository) Save(o *order.Order) error {
 		currency = money.USD
 	}
 	_, err = tx.Exec(
-		`INSERT INTO orders (id, order_number, restaurant_id, session_id, total_amount, fiat_amount, currency,
+		`INSERT INTO orders (id, order_number, restaurant_id, session_id,
+			subtotal_amount, total_amount, tax_amount, tip_amount, fiat_amount, currency,
+			customer_name, table_label,
 			payment_method, payment_status, fulfillment_status,
 			created_at, updated_at, paid_at, preparing_at, ready_at, completed_at)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
 		 ON CONFLICT (id) DO UPDATE SET
 		   order_number=EXCLUDED.order_number,
-		   total_amount=EXCLUDED.total_amount, fiat_amount=EXCLUDED.fiat_amount,
+		   subtotal_amount=EXCLUDED.subtotal_amount,
+		   total_amount=EXCLUDED.total_amount,
+		   tax_amount=EXCLUDED.tax_amount, tip_amount=EXCLUDED.tip_amount,
+		   fiat_amount=EXCLUDED.fiat_amount,
 		   currency=EXCLUDED.currency,
+		   customer_name=EXCLUDED.customer_name, table_label=EXCLUDED.table_label,
 		   payment_status=EXCLUDED.payment_status, fulfillment_status=EXCLUDED.fulfillment_status,
 		   updated_at=EXCLUDED.updated_at, paid_at=EXCLUDED.paid_at,
 		   preparing_at=EXCLUDED.preparing_at, ready_at=EXCLUDED.ready_at, completed_at=EXCLUDED.completed_at`,
 		string(o.ID), string(o.OrderNumber), string(o.RestaurantID), o.SessionID,
-		o.TotalAmount, o.FiatAmount, currency.Code,
+		o.Subtotal, o.TotalAmount, o.TaxAmount, o.TipAmount, o.FiatAmount, currency.Code,
+		o.CustomerName, o.TableLabel,
 		string(o.PaymentMethod), string(o.PaymentStatus), string(o.FulfillmentStatus),
 		o.CreatedAt, o.UpdatedAt, o.PaidAt, o.PreparingAt, o.ReadyAt, o.CompletedAt)
 	if err != nil {
@@ -154,11 +164,17 @@ func (r *PostgresOrderRepository) Update(o *order.Order) error {
 		currency = money.USD
 	}
 	result, err := r.db.Exec(
-		`UPDATE orders SET order_number=$2, total_amount=$3, fiat_amount=$4, currency=$5,
-		   payment_method=$6, payment_status=$7, fulfillment_status=$8,
-		   updated_at=$9, paid_at=$10, preparing_at=$11, ready_at=$12, completed_at=$13
+		`UPDATE orders SET order_number=$2,
+		   subtotal_amount=$3, total_amount=$4, tax_amount=$5, tip_amount=$6,
+		   fiat_amount=$7, currency=$8,
+		   customer_name=$9, table_label=$10,
+		   payment_method=$11, payment_status=$12, fulfillment_status=$13,
+		   updated_at=$14, paid_at=$15, preparing_at=$16, ready_at=$17, completed_at=$18
 		 WHERE id=$1`,
-		string(o.ID), string(o.OrderNumber), o.TotalAmount, o.FiatAmount, currency.Code,
+		string(o.ID), string(o.OrderNumber),
+		o.Subtotal, o.TotalAmount, o.TaxAmount, o.TipAmount,
+		o.FiatAmount, currency.Code,
+		o.CustomerName, o.TableLabel,
 		string(o.PaymentMethod), string(o.PaymentStatus), string(o.FulfillmentStatus),
 		o.UpdatedAt, o.PaidAt, o.PreparingAt, o.ReadyAt, o.CompletedAt)
 	if err != nil {
@@ -293,69 +309,76 @@ func unmarshalOrderModifiers(data []byte) []order.OrderItemModifier {
 	return mods
 }
 
+type orderRow struct {
+	id, orderNum, restID, sessionID           string
+	subtotal, totalAmount, taxAmount          int64
+	tipAmount                                 int64
+	fiatAmount                                float64
+	currencyCode                              string
+	customerName, tableLabel                  string
+	payMethod, payStatus, fulStatus           string
+	createdAt, updatedAt                      time.Time
+	paidAt, preparingAt, readyAt, completedAt sql.NullTime
+}
+
+func (r *orderRow) targets() []any {
+	return []any{
+		&r.id, &r.orderNum, &r.restID, &r.sessionID,
+		&r.subtotal, &r.totalAmount, &r.taxAmount, &r.tipAmount,
+		&r.fiatAmount, &r.currencyCode,
+		&r.customerName, &r.tableLabel,
+		&r.payMethod, &r.payStatus, &r.fulStatus,
+		&r.createdAt, &r.updatedAt, &r.paidAt, &r.preparingAt, &r.readyAt, &r.completedAt,
+	}
+}
+
 func scanOrderRow(row *sql.Row) (*order.Order, error) {
-	var (
-		id, orderNum, restID, sessionID           string
-		totalAmount                               int64
-		fiatAmount                                float64
-		currencyCode                              string
-		payMethod, payStatus, fulStatus           string
-		createdAt, updatedAt                      time.Time
-		paidAt, preparingAt, readyAt, completedAt sql.NullTime
-	)
-	if err := row.Scan(&id, &orderNum, &restID, &sessionID, &totalAmount, &fiatAmount, &currencyCode,
-		&payMethod, &payStatus, &fulStatus,
-		&createdAt, &updatedAt, &paidAt, &preparingAt, &readyAt, &completedAt); err != nil {
+	var r orderRow
+	if err := row.Scan(r.targets()...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("order not found")
 		}
 		return nil, err
 	}
-	return buildOrder(id, orderNum, restID, sessionID, totalAmount, fiatAmount, currencyCode,
-		payMethod, payStatus, fulStatus, createdAt, updatedAt, paidAt, preparingAt, readyAt, completedAt), nil
+	return buildOrder(r), nil
 }
 
 func scanOrderRows(rows *sql.Rows) (*order.Order, error) {
-	var (
-		id, orderNum, restID, sessionID           string
-		totalAmount                               int64
-		fiatAmount                                float64
-		currencyCode                              string
-		payMethod, payStatus, fulStatus           string
-		createdAt, updatedAt                      time.Time
-		paidAt, preparingAt, readyAt, completedAt sql.NullTime
-	)
-	if err := rows.Scan(&id, &orderNum, &restID, &sessionID, &totalAmount, &fiatAmount, &currencyCode,
-		&payMethod, &payStatus, &fulStatus,
-		&createdAt, &updatedAt, &paidAt, &preparingAt, &readyAt, &completedAt); err != nil {
+	var r orderRow
+	if err := rows.Scan(r.targets()...); err != nil {
 		return nil, err
 	}
-	return buildOrder(id, orderNum, restID, sessionID, totalAmount, fiatAmount, currencyCode,
-		payMethod, payStatus, fulStatus, createdAt, updatedAt, paidAt, preparingAt, readyAt, completedAt), nil
+	return buildOrder(r), nil
 }
 
-func buildOrder(id, orderNum, restID, sessionID string, totalAmount int64, fiatAmount float64, currencyCode string,
-	payMethod, payStatus, fulStatus string, createdAt, updatedAt time.Time,
-	paidAt, preparingAt, readyAt, completedAt sql.NullTime) *order.Order {
-
-	currency, err := money.Parse(currencyCode)
+func buildOrder(r orderRow) *order.Order {
+	currency, err := money.Parse(r.currencyCode)
 	if err != nil {
 		currency = money.USD
 	}
 	o := &order.Order{
-		ID:                common.OrderID(id),
-		OrderNumber:       common.OrderNumber(orderNum),
-		RestaurantID:      common.RestaurantID(restID),
-		SessionID:         sessionID,
-		TotalAmount:       totalAmount,
-		FiatAmount:        fiatAmount,
+		ID:                common.OrderID(r.id),
+		OrderNumber:       common.OrderNumber(r.orderNum),
+		RestaurantID:      common.RestaurantID(r.restID),
+		SessionID:         r.sessionID,
+		Subtotal:          r.subtotal,
+		TaxAmount:         r.taxAmount,
+		TipAmount:         r.tipAmount,
+		TotalAmount:       r.totalAmount,
+		FiatAmount:        r.fiatAmount,
 		Currency:          currency,
-		PaymentMethod:     common.PaymentMethodType(payMethod),
-		PaymentStatus:     common.PaymentStatus(payStatus),
-		FulfillmentStatus: common.FulfillmentStatus(fulStatus),
-		CreatedAt:         createdAt,
-		UpdatedAt:         updatedAt,
+		CustomerName:      r.customerName,
+		TableLabel:        r.tableLabel,
+		PaymentMethod:     common.PaymentMethodType(r.payMethod),
+		PaymentStatus:     common.PaymentStatus(r.payStatus),
+		FulfillmentStatus: common.FulfillmentStatus(r.fulStatus),
+		CreatedAt:         r.createdAt,
+		UpdatedAt:         r.updatedAt,
 	}
+	paidAt := r.paidAt
+	preparingAt := r.preparingAt
+	readyAt := r.readyAt
+	completedAt := r.completedAt
 	if paidAt.Valid {
 		t := paidAt.Time
 		o.PaidAt = &t

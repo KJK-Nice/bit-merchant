@@ -15,9 +15,14 @@ type Order struct {
 	RestaurantID      common.RestaurantID
 	SessionID         string
 	Items             []OrderItem
+	Subtotal          int64 // pre-tax, pre-tip; minor units
+	TaxAmount         int64
+	TipAmount         int64
 	TotalAmount       int64
 	FiatAmount        float64
 	Currency          money.Currency
+	CustomerName      string
+	TableLabel        string
 	PaymentMethod     common.PaymentMethodType
 	PaymentStatus     common.PaymentStatus
 	FulfillmentStatus common.FulfillmentStatus
@@ -39,13 +44,27 @@ func (o *Order) Total() money.Money {
 	return money.New(o.TotalAmount, c)
 }
 
-// NewOrder creates a new Order with validation. Currency defaults to USD.
+// NewOrder creates a new Order with validation. Currency defaults to USD and
+// breakdown fields (subtotal/tax/tip/customer/table) are left zero. Kept for
+// back-compat with existing call sites that pre-date the breakdown columns.
 func NewOrder(id common.OrderID, orderNumber common.OrderNumber, restaurantID common.RestaurantID, sessionID string, items []OrderItem, totalAmount int64, paymentMethod common.PaymentMethodType) (*Order, error) {
-	return NewOrderWithCurrency(id, orderNumber, restaurantID, sessionID, items, totalAmount, paymentMethod, money.USD)
+	return NewOrderWithCurrency(id, orderNumber, restaurantID, sessionID, items, totalAmount, totalAmount, 0, 0, "", "", paymentMethod, money.USD)
 }
 
-// NewOrderWithCurrency creates an Order pinned to the restaurant's base currency.
-func NewOrderWithCurrency(id common.OrderID, orderNumber common.OrderNumber, restaurantID common.RestaurantID, sessionID string, items []OrderItem, totalAmount int64, paymentMethod common.PaymentMethodType, currency money.Currency) (*Order, error) {
+// NewOrderWithCurrency creates an Order pinned to the restaurant's base currency,
+// with explicit subtotal/tax/tip and customer pickup metadata. Pass subtotal ==
+// totalAmount and zero tax/tip for cash-only legacy flows.
+func NewOrderWithCurrency(
+	id common.OrderID,
+	orderNumber common.OrderNumber,
+	restaurantID common.RestaurantID,
+	sessionID string,
+	items []OrderItem,
+	subtotal, totalAmount, taxAmount, tipAmount int64,
+	customerName, tableLabel string,
+	paymentMethod common.PaymentMethodType,
+	currency money.Currency,
+) (*Order, error) {
 	if len(items) == 0 {
 		return nil, errors.New("order must have at least one item")
 	}
@@ -66,8 +85,13 @@ func NewOrderWithCurrency(id common.OrderID, orderNumber common.OrderNumber, res
 		RestaurantID:      restaurantID,
 		SessionID:         sessionID,
 		Items:             items,
+		Subtotal:          subtotal,
+		TaxAmount:         taxAmount,
+		TipAmount:         tipAmount,
 		TotalAmount:       totalAmount,
 		Currency:          currency,
+		CustomerName:      customerName,
+		TableLabel:        tableLabel,
 		PaymentMethod:     paymentMethod,
 		PaymentStatus:     common.PaymentStatusPending,
 		FulfillmentStatus: common.FulfillmentStatusPaid,

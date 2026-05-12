@@ -72,7 +72,7 @@ func New(
 		GetKitchenOrders:    getKitchenOrdersUC,
 		GetUnpaidServer:     getUnpaidServerUC,
 		CartHandler:         orderinghttp.NewCartHandler(cartService, repos.MenuItem),
-		OrderHandler:        orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, repos.Order, cartService, vapidPublicKey),
+		OrderHandler:        orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, repos.Order, repos.Restaurant, cartService, vapidPublicKey),
 		KitchenHandler:      orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, toggleItemPrepUC, repos.Restaurant, repos.Membership, vapidPublicKey),
 		ServerHandler:       orderinghttp.NewServerHandler(getUnpaidServerUC, markPaidUC, repos.Restaurant, repos.Membership),
 	}

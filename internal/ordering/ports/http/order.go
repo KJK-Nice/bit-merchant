@@ -11,7 +11,10 @@ import (
 	orderCmd "bitmerchant/internal/ordering/app/command"
 	orderQuery "bitmerchant/internal/ordering/app/query"
 	"bitmerchant/internal/ordering/domain/order"
+	"bitmerchant/internal/restaurant/domain/restaurant"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -22,6 +25,7 @@ type OrderHandler struct {
 	getCustomerOrderByLookup orderQuery.CustomerOrderByLookupHandler
 	getCustomerOrders        orderQuery.CustomerOrdersForSessionHandler
 	orderRepo                order.Repository
+	restRepo                 restaurant.Repository
 	cartService              *cart.CartService
 	vapidPublicKey           string
 }
@@ -32,6 +36,7 @@ func NewOrderHandler(
 	getCustomerOrderByLookup orderQuery.CustomerOrderByLookupHandler,
 	getCustomerOrders orderQuery.CustomerOrdersForSessionHandler,
 	orderRepo order.Repository,
+	restRepo restaurant.Repository,
 	cartService *cart.CartService,
 	vapidPublicKey string,
 ) *OrderHandler {
@@ -40,6 +45,7 @@ func NewOrderHandler(
 		getCustomerOrderByLookup: getCustomerOrderByLookup,
 		getCustomerOrders:        getCustomerOrders,
 		orderRepo:                orderRepo,
+		restRepo:                 restRepo,
 		cartService:              cartService,
 		vapidPublicKey:           vapidPublicKey,
 	}
@@ -50,58 +56,134 @@ func (h *OrderHandler) GetConfirmOrder(c echo.Context) error {
 	sessionID := c.Get("sessionID").(string)
 	cart := h.cartService.GetCart(sessionID)
 
-	// Validate cart not empty
-	if len(cart.Items) == 0 {
-		return c.Redirect(http.StatusFound, "/menu")
-	}
-	if cart.RestaurantID == "" {
+	if len(cart.Items) == 0 || cart.RestaurantID == "" {
 		return c.Redirect(http.StatusFound, "/menu")
 	}
 
-	return templates.OrderConfirmationPage(cart, string(cart.RestaurantID), commonhttp.CSRFToken(c)).Render(c.Request().Context(), c.Response())
+	rest, err := h.restRepo.FindByID(cart.RestaurantID)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load restaurant: "+err.Error())
+	}
+
+	tableLabel := strings.TrimSpace(c.QueryParam("table"))
+
+	return templates.OrderConfirmationPage(
+		cart,
+		string(cart.RestaurantID),
+		rest.Name,
+		tableLabel,
+		rest.TaxRate,
+		orderQuery.DefaultPrepTarget,
+		commonhttp.CSRFToken(c),
+		"",
+	).Render(c.Request().Context(), c.Response())
 }
 
 // CreateOrder handles POST /order/create
 func (h *OrderHandler) CreateOrder(c echo.Context) error {
 	sessionID := c.Get("sessionID").(string)
-	cart := h.cartService.GetCart(sessionID)
+	currentCart := h.cartService.GetCart(sessionID)
 
-	if len(cart.Items) == 0 {
+	if len(currentCart.Items) == 0 {
 		return c.Redirect(http.StatusFound, "/menu")
 	}
 
-	restaurantID := common.RestaurantID(c.FormValue("restaurantID"))
-	if restaurantID == "" || cart.RestaurantID != restaurantID {
-		return c.String(http.StatusBadRequest, "Invalid restaurant for this order")
+	req, ferr := parseCreateOrderForm(c, currentCart, sessionID)
+	if ferr != nil {
+		return h.handleCreateOrderFormError(c, currentCart, ferr)
 	}
 
-	// Get payment method from form
-	paymentMethodVal := c.FormValue("paymentMethod")
-	var paymentMethod common.PaymentMethodType
-	if paymentMethodVal == "cash" {
-		paymentMethod = common.PaymentMethodTypeCash
-	} else {
-		// Default or Error
-		paymentMethod = common.PaymentMethodTypeCash
-	}
-
-	req := orderCmd.CreateOrder{
-		RestaurantID:  restaurantID,
-		SessionID:     sessionID,
-		Cart:          cart,
-		PaymentMethod: paymentMethod,
-	}
-
-	resp, err := h.createOrder.Handle(c.Request().Context(), req)
+	resp, err := h.createOrder.Handle(c.Request().Context(), *req)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Failed to create order: "+err.Error())
 	}
 
-	// Clear cart
 	h.cartService.ClearCart(sessionID)
 
-	// Redirect to status page
 	return c.Redirect(http.StatusFound, "/order/"+string(resp.OrderNumber))
+}
+
+// createOrderFormError carries a parse/validation failure plus the form values
+// (restaurantID is set when we have enough context to re-render the page).
+type createOrderFormError struct {
+	httpStatus    int
+	publicMessage string
+	rerender      bool
+	restaurantID  common.RestaurantID
+}
+
+func (e *createOrderFormError) Error() string { return e.publicMessage }
+
+// parseCreateOrderForm validates the confirm-page form and returns the command
+// payload. Returns a structured *createOrderFormError so the handler can decide
+// between rendering an inline page error and a plain status response.
+func parseCreateOrderForm(c echo.Context, currentCart *cart.Cart, sessionID string) (*orderCmd.CreateOrder, *createOrderFormError) {
+	restaurantID := common.RestaurantID(c.FormValue("restaurantID"))
+	if restaurantID == "" || currentCart.RestaurantID != restaurantID {
+		return nil, &createOrderFormError{httpStatus: http.StatusBadRequest, publicMessage: "Invalid restaurant for this order"}
+	}
+
+	customerName := strings.TrimSpace(c.FormValue("customerName"))
+	if customerName == "" {
+		return nil, &createOrderFormError{httpStatus: http.StatusBadRequest, publicMessage: "Name for pickup is required.", rerender: true, restaurantID: restaurantID}
+	}
+
+	tipPercent, terr := parseTipPercent(c.FormValue("tipPercent"))
+	if terr != nil {
+		return nil, &createOrderFormError{httpStatus: http.StatusBadRequest, publicMessage: terr.Error()}
+	}
+
+	if v := c.FormValue("paymentMethod"); v != "" && v != "cash" {
+		return nil, &createOrderFormError{httpStatus: http.StatusBadRequest, publicMessage: "Unsupported payment method"}
+	}
+
+	return &orderCmd.CreateOrder{
+		RestaurantID:  restaurantID,
+		SessionID:     sessionID,
+		Cart:          currentCart,
+		PaymentMethod: common.PaymentMethodTypeCash,
+		CustomerName:  customerName,
+		TableLabel:    strings.TrimSpace(c.FormValue("table")),
+		TipPercent:    tipPercent,
+	}, nil
+}
+
+func parseTipPercent(raw string) (int, error) {
+	if raw == "" {
+		return cart.DefaultTipPercent, nil
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil || !cart.IsAllowedTipPercent(n) {
+		return 0, fmt.Errorf("invalid tip percent")
+	}
+	return n, nil
+}
+
+func (h *OrderHandler) handleCreateOrderFormError(c echo.Context, currentCart *cart.Cart, ferr *createOrderFormError) error {
+	if ferr.rerender {
+		return h.rerenderConfirmWithError(c, currentCart, ferr.restaurantID, ferr.publicMessage)
+	}
+	return c.String(ferr.httpStatus, ferr.publicMessage)
+}
+
+// rerenderConfirmWithError re-renders the confirm page with an inline error message and a 400 status.
+func (h *OrderHandler) rerenderConfirmWithError(c echo.Context, currentCart *cart.Cart, restaurantID common.RestaurantID, errMsg string) error {
+	rest, err := h.restRepo.FindByID(restaurantID)
+	if err != nil {
+		return c.String(http.StatusBadRequest, errMsg)
+	}
+	tableLabel := strings.TrimSpace(c.FormValue("table"))
+	c.Response().WriteHeader(http.StatusBadRequest)
+	return templates.OrderConfirmationPage(
+		currentCart,
+		string(restaurantID),
+		rest.Name,
+		tableLabel,
+		rest.TaxRate,
+		orderQuery.DefaultPrepTarget,
+		commonhttp.CSRFToken(c),
+		errMsg,
+	).Render(c.Request().Context(), c.Response())
 }
 
 // GetOrder handles GET /order/:orderNumber

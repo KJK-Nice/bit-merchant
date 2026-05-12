@@ -32,7 +32,7 @@ func TestOrderStatus_RendersSatoshiTotal(t *testing.T) {
 	}
 	o, err := order.NewOrderWithCurrency(
 		"ord1", "0001", "r1", "sess",
-		items, 15_000, common.PaymentMethodTypeCash, money.SAT,
+		items, 15_000, 15_000, 0, 0, "", "", common.PaymentMethodTypeCash, money.SAT,
 	)
 	require.NoError(t, err)
 
@@ -50,7 +50,7 @@ func TestOrderStatus_RendersFiatTotal(t *testing.T) {
 	}
 	o, err := order.NewOrderWithCurrency(
 		"ord1", "0001", "r1", "sess",
-		items, 2000, common.PaymentMethodTypeCash, money.USD,
+		items, 2000, 2000, 0, 0, "", "", common.PaymentMethodTypeCash, money.USD,
 	)
 	require.NoError(t, err)
 

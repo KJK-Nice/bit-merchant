@@ -3,65 +3,212 @@ package templates
 import (
 	"fmt"
 	"net/url"
+	"time"
 
-	"bitmerchant/internal/interfaces/templates/components"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
-	"bitmerchant/internal/interfaces/templates/components/ui/label"
-	"bitmerchant/internal/interfaces/templates/components/ui/radio"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/ordering/app/cart"
 )
 
-templ OrderConfirmationPage(cart *cart.Cart, restaurantID string, csrfToken string) {
-	@Layout("Confirm Order") {
-		<div class="container mx-auto p-4 space-y-6 max-w-2xl pb-24 md:pb-8">
-			<div class="flex items-center gap-4">
+func confirmEditCartHref(restaurantID, tableLabel string) string {
+	href := "/menu?restaurantID=" + url.QueryEscape(restaurantID)
+	if tableLabel != "" {
+		href += "&table=" + url.QueryEscape(tableLabel)
+	}
+	return href
+}
+
+func confirmETAWindow(target time.Duration) (int, int) {
+	low := int(target.Minutes())
+	if low < 1 {
+		low = 10
+	}
+	return low, low + 4
+}
+
+func confirmCartCurrency(c *cart.Cart) money.Currency {
+	if c == nil || c.Currency.IsZero() {
+		return money.USD
+	}
+	return c.Currency
+}
+
+func confirmItemCount(c *cart.Cart) int {
+	count := 0
+	for _, item := range c.Items {
+		count += item.Quantity
+	}
+	return count
+}
+
+templ OrderConfirmationPage(
+	cartData *cart.Cart,
+	restaurantID string,
+	restaurantName string,
+	tableLabel string,
+	taxRate float64,
+	prepTarget time.Duration,
+	csrfToken string,
+	formError string,
+) {
+	@Layout("Review your order") {
+		{{ bd := computeBreakdownForConfirm(cartData, taxRate) }}
+		{{ etaLow, etaHigh := confirmETAWindow(prepTarget) }}
+		{{ taxPct := int(taxRate*100 + 0.5) }}
+		<div class="container mx-auto p-4 space-y-6 max-w-2xl pb-32 md:pb-8">
+			<div class="flex items-center gap-3">
 				@button.Button(button.Props{
 					Variant: button.VariantGhost,
 					Size:    button.SizeIcon,
-					Href:    fmt.Sprintf("/menu?restaurantID=%s", url.QueryEscape(restaurantID)),
+					Href:    confirmEditCartHref(restaurantID, tableLabel),
 					Class:   "-ml-2",
 				}) {
 					@icon.Icon("chevron-left")(icon.Props{Class: "h-6 w-6"})
 				}
-				<h1 class="text-3xl font-bold">Confirm Order</h1>
+				<h1 class="text-2xl md:text-3xl font-bold">Review your order</h1>
 			</div>
-
-			@components.CartSummary(cart, false)
-			
-			@card.Card() {
-				@card.Header() {
-					@card.Title() { Payment Method }
-				}
-				@card.Content() {
-					<form action="/order/create" method="POST" class="space-y-6">
-						<input type="hidden" name="csrf" value={ csrfToken }/>
-						<input type="hidden" name="restaurantID" value={ restaurantID }/>
-						<div class="flex items-center space-x-3 border p-4 rounded-md">
-							@radio.Radio(radio.Props{
-								ID:      "payment-method-cash",
-								Name:    "paymentMethod",
-								Value:   "cash",
-								Checked: true,
-							})
-							@label.Label(label.Props{For: "payment-method-cash", Class: "font-medium cursor-pointer"}) {
-								Pay with Cash
+			if restaurantName != "" || tableLabel != "" {
+				<div class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200">
+					<div aria-hidden="true" class="text-base leading-none mt-0.5">📍</div>
+					<div class="flex-1">
+						<div class="font-semibold">
+							if restaurantName != "" {
+								{ restaurantName }
+							}
+							if restaurantName != "" && tableLabel != "" {
+								<span class="mx-1 opacity-70">·</span>
+							}
+							if tableLabel != "" {
+								<span>Table { tableLabel }</span>
 							}
 						</div>
-						
-						@button.Button(button.Props{
-							Type: "submit",
-							Class: "w-full text-lg py-6",
-						}) {
-							Place Order
-						}
-					</form>
-				}
+						<div class="opacity-80">Estimated wait: { fmt.Sprintf("%d–%d min", etaLow, etaHigh) }</div>
+					</div>
+				</div>
 			}
+			<form action="/order/create" method="POST" class="space-y-6">
+				<input type="hidden" name="csrf" value={ csrfToken }/>
+				<input type="hidden" name="restaurantID" value={ restaurantID }/>
+				<input type="hidden" name="table" value={ tableLabel }/>
+				if formError != "" {
+					<div role="alert" class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
+						{ formError }
+					</div>
+				}
+				@card.Card() {
+					@card.Content(card.ContentProps{Class: "space-y-4"}) {
+						<div class="flex items-baseline justify-between">
+							<div class="font-semibold">{ fmt.Sprintf("%d items", confirmItemCount(cartData)) }</div>
+							<a href={ templ.SafeURL(confirmEditCartHref(restaurantID, tableLabel)) } class="text-sm font-medium text-amber-600 hover:underline">Edit cart</a>
+						</div>
+						<div class="divide-y divide-dashed">
+							for _, item := range cartData.Items {
+								<div class="py-3 first:pt-0 last:pb-0">
+									<div class="flex items-baseline justify-between gap-3">
+										<div class="font-semibold">{ item.Name } × { fmt.Sprintf("%d", item.Quantity) }</div>
+										<div class="font-semibold tabular-nums">{ money.FromMajor(item.Subtotal, confirmCartCurrency(cartData)).Format() }</div>
+									</div>
+									if len(item.Modifiers) > 0 {
+										<ul class="mt-1 space-y-0.5">
+											for _, mod := range item.Modifiers {
+												<li class="text-sm text-muted-foreground">↳ { mod.OptionName }
+													if mod.PriceDelta > 0 {
+														<span> (+{ money.FromMajor(mod.PriceDelta, confirmCartCurrency(cartData)).Format() })</span>
+													}
+												</li>
+											}
+										</ul>
+									}
+									if item.SpecialInstructions != "" {
+										<p class="mt-1 text-sm text-muted-foreground">↳ { item.SpecialInstructions }</p>
+									}
+								</div>
+							}
+						</div>
+						<div class="border-t pt-3 space-y-1 text-sm">
+							<div class="flex justify-between text-muted-foreground">
+								<span>Subtotal</span>
+								<span class="tabular-nums">{ bd.Subtotal.Format() }</span>
+							</div>
+							<div class="flex justify-between text-muted-foreground">
+								<span>{ fmt.Sprintf("Tax (%d%%)", taxPct) }</span>
+								<span class="tabular-nums">{ bd.Tax.Format() }</span>
+							</div>
+							<div class="flex justify-between text-base font-bold pt-1">
+								<span>Total</span>
+								<span class="tabular-nums">{ bd.Total.Format() }</span>
+							</div>
+						</div>
+					}
+				}
+				<fieldset class="space-y-2">
+					<legend class="font-semibold">Tip your server (optional)</legend>
+					<div class="grid grid-cols-4 gap-2">
+						for _, pct := range cart.AllowedTipPercents {
+							{{ pctLabel := "No tip" }}
+							if pct > 0 {
+								{{ pctLabel = fmt.Sprintf("%d%%", pct) }}
+							}
+							<label class="cursor-pointer">
+								<input
+									type="radio"
+									name="tipPercent"
+									value={ fmt.Sprintf("%d", pct) }
+									checked?={ pct == cart.DefaultTipPercent }
+									class="peer sr-only"
+								/>
+								<span class="block rounded-md border px-4 py-2 text-center text-sm font-medium hover:bg-muted peer-checked:border-foreground peer-checked:bg-foreground peer-checked:text-background">
+									{ pctLabel }
+								</span>
+							</label>
+						}
+					</div>
+				</fieldset>
+				<div class="space-y-2">
+					<label for="customer-name" class="font-semibold">Name for pickup</label>
+					@input.Input(input.Props{
+						ID:          "customer-name",
+						Name:        "customerName",
+						Type:        input.TypeText,
+						Required:    true,
+						Placeholder: "Your name",
+					})
+					<p class="text-sm text-muted-foreground">So your server can match the order at the table.</p>
+				</div>
+				<div class="space-y-2">
+					<div class="font-semibold">Pay with</div>
+					<div class="grid grid-cols-2 gap-2">
+						<label class="flex items-center gap-3 rounded-md border-2 border-foreground bg-background p-3 cursor-pointer">
+							<input type="radio" name="paymentMethod" value="cash" checked class="sr-only"/>
+							<span aria-hidden="true" class="text-xl">💵</span>
+							<span class="flex-1">
+								<span class="block font-semibold text-sm">Cash at table</span>
+								<span class="block text-xs text-muted-foreground">Pay your server</span>
+							</span>
+						</label>
+						<div class="flex items-center gap-3 rounded-md border border-dashed border-muted-foreground/40 p-3 text-muted-foreground/70">
+							<span aria-hidden="true" class="text-xl">💳</span>
+							<span class="flex-1 text-sm">Card · soon</span>
+						</div>
+					</div>
+				</div>
+				@button.Button(button.Props{
+					Type:  "submit",
+					Class: "w-full py-6 text-base flex items-center justify-between",
+				}) {
+					<span class="font-semibold">Send to kitchen</span>
+					<span class="font-semibold tabular-nums">{ bd.Total.Format() } · cash</span>
+				}
+			</form>
 		</div>
-
-		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/confirm", MenuHref: fmt.Sprintf("/menu?restaurantID=%s", url.QueryEscape(restaurantID))})
+		@footer_nav.CustomerFooterNav(footer_nav.Props{CurrentPath: "/order/confirm", MenuHref: confirmEditCartHref(restaurantID, tableLabel)})
 	}
+}
+
+func computeBreakdownForConfirm(c *cart.Cart, taxRate float64) cart.Breakdown {
+	return cart.ComputeBreakdown(c, taxRate, cart.DefaultTipPercent)
 }

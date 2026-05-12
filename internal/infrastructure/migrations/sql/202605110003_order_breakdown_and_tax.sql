@@ -1,0 +1,21 @@
+-- +goose Up
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS tax_rate NUMERIC(5,4) NOT NULL DEFAULT 0.08;
+
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS subtotal_amount BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS tax_amount BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS tip_amount BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT NOT NULL DEFAULT '';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS table_label TEXT NOT NULL DEFAULT '';
+
+UPDATE orders
+SET subtotal_amount = total_amount
+WHERE subtotal_amount = 0 AND total_amount > 0;
+
+-- +goose Down
+ALTER TABLE orders DROP COLUMN IF EXISTS table_label;
+ALTER TABLE orders DROP COLUMN IF EXISTS customer_name;
+ALTER TABLE orders DROP COLUMN IF EXISTS tip_amount;
+ALTER TABLE orders DROP COLUMN IF EXISTS tax_amount;
+ALTER TABLE orders DROP COLUMN IF EXISTS subtotal_amount;
+
+ALTER TABLE restaurants DROP COLUMN IF EXISTS tax_rate;
