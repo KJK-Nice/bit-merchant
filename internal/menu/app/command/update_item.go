@@ -11,6 +11,10 @@ import (
 )
 
 // UpdateMenuItem updates an item and may move it to another category.
+//
+// Optional / pointer fields use nil to mean "leave unchanged" so legacy callers
+// (the dashboard inline modal, integration tests) keep working with the smaller
+// payload they already send.
 type UpdateMenuItem struct {
 	RestaurantID common.RestaurantID
 	ItemID       common.ItemID
@@ -22,6 +26,20 @@ type UpdateMenuItem struct {
 	IsVegetarian bool
 	IsGlutenFree bool
 	IsSpicy      bool
+
+	// Fields below are optional; nil pointers / nil slices mean
+	// "do not change". Empty values explicitly clear the field.
+	SpiceLevel               *string
+	Schedule                 *string
+	SKU                      *string
+	IsVegan                  *bool
+	IsDairyFree              *bool
+	IsHalal                  *bool
+	IsNutFree                *bool
+	Allergens                *[]string
+	Badges                   *[]string
+	AllowSpecialInstructions *bool
+	OptionGroups             *[]menu.OptionGroup
 }
 
 type UpdateMenuItemHandler decorator.CommandHandler[UpdateMenuItem]
@@ -74,6 +92,10 @@ func (h updateMenuItemHandler) Handle(ctx context.Context, cmd UpdateMenuItem) e
 	}
 	item.SetDietaryTags(cmd.IsVegetarian, cmd.IsGlutenFree, cmd.IsSpicy)
 
+	if err := applyOptionalFields(item, cmd); err != nil {
+		return err
+	}
+
 	if oldCat != cmd.CategoryID {
 		if err := h.moveItemToCategoryEnd(item, cmd.CategoryID); err != nil {
 			return err
@@ -81,6 +103,58 @@ func (h updateMenuItemHandler) Handle(ctx context.Context, cmd UpdateMenuItem) e
 	}
 
 	return h.itemRepo.Update(item)
+}
+
+// applyOptionalFields applies the editor-only overlay fields. Nil pointers /
+// nil slices leave the existing value untouched so callers that don't know
+// about the new fields keep working.
+func applyOptionalFields(item *menu.MenuItem, cmd UpdateMenuItem) error {
+	if cmd.SpiceLevel != nil {
+		if err := item.SetSpiceLevel(*cmd.SpiceLevel); err != nil {
+			return err
+		}
+	}
+	if cmd.Schedule != nil {
+		if err := item.SetSchedule(*cmd.Schedule); err != nil {
+			return err
+		}
+	}
+	if cmd.SKU != nil {
+		if err := item.SetSKU(*cmd.SKU); err != nil {
+			return err
+		}
+	}
+	if cmd.IsVegan != nil {
+		item.IsVegan = *cmd.IsVegan
+	}
+	if cmd.IsDairyFree != nil {
+		item.IsDairyFree = *cmd.IsDairyFree
+	}
+	if cmd.IsHalal != nil {
+		item.IsHalal = *cmd.IsHalal
+	}
+	if cmd.IsNutFree != nil {
+		item.IsNutFree = *cmd.IsNutFree
+	}
+	if cmd.Allergens != nil {
+		if err := item.SetAllergens(*cmd.Allergens); err != nil {
+			return err
+		}
+	}
+	if cmd.Badges != nil {
+		if err := item.SetBadges(*cmd.Badges); err != nil {
+			return err
+		}
+	}
+	if cmd.AllowSpecialInstructions != nil {
+		item.SetAllowSpecialInstructions(*cmd.AllowSpecialInstructions)
+	}
+	if cmd.OptionGroups != nil {
+		if err := item.SetOptionGroups(*cmd.OptionGroups); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func validateItemAndCategoryOwnership(item *menu.MenuItem, cat *menu.MenuCategory, restaurantID common.RestaurantID) error {
