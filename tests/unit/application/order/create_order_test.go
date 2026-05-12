@@ -57,6 +57,9 @@ func TestCreateOrderHandler(t *testing.T) {
 			SessionID:     sessionID,
 			Cart:          userCart,
 			PaymentMethod: common.PaymentMethodTypeCash,
+			CustomerName:  "Maya",
+			TableLabel:    "7",
+			TipPercent:    15,
 		}
 
 		resp, err := uc.Handle(context.Background(), req)
@@ -65,13 +68,36 @@ func TestCreateOrderHandler(t *testing.T) {
 		assert.NotEmpty(t, resp.OrderID)
 		assert.NotEmpty(t, resp.OrderNumber)
 
-		// Verify Order Saved
+		// Verify Order Saved with full breakdown.
+		// Subtotal 2000 (20.0 USD), tax 160 (8%), tip 300 (15%), total 2460.
 		savedOrder, _ := orderRepo.FindByID(resp.OrderID)
 		assert.Equal(t, common.PaymentStatusPending, savedOrder.PaymentStatus)
-		assert.Equal(t, int64(2000), savedOrder.TotalAmount) // 20.0 * 100 (USD cents)
-		assert.Equal(t, 20.0, savedOrder.FiatAmount)
+		assert.Equal(t, int64(2000), savedOrder.Subtotal)
+		assert.Equal(t, int64(160), savedOrder.TaxAmount)
+		assert.Equal(t, int64(300), savedOrder.TipAmount)
+		assert.Equal(t, int64(2460), savedOrder.TotalAmount)
+		assert.Equal(t, 24.60, savedOrder.FiatAmount)
 		assert.Equal(t, money.USD, savedOrder.Currency)
-		assert.Equal(t, "$20.00", savedOrder.Total().Format())
+		assert.Equal(t, "$24.60", savedOrder.Total().Format())
+		assert.Equal(t, "Maya", savedOrder.CustomerName)
+		assert.Equal(t, "7", savedOrder.TableLabel)
+	})
+
+	t.Run("RejectsInvalidTipPercent", func(t *testing.T) {
+		cartSvc := cart.NewCartService()
+		sessionID := "sess_bad_tip"
+		item, _ := menu.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
+		require.NoError(t, cartSvc.AddItem(sessionID, item, 1))
+
+		_, err := uc.Handle(context.Background(), orderCmd.CreateOrder{
+			RestaurantID:  "r1",
+			SessionID:     sessionID,
+			Cart:          cartSvc.GetCart(sessionID),
+			PaymentMethod: common.PaymentMethodTypeCash,
+			CustomerName:  "Maya",
+			TipPercent:    17, // not in {0,10,15,20}
+		})
+		assert.Error(t, err)
 	})
 }
 
@@ -103,14 +129,20 @@ func TestCreateOrderHandler_SatoshiRestaurant(t *testing.T) {
 		SessionID:     sessionID,
 		Cart:          cartSvc.GetCart(sessionID),
 		PaymentMethod: common.PaymentMethodTypeCash,
+		CustomerName:  "Alice",
+		TipPercent:    0,
 	})
 	require.NoError(t, err)
 
+	// 3 × 5,000 sats subtotal = 15,000. Tax 8% = 1,200. Tip 0. Total = 16,200.
 	saved, err := orderRepo.FindByID(resp.OrderID)
 	require.NoError(t, err)
 	assert.Equal(t, money.SAT, saved.Currency)
-	assert.Equal(t, int64(15_000), saved.TotalAmount, "3 × 5,000 sats = 15,000 sats (whole units, no scale)")
-	assert.Equal(t, "15,000 sats", saved.Total().Format())
+	assert.Equal(t, int64(15_000), saved.Subtotal)
+	assert.Equal(t, int64(1_200), saved.TaxAmount)
+	assert.Equal(t, int64(0), saved.TipAmount)
+	assert.Equal(t, int64(16_200), saved.TotalAmount)
+	assert.Equal(t, "16,200 sats", saved.Total().Format())
 }
 
 // Regression: replaces a previously-random rand.Intn(10000) generator that

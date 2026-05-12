@@ -80,7 +80,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Handlers
 	kitchenHandler := orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, toggleItemPrepUC, nil, nil, "")
 	serverHandler := orderinghttp.NewServerHandler(getUnpaidServerUC, markPaidUC, nil, nil)
-	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, orderRepo, cartService, "")
+	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, orderRepo, restRepo, cartService, "")
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
 	_ = menuhttp.NewMenuHandler(getMenuUC, cartService, recordVisitUC)
@@ -137,7 +137,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	sessionID := "session-1"
 	_ = cartService.AddItem(sessionID, item1, 1)
 
-	form := "paymentMethod=cash&restaurantID=" + string(restaurantID)
+	form := "paymentMethod=cash&restaurantID=" + string(restaurantID) + "&customerName=Maya&tipPercent=15"
 	req := httptest.NewRequest(http.MethodPost, "/order/create", strings.NewReader(form))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 	req.AddCookie(&http.Cookie{Name: "bitmerchant_session", Value: sessionID})

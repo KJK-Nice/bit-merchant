@@ -74,9 +74,11 @@ func TestDashboardIntegration(t *testing.T) {
 		})
 		assert.NoError(t, err)
 
+		// Subtotal $30 + 8% tax = $32.40. CreateOrder now persists the full
+		// charged total, which is what dashboard stats sum.
 		assert.Equal(t, 1, stats.OrderCount)
-		assert.Equal(t, 30.0, stats.TotalSales)
-		assert.Equal(t, 30.0, stats.AverageOrderValue)
+		assert.InDelta(t, 32.40, stats.TotalSales, 0.001)
+		assert.InDelta(t, 32.40, stats.AverageOrderValue, 0.001)
 	})
 
 	t.Run("Weekly Stats Include Recent Paid Orders", func(t *testing.T) {
@@ -104,9 +106,10 @@ func TestDashboardIntegration(t *testing.T) {
 		})
 		assert.NoError(t, err)
 
-		// Includes previously created paid order ($30) + recent paid order ($12), excludes oldPaid ($9).
+		// Previously created paid order ($32.40 incl tax) + recent paid order ($12),
+		// excludes oldPaid ($9). recentPaid uses NewOrder which bypasses tax math.
 		assert.Equal(t, 2, stats.OrderCount)
-		assert.Equal(t, 42.0, stats.TotalSales)
-		assert.Equal(t, 21.0, stats.AverageOrderValue)
+		assert.InDelta(t, 44.40, stats.TotalSales, 0.001)
+		assert.InDelta(t, 22.20, stats.AverageOrderValue, 0.001)
 	})
 }
