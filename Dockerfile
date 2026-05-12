@@ -3,7 +3,7 @@ FROM golang:1.26-alpine AS builder
 
 # Install git and templ
 RUN apk add --no-cache git
-RUN go install github.com/a-h/templ/cmd/templ@latest
+RUN go install github.com/a-h/templ/cmd/templ@v0.3.960
 
 WORKDIR /app
 
