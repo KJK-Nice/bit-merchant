@@ -5,6 +5,7 @@ import (
 	dashboard "bitmerchant/internal/dashboard/app/query"
 
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/ordering/domain/order"
 	"context"
 
@@ -14,7 +15,7 @@ import (
 
 func TestTopSellingMenuItemsHandler(t *testing.T) {
 	orderRepo := memory.NewMemoryOrderRepository()
-	h := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil, nil)
+	h := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
 	restaurantID := common.RestaurantID("r1")
 
 	// Order 1: 2 Burgers, 1 Soda
