@@ -30,8 +30,12 @@ type Restaurant struct {
 	IsOpen         bool
 	ClosedMessage  string
 	ReopeningHours string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	// PausedUntil is non-nil when the owner has applied a quick-pause
+	// (rush). The restaurant auto-resumes once now passes this timestamp;
+	// readers should call AcceptingOrdersAt to apply that lazily.
+	PausedUntil *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // NewRestaurant creates a new Restaurant with validation. The currency
@@ -92,20 +96,67 @@ func ValidateDescription(description string) error {
 	return nil
 }
 
-// Open marks the restaurant as open, clearing closed messaging.
+// Open marks the restaurant as open, clearing closed messaging and any
+// active quick-pause window.
 func (r *Restaurant) Open() {
 	r.IsOpen = true
 	r.ClosedMessage = ""
 	r.ReopeningHours = ""
+	r.PausedUntil = nil
 	r.UpdatedAt = time.Now()
 }
 
-// Close marks the restaurant as closed with optional messaging.
+// Close marks the restaurant as closed with optional messaging. Any active
+// quick-pause is cleared — closing is a stronger signal than pausing.
 func (r *Restaurant) Close(closedMessage, reopeningHours string) {
 	r.IsOpen = false
 	r.ClosedMessage = closedMessage
 	r.ReopeningHours = reopeningHours
+	r.PausedUntil = nil
 	r.UpdatedAt = time.Now()
+}
+
+// MaxPauseDuration caps quick-pause windows; longer windows should use the
+// regular close flow with messaging.
+const MaxPauseDuration = 4 * time.Hour
+
+// ErrInvalidPauseDuration indicates the requested pause window is non-positive
+// or beyond MaxPauseDuration.
+var ErrInvalidPauseDuration = errors.New("pause duration must be 1m..4h")
+
+// Pause keeps IsOpen=true but suppresses new orders until now+duration.
+// The restaurant auto-resumes lazily via AcceptingOrdersAt.
+func (r *Restaurant) Pause(now time.Time, duration time.Duration) error {
+	if duration <= 0 || duration > MaxPauseDuration {
+		return ErrInvalidPauseDuration
+	}
+	until := now.Add(duration)
+	r.PausedUntil = &until
+	r.UpdatedAt = now
+	return nil
+}
+
+// Resume clears any pending pause window without changing IsOpen.
+func (r *Restaurant) Resume() {
+	r.PausedUntil = nil
+	r.UpdatedAt = time.Now()
+}
+
+// AcceptingOrdersAt reports whether the restaurant is currently taking orders,
+// applying any active quick-pause window relative to the given instant.
+func (r *Restaurant) AcceptingOrdersAt(now time.Time) bool {
+	if !r.IsOpen {
+		return false
+	}
+	if r.PausedUntil != nil && now.Before(*r.PausedUntil) {
+		return false
+	}
+	return true
+}
+
+// IsPausedAt reports whether the restaurant is mid-pause at the given instant.
+func (r *Restaurant) IsPausedAt(now time.Time) bool {
+	return r.IsOpen && r.PausedUntil != nil && now.Before(*r.PausedUntil)
 }
 
 // UpdateStatus updates restaurant open/closed status (kept for backward compatibility).

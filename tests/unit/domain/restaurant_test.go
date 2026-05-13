@@ -64,3 +64,48 @@ func TestRestaurant_UpdateStatus(t *testing.T) {
 	assert.Equal(t, "Tomorrow 9am", r.ReopeningHours)
 	assert.True(t, r.UpdatedAt.After(originalUpdate))
 }
+
+func TestRestaurant_PauseAndResume(t *testing.T) {
+	r, _ := restaurant.NewRestaurant("id", "Cafe")
+	now := time.Date(2026, 5, 13, 12, 0, 0, 0, time.UTC)
+
+	t.Run("pause within bounds suppresses accepting orders", func(t *testing.T) {
+		err := r.Pause(now, 15*time.Minute)
+		assert.NoError(t, err)
+		assert.True(t, r.IsOpen)
+		assert.True(t, r.IsPausedAt(now))
+		assert.False(t, r.AcceptingOrdersAt(now))
+		assert.True(t, r.AcceptingOrdersAt(now.Add(16*time.Minute)))
+	})
+
+	t.Run("resume clears the pause window", func(t *testing.T) {
+		r.Resume()
+		assert.True(t, r.IsOpen)
+		assert.False(t, r.IsPausedAt(now))
+		assert.True(t, r.AcceptingOrdersAt(now))
+		assert.Nil(t, r.PausedUntil)
+	})
+
+	t.Run("pause rejects bad durations", func(t *testing.T) {
+		assert.ErrorIs(t, r.Pause(now, 0), restaurant.ErrInvalidPauseDuration)
+		assert.ErrorIs(t, r.Pause(now, restaurant.MaxPauseDuration+time.Minute), restaurant.ErrInvalidPauseDuration)
+	})
+
+	t.Run("closing clears any active pause", func(t *testing.T) {
+		_ = r.Pause(now, 30*time.Minute)
+		r.Close("brb", "Tomorrow 9am")
+		assert.False(t, r.IsOpen)
+		assert.Nil(t, r.PausedUntil)
+		assert.False(t, r.AcceptingOrdersAt(now))
+	})
+
+	t.Run("opening clears any leftover pause", func(t *testing.T) {
+		r.PausedUntil = ptrTime(now.Add(5 * time.Minute))
+		r.Open()
+		assert.True(t, r.IsOpen)
+		assert.Nil(t, r.PausedUntil)
+		assert.True(t, r.AcceptingOrdersAt(now))
+	})
+}
+
+func ptrTime(t time.Time) *time.Time { return &t }

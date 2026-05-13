@@ -115,5 +115,7 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	dashboardGroup.GET("/menu", handlers.Admin.GetMenu)
 	dashboardGroup.GET("/qr-code", handlers.Admin.GetQRCode)
 	dashboardGroup.POST("/toggle-open", handlers.Dashboard.ToggleOpen)
+	dashboardGroup.POST("/pause", handlers.Dashboard.Pause)
+	dashboardGroup.GET("/orders/:orderNumber", handlers.Dashboard.OrderDetail)
 	dashboardGroup.POST("/invite", handlers.Auth.CreateInvitation)
 }

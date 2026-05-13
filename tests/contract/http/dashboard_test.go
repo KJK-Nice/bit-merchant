@@ -40,11 +40,13 @@ func TestDashboardHandler(t *testing.T) {
 	// Use Cases
 	getStatsUC := dashboard.NewRestaurantDashboardStatsHandler(orderRepo, nil, nil)
 	getHistoryUC := dashboard.NewPaidOrdersForRestaurantHandler(orderRepo, nil, nil)
-	getTopItemsUC := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil)
+	getTopItemsUC := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil, nil)
 	getStalledUC := dashboard.NewStalledOrdersHandler(orderRepo, nil, nil)
+	getByHourUC := dashboard.NewOrdersByHourHandler(orderRepo, nil, nil)
 	toggleOpenUC := restaurantCmd.NewToggleRestaurantOpenHandler(restaurantRepo, nil, nil)
+	pauseUC := restaurantCmd.NewPauseRestaurantHandler(restaurantRepo, nil, nil)
 
-	h := dashboardhttp.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, getStalledUC, toggleOpenUC, restaurantRepo, nil, slog.Default())
+	h := dashboardhttp.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, getStalledUC, getByHourUC, toggleOpenUC, pauseUC, restaurantRepo, orderRepo, nil, slog.Default())
 
 	e := echo.New()
 
@@ -60,8 +62,8 @@ func TestDashboardHandler(t *testing.T) {
 		body := rec.Body.String()
 		assert.Contains(t, body, "Sales Dashboard")
 		assert.Contains(t, body, "10.00") // Total Sales
-		assert.Contains(t, body, "Restaurant Status")
-		assert.Contains(t, body, "Open")
+		assert.Contains(t, body, "Restaurant")
+		assert.Contains(t, body, "Accepting orders")
 	})
 
 	t.Run("POST /dashboard/toggle-open", func(t *testing.T) {

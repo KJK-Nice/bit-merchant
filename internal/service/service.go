@@ -96,7 +96,7 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 	orderingSvc := orderingservice.New(repos, eventBus, logger, cfg.VAPIDPublicKey, photoStorage, cfg)
 	menuSvc := menuservice.New(repos, photoStorage, cfg, orderingSvc.CartService, placesSvc.RecordMenuVisit)
 	restaurantSvc := restaurantservice.New(repos, cfg, qrService, menuSvc, photoStorage)
-	dashboardSvc := dashboardservice.New(repos, restaurantSvc.ToggleRestaurantOpen, logger.Logger)
+	dashboardSvc := dashboardservice.New(repos, restaurantSvc.ToggleRestaurantOpen, restaurantSvc.PauseRestaurant, logger.Logger)
 
 	sessionOpts := newSessionOptions(cfg)
 	webauthnSvc, err := authInfra.NewWebAuthnService(cfg.RPID, "BitMerchant", []string{cfg.MerchantBaseURL})

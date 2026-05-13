@@ -15,6 +15,7 @@ import (
 type Restaurant struct {
 	CreateRestaurant     restaurantCmd.CreateRestaurantHandler
 	ToggleRestaurantOpen restaurantCmd.ToggleRestaurantOpenHandler
+	PauseRestaurant      restaurantCmd.PauseRestaurantHandler
 	UpdateTableCount     restaurantCmd.UpdateRestaurantTableCountHandler
 	GenerateRestaurantQR restaurantQuery.RestaurantTableQRImageHandler
 	Admin                *restauranthttp.AdminHandler
@@ -31,6 +32,7 @@ func New(
 ) Restaurant {
 	createRestUC := restaurantCmd.NewCreateRestaurantHandler(repos.Restaurant, nil, nil)
 	toggleOpenUC := restaurantCmd.NewToggleRestaurantOpenHandler(repos.Restaurant, nil, nil)
+	pauseRestUC := restaurantCmd.NewPauseRestaurantHandler(repos.Restaurant, nil, nil)
 	updateTableCountUC := restaurantCmd.NewUpdateRestaurantTableCountHandler(repos.Restaurant, nil, nil)
 	generateQRUC := restaurantQuery.NewRestaurantTableQRImageHandler(qrService, cfg.CustomerBaseURL, repos.Restaurant, nil, nil)
 
@@ -62,6 +64,7 @@ func New(
 	return Restaurant{
 		CreateRestaurant:     createRestUC,
 		ToggleRestaurantOpen: toggleOpenUC,
+		PauseRestaurant:      pauseRestUC,
 		UpdateTableCount:     updateTableCountUC,
 		GenerateRestaurantQR: generateQRUC,
 		Admin:                adminHandler,

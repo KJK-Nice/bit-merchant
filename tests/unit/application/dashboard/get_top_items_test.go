@@ -14,7 +14,7 @@ import (
 
 func TestTopSellingMenuItemsHandler(t *testing.T) {
 	orderRepo := memory.NewMemoryOrderRepository()
-	h := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil)
+	h := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil, nil)
 	restaurantID := common.RestaurantID("r1")
 
 	// Order 1: 2 Burgers, 1 Soda

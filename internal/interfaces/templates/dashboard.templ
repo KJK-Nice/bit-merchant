@@ -2,6 +2,9 @@ package templates
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
 	"bitmerchant/internal/dashboard/app/query"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
@@ -9,193 +12,623 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/card"
 	"bitmerchant/internal/interfaces/templates/components/ui/input"
 	"bitmerchant/internal/interfaces/templates/components/ui/primitives"
-	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 	"bitmerchant/internal/interfaces/templates/components/ui/table"
+	"bitmerchant/internal/interfaces/templates/components/ui/textarea"
 	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 	"bitmerchant/internal/interfaces/templates/layouts"
 	"bitmerchant/internal/ordering/domain/order"
 	"bitmerchant/internal/restaurant/domain/restaurant"
 )
 
-templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems []query.TopItem, stalled *query.StalledOrdersView, rest *restaurant.Restaurant, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, statusError string) {
-	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
+// DashboardView aggregates everything the Owner Dashboard page renders.
+// Bundling into a single struct keeps the templ signature short and means
+// new tiles can be added without breaking handler-side call sites.
+type DashboardView struct {
+	Stats        *query.DashboardStats
+	History      []*order.Order
+	TotalHistory int
+	Page         int
+	PageSize     int
+	StatusFilter string
+	TopItems     []query.TopItem
+	Stalled      *query.StalledOrdersView
+	Hourly       *query.HourlyOrdersView
+	Range        query.DateRange
+	Restaurant   *restaurant.Restaurant
+	Now          time.Time
+	CSRFToken    string
+	ActiveLabel  string
+	DisplayName  string
+	Subtitle     string
+	Initials     string
+	Switcher     []layouts.RestaurantSwitchOption
+	ActiveRole   string
+	CanCreate    bool
+	StatusError  string
+}
+
+// rangeLabel maps the canonical DateRange to the tab label the audit asked for.
+func rangeLabel(r query.DateRange) string {
+	switch r {
+	case query.DateRangeWeek:
+		return "7d"
+	case query.DateRangeMonth:
+		return "30d"
+	default:
+		return "Today"
+	}
+}
+
+func rangeQueryHref(base string, r query.DateRange) string {
+	return base + "?range=" + string(r)
+}
+
+// formatDeltaPct renders a +/- percentage delta given current and previous.
+// Returns "" when there is no useful comparison (prior period was zero).
+func formatDeltaPct(cur, prev float64) string {
+	if prev == 0 {
+		return ""
+	}
+	pct := ((cur - prev) / prev) * 100
+	sign := "+"
+	if pct < 0 {
+		sign = ""
+	}
+	return fmt.Sprintf("%s%.1f%%", sign, pct)
+}
+
+// formatDeltaInt renders a +/- absolute delta for integer counts.
+func formatDeltaInt(cur, prev int) string {
+	if prev == 0 && cur == 0 {
+		return ""
+	}
+	diff := cur - prev
+	sign := "+"
+	if diff < 0 {
+		sign = ""
+	}
+	return fmt.Sprintf("%s%d vs prior", sign, diff)
+}
+
+// deltaTone returns the colour class for a delta. higherIsBetter flips the
+// semantics for metrics like avg prep where less is better.
+func deltaTone(cur, prev float64, higherIsBetter bool) string {
+	if prev == 0 {
+		return "text-muted-foreground"
+	}
+	diff := cur - prev
+	if diff == 0 {
+		return "text-muted-foreground"
+	}
+	positive := (diff > 0) == higherIsBetter
+	if positive {
+		return "text-emerald-600 dark:text-emerald-400"
+	}
+	return "text-rose-600 dark:text-rose-400"
+}
+
+// formatPrepDuration renders an avg-prep value (seconds) as Nm SSs or "—".
+func formatPrepDuration(seconds float64) string {
+	if seconds <= 0 {
+		return "—"
+	}
+	d := time.Duration(seconds * float64(time.Second))
+	mins := int(d.Minutes())
+	secs := int(d.Seconds()) - mins*60
+	if mins == 0 {
+		return fmt.Sprintf("%ds", secs)
+	}
+	return fmt.Sprintf("%dm %02ds", mins, secs)
+}
+
+// formatHourLabel turns an hour-of-day (0..23) into a compact "9a"/"12p" tag.
+func formatHourLabel(h int) string {
+	switch {
+	case h == 0:
+		return "12a"
+	case h < 12:
+		return fmt.Sprintf("%da", h)
+	case h == 12:
+		return "12p"
+	default:
+		return fmt.Sprintf("%dp", h-12)
+	}
+}
+
+// barHeightPct returns the bar height percent for the hour chart, with a
+// 6% floor for non-zero buckets so they remain visible at a glance.
+func barHeightPct(value, max int) int {
+	if max <= 0 || value <= 0 {
+		return 0
+	}
+	pct := value * 100 / max
+	if pct < 6 {
+		return 6
+	}
+	if pct > 100 {
+		return 100
+	}
+	return pct
+}
+
+// statusFilterValues lists the fulfillment statuses an owner can filter by.
+var statusFilterValues = []struct {
+	Value string
+	Label string
+}{
+	{"", "All"},
+	{"paid", "Queued"},
+	{"preparing", "Preparing"},
+	{"ready", "Ready"},
+	{"completed", "Completed"},
+}
+
+func totalPages(total, pageSize int) int {
+	if pageSize <= 0 {
+		return 1
+	}
+	if total == 0 {
+		return 1
+	}
+	pages := total / pageSize
+	if total%pageSize != 0 {
+		pages++
+	}
+	return pages
+}
+
+templ DashboardPage(view DashboardView) {
+	@layouts.Dashboard("Sales Dashboard", "/dashboard", view.ActiveLabel, view.DisplayName, view.Subtitle, view.Initials, view.CSRFToken, view.Switcher, view.ActiveRole, view.CanCreate) {
 		<div class="space-y-6 mt-4 max-w-5xl">
-			if statusError != "" {
+			if view.StatusError != "" {
 				@toast.Toast(toast.Props{
-					Title:       "Status update failed",
-					Description: statusError,
-					Variant:     toast.VariantError,
-					Position:    toast.PositionTopRight,
-					Duration:    4200,
-					Dismissible: true,
-					Icon:        true,
+					Title:         "Status update failed",
+					Description:   view.StatusError,
+					Variant:       toast.VariantError,
+					Position:      toast.PositionTopRight,
+					Duration:      4200,
+					Dismissible:   true,
+					Icon:          true,
 					ShowIndicator: true,
 				})
 			}
-			@StalledOrdersBanner(stalled)
-			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-				@card.Card() {
-					@card.Header(card.HeaderProps{Class: "pb-2"}) {
-						@card.Title(card.TitleProps{Class: "text-sm font-medium text-muted-foreground"}) {
-							Total Sales (Today)
-						}
-					}
-					@card.Content(card.ContentProps{Class: "pt-0"}) {
-						<p class="text-3xl font-bold">${ fmt.Sprintf("%.2f", stats.TotalSales) }</p>
-					}
+			@StalledOrdersBanner(view.Stalled)
+			@DateRangeTabs(view.Range)
+			@KPITiles(view.Stats, view.Range)
+			@OrdersByHourCard(view.Hourly, view.Range)
+			@RestaurantStatusCard(view.Restaurant, view.CSRFToken, view.Now)
+			@TopItemsCard(view.TopItems, view.Restaurant)
+			@RecentOrdersCard(view.History, view.TotalHistory, view.Page, view.PageSize, view.StatusFilter, view.Range)
+		</div>
+	}
+}
+
+templ DateRangeTabs(active query.DateRange) {
+	<div class="flex flex-wrap items-center gap-1 rounded-lg border border-border bg-muted p-1 w-fit" role="tablist" aria-label="Date range">
+		for _, r := range []query.DateRange{query.DateRangeToday, query.DateRangeWeek, query.DateRangeMonth} {
+			<a
+				href={ templ.SafeURL(rangeQueryHref("/dashboard", r)) }
+				role="tab"
+				aria-selected?={ active == r }
+				class={
+					"px-3 py-1.5 text-sm rounded-md transition-colors",
+					templ.KV("bg-background text-foreground shadow-sm", active == r),
+					templ.KV("text-muted-foreground hover:text-foreground", active != r),
 				}
-				@card.Card() {
-					@card.Header(card.HeaderProps{Class: "pb-2"}) {
-						@card.Title(card.TitleProps{Class: "text-sm font-medium text-muted-foreground"}) {
-							Orders (Today)
+			>
+				{ rangeLabel(r) }
+			</a>
+		}
+	</div>
+}
+
+templ KPITiles(stats *query.DashboardStats, rng query.DateRange) {
+	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+		@kpiTile("Total Sales", fmt.Sprintf("$%.2f", stats.TotalSales), formatDeltaPct(stats.TotalSales, stats.Previous.TotalSales), deltaTone(stats.TotalSales, stats.Previous.TotalSales, true), priorPeriodLabel(rng))
+		@kpiTile("Orders", strconv.Itoa(stats.OrderCount), formatDeltaInt(stats.OrderCount, stats.Previous.OrderCount), deltaToneInt(stats.OrderCount, stats.Previous.OrderCount, true), priorPeriodLabel(rng))
+		@kpiTile("Avg Ticket", fmt.Sprintf("$%.2f", stats.AverageOrderValue), formatDeltaPct(stats.AverageOrderValue, stats.Previous.AverageOrderValue), deltaTone(stats.AverageOrderValue, stats.Previous.AverageOrderValue, true), priorPeriodLabel(rng))
+		@kpiTile("Avg Prep", formatPrepDuration(stats.AvgPrepSeconds), formatDeltaPct(stats.AvgPrepSeconds, stats.Previous.AvgPrepSeconds), deltaTone(stats.AvgPrepSeconds, stats.Previous.AvgPrepSeconds, false), priorPeriodLabel(rng))
+	</div>
+}
+
+func priorPeriodLabel(r query.DateRange) string {
+	switch r {
+	case query.DateRangeWeek:
+		return "vs prior 7d"
+	case query.DateRangeMonth:
+		return "vs prior month"
+	default:
+		return "vs yesterday"
+	}
+}
+
+func deltaToneInt(cur, prev int, higherIsBetter bool) string {
+	return deltaTone(float64(cur), float64(prev), higherIsBetter)
+}
+
+templ kpiTile(label, value, delta, tone, priorLabel string) {
+	@card.Card() {
+		@card.Header(card.HeaderProps{Class: "pb-2"}) {
+			@card.Title(card.TitleProps{Class: "text-sm font-medium text-muted-foreground"}) {
+				{ label }
+			}
+		}
+		@card.Content(card.ContentProps{Class: "pt-0 space-y-1"}) {
+			<p class="text-3xl font-bold">{ value }</p>
+			if delta != "" {
+				<p class={ "text-xs", tone }>
+					{ delta }
+					<span class="text-muted-foreground"> { priorLabel }</span>
+				</p>
+			} else {
+				<p class="text-xs text-muted-foreground">{ priorLabel }</p>
+			}
+		}
+	}
+}
+
+templ OrdersByHourCard(hourly *query.HourlyOrdersView, rng query.DateRange) {
+	@card.Card() {
+		@card.Header() {
+			@card.Title() {
+				Orders by hour
+			}
+		}
+		@card.Content() {
+			if hourly == nil || hourly.Total == 0 {
+				<p class="text-sm text-muted-foreground">No paid orders in this period yet.</p>
+			} else {
+				<div class="space-y-2">
+					<p class="text-xs text-muted-foreground">
+						Peak: <span class="font-medium text-foreground">{ formatHourLabel(hourly.PeakHour) }</span>
+						<span> · { strconv.Itoa(hourly.Max) } orders</span>
+					</p>
+					<div class="flex items-end gap-1 h-32" role="img" aria-label="Orders by hour">
+						for h := 0; h < 24; h++ {
+							<div class="flex-1 flex flex-col items-center justify-end gap-1">
+								<div
+									class={
+										"w-full rounded-t transition-colors",
+										templ.KV("bg-primary", h == hourly.PeakHour && hourly.Buckets[h] > 0),
+										templ.KV("bg-muted", h != hourly.PeakHour || hourly.Buckets[h] == 0),
+									}
+									style={ "height: " + strconv.Itoa(barHeightPct(hourly.Buckets[h], hourly.Max)) + "%;" }
+									title={ formatHourLabel(h) + " — " + strconv.Itoa(hourly.Buckets[h]) + " orders" }
+								></div>
+								if h%3 == 0 {
+									<span class="text-[10px] text-muted-foreground">{ formatHourLabel(h) }</span>
+								} else {
+									<span class="text-[10px] text-muted-foreground">&nbsp;</span>
+								}
+							</div>
+						}
+					</div>
+				</div>
+			}
+		}
+	}
+}
+
+templ RestaurantStatusCard(rest *restaurant.Restaurant, csrfToken string, now time.Time) {
+	@card.Card() {
+		@card.Header() {
+			@card.Title() {
+				Restaurant
+			}
+		}
+		@card.Content(card.ContentProps{Class: "space-y-4"}) {
+			<div class="flex flex-wrap items-center gap-3">
+				<form action="/dashboard/toggle-open" method="POST" class="flex items-center gap-3">
+					<input type="hidden" name="csrf" value={ csrfToken }/>
+					<label class="inline-flex items-center gap-2 cursor-pointer" for="dashboard-open-switch">
+						<input
+							id="dashboard-open-switch"
+							type="checkbox"
+							name="is_open"
+							value="on"
+							checked?={ rest.IsOpen }
+							class="peer sr-only"
+							onchange="this.form.submit()"
+						/>
+						<span class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent bg-input transition-colors peer-checked:bg-primary">
+							<span class="block h-5 w-5 transform rounded-full bg-background shadow-md transition-transform translate-x-0 peer-checked:translate-x-5"></span>
+						</span>
+						<span class="text-sm font-medium">
+							if rest.IsOpen {
+								Accepting orders
+							} else {
+								Closed
+							}
+						</span>
+					</label>
+				</form>
+				if rest.IsOpen {
+					if rest.IsPausedAt(now) {
+						@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+							{ "Paused until " + rest.PausedUntil.In(now.Location()).Format("15:04") }
+						}
+					} else {
+						@badge.Badge(badge.Props{Variant: badge.VariantDefault}) {
+							Open
 						}
 					}
-					@card.Content(card.ContentProps{Class: "pt-0"}) {
-						<p class="text-3xl font-bold">{ fmt.Sprintf("%d", stats.OrderCount) }</p>
-					}
-				}
-				@card.Card() {
-					@card.Header(card.HeaderProps{Class: "pb-2"}) {
-						@card.Title(card.TitleProps{Class: "text-sm font-medium text-muted-foreground"}) {
-							Avg Order Value
-						}
-					}
-					@card.Content(card.ContentProps{Class: "pt-0"}) {
-						<p class="text-3xl font-bold">${ fmt.Sprintf("%.2f", stats.AverageOrderValue) }</p>
+				} else {
+					@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+						Closed
 					}
 				}
 			</div>
-
-			@card.Card() {
-				@card.Header() {
-					@card.Title() {
-						Restaurant Status
-					}
-				}
-				@card.Content(card.ContentProps{Class: "space-y-4"}) {
-					<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-						<p class="text-sm text-muted-foreground">Customers see this on the public menu.</p>
-						if rest.IsOpen {
-							@badge.Badge(badge.Props{Variant: badge.VariantDefault}) {
-								Open
-							}
-						} else {
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
-								Closed
-							}
+			if rest.IsOpen {
+				<div class="space-y-2">
+					<p class="text-xs text-muted-foreground">Quick pause (auto-resumes after the chosen window)</p>
+					<div class="flex flex-wrap gap-2">
+						for _, mins := range []int{15, 30, 60} {
+							<form action="/dashboard/pause" method="POST">
+								<input type="hidden" name="csrf" value={ csrfToken }/>
+								<input type="hidden" name="minutes" value={ strconv.Itoa(mins) }/>
+								<button
+									type="submit"
+									class="inline-flex items-center rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
+								>
+									{ pauseChipLabel(mins) }
+								</button>
+							</form>
+						}
+						if rest.IsPausedAt(now) {
+							<form action="/dashboard/pause" method="POST">
+								<input type="hidden" name="csrf" value={ csrfToken }/>
+								<input type="hidden" name="minutes" value="0"/>
+								<button
+									type="submit"
+									class="inline-flex items-center rounded-full border border-emerald-500/60 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300"
+								>
+									Resume now
+								</button>
+							</form>
 						}
 					</div>
-					if !rest.IsOpen && rest.ClosedMessage != "" {
-						<div class="text-sm space-y-1">
-							<p class="font-medium text-foreground">Message shown to guests</p>
-							<p class="text-muted-foreground whitespace-pre-wrap">{ rest.ClosedMessage }</p>
-						</div>
-					}
-					if !rest.IsOpen && rest.ReopeningHours != "" {
-						<div class="text-sm space-y-1">
-							<p class="font-medium text-foreground">Reopening</p>
-							<p class="text-muted-foreground">{ rest.ReopeningHours }</p>
-						</div>
-					}
-					<form action="/dashboard/toggle-open" method="POST" class="space-y-4">
-						<input type="hidden" name="csrf" value={ csrfToken }/>
-						if rest.IsOpen {
-							@primitives.Field(primitives.FieldProps{
-								ID:    "closed_message",
-								Label: "Message for guests (optional)",
-							}) {
-								@textarea.Textarea(textarea.Props{
-									ID:          "closed_message",
-									Name:        "closed_message",
-									Rows:        3,
-									Placeholder: "e.g. Closed for a private event today.",
-								})
-							}
-							@primitives.Field(primitives.FieldProps{
-								ID:    "reopening_hours",
-								Label: "Expected reopening (optional)",
-							}) {
-								@input.Input(input.Props{
-									Type:        "text",
-									ID:          "reopening_hours",
-									Name:        "reopening_hours",
-									Placeholder: "e.g. Tomorrow 11am",
-								})
-							}
-							@button.Button(button.Props{Type: "submit", Variant: button.VariantDestructive}) {
-								Close restaurant
-							}
-						} else {
-							@button.Button(button.Props{Type: "submit"}) {
-								Open restaurant
-							}
-						}
-					</form>
-				}
+				</div>
 			}
-
-			@card.Card() {
-				@card.Header() {
-					@card.Title() {
-						Top Selling Items
+			if !rest.IsOpen && rest.ClosedMessage != "" {
+				<div class="text-sm space-y-1">
+					<p class="font-medium text-foreground">Message shown to guests</p>
+					<p class="text-muted-foreground whitespace-pre-wrap">{ rest.ClosedMessage }</p>
+				</div>
+			}
+			if !rest.IsOpen && rest.ReopeningHours != "" {
+				<div class="text-sm space-y-1">
+					<p class="font-medium text-foreground">Reopening</p>
+					<p class="text-muted-foreground">{ rest.ReopeningHours }</p>
+				</div>
+			}
+			if !rest.IsOpen {
+				<form action="/dashboard/toggle-open" method="POST" class="space-y-4">
+					<input type="hidden" name="csrf" value={ csrfToken }/>
+					@primitives.Field(primitives.FieldProps{
+						ID:    "closed_message",
+						Label: "Message for guests (optional, shown until you reopen)",
+					}) {
+						@textarea.Textarea(textarea.Props{
+							ID:          "closed_message",
+							Name:        "closed_message",
+							Rows:        2,
+							Placeholder: "e.g. Closed for a private event today.",
+						})
 					}
+					@primitives.Field(primitives.FieldProps{
+						ID:    "reopening_hours",
+						Label: "Expected reopening (optional)",
+					}) {
+						@input.Input(input.Props{
+							Type:        "text",
+							ID:          "reopening_hours",
+							Name:        "reopening_hours",
+							Placeholder: "e.g. Tomorrow 11am",
+						})
+					}
+					@button.Button(button.Props{Type: "submit"}) {
+						Reopen restaurant
+					}
+				</form>
+			}
+		}
+	}
+}
+
+func pauseChipLabel(mins int) string {
+	if mins == 60 {
+		return "Pause 1h (rush)"
+	}
+	return fmt.Sprintf("Pause %dm", mins)
+}
+
+templ TopItemsCard(items []query.TopItem, rest *restaurant.Restaurant) {
+	@card.Card() {
+		@card.Header() {
+			@card.Title() {
+				Top Selling Items
+			}
+		}
+		@card.Content() {
+			if len(items) == 0 {
+				<p class="text-sm text-muted-foreground">No paid items yet for this restaurant.</p>
+			} else {
+				<ol class="space-y-3" aria-label="Top selling items">
+					for _, item := range items {
+						<li class="flex items-center gap-3">
+							<div class="size-12 shrink-0 rounded-md border border-border overflow-hidden bg-muted flex items-center justify-center">
+								if item.PhotoURL != "" {
+									<img src={ item.PhotoURL } alt={ item.Name } class="size-full object-cover" loading="lazy"/>
+								} else {
+									<span class="text-xs text-muted-foreground">No&nbsp;photo</span>
+								}
+							</div>
+							<div class="min-w-0 flex-1">
+								<div class="flex items-center justify-between gap-3">
+									<p class="text-sm font-medium truncate">{ item.Name }</p>
+									<p class="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+										{ strconv.Itoa(item.Quantity) } sold · { formatRevenue(item.Revenue, rest) }
+									</p>
+								</div>
+								<div class="mt-1 h-2 rounded-full bg-muted overflow-hidden" aria-hidden="true">
+									<div
+										class="h-full bg-primary"
+										style={ "width: " + strconv.Itoa(revenueShareWidth(item.RevenueShare)) + "%;" }
+									></div>
+								</div>
+							</div>
+						</li>
+					}
+				</ol>
+			}
+		}
+	}
+}
+
+func revenueShareWidth(share float64) int {
+	if share <= 0 {
+		return 0
+	}
+	pct := int(share * 100)
+	if pct > 100 {
+		pct = 100
+	}
+	if pct < 4 && share > 0 {
+		pct = 4
+	}
+	return pct
+}
+
+func formatRevenue(revenue float64, rest *restaurant.Restaurant) string {
+	if rest == nil || rest.BaseCurrency.IsZero() {
+		return fmt.Sprintf("$%.2f", revenue)
+	}
+	return fmt.Sprintf("%s%.2f", currencySymbol(rest.BaseCurrency.Code), revenue)
+}
+
+func currencySymbol(code string) string {
+	switch strings.ToUpper(code) {
+	case "USD":
+		return "$"
+	case "THB":
+		return "฿"
+	case "SAT":
+		return "₿"
+	case "EUR":
+		return "€"
+	case "GBP":
+		return "£"
+	default:
+		return "$"
+	}
+}
+
+templ RecentOrdersCard(history []*order.Order, total, page, pageSize int, statusFilter string, rng query.DateRange) {
+	@card.Card() {
+		@card.Header() {
+			@card.Title() {
+				Recent Orders
+			}
+		}
+		@card.Content(card.ContentProps{Class: "space-y-3"}) {
+			<div class="flex flex-wrap items-center gap-2" role="tablist" aria-label="Filter orders by status">
+				for _, opt := range statusFilterValues {
+					<a
+						href={ templ.SafeURL(recentOrdersHref(opt.Value, 1, rng)) }
+						role="tab"
+						aria-selected?={ statusFilter == opt.Value }
+						class={
+							"px-3 py-1 text-xs rounded-full border transition-colors",
+							templ.KV("bg-primary text-primary-foreground border-primary", statusFilter == opt.Value),
+							templ.KV("border-border text-muted-foreground hover:text-foreground", statusFilter != opt.Value),
+						}
+					>
+						{ opt.Label }
+					</a>
 				}
-				@card.Content() {
-					<div class="overflow-x-auto">
-						@table.Table() {
-							@table.Header() {
-								@table.Row() {
-									@table.Head() { Item }
-									@table.Head() { Quantity }
-									@table.Head() { Revenue }
+			</div>
+			<div class="overflow-x-auto">
+				@table.Table() {
+					@table.Header() {
+						@table.Row() {
+							@table.Head() { Order # }
+							@table.Head() { Date }
+							@table.Head() { Total }
+							@table.Head() { Status }
+						}
+					}
+					@table.Body() {
+						if len(history) == 0 {
+							@table.Row() {
+								@table.Cell() {
+									<span class="text-sm text-muted-foreground">No orders match this filter yet.</span>
 								}
 							}
-							@table.Body() {
-								for _, item := range topItems {
-									@table.Row() {
-										@table.Cell() { { item.Name } }
-										@table.Cell() { { fmt.Sprintf("%d", item.Quantity) } }
-										@table.Cell() { { fmt.Sprintf("$%.2f", item.Revenue) } }
+						} else {
+							for _, o := range history {
+								@table.Row() {
+									@table.Cell() {
+										<a href={ templ.SafeURL("/dashboard/orders/" + string(o.OrderNumber)) } class="text-primary hover:underline font-medium">
+											{ string(o.OrderNumber) }
+										</a>
+									}
+									@table.Cell() { { o.CreatedAt.Format("Jan 2 15:04") } }
+									@table.Cell() { { o.Total().Format() } }
+									@table.Cell() {
+										@orderStatusBadge(o)
 									}
 								}
 							}
 						}
-					</div>
-				}
-			}
-
-			@card.Card() {
-				@card.Header() {
-					@card.Title() {
-						Recent Orders
 					}
 				}
-				@card.Content() {
-					<div class="overflow-x-auto">
-						@table.Table() {
-							@table.Header() {
-								@table.Row() {
-									@table.Head() { Order # }
-									@table.Head() { Date }
-									@table.Head() { Total }
-									@table.Head() { Status }
-								}
-							}
-							@table.Body() {
-								for _, order := range history {
-									@table.Row() {
-										@table.Cell() { { string(order.OrderNumber) } }
-										@table.Cell() { { order.CreatedAt.Format("15:04:05") } }
-										@table.Cell() { { order.Total().Format() } }
-										@table.Cell() { { string(order.PaymentStatus) } }
-									}
-								}
-							}
+			</div>
+			if total > pageSize {
+				<div class="flex items-center justify-between gap-3 pt-2 text-sm text-muted-foreground">
+					<span>Page { strconv.Itoa(page) } of { strconv.Itoa(totalPages(total, pageSize)) } · { strconv.Itoa(total) } orders</span>
+					<div class="flex items-center gap-2">
+						if page > 1 {
+							<a href={ templ.SafeURL(recentOrdersHref(statusFilter, page-1, rng)) } class="rounded-md border border-border px-3 py-1 hover:bg-muted">Prev</a>
+						}
+						if page < totalPages(total, pageSize) {
+							<a href={ templ.SafeURL(recentOrdersHref(statusFilter, page+1, rng)) } class="rounded-md border border-border px-3 py-1 hover:bg-muted">Next</a>
 						}
 					</div>
-				}
+				</div>
 			}
-		</div>
+		}
+	}
+}
+
+func recentOrdersHref(status string, page int, rng query.DateRange) string {
+	params := []string{}
+	if rng != "" && rng != query.DateRangeToday {
+		params = append(params, "range="+string(rng))
+	}
+	if status != "" {
+		params = append(params, "status="+status)
+	}
+	if page > 1 {
+		params = append(params, "page="+strconv.Itoa(page))
+	}
+	if len(params) == 0 {
+		return "/dashboard"
+	}
+	return "/dashboard?" + strings.Join(params, "&")
+}
+
+templ orderStatusBadge(o *order.Order) {
+	switch string(o.FulfillmentStatus) {
+	case "paid":
+		@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Queued }
+	case "preparing":
+		@badge.Badge(badge.Props{Variant: badge.VariantDefault}) { Preparing }
+	case "ready":
+		@badge.Badge(badge.Props{Variant: badge.VariantDefault}) { Ready }
+	case "completed":
+		@badge.Badge(badge.Props{Variant: badge.VariantOutline}) { Completed }
+	default:
+		@badge.Badge(badge.Props{Variant: badge.VariantOutline}) { { string(o.FulfillmentStatus) } }
 	}
 }
 
@@ -230,6 +663,103 @@ templ StalledOrdersBanner(view *query.StalledOrdersView) {
 					<path d="m12 5 7 7-7 7"/>
 				</svg>
 			</a>
+		</div>
+	}
+}
+
+templ DashboardOrderDetail(o *order.Order, rest *restaurant.Restaurant, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, csrfToken string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
+	@layouts.Dashboard("Order #"+string(o.OrderNumber), "/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
+		<div class="space-y-6 mt-4 max-w-3xl">
+			<a href="/dashboard" class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true">
+					<path d="m12 19-7-7 7-7"/>
+					<path d="M19 12H5"/>
+				</svg>
+				Back to dashboard
+			</a>
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						{ "Order #" + string(o.OrderNumber) }
+					}
+				}
+				@card.Content(card.ContentProps{Class: "space-y-3"}) {
+					<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+						<div class="space-y-0.5">
+							<dt class="text-xs uppercase tracking-wide text-muted-foreground">Placed</dt>
+							<dd>{ o.CreatedAt.Format("Jan 2 2006 · 15:04:05") }</dd>
+						</div>
+						<div class="space-y-0.5">
+							<dt class="text-xs uppercase tracking-wide text-muted-foreground">Status</dt>
+							<dd>
+								@orderStatusBadge(o)
+							</dd>
+						</div>
+						if o.CustomerName != "" {
+							<div class="space-y-0.5">
+								<dt class="text-xs uppercase tracking-wide text-muted-foreground">Customer</dt>
+								<dd>{ o.CustomerName }</dd>
+							</div>
+						}
+						if o.TableLabel != "" {
+							<div class="space-y-0.5">
+								<dt class="text-xs uppercase tracking-wide text-muted-foreground">Table</dt>
+								<dd>{ o.TableLabel }</dd>
+							</div>
+						}
+						<div class="space-y-0.5">
+							<dt class="text-xs uppercase tracking-wide text-muted-foreground">Total</dt>
+							<dd class="font-semibold">{ o.Total().Format() }</dd>
+						</div>
+						<div class="space-y-0.5">
+							<dt class="text-xs uppercase tracking-wide text-muted-foreground">Payment</dt>
+							<dd>{ string(o.PaymentStatus) + " · " + string(o.PaymentMethod) }</dd>
+						</div>
+					</dl>
+					<a href={ templ.SafeURL("/kitchen") } class="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-muted">
+						Open kitchen
+					</a>
+				}
+			}
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						Line items
+					}
+				}
+				@card.Content() {
+					<div class="overflow-x-auto">
+						@table.Table() {
+							@table.Header() {
+								@table.Row() {
+									@table.Head() { Item }
+									@table.Head() { Qty }
+									@table.Head() { Subtotal }
+								}
+							}
+							@table.Body() {
+								for _, it := range o.Items {
+									@table.Row() {
+										@table.Cell() {
+											<div class="space-y-1">
+												<p class="font-medium">{ it.Name }</p>
+												if it.SpecialInstructions != "" {
+													<p class="text-xs text-muted-foreground italic">"{ it.SpecialInstructions }"</p>
+												}
+												for _, mod := range it.Modifiers {
+													<p class="text-xs text-muted-foreground">+ { mod.GroupName }: { mod.OptionName }</p>
+												}
+											</div>
+										}
+										@table.Cell() { { strconv.Itoa(it.Quantity) } }
+										@table.Cell() { { fmt.Sprintf("$%.2f", it.Subtotal) } }
+									}
+								}
+							}
+						}
+					</div>
+				}
+			}
 		</div>
 	}
 }
