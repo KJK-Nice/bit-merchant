@@ -100,39 +100,57 @@ func computePeriodStats(orders []*order.Order, start, end time.Time) PeriodStats
 		prepCount      int
 	)
 	for _, o := range orders {
-		if o.CreatedAt.Before(start) {
-			continue
-		}
-		if !end.IsZero() && !o.CreatedAt.Before(end) {
-			continue
-		}
-		if o.PaymentStatus != common.PaymentStatusPaid {
+		if !orderInWindow(o, start, end) {
 			continue
 		}
 		count++
 		totalSales += o.FiatAmount
-		if o.PreparingAt != nil && o.ReadyAt != nil {
-			d := o.ReadyAt.Sub(*o.PreparingAt)
-			if d > 0 {
-				prepSumSeconds += d.Seconds()
-				prepCount++
-			}
+		if d, ok := orderPrepDuration(o); ok {
+			prepSumSeconds += d.Seconds()
+			prepCount++
 		}
-	}
-	avg := 0.0
-	if count > 0 {
-		avg = totalSales / float64(count)
-	}
-	avgPrep := 0.0
-	if prepCount > 0 {
-		avgPrep = prepSumSeconds / float64(prepCount)
 	}
 	return PeriodStats{
 		OrderCount:        count,
 		TotalSales:        totalSales,
-		AverageOrderValue: avg,
-		AvgPrepSeconds:    avgPrep,
+		AverageOrderValue: safeMean(totalSales, count),
+		AvgPrepSeconds:    safeMean(prepSumSeconds, prepCount),
 	}
+}
+
+// orderInWindow reports whether a paid order falls in [start, end). end == 0
+// is treated as open-ended (no upper bound).
+func orderInWindow(o *order.Order, start, end time.Time) bool {
+	if o.PaymentStatus != common.PaymentStatusPaid {
+		return false
+	}
+	if o.CreatedAt.Before(start) {
+		return false
+	}
+	if !end.IsZero() && !o.CreatedAt.Before(end) {
+		return false
+	}
+	return true
+}
+
+// orderPrepDuration returns the kitchen prep duration (ReadyAt - PreparingAt)
+// when both timestamps are set and positive, otherwise ok=false.
+func orderPrepDuration(o *order.Order) (time.Duration, bool) {
+	if o.PreparingAt == nil || o.ReadyAt == nil {
+		return 0, false
+	}
+	d := o.ReadyAt.Sub(*o.PreparingAt)
+	if d <= 0 {
+		return 0, false
+	}
+	return d, true
+}
+
+func safeMean(sum float64, n int) float64 {
+	if n <= 0 {
+		return 0
+	}
+	return sum / float64(n)
 }
 
 // RangeWindow returns [start, end) for the active range. Today/week/month
@@ -183,11 +201,4 @@ func PreviousWindow(now time.Time, rangeType DateRange) (time.Time, time.Time) {
 		offset := now.Sub(startOfToday)
 		return yesterdayStart, yesterdayStart.Add(offset)
 	}
-}
-
-// getRangeStart preserves the legacy boundary callers that haven't yet
-// migrated to RangeWindow. Returns the inclusive lower bound only.
-func getRangeStart(now time.Time, rangeType DateRange) time.Time {
-	start, _ := RangeWindow(now, rangeType)
-	return start
 }

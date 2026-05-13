@@ -7,6 +7,7 @@ import (
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/common/decorator"
 	"bitmerchant/internal/menu/domain/menu"
+	"bitmerchant/internal/ordering/domain/order"
 	"log/slog"
 )
 
@@ -45,37 +46,58 @@ func NewTopSellingMenuItemsHandler(orders OrderReadModel, items menu.ItemReposit
 	return decorator.ApplyQueryDecorators[TopSellingMenuItems, []TopItem](h, log, metrics)
 }
 
+const topItemsLimit = 5
+
+type topItemBucket struct {
+	menuItemID common.ItemID
+	name       string
+	quantity   int
+	revenue    float64
+}
+
 func (h topSellingMenuItemsHandler) Handle(ctx context.Context, q TopSellingMenuItems) ([]TopItem, error) {
 	_ = ctx
 	orders, err := h.orders.FindByRestaurantID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}
-	type bucket struct {
-		menuItemID common.ItemID
-		name       string
-		quantity   int
-		revenue    float64
-	}
-	buckets := make(map[string]*bucket)
+	result := topItemsFromBuckets(aggregatePaidItems(orders))
+	annotateTopItems(result, h.items)
+	return result, nil
+}
+
+// aggregatePaidItems folds line items across paid orders into per-item
+// buckets keyed by menu-item ID (or name when the ID is missing).
+func aggregatePaidItems(orders []*order.Order) map[string]*topItemBucket {
+	buckets := make(map[string]*topItemBucket)
 	for _, o := range orders {
 		if o.PaymentStatus != common.PaymentStatusPaid {
 			continue
 		}
 		for _, item := range o.Items {
-			key := string(item.MenuItemID)
-			if key == "" {
-				key = "name:" + item.Name
-			}
+			key := bucketKey(item.MenuItemID, item.Name)
 			b, ok := buckets[key]
 			if !ok {
-				b = &bucket{menuItemID: item.MenuItemID, name: item.Name}
+				b = &topItemBucket{menuItemID: item.MenuItemID, name: item.Name}
 				buckets[key] = b
 			}
 			b.quantity += item.Quantity
 			b.revenue += item.Subtotal
 		}
 	}
+	return buckets
+}
+
+func bucketKey(id common.ItemID, name string) string {
+	if id != "" {
+		return string(id)
+	}
+	return "name:" + name
+}
+
+// topItemsFromBuckets sorts buckets, trims to topItemsLimit, and computes
+// each row's RevenueShare against the leader.
+func topItemsFromBuckets(buckets map[string]*topItemBucket) []TopItem {
 	result := make([]TopItem, 0, len(buckets))
 	for _, b := range buckets {
 		result = append(result, TopItem{
@@ -91,23 +113,33 @@ func (h topSellingMenuItemsHandler) Handle(ctx context.Context, q TopSellingMenu
 		}
 		return result[i].Revenue > result[j].Revenue
 	})
-	if len(result) > 5 {
-		result = result[:5]
+	if len(result) > topItemsLimit {
+		result = result[:topItemsLimit]
 	}
-	// Annotate revenue share against the leader (first row).
-	var leader float64
-	if len(result) > 0 {
-		leader = result[0].Revenue
-	}
-	for i := range result {
-		if leader > 0 {
+	if len(result) > 0 && result[0].Revenue > 0 {
+		leader := result[0].Revenue
+		for i := range result {
 			result[i].RevenueShare = result[i].Revenue / leader
 		}
-		if h.items != nil && result[i].MenuItemID != "" {
-			if mi, err := h.items.FindByID(result[i].MenuItemID); err == nil && mi != nil {
-				result[i].PhotoURL = mi.PhotoURL
-			}
-		}
 	}
-	return result, nil
+	return result
+}
+
+// annotateTopItems fills PhotoURL from the menu item repo. Best-effort —
+// the row is left thumb-less when the originating menu item has been
+// deleted or the repo is nil (tests).
+func annotateTopItems(items []TopItem, repo menu.ItemRepository) {
+	if repo == nil {
+		return
+	}
+	for i := range items {
+		if items[i].MenuItemID == "" {
+			continue
+		}
+		mi, err := repo.FindByID(items[i].MenuItemID)
+		if err != nil || mi == nil {
+			continue
+		}
+		items[i].PhotoURL = mi.PhotoURL
+	}
 }
