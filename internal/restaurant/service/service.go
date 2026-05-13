@@ -2,6 +2,8 @@ package service
 
 import (
 	"bitmerchant/internal/infrastructure/qr"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	"bitmerchant/internal/menu/domain/menu"
 	menuservice "bitmerchant/internal/menu/service"
 	restaurantCmd "bitmerchant/internal/restaurant/app/command"
 	restaurantQuery "bitmerchant/internal/restaurant/app/query"
@@ -24,7 +26,8 @@ func New(
 	repos wiring.Repositories,
 	cfg wiring.Config,
 	qrService *qr.QRCodeService,
-	menu menuservice.Menu,
+	menuSvc menuservice.Menu,
+	photoStorage menu.PhotoStorage,
 ) Restaurant {
 	createRestUC := restaurantCmd.NewCreateRestaurantHandler(repos.Restaurant, nil, nil)
 	toggleOpenUC := restaurantCmd.NewToggleRestaurantOpenHandler(repos.Restaurant, nil, nil)
@@ -33,16 +36,22 @@ func New(
 
 	adminHandler := restauranthttp.NewAdminHandler(
 		createRestUC,
-		menu.CreateMenuCategory,
-		menu.CreateMenuItem,
-		menu.GetMenuForAdmin,
-		menu.UpdateMenuItem,
-		menu.UpdateMenuCategory,
-		menu.ToggleItemAvailability,
-		menu.UploadMenuPhoto,
-		menu.ReorderMenuCategories,
-		menu.ReorderMenuItems,
+		menuSvc.CreateMenuCategory,
+		menuSvc.CreateMenuItem,
+		menuSvc.GetMenuForAdmin,
+		menuSvc.UpdateMenuItem,
+		menuSvc.UpdateMenuCategory,
+		menuSvc.ToggleItemAvailability,
+		menuSvc.UploadMenuPhoto,
+		menuSvc.ReorderMenuCategories,
+		menuSvc.ReorderMenuItems,
 		repos.MenuItem,
+		photoStorage,
+		menuQuery.PhotoSignerConfig{
+			Bucket:        cfg.S3BucketName,
+			Endpoint:      cfg.S3Endpoint,
+			PublicBaseURL: cfg.S3PublicBaseURL,
+		},
 		updateTableCountUC,
 		generateQRUC,
 		repos.Membership,

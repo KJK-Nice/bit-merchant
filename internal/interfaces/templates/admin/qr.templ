@@ -12,7 +12,7 @@ import (
 
 templ QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, restaurantName string, tableNumbers []int, tableCountInput int, qrError string, saved bool) {
 	@layouts.Dashboard("QR codes", "/admin/qr", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
-		<div class="space-y-8 mt-4 max-w-4xl">
+		@AdminContent() {
 			if saved {
 				@toast.Toast(toast.Props{
 					Title:       "QR settings saved",
@@ -111,6 +111,6 @@ templ QRPage(csrfToken string, activeRestaurantLabel string, userDisplayName str
 					</div>
 				}
 			</div>
-		</div>
+		}
 	}
 }

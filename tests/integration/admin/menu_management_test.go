@@ -62,6 +62,8 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 		reorderCatUC,
 		reorderItemUC,
 		repoItem,
+		nil, // photoStorage
+		menuQuery.PhotoSignerConfig{},
 		updateTableUC,
 		generateQRUC,
 		membershipRepo,

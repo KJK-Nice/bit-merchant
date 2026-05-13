@@ -75,6 +75,10 @@ func (h *AdminHandler) GetItemEditor(c echo.Context) error {
 	if item.RestaurantID != restaurantID {
 		return c.Redirect(http.StatusFound, adminMenuRedirect(adminFlashMenuItemNotFound))
 	}
+	item, err = menuQuery.ItemWithPresignedPhoto(c.Request().Context(), item, h.photos, h.photoSignerCfg)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load item photo")
+	}
 
 	cats, err := h.loadEditorCategories(c, restaurantID)
 	if err != nil {

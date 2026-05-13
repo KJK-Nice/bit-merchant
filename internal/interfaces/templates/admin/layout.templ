@@ -1,0 +1,14 @@
+package admin
+
+// adminContentClasses is the canonical wrapper class set for every admin page.
+// All admin pages should wrap their content in <div class={ adminContentClasses() }>
+// so spacing, max width, and top-margin stay consistent.
+const adminContentClasses = "mx-auto w-full max-w-5xl space-y-6 mt-4"
+
+// AdminContent wraps admin page content in the standard layout container so
+// every admin route (dashboard, item editor, QR codes, …) feels identical.
+templ AdminContent() {
+	<div class={ adminContentClasses }>
+		{ children... }
+	</div>
+}

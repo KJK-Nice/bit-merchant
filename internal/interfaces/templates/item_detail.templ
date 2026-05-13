@@ -71,7 +71,7 @@ func hasAnyDietary(item *menu.MenuItem) bool {
 
 // ItemDetailPage renders the full item-detail screen.
 templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken string) {
-	@Layout(item.Name + " · Customize") {
+	@Layout(item.Name + " · Add to cart") {
 		<div class="container mx-auto max-w-lg pb-32">
 			<!-- sticky header / back -->
 			<div class="sticky top-0 z-10 bg-background/95 backdrop-blur border-b px-4 py-3 flex items-center gap-3">

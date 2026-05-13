@@ -6,6 +6,7 @@ import (
 
 	"bitmerchant/internal/interfaces/templates"
 	"bitmerchant/internal/interfaces/templates/components"
+	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/menu/domain/menu"
 
 	"bitmerchant/internal/ordering/app/cart"
@@ -21,15 +22,23 @@ import (
 )
 
 type CartHandler struct {
-	cartService *cart.CartService
-	itemRepo    menu.ItemRepository
+	cartService    *cart.CartService
+	itemRepo       menu.ItemRepository
+	photos         menu.PhotoStorage
+	photoSignerCfg menuQuery.PhotoSignerConfig
 }
 
-// NewCartHandler creates a new CartHandler
-func NewCartHandler(cartService *cart.CartService, itemRepo menu.ItemRepository) *CartHandler {
+// NewCartHandler creates a new CartHandler.
+//
+// photos and photoSignerCfg may be zero values; when photos is nil, item-detail
+// renders fall back to the raw PhotoURL stored on the item (e.g. local dev
+// without S3).
+func NewCartHandler(cartService *cart.CartService, itemRepo menu.ItemRepository, photos menu.PhotoStorage, photoSignerCfg menuQuery.PhotoSignerConfig) *CartHandler {
 	return &CartHandler{
-		cartService: cartService,
-		itemRepo:    itemRepo,
+		cartService:    cartService,
+		itemRepo:       itemRepo,
+		photos:         photos,
+		photoSignerCfg: photoSignerCfg,
 	}
 }
 
@@ -88,10 +97,14 @@ func (h *CartHandler) GetItemDetail(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusNotFound, "Item not found")
 	}
+	display, err := menuQuery.ItemWithPresignedPhoto(c.Request().Context(), item, h.photos, h.photoSignerCfg)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load item photo")
+	}
 	restaurantID := c.QueryParam("restaurantID")
 	tableLabel := c.QueryParam("table")
 	csrfToken := commonhttp.CSRFToken(c)
-	return templates.ItemDetailPage(item, restaurantID, tableLabel, csrfToken).Render(c.Request().Context(), c.Response())
+	return templates.ItemDetailPage(display, restaurantID, tableLabel, csrfToken).Render(c.Request().Context(), c.Response())
 }
 
 // AddToCartAndRedirect handles POST /cart/add-redirect — used by the item-detail

@@ -63,7 +63,7 @@ templ ItemEditorPage(data ItemEditorData, activeRestaurantLabel string, userDisp
 				@toast.Toast(toast.Props{Title: "Could not save", Description: data.FlashMessage, Variant: toast.VariantError, Position: toast.PositionTopRight, Duration: 8000})
 			}
 		}
-		<div class="mx-auto max-w-5xl space-y-6 mt-4 pb-32">
+		@AdminContent() {
 			<div class="flex items-start justify-between gap-3 flex-wrap">
 				<div class="space-y-1">
 					<nav class="text-xs text-muted-foreground flex items-center gap-1">
@@ -134,12 +134,44 @@ templ ItemEditorPage(data ItemEditorData, activeRestaurantLabel string, userDisp
 							@card.Title(card.TitleProps{Class: "text-sm uppercase tracking-wide text-muted-foreground"}) { Photo }
 						}
 						@card.Content(card.ContentProps{Class: "space-y-3"}) {
-							if data.Item.PhotoURL != "" {
-								<div class="overflow-hidden rounded-md border border-border">
-									<img src={ data.Item.PhotoURL } alt={ data.Item.Name } class="max-h-48 w-full object-contain"/>
-								</div>
+							<div
+								id="ie-photo-preview-wrap"
+								class={ "overflow-hidden rounded-md border border-border bg-muted/30 " + photoPreviewClass(data.Item.PhotoURL) }
+							>
+								<img
+									id="ie-photo-preview"
+									src={ data.Item.PhotoURL }
+									alt={ data.Item.Name }
+									class="max-h-96 w-full object-contain"
+								/>
+							</div>
+							<div class="space-y-2">
+								@label.Label(label.Props{For: "ie-photo-input"}) {
+									if data.Item.PhotoURL != "" {
+										Replace photo
+									} else {
+										Upload photo
+									}
+								}
+								<input
+									type="file"
+									id="ie-photo-input"
+									name="photo"
+									accept="image/*"
+									form="item-editor-photo-form"
+									class="block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-foreground hover:file:bg-muted/80"
+								/>
+								<p class="text-xs text-muted-foreground">JPG or PNG · max 5 MB · crop coming soon</p>
+							</div>
+							@button.Button(button.Props{
+								Type:       "submit",
+								Variant:    button.VariantOutline,
+								Class:      "w-full",
+								Attributes: templ.Attributes{"form": "item-editor-photo-form", "id": "ie-photo-upload-btn", "disabled": "disabled"},
+							}) {
+								@icon.Image(icon.Props{Class: "mr-2 h-4 w-4"})
+								Upload selected file
 							}
-							<p class="text-xs text-muted-foreground">Edit the photo from the menu dashboard (Photo button on the item row). Crop coming soon.</p>
 						}
 					}
 
@@ -248,10 +280,36 @@ templ ItemEditorPage(data ItemEditorData, activeRestaurantLabel string, userDisp
 					Publish changes
 				}
 			</div>
-		</div>
+
+			<!--
+				Photo upload subform — declared as a sibling of the editor form so the
+				file input (which lives visually inside the editor's photo card) can
+				submit it via the HTML5 `form` attribute. Multipart photo upload and
+				the structured editor save can't share a single POST, so we keep two
+				forms and let the user submit them independently.
+			-->
+			<form
+				id="item-editor-photo-form"
+				action={ templ.SafeURL("/admin/item/" + string(data.Item.ID) + "/photo") }
+				method="post"
+				enctype="multipart/form-data"
+				class="hidden"
+			>
+				<input type="hidden" name="csrf" value={ data.CSRFToken }/>
+			</form>
+		}
 
 		<script src="/static/js/admin-item-editor.js" nonce={ templ.GetNonce(ctx) } defer></script>
 	}
+}
+
+// photoPreviewClass hides the preview wrapper when no photo is available yet
+// so the empty image element doesn't render a broken icon.
+func photoPreviewClass(photoURL string) string {
+	if photoURL == "" {
+		return "hidden"
+	}
+	return ""
 }
 
 // scheduleRadio renders one schedule option button.
