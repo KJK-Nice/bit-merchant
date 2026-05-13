@@ -15,13 +15,15 @@ type Dashboard struct {
 	GetHistory  dashboardQuery.PaidOrdersForRestaurantHandler
 	GetTopItems dashboardQuery.TopSellingMenuItemsHandler
 	GetStalled  dashboardQuery.StalledOrdersHandler
+	GetByHour   dashboardQuery.OrdersByHourHandler
 	HTTP        *dashboardhttp.DashboardHandler
 }
 
-// New wires dashboard queries and HTTP port. toggleOpen must be the same handler instance used in service.Application.Commands.
+// New wires dashboard queries and HTTP port. toggleOpen and pause must be the same handler instances used in service.Application.Commands.
 func New(
 	repos wiring.Repositories,
 	toggleOpen restaurantCmd.ToggleRestaurantOpenHandler,
+	pause restaurantCmd.PauseRestaurantHandler,
 	logger *slog.Logger,
 ) Dashboard {
 	if logger == nil {
@@ -29,13 +31,15 @@ func New(
 	}
 	getStatsUC := dashboardQuery.NewRestaurantDashboardStatsHandler(repos.Order, nil, nil)
 	getHistoryUC := dashboardQuery.NewPaidOrdersForRestaurantHandler(repos.Order, nil, nil)
-	getTopItemsUC := dashboardQuery.NewTopSellingMenuItemsHandler(repos.Order, nil, nil)
+	getTopItemsUC := dashboardQuery.NewTopSellingMenuItemsHandler(repos.Order, repos.MenuItem, nil, nil)
 	getStalledUC := dashboardQuery.NewStalledOrdersHandler(repos.Order, nil, nil)
+	getByHourUC := dashboardQuery.NewOrdersByHourHandler(repos.Order, nil, nil)
 	return Dashboard{
 		GetStats:    getStatsUC,
 		GetHistory:  getHistoryUC,
 		GetTopItems: getTopItemsUC,
 		GetStalled:  getStalledUC,
-		HTTP:        dashboardhttp.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, getStalledUC, toggleOpen, repos.Restaurant, repos.Membership, logger),
+		GetByHour:   getByHourUC,
+		HTTP:        dashboardhttp.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, getStalledUC, getByHourUC, toggleOpen, pause, repos.Restaurant, repos.Order, repos.Membership, logger),
 	}
 }
