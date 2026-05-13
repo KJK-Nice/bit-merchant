@@ -12,6 +12,11 @@ import (
 // now this single value drives ETA, kitchen overdue tiers, and dashboard alerts.
 const DefaultPrepTarget = 10 * time.Minute
 
+// OverdueThreshold returns the duration past which an in-flight order is
+// considered stalled. Shared by kitchen card highlighting and the dashboard
+// stalled-order alert strip so both surfaces stay in agreement.
+func OverdueThreshold() time.Duration { return DefaultPrepTarget }
+
 // OrderStatusView is a render-time projection of an order with the two pieces
 // the customer cares about on the status screen: where they sit in the queue
 // and when their food should be ready.

@@ -25,7 +25,7 @@ import (
 	"bitmerchant/internal/restaurant/domain/restaurant"
 )
 
-func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems []query.TopItem, rest *restaurant.Restaurant, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, statusError string) templ.Component {
+func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems []query.TopItem, stalled *query.StalledOrdersView, rest *restaurant.Restaurant, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, statusError string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -76,6 +76,10 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
+			}
+			templ_7745c5c3_Err = StalledOrdersBanner(stalled).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4\">")
 			if templ_7745c5c3_Err != nil {
@@ -156,7 +160,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", stats.TotalSales))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 43, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 44, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -253,7 +257,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 					var templ_7745c5c3_Var12 string
 					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", stats.OrderCount))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 53, Col: 73}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 54, Col: 73}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 					if templ_7745c5c3_Err != nil {
@@ -350,7 +354,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 					var templ_7745c5c3_Var17 string
 					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", stats.AverageOrderValue))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 63, Col: 83}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 64, Col: 83}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
@@ -507,7 +511,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 						var templ_7745c5c3_Var24 string
 						templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(rest.ClosedMessage)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 90, Col: 80}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 91, Col: 80}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 						if templ_7745c5c3_Err != nil {
@@ -530,7 +534,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 						var templ_7745c5c3_Var25 string
 						templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(rest.ReopeningHours)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 96, Col: 61}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 97, Col: 61}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 						if templ_7745c5c3_Err != nil {
@@ -548,7 +552,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 					var templ_7745c5c3_Var26 string
 					templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 100, Col: 56}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 101, Col: 56}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 					if templ_7745c5c3_Err != nil {
@@ -927,7 +931,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 										var templ_7745c5c3_Var44 string
 										templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 155, Col: 37}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 156, Col: 37}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 										if templ_7745c5c3_Err != nil {
@@ -958,7 +962,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 										var templ_7745c5c3_Var46 string
 										templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", item.Quantity))
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 156, Col: 60}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 157, Col: 60}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 										if templ_7745c5c3_Err != nil {
@@ -989,7 +993,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 										var templ_7745c5c3_Var48 string
 										templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$%.2f", item.Revenue))
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 157, Col: 62}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 158, Col: 62}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 										if templ_7745c5c3_Err != nil {
@@ -1300,7 +1304,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 										var templ_7745c5c3_Var63 string
 										templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(string(order.OrderNumber))
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 186, Col: 53}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 187, Col: 53}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 										if templ_7745c5c3_Err != nil {
@@ -1331,7 +1335,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 										var templ_7745c5c3_Var65 string
 										templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(order.CreatedAt.Format("15:04:05"))
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 187, Col: 62}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 188, Col: 62}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 										if templ_7745c5c3_Err != nil {
@@ -1362,7 +1366,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 										var templ_7745c5c3_Var67 string
 										templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(order.Total().Format())
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 188, Col: 50}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 189, Col: 50}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 										if templ_7745c5c3_Err != nil {
@@ -1393,7 +1397,7 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 										var templ_7745c5c3_Var69 string
 										templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(string(order.PaymentStatus))
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/dashboard.templ`, Line: 189, Col: 55}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 190, Col: 55}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 										if templ_7745c5c3_Err != nil {
@@ -1449,6 +1453,62 @@ func DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems
 		templ_7745c5c3_Err = layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func StalledOrdersBanner(view *query.StalledOrdersView) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var70 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var70 == nil {
+			templ_7745c5c3_Var70 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		if view != nil && view.Count > 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "<div role=\"status\" aria-live=\"polite\" class=\"flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-400 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/10 dark:text-amber-200\"><div class=\"flex items-start gap-3\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-5 mt-0.5 shrink-0\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z\"></path> <line x1=\"12\" x2=\"12\" y1=\"9\" y2=\"13\"></line> <line x1=\"12\" x2=\"12.01\" y1=\"17\" y2=\"17\"></line></svg><p class=\"text-sm font-medium\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if view.Count == 1 && view.Sample != nil {
+				var templ_7745c5c3_Var71 string
+				templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Order #%s has been preparing for %dm — over your %dm target.", string(view.Sample.OrderNumber), view.SampleAgeMinutes(), view.ThresholdMinutes()))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 217, Col: 168}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				var templ_7745c5c3_Var72 string
+				templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d orders over target — review.", view.Count))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard.templ`, Line: 219, Col: 68}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</p></div><a href=\"/kitchen\" class=\"inline-flex items-center gap-1.5 rounded-md border border-amber-500/70 bg-background/60 px-3 py-1.5 text-sm font-semibold text-amber-900 hover:bg-amber-100/70 dark:text-amber-100 dark:hover:bg-amber-500/20\">Open kitchen <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"size-4\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path> <path d=\"m12 5 7 7-7 7\"></path></svg></a></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		return nil
 	})

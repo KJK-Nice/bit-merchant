@@ -41,9 +41,10 @@ func TestDashboardHandler(t *testing.T) {
 	getStatsUC := dashboard.NewRestaurantDashboardStatsHandler(orderRepo, nil, nil)
 	getHistoryUC := dashboard.NewPaidOrdersForRestaurantHandler(orderRepo, nil, nil)
 	getTopItemsUC := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil)
+	getStalledUC := dashboard.NewStalledOrdersHandler(orderRepo, nil, nil)
 	toggleOpenUC := restaurantCmd.NewToggleRestaurantOpenHandler(restaurantRepo, nil, nil)
 
-	h := dashboardhttp.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpenUC, restaurantRepo, nil, slog.Default())
+	h := dashboardhttp.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, getStalledUC, toggleOpenUC, restaurantRepo, nil, slog.Default())
 
 	e := echo.New()
 

@@ -19,6 +19,7 @@ type DashboardHandler struct {
 	getStatsUC     dashboard.RestaurantDashboardStatsHandler
 	getHistoryUC   dashboard.PaidOrdersForRestaurantHandler
 	getTopItemsUC  dashboard.TopSellingMenuItemsHandler
+	getStalledUC   dashboard.StalledOrdersHandler
 	toggleOpenUC   restaurantCmd.ToggleRestaurantOpenHandler
 	restaurantRepo restaurant.Repository
 	membershipRepo membership.Repository
@@ -40,6 +41,7 @@ func NewDashboardHandler(
 	getStatsUC dashboard.RestaurantDashboardStatsHandler,
 	getHistoryUC dashboard.PaidOrdersForRestaurantHandler,
 	getTopItemsUC dashboard.TopSellingMenuItemsHandler,
+	getStalledUC dashboard.StalledOrdersHandler,
 	toggleOpenUC restaurantCmd.ToggleRestaurantOpenHandler,
 	restaurantRepo restaurant.Repository,
 	membershipRepo membership.Repository,
@@ -52,6 +54,7 @@ func NewDashboardHandler(
 		getStatsUC:     getStatsUC,
 		getHistoryUC:   getHistoryUC,
 		getTopItemsUC:  getTopItemsUC,
+		getStalledUC:   getStalledUC,
 		toggleOpenUC:   toggleOpenUC,
 		restaurantRepo: restaurantRepo,
 		membershipRepo: membershipRepo,
@@ -87,6 +90,13 @@ func (h *DashboardHandler) Dashboard(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Failed to load top items: "+err.Error())
 	}
 
+	stalled, err := h.getStalledUC.Handle(c.Request().Context(), dashboard.StalledOrders{
+		RestaurantID: restaurantID,
+	})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load stalled orders: "+err.Error())
+	}
+
 	rest, err := h.restaurantRepo.FindByID(restaurantID)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Failed to load restaurant: "+err.Error())
@@ -101,7 +111,7 @@ func (h *DashboardHandler) Dashboard(c echo.Context) error {
 		h.logger.Error("Dashboard switcher data failed", "error", sErr)
 		return c.String(http.StatusInternalServerError, "Failed to load navigation")
 	}
-	return templates.DashboardPage(stats, history, topItems, rest, commonhttp.CSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate, statusErr).Render(c.Request().Context(), c.Response())
+	return templates.DashboardPage(stats, history, topItems, stalled, rest, commonhttp.CSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate, statusErr).Render(c.Request().Context(), c.Response())
 }
 
 func (h *DashboardHandler) ToggleOpen(c echo.Context) error {

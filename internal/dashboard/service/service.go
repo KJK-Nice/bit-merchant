@@ -14,6 +14,7 @@ type Dashboard struct {
 	GetStats    dashboardQuery.RestaurantDashboardStatsHandler
 	GetHistory  dashboardQuery.PaidOrdersForRestaurantHandler
 	GetTopItems dashboardQuery.TopSellingMenuItemsHandler
+	GetStalled  dashboardQuery.StalledOrdersHandler
 	HTTP        *dashboardhttp.DashboardHandler
 }
 
@@ -29,10 +30,12 @@ func New(
 	getStatsUC := dashboardQuery.NewRestaurantDashboardStatsHandler(repos.Order, nil, nil)
 	getHistoryUC := dashboardQuery.NewPaidOrdersForRestaurantHandler(repos.Order, nil, nil)
 	getTopItemsUC := dashboardQuery.NewTopSellingMenuItemsHandler(repos.Order, nil, nil)
+	getStalledUC := dashboardQuery.NewStalledOrdersHandler(repos.Order, nil, nil)
 	return Dashboard{
 		GetStats:    getStatsUC,
 		GetHistory:  getHistoryUC,
 		GetTopItems: getTopItemsUC,
-		HTTP:        dashboardhttp.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, toggleOpen, repos.Restaurant, repos.Membership, logger),
+		GetStalled:  getStalledUC,
+		HTTP:        dashboardhttp.NewDashboardHandler(getStatsUC, getHistoryUC, getTopItemsUC, getStalledUC, toggleOpen, repos.Restaurant, repos.Membership, logger),
 	}
 }
