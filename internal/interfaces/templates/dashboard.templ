@@ -17,7 +17,7 @@ import (
 	"bitmerchant/internal/restaurant/domain/restaurant"
 )
 
-templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems []query.TopItem, rest *restaurant.Restaurant, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, statusError string) {
+templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItems []query.TopItem, stalled *query.StalledOrdersView, rest *restaurant.Restaurant, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, statusError string) {
 	@layouts.Dashboard("Sales Dashboard", "/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div class="space-y-6 mt-4 max-w-5xl">
 			if statusError != "" {
@@ -32,6 +32,7 @@ templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItem
 					ShowIndicator: true,
 				})
 			}
+			@StalledOrdersBanner(stalled)
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 				@card.Card() {
 					@card.Header(card.HeaderProps{Class: "pb-2"}) {
@@ -194,6 +195,41 @@ templ DashboardPage(stats *query.DashboardStats, history []*order.Order, topItem
 					</div>
 				}
 			}
+		</div>
+	}
+}
+
+templ StalledOrdersBanner(view *query.StalledOrdersView) {
+	if view != nil && view.Count > 0 {
+		<div
+			role="status"
+			aria-live="polite"
+			class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-400 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/10 dark:text-amber-200"
+		>
+			<div class="flex items-start gap-3">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 mt-0.5 shrink-0" aria-hidden="true">
+					<path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+					<line x1="12" x2="12" y1="9" y2="13"/>
+					<line x1="12" x2="12.01" y1="17" y2="17"/>
+				</svg>
+				<p class="text-sm font-medium">
+					if view.Count == 1 && view.Sample != nil {
+						{ fmt.Sprintf("Order #%s has been preparing for %dm — over your %dm target.", string(view.Sample.OrderNumber), view.SampleAgeMinutes(), view.ThresholdMinutes()) }
+					} else {
+						{ fmt.Sprintf("%d orders over target — review.", view.Count) }
+					}
+				</p>
+			</div>
+			<a
+				href="/kitchen"
+				class="inline-flex items-center gap-1.5 rounded-md border border-amber-500/70 bg-background/60 px-3 py-1.5 text-sm font-semibold text-amber-900 hover:bg-amber-100/70 dark:text-amber-100 dark:hover:bg-amber-500/20"
+			>
+				Open kitchen
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true">
+					<path d="M5 12h14"/>
+					<path d="m12 5 7 7-7 7"/>
+				</svg>
+			</a>
 		</div>
 	}
 }

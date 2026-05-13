@@ -2,11 +2,16 @@ package templates
 
 import (
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/ordering/app/query"
 	"bitmerchant/internal/ordering/domain/order"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/interfaces/templates/layouts"
 	"fmt"
 )
+
+func kitchenOverdueMinutes() int {
+	return int(query.OverdueThreshold().Minutes())
+}
 
 func kitchenStatusForSummary(order *order.Order) string {
 	if order == nil {
@@ -58,9 +63,10 @@ templ kitchenLaneColumn(key string, title string, subtitle string, emptyText str
 
 templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, vapidPublicKey string) {
 	@layouts.Dashboard("Kitchen Display", "/kitchen", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
-		<div 
-			id="kitchen-display" 
+		<div
+			id="kitchen-display"
 			data-init="@get('/kitchen/stream')"
+			data-overdue-minutes={ fmt.Sprintf("%d", kitchenOverdueMinutes()) }
 			class="space-y-6 mt-4 pb-6"
 		>
 			<section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-muted/50 p-5">
@@ -540,7 +546,7 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 				if (!root || !toggle) return;
 
 				const STORAGE_KEY = "kitchen-sound-on";
-				const OVERDUE_MINUTES = 12;
+				const OVERDUE_MINUTES = parseInt(root.dataset.overdueMinutes || "12", 10) || 12;
 				const stored = window.localStorage.getItem(STORAGE_KEY);
 				let soundOn = stored === null ? true : stored === "true";
 
