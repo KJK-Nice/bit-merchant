@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/menu/domain/menu"
 	"bitmerchant/internal/ordering/app/cart"
 	orderinghttp "bitmerchant/internal/ordering/ports/http"
@@ -23,7 +24,7 @@ func TestCartEndpoints(t *testing.T) {
 	item, _ := menu.NewMenuItem("i1", "c1", "r1", "Burger", 10.0)
 	require.NoError(t, itemRepo.Save(item))
 
-	h := orderinghttp.NewCartHandler(cartService, itemRepo)
+	h := orderinghttp.NewCartHandler(cartService, itemRepo, nil, menuQuery.PhotoSignerConfig{})
 	e := echo.New()
 
 	t.Run("Add Item", func(t *testing.T) {

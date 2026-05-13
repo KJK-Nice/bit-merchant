@@ -6,6 +6,8 @@ import (
 	"bitmerchant/internal/common"
 	commonhttp "bitmerchant/internal/common/http"
 	"bitmerchant/internal/infrastructure/logging"
+	menuQuery "bitmerchant/internal/menu/app/query"
+	"bitmerchant/internal/menu/domain/menu"
 	orderCart "bitmerchant/internal/ordering/app/cart"
 	orderCmd "bitmerchant/internal/ordering/app/command"
 	orderevent "bitmerchant/internal/ordering/app/event"
@@ -41,11 +43,16 @@ type Ordering struct {
 }
 
 // New wires ordering bounded-context handlers and HTTP ports.
+//
+// photoStorage may be nil; when missing, the customer item-detail page falls
+// back to rendering raw PhotoURLs (e.g. dev environments without S3).
 func New(
 	repos wiring.Repositories,
 	eventBus common.EventBus,
 	logger *logging.Logger,
 	vapidPublicKey string,
+	photoStorage menu.PhotoStorage,
+	cfg wiring.Config,
 ) Ordering {
 	cartService := orderCart.NewCartService()
 	createOrderUC := orderCmd.NewCreateOrderHandler(repos.Order, repos.Restaurant, eventBus, logger.Logger, nil)
@@ -71,10 +78,14 @@ func New(
 		GetCustomerOrders:   getCustomerOrdersUC,
 		GetKitchenOrders:    getKitchenOrdersUC,
 		GetUnpaidServer:     getUnpaidServerUC,
-		CartHandler:         orderinghttp.NewCartHandler(cartService, repos.MenuItem),
-		OrderHandler:        orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, repos.Order, repos.Restaurant, cartService, vapidPublicKey),
-		KitchenHandler:      orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, toggleItemPrepUC, repos.Restaurant, repos.Membership, vapidPublicKey),
-		ServerHandler:       orderinghttp.NewServerHandler(getUnpaidServerUC, markPaidUC, repos.Restaurant, repos.Membership),
+		CartHandler: orderinghttp.NewCartHandler(cartService, repos.MenuItem, photoStorage, menuQuery.PhotoSignerConfig{
+			Bucket:        cfg.S3BucketName,
+			Endpoint:      cfg.S3Endpoint,
+			PublicBaseURL: cfg.S3PublicBaseURL,
+		}),
+		OrderHandler:   orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, repos.Order, repos.Restaurant, cartService, vapidPublicKey),
+		KitchenHandler: orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, toggleItemPrepUC, repos.Restaurant, repos.Membership, vapidPublicKey),
+		ServerHandler:  orderinghttp.NewServerHandler(getUnpaidServerUC, markPaidUC, repos.Restaurant, repos.Membership),
 	}
 }
 

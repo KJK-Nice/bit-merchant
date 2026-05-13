@@ -231,6 +231,30 @@
     sync();
   });
 
+  // --- Photo preview wiring -------------------------------------------------
+  // When the user picks a file in the photo input, swap the preview image's
+  // src to an object URL so they can verify the choice before uploading. Also
+  // enable the "Upload selected file" button only once a file is chosen.
+  var photoInput = document.getElementById('ie-photo-input');
+  var photoPreview = document.getElementById('ie-photo-preview');
+  var photoWrap = document.getElementById('ie-photo-preview-wrap');
+  var photoUploadBtn = document.getElementById('ie-photo-upload-btn');
+  if (photoInput && photoPreview && photoUploadBtn) {
+    var lastObjectURL = null;
+    photoInput.addEventListener('change', function () {
+      var file = photoInput.files && photoInput.files[0];
+      if (!file) {
+        photoUploadBtn.setAttribute('disabled', 'disabled');
+        return;
+      }
+      if (lastObjectURL) URL.revokeObjectURL(lastObjectURL);
+      lastObjectURL = URL.createObjectURL(file);
+      photoPreview.src = lastObjectURL;
+      if (photoWrap) photoWrap.classList.remove('hidden');
+      photoUploadBtn.removeAttribute('disabled');
+    });
+  }
+
   // Initial render.
   sync();
 })();

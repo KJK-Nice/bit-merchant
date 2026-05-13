@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/menu/domain/menu"
 	"bitmerchant/internal/ordering/app/cart"
 	orderinghttp "bitmerchant/internal/ordering/ports/http"
@@ -22,7 +23,7 @@ func newItemDetailContext(t *testing.T, item *menu.MenuItem) (*orderinghttp.Cart
 	itemRepo := memory.NewMemoryMenuItemRepository()
 	require.NoError(t, itemRepo.Save(item))
 
-	h := orderinghttp.NewCartHandler(cartService, itemRepo)
+	h := orderinghttp.NewCartHandler(cartService, itemRepo, nil, menuQuery.PhotoSignerConfig{})
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/menu/item/"+string(item.ID)+"?restaurantID="+string(item.RestaurantID), nil)
 	rec := httptest.NewRecorder()

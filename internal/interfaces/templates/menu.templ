@@ -167,7 +167,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 																	Class:   "shadow-md",
 																	Href:    fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel),
 																}) {
-																	Customize
+																	Add to cart
 																}
 															} else {
 																// "Add to Cart" — visible when qty == 0
@@ -263,7 +263,7 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 															Variant: button.VariantDefault,
 															Href:    fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel),
 														}) {
-															Customize
+															Add to cart
 														}
 													} else {
 														// "Add to Cart" — visible when qty == 0

@@ -99,6 +99,8 @@ type AdminHandler struct {
 	reorderCategoriesUC menuCmd.ReorderMenuCategoriesHandler
 	reorderItemsUC      menuCmd.ReorderMenuItemsHandler
 	itemRepo            menu.ItemRepository
+	photos              menu.PhotoStorage
+	photoSignerCfg      menuQuery.PhotoSignerConfig
 	updateTableCountUC  restaurantCmd.UpdateRestaurantTableCountHandler
 	generateQRUC        restaurantQuery.RestaurantTableQRImageHandler
 	membershipRepo      membership.Repository
@@ -118,6 +120,8 @@ func NewAdminHandler(
 	reorderCategoriesUC menuCmd.ReorderMenuCategoriesHandler,
 	reorderItemsUC menuCmd.ReorderMenuItemsHandler,
 	itemRepo menu.ItemRepository,
+	photos menu.PhotoStorage,
+	photoSignerCfg menuQuery.PhotoSignerConfig,
 	updateTableCountUC restaurantCmd.UpdateRestaurantTableCountHandler,
 	generateQRUC restaurantQuery.RestaurantTableQRImageHandler,
 	membershipRepo membership.Repository,
@@ -135,6 +139,8 @@ func NewAdminHandler(
 		reorderCategoriesUC: reorderCategoriesUC,
 		reorderItemsUC:      reorderItemsUC,
 		itemRepo:            itemRepo,
+		photos:              photos,
+		photoSignerCfg:      photoSignerCfg,
 		updateTableCountUC:  updateTableCountUC,
 		generateQRUC:        generateQRUC,
 		membershipRepo:      membershipRepo,

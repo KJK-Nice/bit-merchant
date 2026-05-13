@@ -52,6 +52,7 @@ func TestAdminQR_TableCountAndPrint(t *testing.T) {
 		updateItemUC, updateCategoryUC, toggleAvailUC, nil,
 		reorderCatUC, reorderItemUC,
 		repoItem,
+		nil, menuQuery.PhotoSignerConfig{},
 		updateTableUC, generateQRUC, membershipRepo, repoRest,
 	)
 

@@ -50,7 +50,7 @@ func priceInputLabel(c money.Currency) string {
 
 templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, menuError string) {
 	@layouts.Dashboard("Menu Management", "/admin/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
-		<div class="space-y-6 mt-4 max-w-5xl">
+		@AdminContent() {
 			if menuError != "" {
 				@toast.Toast(toast.Props{
 					Title:       "Menu update failed",
@@ -313,7 +313,7 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 																	Photo
 																}
 															}
-															@dialog.Content(dialog.ContentProps{}) {
+															@dialog.Content(dialog.ContentProps{Class: "sm:max-w-3xl"}) {
 																@dialog.Header() {
 																	@dialog.Title() { { "Photo — " + item.Name } }
 																}
@@ -324,8 +324,8 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 																			@label.Label(label.Props{}) {
 																				Current image
 																			}
-																			<div class="max-h-48 overflow-auto rounded-md border border-border">
-																				<img src={ item.PhotoURL } alt={ item.Name } class="w-full object-contain"/>
+																			<div class="overflow-hidden rounded-md border border-border">
+																				<img src={ item.PhotoURL } alt={ item.Name } class="max-h-[28rem] w-full object-contain"/>
 																			</div>
 																		</div>
 																	}
@@ -471,6 +471,6 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 					});
 				})();
 			</script>
-		</div>
+		}
 	}
 }
