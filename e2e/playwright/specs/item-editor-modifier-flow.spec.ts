@@ -126,11 +126,15 @@ const publishWithModifiers = async (
           "X-CSRF-Token": csrfToken,
         },
         body: body.toString(),
-        redirect: "manual",
       });
-      // The server returns a 302 with flash=item_saved on success.
-      if (resp.status !== 302 && resp.status !== 200) {
+      // After following the 302 redirect, the editor renders the saved-flash
+      // page (200). Anything else means the server rejected the payload.
+      if (!resp.ok) {
         throw new Error(`edit POST failed: ${resp.status}`);
+      }
+      const html = await resp.text();
+      if (!html.includes("flash=item_saved") && !html.includes("Item saved")) {
+        throw new Error("edit POST did not land on the saved flash");
       }
     },
     { csrfToken: csrf, itemID, categoryID, ogJSON: optionGroupsJSON },
