@@ -125,3 +125,182 @@ func TestMenuItem_Setters(t *testing.T) {
 	item.SetAvailable(false)
 	assert.False(t, item.IsAvailable)
 }
+
+func TestNewMenuItem_Defaults(t *testing.T) {
+	item, err := menu.NewMenuItem("id", "cid", "rid", "name", 10)
+	require.NoError(t, err)
+	assert.Equal(t, menu.ScheduleAllDay, item.Schedule, "new items default to ALL_DAY schedule")
+	assert.True(t, item.AllowSpecialInstructions, "new items allow special instructions by default")
+	assert.Empty(t, item.SpiceLevel, "new items have no spice level until set")
+}
+
+func TestValidateSpiceLevel(t *testing.T) {
+	cases := map[string]bool{
+		"":        true,
+		"MILD":    true,
+		"MEDIUM":  true,
+		"HOT":     true,
+		"mild":    false,
+		"EXTREME": false,
+	}
+	for input, ok := range cases {
+		err := menu.ValidateSpiceLevel(input)
+		if ok {
+			assert.NoError(t, err, "spice level %q should be valid", input)
+		} else {
+			assert.Error(t, err, "spice level %q should be rejected", input)
+		}
+	}
+}
+
+func TestValidateSchedule(t *testing.T) {
+	for _, ok := range []string{"ALL_DAY", "LUNCH", "DINNER", "WEEKEND"} {
+		assert.NoError(t, menu.ValidateSchedule(ok))
+	}
+	for _, bad := range []string{"", "ALL", "all_day", "BREAKFAST"} {
+		assert.Error(t, menu.ValidateSchedule(bad))
+	}
+}
+
+func TestValidateSKU(t *testing.T) {
+	assert.NoError(t, menu.ValidateSKU(""))
+	assert.NoError(t, menu.ValidateSKU("BAO-001"))
+	assert.Error(t, menu.ValidateSKU(string(make([]byte, 33))), "33-byte SKU exceeds cap")
+	assert.Error(t, menu.ValidateSKU("BAO\x01"), "non-printable rejected")
+}
+
+func TestNormalizeBadges(t *testing.T) {
+	t.Run("trims, dedupes, drops empties", func(t *testing.T) {
+		got, err := menu.NormalizeBadges([]string{" Popular ", "Popular", "", "New"})
+		require.NoError(t, err)
+		assert.Equal(t, []string{"Popular", "New"}, got)
+	})
+	t.Run("rejects too long", func(t *testing.T) {
+		_, err := menu.NormalizeBadges([]string{string(make([]byte, 25))})
+		assert.Error(t, err)
+	})
+	t.Run("rejects more than three", func(t *testing.T) {
+		_, err := menu.NormalizeBadges([]string{"a", "b", "c", "d"})
+		assert.Error(t, err)
+	})
+}
+
+func TestNormalizeAllergens(t *testing.T) {
+	t.Run("accepts known values, dedupes", func(t *testing.T) {
+		got, err := menu.NormalizeAllergens([]string{"Gluten", "Soy", "Gluten"})
+		require.NoError(t, err)
+		assert.Equal(t, []string{"Gluten", "Soy"}, got)
+	})
+	t.Run("rejects unknown", func(t *testing.T) {
+		_, err := menu.NormalizeAllergens([]string{"Plutonium"})
+		assert.Error(t, err)
+	})
+}
+
+func TestValidateOptionGroupRules(t *testing.T) {
+	mkOpt := func(id, name string) menu.Option { return menu.Option{ID: id, Name: name, PriceDelta: 0} }
+	defaultID := "o1"
+
+	t.Run("happy required pick-1", func(t *testing.T) {
+		err := menu.ValidateOptionGroupRules(menu.OptionGroup{
+			Name: "Sauce", Required: true, MinSelections: 1, MaxSelections: 1,
+			DefaultOptionID: &defaultID,
+			Options:         []menu.Option{mkOpt("o1", "Hoisin"), mkOpt("o2", "Mayo")},
+		})
+		assert.NoError(t, err)
+	})
+
+	t.Run("happy optional pick-any", func(t *testing.T) {
+		err := menu.ValidateOptionGroupRules(menu.OptionGroup{
+			Name: "Extras", MinSelections: 0, MaxSelections: 0,
+			Options: []menu.Option{mkOpt("o1", "Pork"), mkOpt("o2", "Egg")},
+		})
+		assert.NoError(t, err)
+	})
+
+	t.Run("required must have min >= 1", func(t *testing.T) {
+		err := menu.ValidateOptionGroupRules(menu.OptionGroup{
+			Name: "Sauce", Required: true, Options: []menu.Option{mkOpt("o1", "Hoisin")},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("max less than min rejected", func(t *testing.T) {
+		err := menu.ValidateOptionGroupRules(menu.OptionGroup{
+			Name: "X", MinSelections: 2, MaxSelections: 1,
+			Options: []menu.Option{mkOpt("o1", "A")},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("default option must be in group", func(t *testing.T) {
+		missing := "o99"
+		err := menu.ValidateOptionGroupRules(menu.OptionGroup{
+			Name: "Sauce", Required: true, MinSelections: 1, MaxSelections: 1,
+			DefaultOptionID: &missing,
+			Options:         []menu.Option{mkOpt("o1", "Hoisin")},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("empty name rejected", func(t *testing.T) {
+		err := menu.ValidateOptionGroupRules(menu.OptionGroup{Name: "  "})
+		assert.Error(t, err)
+	})
+
+	t.Run("duplicate option ids rejected", func(t *testing.T) {
+		err := menu.ValidateOptionGroupRules(menu.OptionGroup{
+			Name: "X", Options: []menu.Option{mkOpt("o1", "A"), mkOpt("o1", "B")},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("negative price delta rejected", func(t *testing.T) {
+		err := menu.ValidateOptionGroupRules(menu.OptionGroup{
+			Name: "X", Options: []menu.Option{{ID: "o1", Name: "A", PriceDelta: -1}},
+		})
+		assert.Error(t, err)
+	})
+}
+
+func TestMenuItem_SetOptionGroups_ValidatesEach(t *testing.T) {
+	item, _ := menu.NewMenuItem("id", "cid", "rid", "name", 10)
+
+	t.Run("happy path", func(t *testing.T) {
+		defaultID := "o1"
+		err := item.SetOptionGroups([]menu.OptionGroup{{
+			ID: "g1", Name: "Sauce", Required: true, MinSelections: 1, MaxSelections: 1,
+			DefaultOptionID: &defaultID,
+			Options:         []menu.Option{{ID: "o1", Name: "Hoisin"}},
+		}})
+		assert.NoError(t, err)
+		assert.Len(t, item.OptionGroups, 1)
+	})
+
+	t.Run("first invalid group rejects whole set", func(t *testing.T) {
+		err := item.SetOptionGroups([]menu.OptionGroup{
+			{ID: "g1", Name: "OK", Options: []menu.Option{{ID: "o1", Name: "A"}}},
+			{ID: "g2", Name: "", Options: nil}, // invalid
+		})
+		assert.Error(t, err)
+	})
+}
+
+func TestMenuItem_SetBadges_SetAllergens_Roundtrip(t *testing.T) {
+	item, _ := menu.NewMenuItem("id", "cid", "rid", "name", 10)
+	require.NoError(t, item.SetBadges([]string{"Popular", "  ", "Popular"}))
+	assert.Equal(t, []string{"Popular"}, item.Badges)
+
+	require.NoError(t, item.SetAllergens([]string{"Gluten", "Soy"}))
+	assert.Equal(t, []string{"Gluten", "Soy"}, item.Allergens)
+}
+
+func TestMenuItem_DietaryTagsString_IncludesExpandedSet(t *testing.T) {
+	item, _ := menu.NewMenuItem("id", "cid", "rid", "name", 10)
+	item.SetDietaryFlags(true, true, false, true, false, true)
+	tags := item.DietaryTagsString()
+	assert.Contains(t, tags, "vegetarian")
+	assert.Contains(t, tags, "vegan")
+	assert.Contains(t, tags, "dairy_free")
+	assert.Contains(t, tags, "nut_free")
+}

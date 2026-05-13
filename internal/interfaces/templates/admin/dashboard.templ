@@ -14,7 +14,6 @@ import (
 	"bitmerchant/internal/interfaces/templates/components/ui/toast"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/dialog"
-	"bitmerchant/internal/interfaces/templates/components/ui/dropdown"
 	"bitmerchant/internal/interfaces/templates/components/ui/icon"
 	"strconv"
 )
@@ -348,119 +347,13 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 																</form>
 															}
 														}
-														@dialog.Dialog() {
-															@dialog.Trigger(dialog.TriggerProps{}) {
-																@button.Button(button.Props{Variant: button.VariantGhost, Size: button.SizeIcon}) {
-																	@icon.Pencil(icon.Props{Class: "h-4 w-4"})
-																}
-															}
-															@dialog.Content(dialog.ContentProps{}) {
-																@dialog.Header() {
-																	@dialog.Title() { { "Edit " + item.Name } }
-																}
-																<form action={ "/admin/item/" + string(item.ID) + "/update" } method="post" class="space-y-4" id={ "edit-item-form-" + string(item.ID) }>
-																	<input type="hidden" name="csrf" value={ csrfToken }/>
-																	<input type="hidden" name="categoryID" id={ "edit-item-cat-value-" + string(item.ID) } value={ string(item.CategoryID) }/>
-																	<div class="space-y-2">
-																		@label.Label(label.Props{For: "edit-item-cat-trigger-" + string(item.ID)}) {
-																			Category
-																		}
-																		@dropdown.Dropdown() {
-																			@dropdown.Trigger(dropdown.TriggerProps{Class: "w-full"}) {
-																				@button.Button(button.Props{
-																					Type:    button.TypeButton,
-																					Variant: button.VariantOutline,
-																					Class:   "w-full justify-between font-normal",
-																					ID:      "edit-item-cat-trigger-" + string(item.ID),
-																				}) {
-																					{{
-																						catLabel := ""
-																						for _, oc := range menuData.Categories {
-																							if oc.Category.ID == item.CategoryID {
-																								catLabel = oc.Category.Name
-																								break
-																							}
-																						}
-																					}}
-																					<span class="edit-item-cat-label min-w-0 flex-1 text-left line-clamp-2" data-item-id={ string(item.ID) }>{ catLabel }</span>
-																					@icon.ChevronDown(icon.Props{Class: "h-4 w-4 shrink-0 opacity-60"})
-																				}
-																			}
-																			@dropdown.Content(dropdown.ContentProps{Class: "min-w-[12rem] max-w-[min(100vw-2rem,28rem)]"}) {
-																				@dropdown.Group() {
-																					for _, optCat := range menuData.Categories {
-																						@dropdown.Item(dropdown.ItemProps{
-																							Class: "whitespace-normal text-left",
-																							Attributes: templ.Attributes{
-																								"type":                    "button",
-																								"data-set-category-for":   string(item.ID),
-																								"data-category-id-value":  string(optCat.Category.ID),
-																								"data-category-name-text": optCat.Category.Name,
-																							},
-																						}) {
-																							{ optCat.Category.Name }
-																						}
-																					}
-																				}
-																			}
-																		}
-																	</div>
-																	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-																		<div class="space-y-2">
-																			@label.Label(label.Props{For: "edit-item-name-" + string(item.ID)}) {
-																				Name
-																			}
-																			@input.Input(input.Props{Type: "text", ID: "edit-item-name-" + string(item.ID), Name: "name", Required: true, Value: item.Name})
-																		</div>
-																		<div class="space-y-2">
-																			@label.Label(label.Props{For: "edit-item-price-" + string(item.ID)}) {
-																				Price
-																			}
-																			@input.Input(input.Props{Type: "number", Step: priceInputStep(item.Money().Currency), ID: "edit-item-price-" + string(item.ID), Name: "price", Required: true, Value: item.Money().FormatNoSymbol()})
-																		</div>
-																	</div>
-																	<div class="space-y-2">
-																		@label.Label(label.Props{For: "edit-item-desc-" + string(item.ID)}) {
-																			Description
-																		}
-																		@textarea.Textarea(textarea.Props{
-																			ID:          "edit-item-desc-" + string(item.ID),
-																			Name:        "description",
-																			Placeholder: "Description",
-																			Rows:        4,
-																			Value:       item.Description,
-																		})
-																	</div>
-																	<div class="space-y-2">
-																		@label.Label(label.Props{}) { Dietary tags }
-																		<div class="flex flex-wrap gap-4">
-																			<div class="flex items-center gap-2">
-																				@checkbox.Checkbox(checkbox.Props{ID: "edit-item-veg-" + string(item.ID), Name: "is_vegetarian", Checked: item.IsVegetarian})
-																				@label.Label(label.Props{For: "edit-item-veg-" + string(item.ID), Class: "cursor-pointer"}) { Vegetarian }
-																			</div>
-																			<div class="flex items-center gap-2">
-																				@checkbox.Checkbox(checkbox.Props{ID: "edit-item-gf-" + string(item.ID), Name: "is_gluten_free", Checked: item.IsGlutenFree})
-																				@label.Label(label.Props{For: "edit-item-gf-" + string(item.ID), Class: "cursor-pointer"}) { Gluten-free }
-																			</div>
-																			<div class="flex items-center gap-2">
-																				@checkbox.Checkbox(checkbox.Props{ID: "edit-item-spicy-" + string(item.ID), Name: "is_spicy", Checked: item.IsSpicy})
-																				@label.Label(label.Props{For: "edit-item-spicy-" + string(item.ID), Class: "cursor-pointer"}) { Spicy }
-																			</div>
-																		</div>
-																	</div>
-																	<div class="flex items-center space-x-2">
-																		@checkbox.Checkbox(checkbox.Props{
-																			ID:      "edit-item-avail-" + string(item.ID),
-																			Name:    "available",
-																			Checked: item.IsAvailable,
-																		})
-																		@label.Label(label.Props{For: "edit-item-avail-" + string(item.ID), Class: "cursor-pointer"}) {
-																			Available
-																		}
-																	</div>
-																	@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Save item }
-																</form>
-															}
+														@button.Button(button.Props{
+															Variant: button.VariantGhost,
+															Size:    button.SizeIcon,
+															Href:    "/admin/items/" + string(item.ID) + "/edit",
+															Attributes: templ.Attributes{"aria-label": "Edit item"},
+														}) {
+															@icon.Pencil(icon.Props{Class: "h-4 w-4"})
 														}
 													</div>
 												}

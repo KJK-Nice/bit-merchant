@@ -25,6 +25,50 @@ func itemDetailRequiredGroupIDs(item *menu.MenuItem) string {
 	return strings.Join(ids, ",")
 }
 
+// allergensLine joins allergens into the "Contains: …" display string.
+func allergensLine(allergens []string) string {
+	if len(allergens) == 0 {
+		return ""
+	}
+	lower := make([]string, len(allergens))
+	for i, a := range allergens {
+		lower[i] = strings.ToLower(a)
+	}
+	return "Contains: " + strings.Join(lower, ", ")
+}
+
+// spiceLevelLabel returns the customer-facing label for a spice level.
+func spiceLevelLabel(level string) string {
+	switch level {
+	case menu.SpiceLevelMild:
+		return "Mild"
+	case menu.SpiceLevelMedium:
+		return "Medium"
+	case menu.SpiceLevelHot:
+		return "Hot"
+	}
+	return ""
+}
+
+// spiceLevelGlyph returns the chili-emoji indicator for a spice level.
+func spiceLevelGlyph(level string) string {
+	switch level {
+	case menu.SpiceLevelMild:
+		return "🌶"
+	case menu.SpiceLevelMedium:
+		return "🌶🌶"
+	case menu.SpiceLevelHot:
+		return "🌶🌶🌶"
+	}
+	return ""
+}
+
+// hasAnyDietary reports whether at least one dietary flag is set.
+func hasAnyDietary(item *menu.MenuItem) bool {
+	return item.IsVegetarian || item.IsVegan || item.IsGlutenFree ||
+		item.IsDairyFree || item.IsHalal || item.IsNutFree
+}
+
 // ItemDetailPage renders the full item-detail screen.
 templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken string) {
 	@Layout(item.Name + " · Customize") {
@@ -54,6 +98,23 @@ templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken st
 			}
 
 			<div class="px-4 pt-4 space-y-5">
+				<!-- badges row + spice indicator + allergen line -->
+				if len(item.Badges) > 0 || item.SpiceLevel != "" || len(item.Allergens) > 0 {
+					<div class="flex flex-wrap items-center gap-1.5">
+						for _, b := range item.Badges {
+							@badge.Badge(badge.Props{Variant: badge.VariantDefault}) { { b } }
+						}
+						if len(item.Allergens) > 0 {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { { allergensLine(item.Allergens) } }
+						}
+						if item.SpiceLevel != "" {
+							@badge.Badge(badge.Props{Variant: badge.VariantOutline}) {
+								{ spiceLevelGlyph(item.SpiceLevel) } { spiceLevelLabel(item.SpiceLevel) }
+							}
+						}
+					</div>
+				}
+
 				<!-- name + description + base price -->
 				<div class="space-y-1">
 					<h2 class="text-2xl font-bold leading-snug">{ item.Name }</h2>
@@ -63,17 +124,26 @@ templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken st
 					<p class="text-xl font-semibold">{ item.Money().Format() }</p>
 				</div>
 
-				<!-- dietary badges -->
-				if item.IsVegetarian || item.IsGlutenFree || item.IsSpicy {
+				<!-- expanded dietary badges -->
+				if hasAnyDietary(item) {
 					<div class="flex flex-wrap gap-1.5">
 						if item.IsVegetarian {
 							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { 🥬 Vegetarian }
 						}
+						if item.IsVegan {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { 🌱 Vegan }
+						}
 						if item.IsGlutenFree {
 							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { GF Gluten-free }
 						}
-						if item.IsSpicy {
-							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { 🌶 Spicy }
+						if item.IsDairyFree {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { DF Dairy-free }
+						}
+						if item.IsHalal {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Halal }
+						}
+						if item.IsNutFree {
+							@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) { Nut-free }
 						}
 					</div>
 				}
@@ -141,17 +211,19 @@ templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken st
 						</fieldset>
 					}
 
-					<!-- special instructions -->
-					<div class="space-y-1.5">
-						<label for="item-detail-instructions" class="text-sm font-semibold">Special instructions</label>
-						<textarea
-							id="item-detail-instructions"
-							name="specialInstructions"
-							rows="2"
-							placeholder="e.g. no cilantro, please"
-							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-						></textarea>
-					</div>
+					<!-- special instructions (gated by owner toggle) -->
+					if item.AllowSpecialInstructions {
+						<div class="space-y-1.5">
+							<label for="item-detail-instructions" class="text-sm font-semibold">Special instructions</label>
+							<textarea
+								id="item-detail-instructions"
+								name="specialInstructions"
+								rows="2"
+								placeholder="e.g. no cilantro, please"
+								class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+							></textarea>
+						</div>
+					}
 				</form>
 			</div>
 		</div>

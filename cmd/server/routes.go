@@ -78,6 +78,8 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	adminGroup.POST("/item/:id/update", handlers.Admin.UpdateItem)
 	adminGroup.POST("/item/:id/toggle-availability", handlers.Admin.ToggleItemAvailability)
 	adminGroup.POST("/item/:id/photo", handlers.Admin.UploadPhoto)
+	adminGroup.GET("/items/:itemID/edit", handlers.Admin.GetItemEditor)
+	adminGroup.POST("/items/:itemID/edit", handlers.Admin.PostItemEditor)
 	adminGroup.POST("/menu/reorder-categories", handlers.Admin.PostReorderCategories)
 	adminGroup.POST("/menu/reorder-items", handlers.Admin.PostReorderItems)
 	adminGroup.GET("/qr", handlers.Admin.GetQRPage)

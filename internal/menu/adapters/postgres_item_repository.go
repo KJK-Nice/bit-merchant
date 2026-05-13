@@ -19,7 +19,7 @@ func NewPostgresItemRepository(db *sql.DB) *PostgresItemRepository {
 	return &PostgresItemRepository{db: db}
 }
 
-const itemSelectCols = `id, category_id, restaurant_id, name, description, price, COALESCE(currency, 'USD'), COALESCE(price_minor, 0), photo_url, photo_original_url, is_available, display_order, created_at, updated_at, COALESCE(is_vegetarian, false), COALESCE(is_gluten_free, false), COALESCE(is_spicy, false), COALESCE(option_groups, '[]'::jsonb)`
+const itemSelectCols = `id, category_id, restaurant_id, name, description, price, COALESCE(currency, 'USD'), COALESCE(price_minor, 0), photo_url, photo_original_url, is_available, display_order, created_at, updated_at, COALESCE(is_vegetarian, false), COALESCE(is_gluten_free, false), COALESCE(is_spicy, false), COALESCE(option_groups, '[]'::jsonb), COALESCE(spice_level, ''), COALESCE(sku, ''), COALESCE(schedule, 'ALL_DAY'), COALESCE(is_vegan, false), COALESCE(is_dairy_free, false), COALESCE(is_halal, false), COALESCE(is_nut_free, false), COALESCE(allergens, '[]'::jsonb), COALESCE(badges, '[]'::jsonb), COALESCE(allow_special_instructions, true)`
 
 func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
 	currency, priceMinor := itemCurrencyAndMinor(item)
@@ -27,9 +27,21 @@ func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
 	if err != nil {
 		return err
 	}
+	allergensJSON, err := marshalStringList(item.Allergens)
+	if err != nil {
+		return err
+	}
+	badgesJSON, err := marshalStringList(item.Badges)
+	if err != nil {
+		return err
+	}
+	schedule := item.Schedule
+	if schedule == "" {
+		schedule = menu.ScheduleAllDay
+	}
 	_, err = r.db.Exec(
-		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, currency, price_minor, photo_url, photo_original_url, is_available, display_order, created_at, updated_at, is_vegetarian, is_gluten_free, is_spicy, option_groups)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, currency, price_minor, photo_url, photo_original_url, is_available, display_order, created_at, updated_at, is_vegetarian, is_gluten_free, is_spicy, option_groups, spice_level, sku, schedule, is_vegan, is_dairy_free, is_halal, is_nut_free, allergens, badges, allow_special_instructions)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NULLIF($19, ''), $20, $21, $22, $23, $24, $25, $26, $27, $28)
 		 ON CONFLICT (id) DO UPDATE
 		 SET category_id = EXCLUDED.category_id, name = EXCLUDED.name,
 		     description = EXCLUDED.description, price = EXCLUDED.price,
@@ -38,13 +50,21 @@ func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
 		     is_available = EXCLUDED.is_available, display_order = EXCLUDED.display_order,
 		     is_vegetarian = EXCLUDED.is_vegetarian, is_gluten_free = EXCLUDED.is_gluten_free,
 		     is_spicy = EXCLUDED.is_spicy, option_groups = EXCLUDED.option_groups,
+		     spice_level = EXCLUDED.spice_level, sku = EXCLUDED.sku, schedule = EXCLUDED.schedule,
+		     is_vegan = EXCLUDED.is_vegan, is_dairy_free = EXCLUDED.is_dairy_free,
+		     is_halal = EXCLUDED.is_halal, is_nut_free = EXCLUDED.is_nut_free,
+		     allergens = EXCLUDED.allergens, badges = EXCLUDED.badges,
+		     allow_special_instructions = EXCLUDED.allow_special_instructions,
 		     updated_at = EXCLUDED.updated_at`,
 		string(item.ID), string(item.CategoryID), string(item.RestaurantID),
 		item.Name, item.Description, item.Price,
 		currency.Code, priceMinor,
 		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder,
 		item.CreatedAt, item.UpdatedAt,
-		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy, optionGroupsJSON)
+		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy, optionGroupsJSON,
+		item.SpiceLevel, item.SKU, schedule,
+		item.IsVegan, item.IsDairyFree, item.IsHalal, item.IsNutFree,
+		allergensJSON, badgesJSON, item.AllowSpecialInstructions)
 	return err
 }
 
@@ -73,12 +93,31 @@ func (r *PostgresItemRepository) Update(item *menu.MenuItem) error {
 	if err != nil {
 		return err
 	}
+	allergensJSON, err := marshalStringList(item.Allergens)
+	if err != nil {
+		return err
+	}
+	badgesJSON, err := marshalStringList(item.Badges)
+	if err != nil {
+		return err
+	}
+	schedule := item.Schedule
+	if schedule == "" {
+		schedule = menu.ScheduleAllDay
+	}
 	result, err := r.db.Exec(
-		`UPDATE menu_items SET category_id=$2, name=$3, description=$4, price=$5, currency=$6, price_minor=$7, photo_url=$8, photo_original_url=$9, is_available=$10, display_order=$11, is_vegetarian=$12, is_gluten_free=$13, is_spicy=$14, option_groups=$15, updated_at=$16 WHERE id=$1`,
+		`UPDATE menu_items SET category_id=$2, name=$3, description=$4, price=$5, currency=$6, price_minor=$7, photo_url=$8, photo_original_url=$9, is_available=$10, display_order=$11, is_vegetarian=$12, is_gluten_free=$13, is_spicy=$14, option_groups=$15, updated_at=$16,
+		     spice_level=NULLIF($17, ''), sku=$18, schedule=$19,
+		     is_vegan=$20, is_dairy_free=$21, is_halal=$22, is_nut_free=$23,
+		     allergens=$24, badges=$25, allow_special_instructions=$26
+		 WHERE id=$1`,
 		string(item.ID), string(item.CategoryID), item.Name, item.Description, item.Price,
 		currency.Code, priceMinor,
 		item.PhotoURL, item.PhotoOriginalURL, item.IsAvailable, item.DisplayOrder,
-		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy, optionGroupsJSON, item.UpdatedAt)
+		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy, optionGroupsJSON, item.UpdatedAt,
+		item.SpiceLevel, item.SKU, schedule,
+		item.IsVegan, item.IsDairyFree, item.IsHalal, item.IsNutFree,
+		allergensJSON, badgesJSON, item.AllowSpecialInstructions)
 	if err != nil {
 		return err
 	}
@@ -204,19 +243,29 @@ func (r *PostgresItemRepository) queryItems(query string, args ...interface{}) (
 }
 
 type itemRowFields struct {
-	id, catID, restID, name string
-	description             sql.NullString
-	price                   float64
-	currencyCode            string
-	priceMinor              int64
-	photoURL, photoOrigURL  sql.NullString
-	isAvailable             bool
-	displayOrder            int
-	createdAt, updatedAt    time.Time
-	isVegetarian            bool
-	isGlutenFree            bool
-	isSpicy                 bool
-	optionGroupsJSON        []byte
+	id, catID, restID, name  string
+	description              sql.NullString
+	price                    float64
+	currencyCode             string
+	priceMinor               int64
+	photoURL, photoOrigURL   sql.NullString
+	isAvailable              bool
+	displayOrder             int
+	createdAt, updatedAt     time.Time
+	isVegetarian             bool
+	isGlutenFree             bool
+	isSpicy                  bool
+	optionGroupsJSON         []byte
+	spiceLevel               string
+	sku                      string
+	schedule                 string
+	isVegan                  bool
+	isDairyFree              bool
+	isHalal                  bool
+	isNutFree                bool
+	allergensJSON            []byte
+	badgesJSON               []byte
+	allowSpecialInstructions bool
 }
 
 func (f *itemRowFields) toMenuItem() *menu.MenuItem {
@@ -225,6 +274,8 @@ func (f *itemRowFields) toMenuItem() *menu.MenuItem {
 		currency = money.USD
 	}
 	groups := unmarshalOptionGroups(f.optionGroupsJSON)
+	allergens := unmarshalStringList(f.allergensJSON)
+	badges := unmarshalStringList(f.badgesJSON)
 	return &menu.MenuItem{
 		ID: common.ItemID(f.id), CategoryID: common.CategoryID(f.catID),
 		RestaurantID: common.RestaurantID(f.restID), Name: f.name,
@@ -232,14 +283,29 @@ func (f *itemRowFields) toMenuItem() *menu.MenuItem {
 		PhotoURL: f.photoURL.String, PhotoOriginalURL: f.photoOrigURL.String,
 		IsAvailable: f.isAvailable, DisplayOrder: f.displayOrder,
 		IsVegetarian: f.isVegetarian, IsGlutenFree: f.isGlutenFree, IsSpicy: f.isSpicy,
-		OptionGroups: groups,
-		CreatedAt:    f.createdAt, UpdatedAt: f.updatedAt,
+		IsVegan: f.isVegan, IsDairyFree: f.isDairyFree, IsHalal: f.isHalal, IsNutFree: f.isNutFree,
+		SpiceLevel: f.spiceLevel, SKU: f.sku, Schedule: f.schedule,
+		Allergens: allergens, Badges: badges,
+		AllowSpecialInstructions: f.allowSpecialInstructions,
+		OptionGroups:             groups,
+		CreatedAt:                f.createdAt, UpdatedAt: f.updatedAt,
+	}
+}
+
+func (f *itemRowFields) scanTargets() []any {
+	return []any{
+		&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor,
+		&f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt,
+		&f.isVegetarian, &f.isGlutenFree, &f.isSpicy, &f.optionGroupsJSON,
+		&f.spiceLevel, &f.sku, &f.schedule,
+		&f.isVegan, &f.isDairyFree, &f.isHalal, &f.isNutFree,
+		&f.allergensJSON, &f.badgesJSON, &f.allowSpecialInstructions,
 	}
 }
 
 func scanItem(row *sql.Row) (*menu.MenuItem, error) {
 	var f itemRowFields
-	if err := row.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt, &f.isVegetarian, &f.isGlutenFree, &f.isSpicy, &f.optionGroupsJSON); err != nil {
+	if err := row.Scan(f.scanTargets()...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("menu item not found")
 		}
@@ -250,7 +316,7 @@ func scanItem(row *sql.Row) (*menu.MenuItem, error) {
 
 func scanItemRows(rows *sql.Rows) (*menu.MenuItem, error) {
 	var f itemRowFields
-	if err := rows.Scan(&f.id, &f.catID, &f.restID, &f.name, &f.description, &f.price, &f.currencyCode, &f.priceMinor, &f.photoURL, &f.photoOrigURL, &f.isAvailable, &f.displayOrder, &f.createdAt, &f.updatedAt, &f.isVegetarian, &f.isGlutenFree, &f.isSpicy, &f.optionGroupsJSON); err != nil {
+	if err := rows.Scan(f.scanTargets()...); err != nil {
 		return nil, err
 	}
 	return f.toMenuItem(), nil
@@ -258,10 +324,13 @@ func scanItemRows(rows *sql.Rows) (*menu.MenuItem, error) {
 
 // jsonOptionGroup mirrors menu.OptionGroup for JSON serialisation (snake_case keys).
 type jsonOptionGroup struct {
-	ID       string       `json:"id"`
-	Name     string       `json:"name"`
-	Required bool         `json:"required"`
-	Options  []jsonOption `json:"options"`
+	ID              string       `json:"id"`
+	Name            string       `json:"name"`
+	Required        bool         `json:"required"`
+	MinSelections   int          `json:"min_selections"`
+	MaxSelections   int          `json:"max_selections"`
+	DefaultOptionID *string      `json:"default_option_id,omitempty"`
+	Options         []jsonOption `json:"options"`
 }
 
 type jsonOption struct {
@@ -280,7 +349,15 @@ func marshalOptionGroups(groups []menu.OptionGroup) ([]byte, error) {
 		for j, o := range g.Options {
 			jos[j] = jsonOption{ID: o.ID, Name: o.Name, PriceDelta: o.PriceDelta}
 		}
-		jgs[i] = jsonOptionGroup{ID: g.ID, Name: g.Name, Required: g.Required, Options: jos}
+		jgs[i] = jsonOptionGroup{
+			ID:              g.ID,
+			Name:            g.Name,
+			Required:        g.Required,
+			MinSelections:   g.MinSelections,
+			MaxSelections:   g.MaxSelections,
+			DefaultOptionID: g.DefaultOptionID,
+			Options:         jos,
+		}
 	}
 	return json.Marshal(jgs)
 }
@@ -299,9 +376,37 @@ func unmarshalOptionGroups(data []byte) []menu.OptionGroup {
 		for j, jo := range jg.Options {
 			opts[j] = menu.Option{ID: jo.ID, Name: jo.Name, PriceDelta: jo.PriceDelta}
 		}
-		groups[i] = menu.OptionGroup{ID: jg.ID, Name: jg.Name, Required: jg.Required, Options: opts}
+		groups[i] = menu.OptionGroup{
+			ID:              jg.ID,
+			Name:            jg.Name,
+			Required:        jg.Required,
+			MinSelections:   jg.MinSelections,
+			MaxSelections:   jg.MaxSelections,
+			DefaultOptionID: jg.DefaultOptionID,
+			Options:         opts,
+		}
 	}
 	return groups
+}
+
+// marshalStringList serialises a []string into a JSONB array. Empty/nil slices
+// become "[]" so the JSONB column never holds a NULL or malformed payload.
+func marshalStringList(in []string) ([]byte, error) {
+	if len(in) == 0 {
+		return []byte("[]"), nil
+	}
+	return json.Marshal(in)
+}
+
+func unmarshalStringList(data []byte) []string {
+	if len(data) == 0 {
+		return nil
+	}
+	var out []string
+	if err := json.Unmarshal(data, &out); err != nil {
+		return nil
+	}
+	return out
 }
 
 func itemCurrencyAndMinor(item *menu.MenuItem) (money.Currency, int64) {
