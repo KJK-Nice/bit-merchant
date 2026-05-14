@@ -1429,7 +1429,7 @@ func TopItemsCard(items []query.TopItem, rest *restaurant.Restaurant) templ.Comp
 						return templ_7745c5c3_Err
 					}
 					for _, item := range items {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "<li class=\"flex items-center gap-3\"><div class=\"size-12 shrink-0 rounded-md border border-border overflow-hidden bg-muted flex items-center justify-center\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "<li class=\"flex items-center gap-3\"><div class=\"relative h-12 w-12 shrink-0 rounded-md border border-border overflow-hidden bg-muted\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -1460,12 +1460,12 @@ func TopItemsCard(items []query.TopItem, rest *restaurant.Restaurant) templ.Comp
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "\" class=\"size-full object-cover\" loading=\"lazy\">")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "\" class=\"absolute inset-0 h-full w-full object-cover\" loading=\"lazy\" width=\"48\" height=\"48\">")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 						} else {
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "<span class=\"text-xs text-muted-foreground\">No&nbsp;photo</span>")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "<span class=\"absolute inset-0 flex items-center justify-center text-xs text-muted-foreground\">No&nbsp;photo</span>")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}

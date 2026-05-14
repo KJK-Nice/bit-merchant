@@ -456,11 +456,11 @@ templ TopItemsCard(items []query.TopItem, rest *restaurant.Restaurant) {
 				<ol class="space-y-3" aria-label="Top selling items">
 					for _, item := range items {
 						<li class="flex items-center gap-3">
-							<div class="size-12 shrink-0 rounded-md border border-border overflow-hidden bg-muted flex items-center justify-center">
+							<div class="relative h-12 w-12 shrink-0 rounded-md border border-border overflow-hidden bg-muted">
 								if item.PhotoURL != "" {
-									<img src={ item.PhotoURL } alt={ item.Name } class="size-full object-cover" loading="lazy"/>
+									<img src={ item.PhotoURL } alt={ item.Name } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="48" height="48"/>
 								} else {
-									<span class="text-xs text-muted-foreground">No&nbsp;photo</span>
+									<span class="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">No&nbsp;photo</span>
 								}
 							</div>
 							<div class="min-w-0 flex-1">
