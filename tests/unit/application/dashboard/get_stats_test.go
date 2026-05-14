@@ -25,32 +25,34 @@ func TestRestaurantDashboardStatsHandler(t *testing.T) {
 	// Seed orders
 	items := []order.OrderItem{{MenuItemID: "i1", Name: "Item 1", Quantity: 1, UnitPrice: 10.0, Subtotal: 10.0}}
 
-	// Order 1: Today, Paid, $10
+	// Order 1: Today, Paid, $10. CreatedAt pinned to start-of-today so the
+	// fixture stays "today" but never future-dated when the suite runs near
+	// midnight (pre-PR-#114 the window was open-ended; now end == now).
 	o1, _ := order.NewOrder("o1", "1001", restaurantID, "session_1", items, 1000, common.PaymentMethodTypeCash)
 	o1.FiatAmount = 10.0
 	o1.PaymentStatus = common.PaymentStatusPaid
-	o1.CreatedAt = startOfToday.Add(1 * time.Hour)
+	o1.CreatedAt = startOfToday
 	_ = orderRepo.Save(o1)
 
 	// Order 2: 2 days ago, Paid, $20 (in week and month)
 	o2, _ := order.NewOrder("o2", "1002", restaurantID, "session_1", items, 2000, common.PaymentMethodTypeCash)
 	o2.FiatAmount = 20.0
 	o2.PaymentStatus = common.PaymentStatusPaid
-	o2.CreatedAt = startOfToday.AddDate(0, 0, -2).Add(2 * time.Hour)
+	o2.CreatedAt = startOfToday.AddDate(0, 0, -2)
 	_ = orderRepo.Save(o2)
 
 	// Order 3: 10 days ago, Paid, $50 (excluded from week, included in month only if still same month)
 	o3, _ := order.NewOrder("o3", "1003", restaurantID, "session_1", items, 5000, common.PaymentMethodTypeCash)
 	o3.FiatAmount = 50.0
 	o3.PaymentStatus = common.PaymentStatusPaid
-	o3.CreatedAt = startOfToday.AddDate(0, 0, -10).Add(3 * time.Hour)
+	o3.CreatedAt = startOfToday.AddDate(0, 0, -10)
 	_ = orderRepo.Save(o3)
 
 	// Order 4: Today, Pending (always excluded)
 	o4, _ := order.NewOrder("o4", "1004", restaurantID, "session_1", items, 500, common.PaymentMethodTypeCash)
 	o4.FiatAmount = 5.0
 	o4.PaymentStatus = common.PaymentStatusPending
-	o4.CreatedAt = startOfToday.Add(4 * time.Hour)
+	o4.CreatedAt = startOfToday
 	_ = orderRepo.Save(o4)
 
 	// Order 5: Previous month, Paid, $80 (excluded from month and week/today)
