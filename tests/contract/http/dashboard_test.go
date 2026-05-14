@@ -7,6 +7,7 @@ import (
 	httpMiddleware "bitmerchant/internal/common/http/middleware"
 	dashboardhttp "bitmerchant/internal/dashboard/ports/http"
 	"bitmerchant/internal/infrastructure/repositories/memory"
+	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/ordering/domain/order"
 	restaurantCmd "bitmerchant/internal/restaurant/app/command"
 	"bitmerchant/internal/restaurant/domain/restaurant"
@@ -40,7 +41,7 @@ func TestDashboardHandler(t *testing.T) {
 	// Use Cases
 	getStatsUC := dashboard.NewRestaurantDashboardStatsHandler(orderRepo, nil, nil)
 	getHistoryUC := dashboard.NewPaidOrdersForRestaurantHandler(orderRepo, nil, nil)
-	getTopItemsUC := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil, nil)
+	getTopItemsUC := dashboard.NewTopSellingMenuItemsHandler(orderRepo, nil, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
 	getStalledUC := dashboard.NewStalledOrdersHandler(orderRepo, nil, nil)
 	getByHourUC := dashboard.NewOrdersByHourHandler(orderRepo, nil, nil)
 	toggleOpenUC := restaurantCmd.NewToggleRestaurantOpenHandler(restaurantRepo, nil, nil)

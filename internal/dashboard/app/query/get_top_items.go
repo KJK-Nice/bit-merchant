@@ -6,6 +6,7 @@ import (
 
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/common/decorator"
+	"bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/menu/domain/menu"
 	"bitmerchant/internal/ordering/domain/order"
 	"log/slog"
@@ -34,15 +35,21 @@ type TopSellingMenuItems struct {
 type TopSellingMenuItemsHandler decorator.QueryHandler[TopSellingMenuItems, []TopItem]
 
 type topSellingMenuItemsHandler struct {
-	orders OrderReadModel
-	items  menu.ItemRepository
+	orders   OrderReadModel
+	items    menu.ItemRepository
+	photos   menu.PhotoStorage
+	photoCfg query.PhotoSignerConfig
 }
 
-func NewTopSellingMenuItemsHandler(orders OrderReadModel, items menu.ItemRepository, log *slog.Logger, metrics decorator.MetricsClient) TopSellingMenuItemsHandler {
+// NewTopSellingMenuItemsHandler wires the read-side handler. photos and
+// photoCfg are optional; when both are set the handler swaps stored S3 keys
+// for short-lived presigned GET URLs so <img src> works in the browser
+// (same pattern the menu page uses).
+func NewTopSellingMenuItemsHandler(orders OrderReadModel, items menu.ItemRepository, photos menu.PhotoStorage, photoCfg query.PhotoSignerConfig, log *slog.Logger, metrics decorator.MetricsClient) TopSellingMenuItemsHandler {
 	if orders == nil {
 		panic("nil OrderReadModel")
 	}
-	h := topSellingMenuItemsHandler{orders: orders, items: items}
+	h := topSellingMenuItemsHandler{orders: orders, items: items, photos: photos, photoCfg: photoCfg}
 	return decorator.ApplyQueryDecorators[TopSellingMenuItems, []TopItem](h, log, metrics)
 }
 
@@ -56,13 +63,12 @@ type topItemBucket struct {
 }
 
 func (h topSellingMenuItemsHandler) Handle(ctx context.Context, q TopSellingMenuItems) ([]TopItem, error) {
-	_ = ctx
 	orders, err := h.orders.FindByRestaurantID(q.RestaurantID)
 	if err != nil {
 		return nil, err
 	}
 	result := topItemsFromBuckets(aggregatePaidItems(orders))
-	annotateTopItems(result, h.items)
+	annotateTopItems(ctx, result, h.items, h.photos, h.photoCfg)
 	return result, nil
 }
 
@@ -125,10 +131,12 @@ func topItemsFromBuckets(buckets map[string]*topItemBucket) []TopItem {
 	return result
 }
 
-// annotateTopItems fills PhotoURL from the menu item repo. Best-effort —
+// annotateTopItems fills PhotoURL from the menu item repo, presigning the
+// URL when photo storage is wired (mirrors the menu-page pattern so the
+// browser receives a usable GET URL instead of a stored S3 key). Best-effort —
 // the row is left thumb-less when the originating menu item has been
-// deleted or the repo is nil (tests).
-func annotateTopItems(items []TopItem, repo menu.ItemRepository) {
+// deleted, the repo is nil (tests), or the presign call fails.
+func annotateTopItems(ctx context.Context, items []TopItem, repo menu.ItemRepository, photos menu.PhotoStorage, cfg query.PhotoSignerConfig) {
 	if repo == nil {
 		return
 	}
@@ -137,9 +145,14 @@ func annotateTopItems(items []TopItem, repo menu.ItemRepository) {
 			continue
 		}
 		mi, err := repo.FindByID(items[i].MenuItemID)
-		if err != nil || mi == nil {
+		if err != nil || mi == nil || mi.PhotoURL == "" {
 			continue
 		}
-		items[i].PhotoURL = mi.PhotoURL
+		signed, err := query.ItemWithPresignedPhoto(ctx, mi, photos, cfg)
+		if err != nil || signed == nil {
+			items[i].PhotoURL = mi.PhotoURL
+			continue
+		}
+		items[i].PhotoURL = signed.PhotoURL
 	}
 }
