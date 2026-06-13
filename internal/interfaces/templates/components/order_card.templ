@@ -95,6 +95,19 @@ templ OrderCard(o *order.Order) {
 						}
 					</div>
 					<p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{ kitchenStatusLabel(statusKey) }</p>
+					if o.TableLabel != "" || o.CustomerName != "" {
+						<p class="text-sm font-medium text-foreground">
+							if o.TableLabel != "" {
+								<span>Table { o.TableLabel }</span>
+							}
+							if o.TableLabel != "" && o.CustomerName != "" {
+								<span class="text-muted-foreground"> · </span>
+							}
+							if o.CustomerName != "" {
+								<span>{ o.CustomerName }</span>
+							}
+						</p>
+					}
 				</div>
 				<span class="rounded-full border border-border bg-background/70 px-2 py-1 text-xs font-semibold text-muted-foreground tabular-nums" data-order-age>New</span>
 			</div>
