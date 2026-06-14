@@ -141,6 +141,19 @@ templ orderStatusHeader(view *query.OrderStatusView) {
 		if sub != "" {
 			<p class="text-sm text-muted-foreground mt-1">{ sub }</p>
 		}
+		if view.Order.CustomerName != "" || view.Order.TableLabel != "" {
+			<p class="text-sm font-medium text-foreground mt-2">
+				if view.Order.CustomerName != "" {
+					<span>For { view.Order.CustomerName }</span>
+				}
+				if view.Order.CustomerName != "" && view.Order.TableLabel != "" {
+					<span class="text-muted-foreground"> · </span>
+				}
+				if view.Order.TableLabel != "" {
+					<span>Table { view.Order.TableLabel }</span>
+				}
+			</p>
+		}
 	</div>
 }
 
