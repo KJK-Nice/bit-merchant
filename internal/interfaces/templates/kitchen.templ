@@ -720,12 +720,24 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 						for (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
 						return outputArray;
 					}
-					function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent); }
+					function isIOS() {
+						return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+							(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+					}
 					function isStandalone() {
 						return navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 					}
 					function reveal(el) { if (el) el.hidden = false; }
 					function hide(el) { if (el) el.hidden = true; }
+					// iOS Safari only exposes Push/Notification APIs to installed (standalone)
+					// web apps, so the capability gate below would bail before the install
+					// hint ever shows. Surface the Add-to-Home-Screen hint first.
+					if (isIOS() && !isStandalone()) {
+						console.info('[push] iOS browser tab — showing Add to Home Screen hint');
+						reveal(promptHost);
+						reveal(iosHint);
+						return;
+					}
 					if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
 						console.info('[push] browser does not support service workers or push notifications');
 						return;

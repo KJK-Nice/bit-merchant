@@ -2,12 +2,22 @@ package templates
 
 import (
 	"bitmerchant/internal/common"
+	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/ordering/app/query"
 	"fmt"
 	"time"
 )
+
+// statusMoney builds a Money from a minor-unit amount on the order, falling back
+// to USD for legacy rows persisted before currency was tracked.
+func statusMoney(amount int64, cur money.Currency) money.Money {
+	if cur.IsZero() {
+		cur = money.USD
+	}
+	return money.New(amount, cur)
+}
 
 type statusStep struct {
 	Label   string
@@ -228,10 +238,36 @@ templ orderSummaryCard(view *query.OrderStatusView) {
 				</li>
 			}
 		</ul>
-		<div class="flex justify-between items-center mt-3 pt-3 border-t text-base font-bold">
-			<span>Total</span>
-			<span>{ view.Order.Total().Format() }</span>
-		</div>
+		if view.Order.Subtotal > 0 {
+			{{ cur := view.Order.Currency }}
+			<div class="mt-3 pt-3 border-t space-y-1 text-sm">
+				<div class="flex justify-between text-muted-foreground">
+					<span>Subtotal</span>
+					<span class="tabular-nums">{ statusMoney(view.Order.Subtotal, cur).Format() }</span>
+				</div>
+				if view.Order.TaxAmount > 0 {
+					<div class="flex justify-between text-muted-foreground">
+						<span>Tax</span>
+						<span class="tabular-nums">{ statusMoney(view.Order.TaxAmount, cur).Format() }</span>
+					</div>
+				}
+				if view.Order.TipAmount > 0 {
+					<div class="flex justify-between text-muted-foreground">
+						<span>Tip</span>
+						<span class="tabular-nums">{ statusMoney(view.Order.TipAmount, cur).Format() }</span>
+					</div>
+				}
+				<div class="flex justify-between items-center pt-1 text-base font-bold">
+					<span>Total</span>
+					<span class="tabular-nums">{ view.Order.Total().Format() }</span>
+				</div>
+			</div>
+		} else {
+			<div class="flex justify-between items-center mt-3 pt-3 border-t text-base font-bold">
+				<span>Total</span>
+				<span>{ view.Order.Total().Format() }</span>
+			</div>
+		}
 	</div>
 }
 
@@ -275,12 +311,24 @@ templ OrderStatusPage(view *query.OrderStatusView, vapidPublicKey string) {
 						for (var i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
 						return outputArray;
 					}
-					function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent); }
+					function isIOS() {
+						return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+							(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+					}
 					function isStandalone() {
 						return navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 					}
 					function reveal(el) { if (el) el.hidden = false; }
 					function hide(el) { if (el) el.hidden = true; }
+					// iOS Safari only exposes Push/Notification APIs to installed (standalone)
+					// web apps, so the capability gate below would bail before the install
+					// hint ever shows. Surface the Add-to-Home-Screen hint first.
+					if (isIOS() && !isStandalone()) {
+						console.info('[push] iOS browser tab — showing Add to Home Screen hint');
+						reveal(promptHost);
+						reveal(iosHint);
+						return;
+					}
 					if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
 						console.info('[push] browser does not support service workers or push notifications');
 						return;
