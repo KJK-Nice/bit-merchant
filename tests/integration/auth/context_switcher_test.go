@@ -65,7 +65,7 @@ func TestSelectRestaurantUpdatesActiveContext(t *testing.T) {
 		httpMiddleware.SessionOptions{TTL: time.Hour},
 	))
 	createUC := restaurantCmd.NewCreateRestaurantHandler(restaurantRepo, nil, nil)
-	authApp := authapp.NewApplication(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, createUC, nil, nil, nil)
+	authApp := authapp.NewApplication(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, nil, nil, "", createUC, nil, nil, nil)
 	authHandler := authhttp.NewAuthHandler(nil, authApp, nil, httpMiddleware.SessionOptions{})
 	group := e.Group("/auth")
 	group.Use(httpMiddleware.RequireAuth())

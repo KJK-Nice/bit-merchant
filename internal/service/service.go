@@ -105,7 +105,7 @@ func newApplication(ctx context.Context, cfg Config, logger *logging.Logger) (Ap
 		return Application{}, nil, fmt.Errorf("init webauthn: %w", err)
 	}
 
-	authSvc := authservice.New(repos, webauthnSvc, logger.Logger, sessionOpts, restaurantSvc.CreateRestaurant)
+	authSvc := authservice.New(repos, webauthnSvc, logger.Logger, sessionOpts, restaurantSvc.CreateRestaurant, cfg.MerchantBaseURL)
 
 	vapidCfg := notifwebpush.VAPIDConfig{
 		PublicKey:  cfg.VAPIDPublicKey,

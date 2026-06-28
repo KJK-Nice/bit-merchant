@@ -104,6 +104,10 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	e.POST("/auth/login/begin", handlers.Auth.BeginLogin)
 	e.POST("/auth/login/finish", handlers.Auth.FinishLogin)
 	e.POST("/auth/login/password", handlers.Auth.PostLoginPassword)
+	e.GET("/auth/forgot-password", handlers.Auth.GetForgotPassword)
+	e.POST("/auth/forgot-password", handlers.Auth.PostForgotPassword)
+	e.GET("/auth/reset-password/:token", handlers.Auth.GetResetPassword)
+	e.POST("/auth/reset-password", handlers.Auth.PostResetPassword)
 	e.POST("/auth/logout", handlers.Auth.Logout)
 
 	authSelectionGroup := e.Group("/auth")

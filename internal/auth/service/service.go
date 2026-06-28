@@ -24,12 +24,14 @@ func New(
 	logger *slog.Logger,
 	sessionOpts middleware.SessionOptions,
 	createRestaurant restaurantCmd.CreateRestaurantHandler,
+	resetBaseURL string,
 ) *Auth {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	hasher := authInfra.NewBcryptPasswordHasher()
-	app := authapp.NewApplication(repos.User, repos.Membership, repos.Invitation, repos.Session, repos.Restaurant, createRestaurant, hasher, logger, nil)
+	mailer := authInfra.NewLoggingMailer(logger)
+	app := authapp.NewApplication(repos.User, repos.Membership, repos.Invitation, repos.Session, repos.Restaurant, repos.PasswordResetToken, mailer, resetBaseURL, createRestaurant, hasher, logger, nil)
 	return &Auth{
 		Application: app,
 		HTTP:        authhttp.NewAuthHandler(webauthnSvc, app, logger, sessionOpts),

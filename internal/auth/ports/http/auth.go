@@ -78,6 +78,50 @@ func (h *AuthHandler) GetLogin(c echo.Context) error {
 	return templates.AuthLogin(commonhttp.CSRFToken(c)).Render(c.Request().Context(), c.Response())
 }
 
+// GetForgotPassword renders the forgot-password request form.
+func (h *AuthHandler) GetForgotPassword(c echo.Context) error {
+	return templates.AuthForgotPassword(commonhttp.CSRFToken(c), c.QueryParam("sent") == "1").Render(c.Request().Context(), c.Response())
+}
+
+// PostForgotPassword starts the reset flow. It always redirects to the same
+// "sent" confirmation regardless of whether the email matched an account, so it
+// never reveals which addresses are registered.
+func (h *AuthHandler) PostForgotPassword(c echo.Context) error {
+	email := c.FormValue("email")
+	if err := h.app.Commands.RequestPasswordReset.Handle(c.Request().Context(), authcommand.RequestPasswordReset{Email: email}); err != nil {
+		h.logger.Error("password reset request failed", "error", err)
+	}
+	return c.Redirect(http.StatusFound, "/auth/forgot-password?sent=1")
+}
+
+// GetResetPassword renders the new-password form for a reset link.
+func (h *AuthHandler) GetResetPassword(c echo.Context) error {
+	token := c.Param("token")
+	errMsg := ""
+	switch c.QueryParam("error") {
+	case "link":
+		errMsg = "This reset link is invalid or has expired. Request a new one from the sign-in page."
+	case "pw":
+		errMsg = "Password must be at least 8 characters."
+	}
+	return templates.AuthResetPassword(commonhttp.CSRFToken(c), token, errMsg).Render(c.Request().Context(), c.Response())
+}
+
+// PostResetPassword redeems the token and sets the new password.
+func (h *AuthHandler) PostResetPassword(c echo.Context) error {
+	token := c.FormValue("token")
+	password := c.FormValue("password")
+	err := h.app.Commands.ResetPassword.Handle(c.Request().Context(), authcommand.ResetPassword{Token: token, NewPassword: password})
+	if err != nil {
+		reason := "pw"
+		if errors.Is(err, authcommand.ErrInvalidResetToken) {
+			reason = "link"
+		}
+		return c.Redirect(http.StatusFound, "/auth/reset-password/"+token+"?error="+reason)
+	}
+	return c.Redirect(http.StatusFound, "/auth/login?reset=1")
+}
+
 func (h *AuthHandler) GetInvite(c echo.Context) error {
 	token := c.Param("token")
 	inv, err := h.app.Queries.InvitationForToken.Handle(c.Request().Context(), authquery.InvitationForToken{Token: token})

@@ -7,6 +7,7 @@ import (
 	"bitmerchant/internal/auth/app/query"
 	"bitmerchant/internal/auth/domain/invitation"
 	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/auth/domain/passwordreset"
 	"bitmerchant/internal/auth/domain/session"
 	"bitmerchant/internal/auth/domain/user"
 	"bitmerchant/internal/common/decorator"
@@ -36,6 +37,8 @@ type Commands struct {
 	EndCustomerSession          command.EndCustomerSessionHandler
 	RegisterWithPassword        command.RegisterWithPasswordHandler
 	LoginWithPassword           command.LoginWithPasswordHandler
+	RequestPasswordReset        command.RequestPasswordResetHandler
+	ResetPassword               command.ResetPasswordHandler
 }
 
 // Queries are read-side handlers.
@@ -57,6 +60,9 @@ func NewApplication(
 	invRepo invitation.Repository,
 	sessRepo session.Repository,
 	restRepo restaurantdomain.Repository,
+	resetTokenRepo passwordreset.Repository,
+	mailer command.Mailer,
+	resetBaseURL string,
 	createRestaurant restaurantCmd.CreateRestaurantHandler,
 	hasher PasswordHasher,
 	log *slog.Logger,
@@ -79,6 +85,8 @@ func NewApplication(
 			EndCustomerSession:          command.NewEndCustomerSessionHandler(sessRepo, log, metrics),
 			RegisterWithPassword:        command.NewRegisterWithPasswordHandler(userRepo, hasher, acceptInv, completeSignup, log, metrics),
 			LoginWithPassword:           command.NewLoginWithPasswordHandler(userRepo, hasher, log, metrics),
+			RequestPasswordReset:        command.NewRequestPasswordResetHandler(userRepo, resetTokenRepo, mailer, resetBaseURL, log, metrics),
+			ResetPassword:               command.NewResetPasswordHandler(userRepo, resetTokenRepo, hasher, log, metrics),
 		},
 		Queries: Queries{
 			InvitationForToken: query.NewInvitationForTokenHandler(invRepo, log, metrics),
