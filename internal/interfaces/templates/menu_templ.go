@@ -197,62 +197,101 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 				return templ_7745c5c3_Err
 			}
 			if !data.Restaurant.IsOpen {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"bg-destructive text-destructive-foreground p-4 rounded-md shadow-sm\"><div class=\"flex items-center gap-2\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"rounded-xl border bg-card p-5 shadow-sm space-y-3\"><div class=\"flex items-start justify-between gap-3\"><div class=\"min-w-0 space-y-1\"><h2 class=\"text-lg font-semibold tracking-tight truncate\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = icon.Icon("circle-alert")(icon.Props{Class: "h-5 w-5"}).Render(ctx, templ_7745c5c3_Buffer)
+				var templ_7745c5c3_Var10 string
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(data.Restaurant.Name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 95, Col: 87}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<h3 class=\"font-bold text-lg\">Currently Closed</h3></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</h2><p class=\"text-sm text-muted-foreground\">Not taking orders right now — check back soon.</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if data.Restaurant.ClosedMessage != "" {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<p class=\"mt-1\">")
+				templ_7745c5c3_Var11 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+					if !templ_7745c5c3_IsBuffer {
+						defer func() {
+							templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+							if templ_7745c5c3_Err == nil {
+								templ_7745c5c3_Err = templ_7745c5c3_BufErr
+							}
+						}()
+					}
+					ctx = templ.InitializeContext(ctx)
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "Closed ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var10 string
-					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(data.Restaurant.ClosedMessage)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 98, Col: 53}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
+					return nil
+				})
+				templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "shrink-0"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
 				}
 				if data.Restaurant.ReopeningHours != "" {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<p class=\"text-sm mt-1 opacity-90\">Reopening: ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-sm font-medium\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var11 string
-					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(data.Restaurant.ReopeningHours)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 101, Col: 84}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+					templ_7745c5c3_Err = icon.Icon("clock")(icon.Props{Class: "h-4 w-4 text-muted-foreground"}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</p>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<span>Opens ")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var12 string
+					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(data.Restaurant.ReopeningHours)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 103, Col: 51}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</span></div>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div>")
+				if data.Restaurant.ClosedMessage != "" {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<p class=\"text-sm text-muted-foreground\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var13 string
+					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(data.Restaurant.ClosedMessage)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 107, Col: 78}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</p>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"hidden md:block sticky top-4 z-10\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"hidden md:block sticky top-4 z-10\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -260,118 +299,118 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div><div id=\"menu-no-results\" style=\"display:none;\" class=\"py-16 text-center space-y-3\"><p class=\"text-muted-foreground text-base\">No matches — try different keywords or filters.</p><button id=\"menu-clear-filters\" class=\"inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors\">Clear filters</button></div><div class=\"space-y-8 relative z-0\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div><div id=\"menu-no-results\" style=\"display:none;\" class=\"py-16 text-center space-y-3\"><p class=\"text-muted-foreground text-base\">No matches — try different keywords or filters.</p><button id=\"menu-clear-filters\" class=\"inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors\">Clear filters</button></div><div class=\"space-y-8 relative z-0\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for i, cat := range data.Categories {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<section id=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<section id=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var12 string
-				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("cat-%d", i))
+				var templ_7745c5c3_Var14 string
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("cat-%d", i))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 120, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 126, Col: 44}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" class=\"space-y-3 scroll-mt-40 md:scroll-mt-24 relative z-0\" data-menu-section><div class=\"flex items-center justify-between gap-3\"><h2 class=\"text-2xl font-semibold tracking-tight\">")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var13 string
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(cat.Category.Name)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 122, Col: 76}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" class=\"space-y-3 scroll-mt-40 md:scroll-mt-24 relative z-0\" data-menu-section><div class=\"flex items-center justify-between gap-3\"><h2 class=\"text-2xl font-semibold tracking-tight\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</h2></div><div class=\"-mx-4 flex gap-3 overflow-x-auto snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden\">")
+				var templ_7745c5c3_Var15 string
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(cat.Category.Name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 128, Col: 76}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</h2></div><div class=\"-mx-4 flex gap-3 overflow-x-auto snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for j, item := range cat.Items {
-					var templ_7745c5c3_Var14 = []any{"snap-start shrink-0 md:w-auto md:max-w-none", templ.KV("ms-4 md:ms-0", j == 0)}
-					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var14...)
+					var templ_7745c5c3_Var16 = []any{"snap-start shrink-0 md:w-auto md:max-w-none", templ.KV("ms-4 md:ms-0", j == 0)}
+					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var16...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div class=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var15 string
-					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var14).String())
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 1, Col: 0}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" style=\"width:min(84vw,24rem);\" data-item-name=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var16 string
-					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 129, Col: 35}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" data-item-desc=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var17 string
-					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
+					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var16).String())
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 130, Col: 42}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 1, Col: 0}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\" data-item-tags=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" style=\"width:min(84vw,24rem);\" data-item-name=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var18 string
-					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(item.DietaryTagsString())
+					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 131, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 135, Col: 35}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" data-item-price=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\" data-item-desc=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var19 string
-					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", item.Price))
+					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 132, Col: 58}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 136, Col: 42}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" data-item-tags=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var20 string
+					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(item.DietaryTagsString())
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 137, Col: 50}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" data-item-price=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var21 string
+					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", item.Price))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 138, Col: 58}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					if item.PhotoURL != "" {
-						templ_7745c5c3_Var20 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_Var22 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 							if !templ_7745c5c3_IsBuffer {
@@ -383,148 +422,100 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 								}()
 							}
 							ctx = templ.InitializeContext(ctx)
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<img src=\"")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<img src=\"")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							var templ_7745c5c3_Var21 string
-							templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
+							var templ_7745c5c3_Var23 string
+							templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 141, Col: 35}
-							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" alt=\"")
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							var templ_7745c5c3_Var22 string
-							templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
-							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 141, Col: 53}
-							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\" class=\"absolute inset-0 h-full w-full object-cover\" loading=\"lazy\" width=\"400\" height=\"300\"> <a href=\"")
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							var templ_7745c5c3_Var23 templ.SafeURL
-							templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel)))
-							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 143, Col: 136}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 147, Col: 35}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\" class=\"absolute inset-0 z-10\" aria-label=\"")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\" alt=\"")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 							var templ_7745c5c3_Var24 string
-							templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs("View details for " + item.Name)
+							templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 145, Col: 56}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 147, Col: 53}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\"></a><div class=\"p-3\" style=\"position:absolute;left:0;right:0;bottom:0;\"><div class=\"rounded-xl p-3 flex flex-col gap-2 bg-white/60 backdrop-blur-md dark:bg-black/65 dark:backdrop-blur-none\"><h3 class=\"text-base font-semibold leading-snug line-clamp-2 text-foreground dark:text-white\">")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "\" class=\"absolute inset-0 h-full w-full object-cover\" loading=\"lazy\" width=\"400\" height=\"300\"> <a href=\"")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							var templ_7745c5c3_Var25 string
-							templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
+							var templ_7745c5c3_Var25 templ.SafeURL
+							templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel)))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 149, Col: 118}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 149, Col: 136}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</h3>")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" class=\"absolute inset-0 z-10\" aria-label=\"")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							var templ_7745c5c3_Var26 string
+							templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs("View details for " + item.Name)
+							if templ_7745c5c3_Err != nil {
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 151, Col: 56}
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\"></a><div class=\"p-3\" style=\"position:absolute;left:0;right:0;bottom:0;\"><div class=\"rounded-xl p-3 flex flex-col gap-2 bg-white/60 backdrop-blur-md dark:bg-black/65 dark:backdrop-blur-none\"><h3 class=\"text-base font-semibold leading-snug line-clamp-2 text-foreground dark:text-white\">")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							var templ_7745c5c3_Var27 string
+							templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
+							if templ_7745c5c3_Err != nil {
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 155, Col: 118}
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</h3>")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 							if item.Description != "" {
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<p class=\"text-xs text-foreground/75 dark:text-white/75 line-clamp-2\">")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<p class=\"text-xs text-foreground/75 dark:text-white/75 line-clamp-2\">")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								var templ_7745c5c3_Var26 string
-								templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
+								var templ_7745c5c3_Var28 string
+								templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 151, Col: 102}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 157, Col: 102}
 								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</p>")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</p>")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 							}
 							if item.IsVegetarian || item.IsGlutenFree || item.IsSpicy {
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<div class=\"flex flex-wrap gap-1\">")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<div class=\"flex flex-wrap gap-1\">")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								if item.IsVegetarian {
-									templ_7745c5c3_Var27 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-										if !templ_7745c5c3_IsBuffer {
-											defer func() {
-												templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-												if templ_7745c5c3_Err == nil {
-													templ_7745c5c3_Err = templ_7745c5c3_BufErr
-												}
-											}()
-										}
-										ctx = templ.InitializeContext(ctx)
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "🥬 Veg ")
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										return nil
-									})
-									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-								}
-								if item.IsGlutenFree {
-									templ_7745c5c3_Var28 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-										if !templ_7745c5c3_IsBuffer {
-											defer func() {
-												templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-												if templ_7745c5c3_Err == nil {
-													templ_7745c5c3_Err = templ_7745c5c3_BufErr
-												}
-											}()
-										}
-										ctx = templ.InitializeContext(ctx)
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "GF ")
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										return nil
-									})
-									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-								}
-								if item.IsSpicy {
 									templ_7745c5c3_Var29 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -537,7 +528,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 											}()
 										}
 										ctx = templ.InitializeContext(ctx)
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "🌶 Spicy ")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "🥬 Veg ")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
@@ -548,30 +539,31 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										return templ_7745c5c3_Err
 									}
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</div>")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
+								if item.IsGlutenFree {
+									templ_7745c5c3_Var30 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+										if !templ_7745c5c3_IsBuffer {
+											defer func() {
+												templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+												if templ_7745c5c3_Err == nil {
+													templ_7745c5c3_Err = templ_7745c5c3_BufErr
+												}
+											}()
+										}
+										ctx = templ.InitializeContext(ctx)
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "GF ")
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										return nil
+									})
+									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
 								}
-							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<div class=\"relative z-20 flex items-center justify-between gap-3\"><span class=\"text-lg font-semibold tracking-tight text-foreground dark:text-white\">")
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							var templ_7745c5c3_Var30 string
-							templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(item.Money().Format())
-							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 167, Col: 120}
-							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</span> ")
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							if item.IsAvailable && data.Restaurant.IsOpen {
-								if item.HasOptionGroups() {
+								if item.IsSpicy {
 									templ_7745c5c3_Var31 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -584,38 +576,41 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 											}()
 										}
 										ctx = templ.InitializeContext(ctx)
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "Add to cart")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "🌶 Spicy ")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 										return nil
 									})
-									templ_7745c5c3_Err = button.Button(button.Props{
-										Variant: button.VariantDefault,
-										Class:   "shadow-md",
-										Href:    fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel),
-									}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var31), templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var31), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-								} else {
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, " <div data-show=\"")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									var templ_7745c5c3_Var32 string
-									templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("!($cartItemQty['%s'] > 0)", string(item.ID)))
-									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 180, Col: 86}
-									}
-									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "\">")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
+								}
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "</div>")
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+							}
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<div class=\"relative z-20 flex items-center justify-between gap-3\"><span class=\"text-lg font-semibold tracking-tight text-foreground dark:text-white\">")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							var templ_7745c5c3_Var32 string
+							templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(item.Money().Format())
+							if templ_7745c5c3_Err != nil {
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 173, Col: 120}
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</span> ")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							if item.IsAvailable && data.Restaurant.IsOpen {
+								if item.HasOptionGroups() {
 									templ_7745c5c3_Var33 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -628,7 +623,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 											}()
 										}
 										ctx = templ.InitializeContext(ctx)
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "Add to Cart")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "Add to cart")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
@@ -637,27 +632,26 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 									templ_7745c5c3_Err = button.Button(button.Props{
 										Variant: button.VariantDefault,
 										Class:   "shadow-md",
-										Attributes: templ.Attributes{
-											"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
-										},
+										Href:    fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel),
 									}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</div> <div style=\"display:none;\" data-show=\"")
+								} else {
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, " <div data-show=\"")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									var templ_7745c5c3_Var34 string
-									templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$cartItemQty['%s'] > 0", string(item.ID)))
+									templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("!($cartItemQty['%s'] > 0)", string(item.ID)))
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 195, Col: 83}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 186, Col: 86}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "\" class=\"flex items-center gap-1.5\">")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "\">")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
@@ -673,38 +667,36 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 											}()
 										}
 										ctx = templ.InitializeContext(ctx)
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<span class=\"text-base leading-none select-none\">−</span>")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "Add to Cart")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 										return nil
 									})
 									templ_7745c5c3_Err = button.Button(button.Props{
-										Variant: button.VariantOutline,
-										Size:    button.SizeIcon,
-										Class:   "rounded-full dark:border-white/70 dark:text-white dark:bg-white/10 dark:hover:bg-white/25",
+										Variant: button.VariantDefault,
+										Class:   "shadow-md",
 										Attributes: templ.Attributes{
-											"data-on:click": fmt.Sprintf("@post('/cart/decrement?itemID=%s')", item.ID),
-											"aria-label":    "Decrease quantity",
+											"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
 										},
 									}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var35), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<span class=\"min-w-[1.5rem] text-center font-bold tabular-nums text-foreground dark:text-white\" data-text=\"")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</div> <div style=\"display:none;\" data-show=\"")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									var templ_7745c5c3_Var36 string
-									templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$cartItemQty['%s']", string(item.ID)))
+									templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$cartItemQty['%s'] > 0", string(item.ID)))
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 211, Col: 80}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 201, Col: 83}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "\"></span>")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "\" class=\"flex items-center gap-1.5\">")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
@@ -720,7 +712,54 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 											}()
 										}
 										ctx = templ.InitializeContext(ctx)
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<span class=\"text-base leading-none select-none\">+</span>")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<span class=\"text-base leading-none select-none\">−</span>")
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										return nil
+									})
+									templ_7745c5c3_Err = button.Button(button.Props{
+										Variant: button.VariantOutline,
+										Size:    button.SizeIcon,
+										Class:   "rounded-full dark:border-white/70 dark:text-white dark:bg-white/10 dark:hover:bg-white/25",
+										Attributes: templ.Attributes{
+											"data-on:click": fmt.Sprintf("@post('/cart/decrement?itemID=%s')", item.ID),
+											"aria-label":    "Decrease quantity",
+										},
+									}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var37), templ_7745c5c3_Buffer)
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<span class=\"min-w-[1.5rem] text-center font-bold tabular-nums text-foreground dark:text-white\" data-text=\"")
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+									var templ_7745c5c3_Var38 string
+									templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$cartItemQty['%s']", string(item.ID)))
+									if templ_7745c5c3_Err != nil {
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 217, Col: 80}
+									}
+									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "\"></span>")
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+									templ_7745c5c3_Var39 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+										if !templ_7745c5c3_IsBuffer {
+											defer func() {
+												templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+												if templ_7745c5c3_Err == nil {
+													templ_7745c5c3_Err = templ_7745c5c3_BufErr
+												}
+											}()
+										}
+										ctx = templ.InitializeContext(ctx)
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "<span class=\"text-base leading-none select-none\">+</span>")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
@@ -734,17 +773,17 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 											"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
 											"aria-label":    "Increase quantity",
 										},
-									}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var37), templ_7745c5c3_Buffer)
+									}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</div>")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</div>")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 								}
 							} else if !item.IsAvailable {
-								templ_7745c5c3_Var38 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var40 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -756,18 +795,18 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "Out of Stock ")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "Out of Stock ")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantDestructive, Class: "font-medium"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var38), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantDestructive, Class: "font-medium"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var40), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 							} else {
-								templ_7745c5c3_Var39 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var41 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -779,18 +818,18 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "Closed ")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "Closed ")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-background/90 text-foreground font-medium"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-background/90 text-foreground font-medium"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var41), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</div></div></div>")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</div></div></div>")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -801,12 +840,12 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							Attributes: templ.Attributes{
 								"style": "height:22rem;",
 							},
-						}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
+						}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var22), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					} else {
-						templ_7745c5c3_Var40 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_Var42 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 							if !templ_7745c5c3_IsBuffer {
@@ -818,37 +857,37 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 								}()
 							}
 							ctx = templ.InitializeContext(ctx)
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<a href=\"")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<a href=\"")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							var templ_7745c5c3_Var41 templ.SafeURL
-							templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel)))
+							var templ_7745c5c3_Var43 templ.SafeURL
+							templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel)))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 243, Col: 136}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 249, Col: 136}
 							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" class=\"absolute inset-0 z-10\" aria-label=\"")
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							var templ_7745c5c3_Var42 string
-							templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs("View details for " + item.Name)
-							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 245, Col: 56}
-							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\" class=\"absolute inset-0 z-10\" aria-label=\"")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\"></a>")
+							var templ_7745c5c3_Var44 string
+							templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs("View details for " + item.Name)
+							if templ_7745c5c3_Err != nil {
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 251, Col: 56}
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Var43 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "\"></a>")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							templ_7745c5c3_Var45 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 								if !templ_7745c5c3_IsBuffer {
@@ -860,7 +899,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 									}()
 								}
 								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Var44 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_Var46 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 									templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 									templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 									if !templ_7745c5c3_IsBuffer {
@@ -872,32 +911,32 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										}()
 									}
 									ctx = templ.InitializeContext(ctx)
-									var templ_7745c5c3_Var45 string
-									templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
+									var templ_7745c5c3_Var47 string
+									templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 248, Col: 90}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 254, Col: 90}
 									}
-									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
+									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									return nil
 								})
-								templ_7745c5c3_Err = card.Title(card.TitleProps{Class: "leading-snug line-clamp-2"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var44), templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = card.Title(card.TitleProps{Class: "leading-snug line-clamp-2"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var46), templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								return nil
 							})
-							templ_7745c5c3_Err = card.Header(card.HeaderProps{Class: "pb-3"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var43), templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = card.Header(card.HeaderProps{Class: "pb-3"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, " ")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, " ")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Var46 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+							templ_7745c5c3_Var48 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 								if !templ_7745c5c3_IsBuffer {
@@ -910,82 +949,34 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 								}
 								ctx = templ.InitializeContext(ctx)
 								if item.Description != "" {
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<p class=\"text-sm text-muted-foreground line-clamp-2\">")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<p class=\"text-sm text-muted-foreground line-clamp-2\">")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									var templ_7745c5c3_Var47 string
-									templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
+									var templ_7745c5c3_Var49 string
+									templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 252, Col: 85}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 258, Col: 85}
 									}
-									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
+									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</p>")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</p>")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, " ")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, " ")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
 								if item.IsVegetarian || item.IsGlutenFree || item.IsSpicy {
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<div class=\"flex flex-wrap gap-1\">")
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<div class=\"flex flex-wrap gap-1\">")
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 									if item.IsVegetarian {
-										templ_7745c5c3_Var48 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-											if !templ_7745c5c3_IsBuffer {
-												defer func() {
-													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-													if templ_7745c5c3_Err == nil {
-														templ_7745c5c3_Err = templ_7745c5c3_BufErr
-													}
-												}()
-											}
-											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "🥬 Veg ")
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											return nil
-										})
-										templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-									}
-									if item.IsGlutenFree {
-										templ_7745c5c3_Var49 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-											if !templ_7745c5c3_IsBuffer {
-												defer func() {
-													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-													if templ_7745c5c3_Err == nil {
-														templ_7745c5c3_Err = templ_7745c5c3_BufErr
-													}
-												}()
-											}
-											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "GF ")
-											if templ_7745c5c3_Err != nil {
-												return templ_7745c5c3_Err
-											}
-											return nil
-										})
-										templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var49), templ_7745c5c3_Buffer)
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-									}
-									if item.IsSpicy {
 										templ_7745c5c3_Var50 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -998,7 +989,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 												}()
 											}
 											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "🌶 Spicy ")
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "🥬 Veg ")
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
@@ -1009,53 +1000,8 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 											return templ_7745c5c3_Err
 										}
 									}
-									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "</div>")
-									if templ_7745c5c3_Err != nil {
-										return templ_7745c5c3_Err
-									}
-								}
-								return nil
-							})
-							templ_7745c5c3_Err = card.Content(card.ContentProps{Class: "flex-grow pt-0 space-y-2"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var46), templ_7745c5c3_Buffer)
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, " ")
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							templ_7745c5c3_Var51 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-								if !templ_7745c5c3_IsBuffer {
-									defer func() {
-										templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-										if templ_7745c5c3_Err == nil {
-											templ_7745c5c3_Err = templ_7745c5c3_BufErr
-										}
-									}()
-								}
-								ctx = templ.InitializeContext(ctx)
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<span class=\"text-xl font-bold tracking-tight\">")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								var templ_7745c5c3_Var52 string
-								templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(item.Money().Format())
-								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 269, Col: 82}
-								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</span> ")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								if item.IsAvailable && data.Restaurant.IsOpen {
-									if item.HasOptionGroups() {
-										templ_7745c5c3_Var53 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									if item.IsGlutenFree {
+										templ_7745c5c3_Var51 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 											if !templ_7745c5c3_IsBuffer {
@@ -1067,37 +1013,87 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 												}()
 											}
 											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "Add to cart")
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "GF ")
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
 											return nil
 										})
-										templ_7745c5c3_Err = button.Button(button.Props{
-											Variant: button.VariantDefault,
-											Href:    fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel),
-										}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var53), templ_7745c5c3_Buffer)
+										templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var51), templ_7745c5c3_Buffer)
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
-									} else {
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, " <div data-show=\"")
+									}
+									if item.IsSpicy {
+										templ_7745c5c3_Var52 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+											if !templ_7745c5c3_IsBuffer {
+												defer func() {
+													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+													if templ_7745c5c3_Err == nil {
+														templ_7745c5c3_Err = templ_7745c5c3_BufErr
+													}
+												}()
+											}
+											ctx = templ.InitializeContext(ctx)
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "🌶 Spicy ")
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											return nil
+										})
+										templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var52), templ_7745c5c3_Buffer)
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
-										var templ_7745c5c3_Var54 string
-										templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("!($cartItemQty['%s'] > 0)", string(item.ID)))
-										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 281, Col: 84}
+									}
+									templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</div>")
+									if templ_7745c5c3_Err != nil {
+										return templ_7745c5c3_Err
+									}
+								}
+								return nil
+							})
+							templ_7745c5c3_Err = card.Content(card.ContentProps{Class: "flex-grow pt-0 space-y-2"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, " ")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							templ_7745c5c3_Var53 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+								if !templ_7745c5c3_IsBuffer {
+									defer func() {
+										templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+										if templ_7745c5c3_Err == nil {
+											templ_7745c5c3_Err = templ_7745c5c3_BufErr
 										}
-										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "\">")
-										if templ_7745c5c3_Err != nil {
-											return templ_7745c5c3_Err
-										}
+									}()
+								}
+								ctx = templ.InitializeContext(ctx)
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "<span class=\"text-xl font-bold tracking-tight\">")
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								var templ_7745c5c3_Var54 string
+								templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(item.Money().Format())
+								if templ_7745c5c3_Err != nil {
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 275, Col: 82}
+								}
+								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "</span> ")
+								if templ_7745c5c3_Err != nil {
+									return templ_7745c5c3_Err
+								}
+								if item.IsAvailable && data.Restaurant.IsOpen {
+									if item.HasOptionGroups() {
 										templ_7745c5c3_Var55 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -1110,7 +1106,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 												}()
 											}
 											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "Add to Cart")
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "Add to cart")
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
@@ -1118,27 +1114,26 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										})
 										templ_7745c5c3_Err = button.Button(button.Props{
 											Variant: button.VariantDefault,
-											Attributes: templ.Attributes{
-												"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
-											},
+											Href:    fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel),
 										}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var55), templ_7745c5c3_Buffer)
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "</div> <div style=\"display:none;\" data-show=\"")
+									} else {
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, " <div data-show=\"")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 										var templ_7745c5c3_Var56 string
-										templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$cartItemQty['%s'] > 0", string(item.ID)))
+										templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("!($cartItemQty['%s'] > 0)", string(item.ID)))
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 295, Col: 81}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 287, Col: 84}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "\" class=\"flex items-center gap-1.5\">")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "\">")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
@@ -1154,38 +1149,35 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 												}()
 											}
 											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "<span class=\"text-base leading-none select-none\">−</span>")
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "Add to Cart")
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
 											return nil
 										})
 										templ_7745c5c3_Err = button.Button(button.Props{
-											Variant: button.VariantOutline,
-											Size:    button.SizeIcon,
-											Class:   "h-9 w-9 rounded-full",
+											Variant: button.VariantDefault,
 											Attributes: templ.Attributes{
-												"data-on:click": fmt.Sprintf("@post('/cart/decrement?itemID=%s')", item.ID),
-												"aria-label":    "Decrease quantity",
+												"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
 											},
 										}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var57), templ_7745c5c3_Buffer)
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "<span class=\"min-w-[1.75rem] text-center font-bold text-lg tabular-nums\" data-text=\"")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "</div> <div style=\"display:none;\" data-show=\"")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 										var templ_7745c5c3_Var58 string
-										templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$cartItemQty['%s']", string(item.ID)))
+										templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$cartItemQty['%s'] > 0", string(item.ID)))
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 311, Col: 78}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 301, Col: 81}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "\"></span>")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "\" class=\"flex items-center gap-1.5\">")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
@@ -1201,7 +1193,54 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 												}()
 											}
 											ctx = templ.InitializeContext(ctx)
-											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "<span class=\"text-base leading-none select-none\">+</span>")
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "<span class=\"text-base leading-none select-none\">−</span>")
+											if templ_7745c5c3_Err != nil {
+												return templ_7745c5c3_Err
+											}
+											return nil
+										})
+										templ_7745c5c3_Err = button.Button(button.Props{
+											Variant: button.VariantOutline,
+											Size:    button.SizeIcon,
+											Class:   "h-9 w-9 rounded-full",
+											Attributes: templ.Attributes{
+												"data-on:click": fmt.Sprintf("@post('/cart/decrement?itemID=%s')", item.ID),
+												"aria-label":    "Decrease quantity",
+											},
+										}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var59), templ_7745c5c3_Buffer)
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "<span class=\"min-w-[1.75rem] text-center font-bold text-lg tabular-nums\" data-text=\"")
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										var templ_7745c5c3_Var60 string
+										templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$cartItemQty['%s']", string(item.ID)))
+										if templ_7745c5c3_Err != nil {
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 317, Col: 78}
+										}
+										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "\"></span>")
+										if templ_7745c5c3_Err != nil {
+											return templ_7745c5c3_Err
+										}
+										templ_7745c5c3_Var61 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+											templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+											templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+											if !templ_7745c5c3_IsBuffer {
+												defer func() {
+													templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+													if templ_7745c5c3_Err == nil {
+														templ_7745c5c3_Err = templ_7745c5c3_BufErr
+													}
+												}()
+											}
+											ctx = templ.InitializeContext(ctx)
+											templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "<span class=\"text-base leading-none select-none\">+</span>")
 											if templ_7745c5c3_Err != nil {
 												return templ_7745c5c3_Err
 											}
@@ -1215,17 +1254,17 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 												"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
 												"aria-label":    "Increase quantity",
 											},
-										}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var59), templ_7745c5c3_Buffer)
+										}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var61), templ_7745c5c3_Buffer)
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "</div>")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "</div>")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 									}
 								} else if !item.IsAvailable {
-									templ_7745c5c3_Var60 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_Var62 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 										if !templ_7745c5c3_IsBuffer {
@@ -1237,18 +1276,18 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 											}()
 										}
 										ctx = templ.InitializeContext(ctx)
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "Out of Stock ")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "Out of Stock ")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 										return nil
 									})
-									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantDestructive}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var60), templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantDestructive}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var62), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 								} else {
-									templ_7745c5c3_Var61 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+									templ_7745c5c3_Var63 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 										templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 										templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 										if !templ_7745c5c3_IsBuffer {
@@ -1260,20 +1299,20 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 											}()
 										}
 										ctx = templ.InitializeContext(ctx)
-										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "Closed ")
+										templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "Closed ")
 										if templ_7745c5c3_Err != nil {
 											return templ_7745c5c3_Err
 										}
 										return nil
 									})
-									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var61), templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var63), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
 								}
 								return nil
 							})
-							templ_7745c5c3_Err = card.Footer(card.FooterProps{Class: "relative z-20 justify-between items-center border-t pt-4"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var51), templ_7745c5c3_Buffer)
+							templ_7745c5c3_Err = card.Footer(card.FooterProps{Class: "relative z-20 justify-between items-center border-t pt-4"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var53), templ_7745c5c3_Buffer)
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -1284,22 +1323,22 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							Attributes: templ.Attributes{
 								"style": "height:22rem;",
 							},
-						}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var40), templ_7745c5c3_Buffer)
+						}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var42), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "</div>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "</div>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "</div></section>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "</div></section>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1307,7 +1346,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, " <div data-init=\"@get('/cart')\"></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, " <div data-init=\"@get('/cart')\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1315,7 +1354,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, " <div id=\"pwa-install-btn\" class=\"hidden fixed bottom-32 right-4 z-50 md:bottom-20\"><button onclick=\"installPWA()\" class=\"bg-primary text-primary-foreground hover:bg-primary/90 rounded-full p-4 shadow-lg flex items-center gap-2 transition-all\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, " <div id=\"pwa-install-btn\" class=\"hidden fixed bottom-32 right-4 z-50 md:bottom-20\"><button onclick=\"installPWA()\" class=\"bg-primary text-primary-foreground hover:bg-primary/90 rounded-full p-4 shadow-lg flex items-center gap-2 transition-all\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1323,20 +1362,20 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "<span class=\"font-medium\">Install App</span></button></div><script nonce=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "<span class=\"font-medium\">Install App</span></button></div><script nonce=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var62 string
-			templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
+			var templ_7745c5c3_Var64 string
+			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 354, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/menu.templ`, Line: 360, Col: 38}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "\">\n\t\t\t\tdocument.addEventListener('DOMContentLoaded', () => {\n\t\t\t\t\tconst tabsRoot = document.getElementById('menu-category-tabs');\n\t\t\t\t\tif (!tabsRoot) return;\n\n\t\t\t\t\tconst triggers = Array.from(tabsRoot.querySelectorAll('[data-tui-tabs-trigger][data-cat-target]'));\n\t\t\t\t\tif (!triggers.length) return;\n\n\t\t\t\t\tconst sections = triggers\n\t\t\t\t\t\t.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))\n\t\t\t\t\t\t.filter(Boolean);\n\t\t\t\t\tif (!sections.length) return;\n\n\t\t\t\t\tconst setActive = (sectionID) => {\n\t\t\t\t\t\twindow.tui?.tabs?.setActive('menu-category-tabs', sectionID);\n\t\t\t\t\t};\n\n\t\t\t\t\tconst scrollToSection = (sectionID) => {\n\t\t\t\t\t\tconst section = document.getElementById(sectionID);\n\t\t\t\t\t\tif (!section) return;\n\t\t\t\t\t\tsection.scrollIntoView({ behavior: 'smooth', block: 'start' });\n\t\t\t\t\t\twindow.history.replaceState(null, '', `#${sectionID}`);\n\t\t\t\t\t\tsetActive(sectionID);\n\t\t\t\t\t};\n\n\t\t\t\t\tfor (const trigger of triggers) {\n\t\t\t\t\t\ttrigger.addEventListener('click', (event) => {\n\t\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t\t\tevent.stopPropagation();\n\t\t\t\t\t\t\tconst sectionID = trigger.getAttribute('data-cat-target');\n\t\t\t\t\t\t\tif (!sectionID) return;\n\t\t\t\t\t\t\tscrollToSection(sectionID);\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\n\t\t\t\t\tconst observer = new IntersectionObserver(\n\t\t\t\t\t\t(entries) => {\n\t\t\t\t\t\t\tlet best = null;\n\t\t\t\t\t\t\tfor (const entry of entries) {\n\t\t\t\t\t\t\t\tif (!entry.isIntersecting) continue;\n\t\t\t\t\t\t\t\tif (!best || entry.intersectionRatio > best.intersectionRatio) {\n\t\t\t\t\t\t\t\t\tbest = entry;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tif (best?.target?.id) {\n\t\t\t\t\t\t\t\tsetActive(best.target.id);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t},\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\troot: null,\n\t\t\t\t\t\t\trootMargin: '-35% 0px -55% 0px',\n\t\t\t\t\t\t\tthreshold: [0, 0.2, 0.4, 0.6, 0.8, 1],\n\t\t\t\t\t\t},\n\t\t\t\t\t);\n\n\t\t\t\t\tfor (const section of sections) {\n\t\t\t\t\t\tobserver.observe(section);\n\t\t\t\t\t}\n\n\t\t\t\t\tconst initialHash = window.location.hash.replace('#', '');\n\t\t\t\t\tif (initialHash && sections.some((section) => section.id === initialHash)) {\n\t\t\t\t\t\tsetActive(initialHash);\n\t\t\t\t\t} else if (sections[0]?.id) {\n\t\t\t\t\t\tsetActive(sections[0].id);\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\tlet deferredPrompt;\n\t\t\tconst cartHost = document.getElementById('cart-floating-button');\n\n\t\t\t// The mobile cart bar (rendered inside #cart-floating-button only when the\n\t\t\t// cart has items) shares the bottom-right corner with the install button.\n\t\t\t// Hide the install prompt whenever the cart bar is present so the two CTAs\n\t\t\t// never collide; show it again if the cart empties.\n\t\t\tfunction cartHasItems() {\n\t\t\t\treturn !!(cartHost && cartHost.querySelector('div'));\n\t\t\t}\n\t\t\tfunction syncInstallVisibility() {\n\t\t\t\tconst installBtn = document.getElementById('pwa-install-btn');\n\t\t\t\tif (!installBtn) return;\n\t\t\t\tinstallBtn.classList.toggle('hidden', !deferredPrompt || cartHasItems());\n\t\t\t}\n\n\t\t\twindow.addEventListener('beforeinstallprompt', (e) => {\n\t\t\t\te.preventDefault();\n\t\t\t\tdeferredPrompt = e;\n\t\t\t\tsyncInstallVisibility();\n\t\t\t});\n\n\t\t\t// The cart fragment is swapped in via SSE on add/remove; re-evaluate on change.\n\t\t\tif (cartHost) {\n\t\t\t\tnew MutationObserver(syncInstallVisibility).observe(cartHost, { childList: true, subtree: true });\n\t\t\t}\n\n\t\t\tasync function installPWA() {\n\t\t\t\tif (!deferredPrompt) return;\n\t\t\t\tdeferredPrompt.prompt();\n\t\t\t\tawait deferredPrompt.userChoice;\n\t\t\t\tdeferredPrompt = null;\n\t\t\t\tsyncInstallVisibility();\n\t\t\t}\n\n\t\t\t// ── Search + dietary filter ──────────────────────────────────────────\n\t\t\t(function () {\n\t\t\t\tconst params = new URLSearchParams(window.location.search);\n\t\t\t\tlet searchQuery = params.get('q') || '';\n\t\t\t\tconst activeFilters = new Set((params.get('filters') || '').split(',').filter(Boolean));\n\t\t\t\tlet under10 = params.has('under10');\n\n\t\t\t\tfunction setChipActive(chip, active) {\n\t\t\t\t\tif (active) {\n\t\t\t\t\t\tchip.classList.remove('bg-background', 'text-foreground');\n\t\t\t\t\t\tchip.classList.add('bg-primary', 'text-primary-foreground', 'border-primary');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tchip.classList.remove('bg-primary', 'text-primary-foreground', 'border-primary');\n\t\t\t\t\t\tchip.classList.add('bg-background', 'text-foreground');\n\t\t\t\t\t}\n\t\t\t\t\tchip.setAttribute('aria-pressed', active ? 'true' : 'false');\n\t\t\t\t}\n\n\t\t\t\tfunction updateURL() {\n\t\t\t\t\tconst p = new URLSearchParams(window.location.search);\n\t\t\t\t\tif (searchQuery) { p.set('q', searchQuery); } else { p.delete('q'); }\n\t\t\t\t\tconst filters = Array.from(activeFilters);\n\t\t\t\t\tif (filters.length) { p.set('filters', filters.join(',')); } else { p.delete('filters'); }\n\t\t\t\t\tif (under10) { p.set('under10', '1'); } else { p.delete('under10'); }\n\t\t\t\t\tconst qs = p.toString();\n\t\t\t\t\twindow.history.replaceState(null, '', (qs ? '?' + qs : window.location.pathname) + window.location.hash);\n\t\t\t\t}\n\n\t\t\t\tfunction applyFilters() {\n\t\t\t\t\tconst q = searchQuery.toLowerCase().trim();\n\t\t\t\t\tconst menuSections = document.querySelectorAll('[data-menu-section]');\n\t\t\t\t\tlet anyVisible = false;\n\n\t\t\t\t\tfor (const section of menuSections) {\n\t\t\t\t\t\tconst cards = section.querySelectorAll('[data-item-name]');\n\t\t\t\t\t\tlet sectionVisible = false;\n\n\t\t\t\t\t\tfor (const card of cards) {\n\t\t\t\t\t\t\tconst name = (card.getAttribute('data-item-name') || '').toLowerCase();\n\t\t\t\t\t\t\tconst desc = (card.getAttribute('data-item-desc') || '').toLowerCase();\n\t\t\t\t\t\t\tconst tags = (card.getAttribute('data-item-tags') || '').split(' ').filter(Boolean);\n\t\t\t\t\t\t\tconst price = parseFloat(card.getAttribute('data-item-price') || '0');\n\n\t\t\t\t\t\t\tconst matchSearch = !q || name.includes(q) || desc.includes(q);\n\t\t\t\t\t\t\tconst matchTags = activeFilters.size === 0 || [...activeFilters].every(f => tags.includes(f));\n\t\t\t\t\t\t\tconst matchPrice = !under10 || price < 10;\n\n\t\t\t\t\t\t\tconst visible = matchSearch && matchTags && matchPrice;\n\t\t\t\t\t\t\tcard.style.display = visible ? '' : 'none';\n\t\t\t\t\t\t\tif (visible) sectionVisible = true;\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tsection.style.display = sectionVisible ? '' : 'none';\n\t\t\t\t\t\tif (sectionVisible) anyVisible = true;\n\n\t\t\t\t\t\t// sync tab trigger visibility\n\t\t\t\t\t\tconst tabTrigger = document.querySelector('[data-cat-target=\"' + section.id + '\"]');\n\t\t\t\t\t\tif (tabTrigger) {\n\t\t\t\t\t\t\ttabTrigger.style.display = sectionVisible ? '' : 'none';\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\n\t\t\t\t\tconst noResults = document.getElementById('menu-no-results');\n\t\t\t\t\tif (noResults) noResults.style.display = anyVisible ? 'none' : '';\n\n\t\t\t\t\tupdateURL();\n\t\t\t\t}\n\n\t\t\t\tdocument.addEventListener('DOMContentLoaded', function () {\n\t\t\t\t\t// Restore search input\n\t\t\t\t\tconst searchInput = document.getElementById('menu-search');\n\t\t\t\t\tif (searchInput) {\n\t\t\t\t\t\tif (searchQuery) searchInput.value = searchQuery;\n\t\t\t\t\t\tsearchInput.addEventListener('input', function (e) {\n\t\t\t\t\t\t\tsearchQuery = e.target.value;\n\t\t\t\t\t\t\tapplyFilters();\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\n\t\t\t\t\t// Restore + wire filter chips\n\t\t\t\t\tfor (const chip of document.querySelectorAll('.menu-filter-chip[data-filter]')) {\n\t\t\t\t\t\tconst filter = chip.getAttribute('data-filter');\n\t\t\t\t\t\tconst isActive = filter === 'under10' ? under10 : activeFilters.has(filter);\n\t\t\t\t\t\tsetChipActive(chip, isActive);\n\n\t\t\t\t\t\tchip.addEventListener('click', function () {\n\t\t\t\t\t\t\tif (filter === 'under10') {\n\t\t\t\t\t\t\t\tunder10 = !under10;\n\t\t\t\t\t\t\t\tsetChipActive(chip, under10);\n\t\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t\tconst nowActive = !activeFilters.has(filter);\n\t\t\t\t\t\t\t\tif (nowActive) { activeFilters.add(filter); } else { activeFilters.delete(filter); }\n\t\t\t\t\t\t\t\tsetChipActive(chip, nowActive);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tapplyFilters();\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\n\t\t\t\t\t// Clear-filters button (inside no-results state)\n\t\t\t\t\tconst clearBtn = document.getElementById('menu-clear-filters');\n\t\t\t\t\tif (clearBtn) {\n\t\t\t\t\t\tclearBtn.addEventListener('click', function () {\n\t\t\t\t\t\t\tsearchQuery = '';\n\t\t\t\t\t\t\tactiveFilters.clear();\n\t\t\t\t\t\t\tunder10 = false;\n\t\t\t\t\t\t\tconst si = document.getElementById('menu-search');\n\t\t\t\t\t\t\tif (si) si.value = '';\n\t\t\t\t\t\t\tfor (const chip of document.querySelectorAll('.menu-filter-chip[data-filter]')) {\n\t\t\t\t\t\t\t\tsetChipActive(chip, false);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tapplyFilters();\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\n\t\t\t\t\t// Apply initial state from URL params\n\t\t\t\t\tif (searchQuery || activeFilters.size > 0 || under10) {\n\t\t\t\t\t\tapplyFilters();\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t})();\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "\">\n\t\t\t\tdocument.addEventListener('DOMContentLoaded', () => {\n\t\t\t\t\tconst tabsRoot = document.getElementById('menu-category-tabs');\n\t\t\t\t\tif (!tabsRoot) return;\n\n\t\t\t\t\tconst triggers = Array.from(tabsRoot.querySelectorAll('[data-tui-tabs-trigger][data-cat-target]'));\n\t\t\t\t\tif (!triggers.length) return;\n\n\t\t\t\t\tconst sections = triggers\n\t\t\t\t\t\t.map((trigger) => document.getElementById(trigger.getAttribute('data-cat-target') || ''))\n\t\t\t\t\t\t.filter(Boolean);\n\t\t\t\t\tif (!sections.length) return;\n\n\t\t\t\t\tconst setActive = (sectionID) => {\n\t\t\t\t\t\twindow.tui?.tabs?.setActive('menu-category-tabs', sectionID);\n\t\t\t\t\t};\n\n\t\t\t\t\tconst scrollToSection = (sectionID) => {\n\t\t\t\t\t\tconst section = document.getElementById(sectionID);\n\t\t\t\t\t\tif (!section) return;\n\t\t\t\t\t\tsection.scrollIntoView({ behavior: 'smooth', block: 'start' });\n\t\t\t\t\t\twindow.history.replaceState(null, '', `#${sectionID}`);\n\t\t\t\t\t\tsetActive(sectionID);\n\t\t\t\t\t};\n\n\t\t\t\t\tfor (const trigger of triggers) {\n\t\t\t\t\t\ttrigger.addEventListener('click', (event) => {\n\t\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t\t\tevent.stopPropagation();\n\t\t\t\t\t\t\tconst sectionID = trigger.getAttribute('data-cat-target');\n\t\t\t\t\t\t\tif (!sectionID) return;\n\t\t\t\t\t\t\tscrollToSection(sectionID);\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\n\t\t\t\t\tconst observer = new IntersectionObserver(\n\t\t\t\t\t\t(entries) => {\n\t\t\t\t\t\t\tlet best = null;\n\t\t\t\t\t\t\tfor (const entry of entries) {\n\t\t\t\t\t\t\t\tif (!entry.isIntersecting) continue;\n\t\t\t\t\t\t\t\tif (!best || entry.intersectionRatio > best.intersectionRatio) {\n\t\t\t\t\t\t\t\t\tbest = entry;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tif (best?.target?.id) {\n\t\t\t\t\t\t\t\tsetActive(best.target.id);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t},\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\troot: null,\n\t\t\t\t\t\t\trootMargin: '-35% 0px -55% 0px',\n\t\t\t\t\t\t\tthreshold: [0, 0.2, 0.4, 0.6, 0.8, 1],\n\t\t\t\t\t\t},\n\t\t\t\t\t);\n\n\t\t\t\t\tfor (const section of sections) {\n\t\t\t\t\t\tobserver.observe(section);\n\t\t\t\t\t}\n\n\t\t\t\t\tconst initialHash = window.location.hash.replace('#', '');\n\t\t\t\t\tif (initialHash && sections.some((section) => section.id === initialHash)) {\n\t\t\t\t\t\tsetActive(initialHash);\n\t\t\t\t\t} else if (sections[0]?.id) {\n\t\t\t\t\t\tsetActive(sections[0].id);\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\tlet deferredPrompt;\n\t\t\tconst cartHost = document.getElementById('cart-floating-button');\n\n\t\t\t// The mobile cart bar (rendered inside #cart-floating-button only when the\n\t\t\t// cart has items) shares the bottom-right corner with the install button.\n\t\t\t// Hide the install prompt whenever the cart bar is present so the two CTAs\n\t\t\t// never collide; show it again if the cart empties.\n\t\t\tfunction cartHasItems() {\n\t\t\t\treturn !!(cartHost && cartHost.querySelector('div'));\n\t\t\t}\n\t\t\tfunction syncInstallVisibility() {\n\t\t\t\tconst installBtn = document.getElementById('pwa-install-btn');\n\t\t\t\tif (!installBtn) return;\n\t\t\t\tinstallBtn.classList.toggle('hidden', !deferredPrompt || cartHasItems());\n\t\t\t}\n\n\t\t\twindow.addEventListener('beforeinstallprompt', (e) => {\n\t\t\t\te.preventDefault();\n\t\t\t\tdeferredPrompt = e;\n\t\t\t\tsyncInstallVisibility();\n\t\t\t});\n\n\t\t\t// The cart fragment is swapped in via SSE on add/remove; re-evaluate on change.\n\t\t\tif (cartHost) {\n\t\t\t\tnew MutationObserver(syncInstallVisibility).observe(cartHost, { childList: true, subtree: true });\n\t\t\t}\n\n\t\t\tasync function installPWA() {\n\t\t\t\tif (!deferredPrompt) return;\n\t\t\t\tdeferredPrompt.prompt();\n\t\t\t\tawait deferredPrompt.userChoice;\n\t\t\t\tdeferredPrompt = null;\n\t\t\t\tsyncInstallVisibility();\n\t\t\t}\n\n\t\t\t// ── Search + dietary filter ──────────────────────────────────────────\n\t\t\t(function () {\n\t\t\t\tconst params = new URLSearchParams(window.location.search);\n\t\t\t\tlet searchQuery = params.get('q') || '';\n\t\t\t\tconst activeFilters = new Set((params.get('filters') || '').split(',').filter(Boolean));\n\t\t\t\tlet under10 = params.has('under10');\n\n\t\t\t\tfunction setChipActive(chip, active) {\n\t\t\t\t\tif (active) {\n\t\t\t\t\t\tchip.classList.remove('bg-background', 'text-foreground');\n\t\t\t\t\t\tchip.classList.add('bg-primary', 'text-primary-foreground', 'border-primary');\n\t\t\t\t\t} else {\n\t\t\t\t\t\tchip.classList.remove('bg-primary', 'text-primary-foreground', 'border-primary');\n\t\t\t\t\t\tchip.classList.add('bg-background', 'text-foreground');\n\t\t\t\t\t}\n\t\t\t\t\tchip.setAttribute('aria-pressed', active ? 'true' : 'false');\n\t\t\t\t}\n\n\t\t\t\tfunction updateURL() {\n\t\t\t\t\tconst p = new URLSearchParams(window.location.search);\n\t\t\t\t\tif (searchQuery) { p.set('q', searchQuery); } else { p.delete('q'); }\n\t\t\t\t\tconst filters = Array.from(activeFilters);\n\t\t\t\t\tif (filters.length) { p.set('filters', filters.join(',')); } else { p.delete('filters'); }\n\t\t\t\t\tif (under10) { p.set('under10', '1'); } else { p.delete('under10'); }\n\t\t\t\t\tconst qs = p.toString();\n\t\t\t\t\twindow.history.replaceState(null, '', (qs ? '?' + qs : window.location.pathname) + window.location.hash);\n\t\t\t\t}\n\n\t\t\t\tfunction applyFilters() {\n\t\t\t\t\tconst q = searchQuery.toLowerCase().trim();\n\t\t\t\t\tconst menuSections = document.querySelectorAll('[data-menu-section]');\n\t\t\t\t\tlet anyVisible = false;\n\n\t\t\t\t\tfor (const section of menuSections) {\n\t\t\t\t\t\tconst cards = section.querySelectorAll('[data-item-name]');\n\t\t\t\t\t\tlet sectionVisible = false;\n\n\t\t\t\t\t\tfor (const card of cards) {\n\t\t\t\t\t\t\tconst name = (card.getAttribute('data-item-name') || '').toLowerCase();\n\t\t\t\t\t\t\tconst desc = (card.getAttribute('data-item-desc') || '').toLowerCase();\n\t\t\t\t\t\t\tconst tags = (card.getAttribute('data-item-tags') || '').split(' ').filter(Boolean);\n\t\t\t\t\t\t\tconst price = parseFloat(card.getAttribute('data-item-price') || '0');\n\n\t\t\t\t\t\t\tconst matchSearch = !q || name.includes(q) || desc.includes(q);\n\t\t\t\t\t\t\tconst matchTags = activeFilters.size === 0 || [...activeFilters].every(f => tags.includes(f));\n\t\t\t\t\t\t\tconst matchPrice = !under10 || price < 10;\n\n\t\t\t\t\t\t\tconst visible = matchSearch && matchTags && matchPrice;\n\t\t\t\t\t\t\tcard.style.display = visible ? '' : 'none';\n\t\t\t\t\t\t\tif (visible) sectionVisible = true;\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tsection.style.display = sectionVisible ? '' : 'none';\n\t\t\t\t\t\tif (sectionVisible) anyVisible = true;\n\n\t\t\t\t\t\t// sync tab trigger visibility\n\t\t\t\t\t\tconst tabTrigger = document.querySelector('[data-cat-target=\"' + section.id + '\"]');\n\t\t\t\t\t\tif (tabTrigger) {\n\t\t\t\t\t\t\ttabTrigger.style.display = sectionVisible ? '' : 'none';\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\n\t\t\t\t\tconst noResults = document.getElementById('menu-no-results');\n\t\t\t\t\tif (noResults) noResults.style.display = anyVisible ? 'none' : '';\n\n\t\t\t\t\tupdateURL();\n\t\t\t\t}\n\n\t\t\t\tdocument.addEventListener('DOMContentLoaded', function () {\n\t\t\t\t\t// Restore search input\n\t\t\t\t\tconst searchInput = document.getElementById('menu-search');\n\t\t\t\t\tif (searchInput) {\n\t\t\t\t\t\tif (searchQuery) searchInput.value = searchQuery;\n\t\t\t\t\t\tsearchInput.addEventListener('input', function (e) {\n\t\t\t\t\t\t\tsearchQuery = e.target.value;\n\t\t\t\t\t\t\tapplyFilters();\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\n\t\t\t\t\t// Restore + wire filter chips\n\t\t\t\t\tfor (const chip of document.querySelectorAll('.menu-filter-chip[data-filter]')) {\n\t\t\t\t\t\tconst filter = chip.getAttribute('data-filter');\n\t\t\t\t\t\tconst isActive = filter === 'under10' ? under10 : activeFilters.has(filter);\n\t\t\t\t\t\tsetChipActive(chip, isActive);\n\n\t\t\t\t\t\tchip.addEventListener('click', function () {\n\t\t\t\t\t\t\tif (filter === 'under10') {\n\t\t\t\t\t\t\t\tunder10 = !under10;\n\t\t\t\t\t\t\t\tsetChipActive(chip, under10);\n\t\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t\tconst nowActive = !activeFilters.has(filter);\n\t\t\t\t\t\t\t\tif (nowActive) { activeFilters.add(filter); } else { activeFilters.delete(filter); }\n\t\t\t\t\t\t\t\tsetChipActive(chip, nowActive);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tapplyFilters();\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\n\t\t\t\t\t// Clear-filters button (inside no-results state)\n\t\t\t\t\tconst clearBtn = document.getElementById('menu-clear-filters');\n\t\t\t\t\tif (clearBtn) {\n\t\t\t\t\t\tclearBtn.addEventListener('click', function () {\n\t\t\t\t\t\t\tsearchQuery = '';\n\t\t\t\t\t\t\tactiveFilters.clear();\n\t\t\t\t\t\t\tunder10 = false;\n\t\t\t\t\t\t\tconst si = document.getElementById('menu-search');\n\t\t\t\t\t\t\tif (si) si.value = '';\n\t\t\t\t\t\t\tfor (const chip of document.querySelectorAll('.menu-filter-chip[data-filter]')) {\n\t\t\t\t\t\t\t\tsetChipActive(chip, false);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tapplyFilters();\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\n\t\t\t\t\t// Apply initial state from URL params\n\t\t\t\t\tif (searchQuery || activeFilters.size > 0 || under10) {\n\t\t\t\t\t\tapplyFilters();\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t})();\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

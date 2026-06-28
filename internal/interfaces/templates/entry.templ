@@ -46,10 +46,19 @@ templ EntryPage(reason string, visited []placesQuery.VisitedPlace) {
 					})
 				}
 				if reason == "restaurant_not_found" {
-					@primitives.InlineAlert(primitives.InlineAlertProps{
-						Variant:     primitives.InlineAlertWarning,
-						Description: "That restaurant link is not available. Please scan a new QR code.",
-					})
+					<div class="rounded-xl border bg-card p-6 text-center space-y-3 shadow-sm">
+						<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+							@icon.MapPinOff(icon.Props{Class: "h-6 w-6"})
+						</div>
+						<div class="space-y-1">
+							<h2 class="text-lg font-semibold tracking-tight">Restaurant not found</h2>
+							<p class="text-sm text-muted-foreground">This link may be outdated or the QR code invalid. Scan the code on your table to start ordering.</p>
+						</div>
+						@button.Button(button.Props{Href: "/scan", Class: "w-full"}) {
+							@icon.ScanQrCode()
+							Scan QR Code
+						}
+					</div>
 				}
 				<!-- Customer actions -->
 				if len(visited) > 0 {
