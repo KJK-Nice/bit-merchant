@@ -793,7 +793,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			templ_7745c5c3_Err = button.Button(button.Props{
 				Variant:    button.VariantOutline,
 				Size:       button.SizeIcon,
-				Class:      "h-10 w-10 rounded-full",
+				Class:      "h-10 w-10 rounded-full min-h-11 min-w-11",
 				Attributes: templ.Attributes{"type": "button", "onclick": "changeItemDetailQty(-1)"},
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -824,7 +824,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			templ_7745c5c3_Err = button.Button(button.Props{
 				Variant:    button.VariantOutline,
 				Size:       button.SizeIcon,
-				Class:      "h-10 w-10 rounded-full",
+				Class:      "h-10 w-10 rounded-full min-h-11 min-w-11",
 				Attributes: templ.Attributes{"type": "button", "onclick": "changeItemDetailQty(1)"},
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var37), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {

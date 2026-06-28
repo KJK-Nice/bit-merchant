@@ -237,7 +237,7 @@ templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken st
 				@button.Button(button.Props{
 					Variant:    button.VariantOutline,
 					Size:       button.SizeIcon,
-					Class:      "h-10 w-10 rounded-full",
+					Class:      "h-10 w-10 rounded-full min-h-11 min-w-11",
 					Attributes: templ.Attributes{"type": "button", "onclick": "changeItemDetailQty(-1)"},
 				}) {
 					<span class="text-base leading-none select-none">−</span>
@@ -246,7 +246,7 @@ templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken st
 				@button.Button(button.Props{
 					Variant:    button.VariantOutline,
 					Size:       button.SizeIcon,
-					Class:      "h-10 w-10 rounded-full",
+					Class:      "h-10 w-10 rounded-full min-h-11 min-w-11",
 					Attributes: templ.Attributes{"type": "button", "onclick": "changeItemDetailQty(1)"},
 				}) {
 					<span class="text-base leading-none select-none">+</span>
