@@ -82,6 +82,8 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	adminGroup.POST("/items/:itemID/edit", handlers.Admin.PostItemEditor)
 	adminGroup.POST("/menu/reorder-categories", handlers.Admin.PostReorderCategories)
 	adminGroup.POST("/menu/reorder-items", handlers.Admin.PostReorderItems)
+	adminGroup.GET("/kitchen", handlers.Admin.GetKitchenSettings)
+	adminGroup.POST("/kitchen/settings", handlers.Admin.PostKitchenSettings)
 	adminGroup.GET("/qr", handlers.Admin.GetQRPage)
 	adminGroup.POST("/qr/settings", handlers.Admin.PostQRSettings)
 	adminGroup.GET("/qr/print", handlers.Admin.GetQRPrint)

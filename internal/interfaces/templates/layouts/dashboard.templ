@@ -227,6 +227,16 @@ templ Dashboard(title string, currentPath string, activeRestaurantLabel string, 
 								}
 								@sidebar.MenuItem() {
 									@sidebar.MenuButton(sidebar.MenuButtonProps{
+										Href:     "/admin/kitchen",
+										IsActive: currentPath == "/admin/kitchen",
+										Tooltip:  "Kitchen timing",
+									}) {
+										@icon.Timer(icon.Props{Class: "size-4"})
+										<span>Kitchen timing</span>
+									}
+								}
+								@sidebar.MenuItem() {
+									@sidebar.MenuButton(sidebar.MenuButtonProps{
 										Href:     "/admin/qr",
 										IsActive: currentPath == "/admin/qr",
 										Tooltip:  "QR Code",
