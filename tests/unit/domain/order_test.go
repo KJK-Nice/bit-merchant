@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestNewOrder(t *testing.T) {
@@ -95,4 +96,31 @@ func TestOrder_UpdateFulfillmentStatus(t *testing.T) {
 		err := testOrder.UpdateFulfillmentStatus(common.FulfillmentStatusReady)
 		assert.Error(t, err)
 	})
+}
+
+func TestOrder_RequestServerThrottle(t *testing.T) {
+	o, _ := order.NewOrder("o_1", "101", "r_1", "session_1", []order.OrderItem{{}}, 100, common.PaymentMethodTypeCash)
+	base := time.Date(2026, 6, 28, 12, 0, 0, 0, time.UTC)
+
+	assert.True(t, o.RequestServer(base), "first call should register")
+	assert.NotNil(t, o.ServerCalledAt)
+	assert.True(t, o.ServerCalledAt.Equal(base))
+
+	// Repeat within the throttle window is a no-op.
+	assert.False(t, o.RequestServer(base.Add(30*time.Second)), "repeat within 60s should be throttled")
+	assert.True(t, o.ServerCalledAt.Equal(base), "throttled call must not move the timestamp")
+
+	// After the window a fresh request registers again.
+	later := base.Add(order.ServiceRequestThrottle + time.Second)
+	assert.True(t, o.RequestServer(later), "call after window should register")
+	assert.True(t, o.ServerCalledAt.Equal(later))
+}
+
+func TestOrder_RequestBillThrottle(t *testing.T) {
+	o, _ := order.NewOrder("o_1", "101", "r_1", "session_1", []order.OrderItem{{}}, 100, common.PaymentMethodTypeCash)
+	base := time.Date(2026, 6, 28, 12, 0, 0, 0, time.UTC)
+
+	assert.True(t, o.RequestBill(base))
+	assert.False(t, o.RequestBill(base.Add(time.Second)))
+	assert.True(t, o.RequestBill(base.Add(order.ServiceRequestThrottle+time.Second)))
 }

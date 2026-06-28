@@ -80,7 +80,9 @@ func TestKitchenWorkflow(t *testing.T) {
 	// Handlers
 	kitchenHandler := orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, toggleItemPrepUC, nil, nil, "")
 	serverHandler := orderinghttp.NewServerHandler(getUnpaidServerUC, markPaidUC, nil, nil)
-	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, orderRepo, restRepo, cartService, "")
+	requestServerUC := orderCmd.NewRequestServerHandler(orderRepo, eventBus, logger.Logger, nil)
+	requestBillUC := orderCmd.NewRequestBillHandler(orderRepo, eventBus, logger.Logger, nil)
+	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, requestServerUC, requestBillUC, orderRepo, restRepo, cartService, "")
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
 	_ = menuhttp.NewMenuHandler(getMenuUC, cartService, recordVisitUC)

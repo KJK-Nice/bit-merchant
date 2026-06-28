@@ -32,7 +32,15 @@ type Order struct {
 	PreparingAt       *time.Time
 	ReadyAt           *time.Time
 	CompletedAt       *time.Time
+	// ServerCalledAt / BillRequestedAt record the last time the customer asked
+	// front-of-house for service. Used for 60s tap throttling (see ServiceRequestThrottle).
+	ServerCalledAt  *time.Time
+	BillRequestedAt *time.Time
 }
+
+// ServiceRequestThrottle is the window during which a repeated call-server /
+// request-bill tap is treated as a no-op so the FOH device is not spammed.
+const ServiceRequestThrottle = 60 * time.Second
 
 // Total returns the order total as money.Money. Falls back to USD when the
 // order was loaded from a row that predates currency support.
@@ -177,6 +185,29 @@ func (o *Order) Complete() error {
 	now := time.Now()
 	o.CompletedAt = &now
 	return nil
+}
+
+// RequestServer records a customer "call server" request at now. It returns
+// false (a no-op) when an identical request was made within ServiceRequestThrottle,
+// so repeated taps do not spam the FOH device.
+func (o *Order) RequestServer(now time.Time) bool {
+	if o.ServerCalledAt != nil && now.Sub(*o.ServerCalledAt) < ServiceRequestThrottle {
+		return false
+	}
+	o.ServerCalledAt = &now
+	o.UpdatedAt = now
+	return true
+}
+
+// RequestBill records a customer "request bill" at now, with the same 60s
+// throttle semantics as RequestServer.
+func (o *Order) RequestBill(now time.Time) bool {
+	if o.BillRequestedAt != nil && now.Sub(*o.BillRequestedAt) < ServiceRequestThrottle {
+		return false
+	}
+	o.BillRequestedAt = &now
+	o.UpdatedAt = now
+	return true
 }
 
 // UpdateFulfillmentStatus updates order fulfillment status with validation (kept for backward compat).

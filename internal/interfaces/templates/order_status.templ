@@ -4,6 +4,7 @@ import (
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/common/money"
 	"bitmerchant/internal/interfaces/templates/components/ui/badge"
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
 	"bitmerchant/internal/interfaces/templates/components/ui/footer_nav"
 	"bitmerchant/internal/ordering/app/query"
 	"fmt"
@@ -138,7 +139,46 @@ templ OrderStatus(view *query.OrderStatusView) {
 		}
 		@statusTimeline(view)
 		@orderSummaryCard(view)
+		@orderServiceActions(view)
 	</div>
+}
+
+// orderServiceActions renders the "Call server" / "Request bill" row. Both POST
+// to the customer order endpoints; the server reflects the request back over the
+// SSE stream so the button confirms "Notified". Hidden once the order is done.
+templ orderServiceActions(view *query.OrderStatusView) {
+	if view.Order.FulfillmentStatus != common.FulfillmentStatusCompleted {
+		<div class="mt-4 grid grid-cols-2 gap-2">
+			@button.Button(button.Props{
+				Variant:   button.VariantOutline,
+				FullWidth: true,
+				Disabled:  view.Order.ServerCalledAt != nil,
+				Attributes: templ.Attributes{
+					"data-on:click": fmt.Sprintf("@post('/order/%s/call-server')", view.Order.OrderNumber),
+				},
+			}) {
+				if view.Order.ServerCalledAt != nil {
+					Server notified ✓
+				} else {
+					🔔 Call server
+				}
+			}
+			@button.Button(button.Props{
+				Variant:   button.VariantOutline,
+				FullWidth: true,
+				Disabled:  view.Order.BillRequestedAt != nil,
+				Attributes: templ.Attributes{
+					"data-on:click": fmt.Sprintf("@post('/order/%s/request-bill')", view.Order.OrderNumber),
+				},
+			}) {
+				if view.Order.BillRequestedAt != nil {
+					Bill requested ✓
+				} else {
+					🧾 Request bill
+				}
+			}
+		</div>
+	}
 }
 
 templ orderStatusHeader(view *query.OrderStatusView) {

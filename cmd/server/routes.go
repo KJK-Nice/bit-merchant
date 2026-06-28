@@ -51,6 +51,8 @@ func registerRoutes(e *echo.Echo, handlers routeHandlers, membershipRepo members
 	e.POST("/order/create", handlers.Order.CreateOrder)
 	e.GET("/order/:orderNumber", handlers.Order.GetOrder)
 	e.GET("/order/:orderNumber/stream", handlers.SSE.OrderStatusStream)
+	e.POST("/order/:orderNumber/call-server", handlers.Order.CallServer)
+	e.POST("/order/:orderNumber/request-bill", handlers.Order.RequestBill)
 	e.POST("/push/subscribe", handlers.Push.SubscribeCustomer)
 
 	kitchenGroup := e.Group("/kitchen")

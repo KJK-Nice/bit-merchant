@@ -25,7 +25,8 @@ const orderColumns = `id, order_number, restaurant_id, session_id,
 	fiat_amount, COALESCE(currency, 'USD'),
 	COALESCE(customer_name, ''), COALESCE(table_label, ''),
 	payment_method, payment_status, fulfillment_status,
-	created_at, updated_at, paid_at, preparing_at, ready_at, completed_at`
+	created_at, updated_at, paid_at, preparing_at, ready_at, completed_at,
+	server_called_at, bill_requested_at`
 
 // NextOrderNumber atomically allocates the next order number for restaurantID.
 // Race-free: the UPDATE in ON CONFLICT takes the row lock, so concurrent
@@ -62,8 +63,9 @@ func (r *PostgresOrderRepository) Save(o *order.Order) error {
 			subtotal_amount, total_amount, tax_amount, tip_amount, fiat_amount, currency,
 			customer_name, table_label,
 			payment_method, payment_status, fulfillment_status,
-			created_at, updated_at, paid_at, preparing_at, ready_at, completed_at)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+			created_at, updated_at, paid_at, preparing_at, ready_at, completed_at,
+			server_called_at, bill_requested_at)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
 		 ON CONFLICT (id) DO UPDATE SET
 		   order_number=EXCLUDED.order_number,
 		   subtotal_amount=EXCLUDED.subtotal_amount,
@@ -74,12 +76,14 @@ func (r *PostgresOrderRepository) Save(o *order.Order) error {
 		   customer_name=EXCLUDED.customer_name, table_label=EXCLUDED.table_label,
 		   payment_status=EXCLUDED.payment_status, fulfillment_status=EXCLUDED.fulfillment_status,
 		   updated_at=EXCLUDED.updated_at, paid_at=EXCLUDED.paid_at,
-		   preparing_at=EXCLUDED.preparing_at, ready_at=EXCLUDED.ready_at, completed_at=EXCLUDED.completed_at`,
+		   preparing_at=EXCLUDED.preparing_at, ready_at=EXCLUDED.ready_at, completed_at=EXCLUDED.completed_at,
+		   server_called_at=EXCLUDED.server_called_at, bill_requested_at=EXCLUDED.bill_requested_at`,
 		string(o.ID), string(o.OrderNumber), string(o.RestaurantID), o.SessionID,
 		o.Subtotal, o.TotalAmount, o.TaxAmount, o.TipAmount, o.FiatAmount, currency.Code,
 		o.CustomerName, o.TableLabel,
 		string(o.PaymentMethod), string(o.PaymentStatus), string(o.FulfillmentStatus),
-		o.CreatedAt, o.UpdatedAt, o.PaidAt, o.PreparingAt, o.ReadyAt, o.CompletedAt)
+		o.CreatedAt, o.UpdatedAt, o.PaidAt, o.PreparingAt, o.ReadyAt, o.CompletedAt,
+		o.ServerCalledAt, o.BillRequestedAt)
 	if err != nil {
 		return err
 	}
@@ -319,6 +323,7 @@ type orderRow struct {
 	payMethod, payStatus, fulStatus           string
 	createdAt, updatedAt                      time.Time
 	paidAt, preparingAt, readyAt, completedAt sql.NullTime
+	serverCalledAt, billRequestedAt           sql.NullTime
 }
 
 func (r *orderRow) targets() []any {
@@ -329,6 +334,7 @@ func (r *orderRow) targets() []any {
 		&r.customerName, &r.tableLabel,
 		&r.payMethod, &r.payStatus, &r.fulStatus,
 		&r.createdAt, &r.updatedAt, &r.paidAt, &r.preparingAt, &r.readyAt, &r.completedAt,
+		&r.serverCalledAt, &r.billRequestedAt,
 	}
 }
 
@@ -394,6 +400,14 @@ func buildOrder(r orderRow) *order.Order {
 	if completedAt.Valid {
 		t := completedAt.Time
 		o.CompletedAt = &t
+	}
+	if r.serverCalledAt.Valid {
+		t := r.serverCalledAt.Time
+		o.ServerCalledAt = &t
+	}
+	if r.billRequestedAt.Valid {
+		t := r.billRequestedAt.Time
+		o.BillRequestedAt = &t
 	}
 	return o
 }

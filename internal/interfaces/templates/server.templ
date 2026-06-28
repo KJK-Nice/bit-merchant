@@ -48,6 +48,8 @@ templ ServerPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 				</div>
 			</section>
 
+			<div id="service-requests" class="space-y-2" aria-live="polite"></div>
+
 			<div id="server-orders" class="server-orders space-y-3">
 				for _, o := range orders {
 					@components.ServerOrderCard(o)
@@ -134,6 +136,48 @@ templ ServerPage(orders []*order.Order, csrfToken string, activeRestaurantLabel 
 
 				const observer = new MutationObserver(() => { updateCount(); updateAges(); });
 				if (list) observer.observe(list, { childList: true, subtree: false });
+
+				// ── Service requests (call server / request bill) ──────────────────
+				const requests = document.getElementById("service-requests");
+				let audioCtx = null;
+				function chime() {
+					try {
+						audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+						if (audioCtx.state === "suspended") audioCtx.resume();
+						const now = audioCtx.currentTime;
+						[880, 1320].forEach((freq, i) => {
+							const osc = audioCtx.createOscillator();
+							const gain = audioCtx.createGain();
+							osc.type = "sine";
+							osc.frequency.value = freq;
+							const t = now + i * 0.16;
+							gain.gain.setValueAtTime(0.0001, t);
+							gain.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+							gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+							osc.connect(gain).connect(audioCtx.destination);
+							osc.start(t);
+							osc.stop(t + 0.34);
+						});
+					} catch (e) { /* audio unavailable — visual alert still shows */ }
+				}
+				if (requests) {
+					new MutationObserver((mutations) => {
+						let added = false;
+						for (const m of mutations) {
+							m.addedNodes.forEach((n) => {
+								if (n.nodeType === 1 && n.matches("[data-service-alert]")) added = true;
+							});
+						}
+						if (added) chime();
+					}).observe(requests, { childList: true });
+
+					requests.addEventListener("click", (e) => {
+						const btn = e.target.closest("[data-dismiss-service-alert]");
+						if (!btn) return;
+						const alert = btn.closest("[data-service-alert]");
+						if (alert) alert.remove();
+					});
+				}
 
 				connect();
 				updateCount();
