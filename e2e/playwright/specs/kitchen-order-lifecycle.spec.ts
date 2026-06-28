@@ -145,7 +145,9 @@ test.describe("Kitchen order lifecycle", () => {
     await expect(customerStatus).toContainText("Sent to kitchen");
 
     await kitchenStaff.attemptsTo(OpenRoute("merchant", "/kitchen"));
-    const kitchenOrderCard = kitchenStaff.page.locator("div[id^='order-']").filter({ hasText: `Order #${orderNumber}` });
+    // The kitchen card leads with the table/customer handle (#77), so match on the
+    // stable data-order-number attribute rather than visible "Order #" text.
+    const kitchenOrderCard = kitchenStaff.page.locator(`div[id^='order-'][data-order-number='${orderNumber}']`);
     await expect(kitchenOrderCard).toBeVisible();
 
     // Cook must NOT see Mark Paid on the kitchen board.

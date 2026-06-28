@@ -419,24 +419,38 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 				});
 
 			let deferredPrompt;
+			const cartHost = document.getElementById('cart-floating-button');
+
+			// The mobile cart bar (rendered inside #cart-floating-button only when the
+			// cart has items) shares the bottom-right corner with the install button.
+			// Hide the install prompt whenever the cart bar is present so the two CTAs
+			// never collide; show it again if the cart empties.
+			function cartHasItems() {
+				return !!(cartHost && cartHost.querySelector('div'));
+			}
+			function syncInstallVisibility() {
+				const installBtn = document.getElementById('pwa-install-btn');
+				if (!installBtn) return;
+				installBtn.classList.toggle('hidden', !deferredPrompt || cartHasItems());
+			}
+
 			window.addEventListener('beforeinstallprompt', (e) => {
 				e.preventDefault();
 				deferredPrompt = e;
-				const installBtn = document.getElementById('pwa-install-btn');
-				if (installBtn) {
-					installBtn.classList.remove('hidden');
-				}
+				syncInstallVisibility();
 			});
+
+			// The cart fragment is swapped in via SSE on add/remove; re-evaluate on change.
+			if (cartHost) {
+				new MutationObserver(syncInstallVisibility).observe(cartHost, { childList: true, subtree: true });
+			}
 
 			async function installPWA() {
 				if (!deferredPrompt) return;
 				deferredPrompt.prompt();
-				const { outcome } = await deferredPrompt.userChoice;
+				await deferredPrompt.userChoice;
 				deferredPrompt = null;
-				const installBtn = document.getElementById('pwa-install-btn');
-				if (installBtn) {
-					installBtn.classList.add('hidden');
-				}
+				syncInstallVisibility();
 			}
 
 			// ── Search + dietary filter ──────────────────────────────────────────

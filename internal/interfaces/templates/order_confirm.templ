@@ -57,6 +57,7 @@ templ OrderConfirmationPage(
 ) {
 	@Layout("Review your order") {
 		{{ bd := computeBreakdownForConfirm(cartData, taxRate) }}
+		{{ bds := confirmBreakdowns(cartData, taxRate) }}
 		{{ etaLow, etaHigh := confirmETAWindow(prepTarget) }}
 		{{ taxPct := int(taxRate*100 + 0.5) }}
 		<div class="container mx-auto p-4 space-y-6 max-w-2xl pb-32 md:pb-8">
@@ -90,7 +91,7 @@ templ OrderConfirmationPage(
 					</div>
 				</div>
 			}
-			<form action="/order/create" method="POST" class="space-y-6">
+			<form action="/order/create" method="POST" class="space-y-6" data-signals={ fmt.Sprintf(`{"tipPercent": %d}`, cart.DefaultTipPercent) }>
 				<input type="hidden" name="csrf" value={ csrfToken }/>
 				<input type="hidden" name="restaurantID" value={ restaurantID }/>
 				<input type="hidden" name="table" value={ tableLabel }/>
@@ -138,9 +139,21 @@ templ OrderConfirmationPage(
 								<span>{ fmt.Sprintf("Tax (%d%%)", taxPct) }</span>
 								<span class="tabular-nums">{ bd.Tax.Format() }</span>
 							</div>
+							<div class="flex justify-between text-muted-foreground">
+								<span>Tip</span>
+								<span class="tabular-nums">
+									for _, pct := range cart.AllowedTipPercents {
+										<span data-show={ fmt.Sprintf("$tipPercent == %d", pct) } style={ hideUnlessDefaultTip(pct) }>{ bds[pct].Tip.Format() }</span>
+									}
+								</span>
+							</div>
 							<div class="flex justify-between text-base font-bold pt-1">
 								<span>Total</span>
-								<span class="tabular-nums">{ bd.Total.Format() }</span>
+								<span class="tabular-nums">
+									for _, pct := range cart.AllowedTipPercents {
+										<span data-show={ fmt.Sprintf("$tipPercent == %d", pct) } style={ hideUnlessDefaultTip(pct) }>{ bds[pct].Total.Format() }</span>
+									}
+								</span>
 							</div>
 						</div>
 					}
@@ -159,6 +172,7 @@ templ OrderConfirmationPage(
 									name="tipPercent"
 									value={ fmt.Sprintf("%d", pct) }
 									checked?={ pct == cart.DefaultTipPercent }
+									data-on:change={ fmt.Sprintf("$tipPercent = %d", pct) }
 									class="peer sr-only"
 								/>
 								<span class="block rounded-md border px-4 py-2 text-center text-sm font-medium hover:bg-muted peer-checked:border-foreground peer-checked:bg-foreground peer-checked:text-background">
@@ -201,7 +215,12 @@ templ OrderConfirmationPage(
 					Class: "w-full py-6 text-base flex items-center justify-between",
 				}) {
 					<span class="font-semibold">Send to kitchen</span>
-					<span class="font-semibold tabular-nums">{ bd.Total.Format() } · cash</span>
+					<span class="font-semibold tabular-nums">
+						for _, pct := range cart.AllowedTipPercents {
+							<span data-show={ fmt.Sprintf("$tipPercent == %d", pct) } style={ hideUnlessDefaultTip(pct) }>{ bds[pct].Total.Format() }</span>
+						}
+						<span>{ " · cash" }</span>
+					</span>
 				}
 			</form>
 		</div>
@@ -211,4 +230,26 @@ templ OrderConfirmationPage(
 
 func computeBreakdownForConfirm(c *cart.Cart, taxRate float64) cart.Breakdown {
 	return cart.ComputeBreakdown(c, taxRate, cart.DefaultTipPercent)
+}
+
+// confirmBreakdowns precomputes the breakdown for every allowed tip tier so the
+// confirm page can swap the displayed Tip/Total to match the selected chip
+// client-side — guaranteeing the shown total equals the total the server will
+// charge for that tip percent.
+func confirmBreakdowns(c *cart.Cart, taxRate float64) map[int]cart.Breakdown {
+	out := make(map[int]cart.Breakdown, len(cart.AllowedTipPercents))
+	for _, pct := range cart.AllowedTipPercents {
+		out[pct] = cart.ComputeBreakdown(c, taxRate, pct)
+	}
+	return out
+}
+
+// hideUnlessDefaultTip pre-hides the non-default Tip/Total spans so only the
+// default tier is visible before Datastar hydrates (and as a no-JS fallback,
+// where the default chip is the one posted).
+func hideUnlessDefaultTip(pct int) string {
+	if pct == cart.DefaultTipPercent {
+		return ""
+	}
+	return "display:none"
 }
