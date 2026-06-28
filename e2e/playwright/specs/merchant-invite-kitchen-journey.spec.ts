@@ -96,6 +96,8 @@ test.describe("Merchant invite onboarding journey", () => {
 
     // "Your name" is in the passkey form; password_auth.js reads it via document fallback.
     await kitchenUser.page.getByLabel("Your name").fill(`Kitchen ${suffix}`);
+    // Email+password is the de-emphasised method (#84): expand the disclosure first.
+    await kitchenUser.page.getByText("Use email and password instead").click();
     await kitchenUser.page.getByLabel("Email").fill(`kitchen-${suffix}@test.local`);
     await kitchenUser.page.getByLabel("Password").fill("password123");
 

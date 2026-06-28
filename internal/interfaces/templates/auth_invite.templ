@@ -34,25 +34,27 @@ templ AuthInvite(csrfToken, invitationToken, role string) {
 								Required:    true,
 							})
 						}
-						@button.Button(button.Props{Type: "submit"}) {
+						@button.Button(button.Props{Type: "submit", Class: "w-full"}) {
 							Accept and register passkey
 						}
+						<p class="text-xs text-center text-muted-foreground">Fastest and most secure — nothing to remember.</p>
 					</form>
-					<div class="relative my-5">
-						<div class="absolute inset-0 flex items-center"><span class="w-full border-t"></span></div>
-						<div class="relative flex justify-center text-xs uppercase"><span class="bg-background px-2 text-muted-foreground">or</span></div>
-					</div>
-					<form id="password-invite-form" class="space-y-5" data-csrf={ csrfToken } data-invitation-token={ invitationToken }>
-						@primitives.Field(primitives.FieldProps{ID: "inv-email", Label: "Email", Required: true}) {
-							@input.Input(input.Props{ID: "inv-email", Name: "email", Type: "email", Placeholder: "you@example.com", Required: true})
-						}
-						@primitives.Field(primitives.FieldProps{ID: "inv-password", Label: "Password", Required: true}) {
-							@input.Input(input.Props{ID: "inv-password", Name: "password", Type: "password", Placeholder: "••••••••", Required: true})
-						}
-						@button.Button(button.Props{Type: "submit"}) {
-							Accept with password
-						}
-					</form>
+					<details class="mt-5">
+						<summary class="cursor-pointer list-none text-center text-sm text-muted-foreground hover:text-foreground select-none">
+							Use email and password instead
+						</summary>
+						<form id="password-invite-form" class="space-y-5 mt-4" data-csrf={ csrfToken } data-invitation-token={ invitationToken }>
+							@primitives.Field(primitives.FieldProps{ID: "inv-email", Label: "Email", Required: true}) {
+								@input.Input(input.Props{ID: "inv-email", Name: "email", Type: "email", Placeholder: "you@example.com", Required: true})
+							}
+							@primitives.Field(primitives.FieldProps{ID: "inv-password", Label: "Password", Required: true}) {
+								@input.Input(input.Props{ID: "inv-password", Name: "password", Type: "password", Placeholder: "••••••••", Required: true})
+							}
+							@button.Button(button.Props{Type: "submit", Variant: button.VariantOutline, Class: "w-full"}) {
+								Accept with password
+							}
+						</form>
+					</details>
 				}
 			}
 		</div>
