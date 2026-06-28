@@ -265,6 +265,22 @@ func (h *OrderHandler) RequestBill(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// GetReceipt handles GET /order/:orderNumber/receipt — a standalone,
+// print/save-friendly receipt for the customer's own order.
+func (h *OrderHandler) GetReceipt(c echo.Context) error {
+	o, err := h.resolveCustomerOrder(c)
+	if err != nil {
+		return err
+	}
+	restaurantName := ""
+	if h.restRepo != nil {
+		if rest, rErr := h.restRepo.FindByID(o.RestaurantID); rErr == nil && rest != nil {
+			restaurantName = rest.Name
+		}
+	}
+	return templates.OrderReceiptPage(o, restaurantName).Render(c.Request().Context(), c.Response())
+}
+
 // GetLookup renders the lookup/history page (REPLACED functionality)
 func (h *OrderHandler) GetLookup(c echo.Context) error {
 	sessionID := c.Get("sessionID").(string)
