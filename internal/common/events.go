@@ -12,6 +12,8 @@ const (
 	EventOrderReady           = "order.ready"
 	EventOrderCompleted       = "order.completed"
 	EventOrderItemPrepToggled = "order_item.prep_toggled"
+	EventServerCalled         = "order.server_called"
+	EventBillRequested        = "order.bill_requested"
 )
 
 // DomainEvent represents a domain event interface.

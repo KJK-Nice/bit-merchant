@@ -36,6 +36,13 @@ test.describe("Customer full journey", () => {
     await expect(customer.page.getByText("Total", { exact: true })).toBeVisible();
     await expect(customer.page.getByText("Your order")).toBeVisible();
 
+    // #71: call-server action round-trips through the event bus + SSE and the
+    // button confirms "Server notified".
+    const callServer = customer.page.getByRole("button", { name: "Call server" });
+    await expect(callServer).toBeVisible();
+    await callServer.click();
+    await expect(customer.page.getByRole("button", { name: "Server notified" })).toBeVisible({ timeout: 10000 });
+
     await context.close();
   });
 });

@@ -24,6 +24,8 @@ type OrderHandler struct {
 	createOrder              orderCmd.CreateOrderHandler
 	getCustomerOrderByLookup orderQuery.CustomerOrderByLookupHandler
 	getCustomerOrders        orderQuery.CustomerOrdersForSessionHandler
+	requestServer            orderCmd.RequestServerHandler
+	requestBill              orderCmd.RequestBillHandler
 	orderRepo                order.Repository
 	restRepo                 restaurant.Repository
 	cartService              *cart.CartService
@@ -35,6 +37,8 @@ func NewOrderHandler(
 	createOrder orderCmd.CreateOrderHandler,
 	getCustomerOrderByLookup orderQuery.CustomerOrderByLookupHandler,
 	getCustomerOrders orderQuery.CustomerOrdersForSessionHandler,
+	requestServer orderCmd.RequestServerHandler,
+	requestBill orderCmd.RequestBillHandler,
 	orderRepo order.Repository,
 	restRepo restaurant.Repository,
 	cartService *cart.CartService,
@@ -44,6 +48,8 @@ func NewOrderHandler(
 		createOrder:              createOrder,
 		getCustomerOrderByLookup: getCustomerOrderByLookup,
 		getCustomerOrders:        getCustomerOrders,
+		requestServer:            requestServer,
+		requestBill:              requestBill,
 		orderRepo:                orderRepo,
 		restRepo:                 restRepo,
 		cartService:              cartService,
@@ -211,6 +217,52 @@ func (h *OrderHandler) GetOrder(c echo.Context) error {
 	}
 
 	return templates.OrderStatusPage(view, h.vapidPublicKey).Render(c.Request().Context(), c.Response())
+}
+
+// resolveCustomerOrder loads the order for the requesting session by order number.
+// Scoping by sessionID ensures only the customer who placed the order can act on it.
+func (h *OrderHandler) resolveCustomerOrder(c echo.Context) (*order.Order, error) {
+	orderNumber := c.Param("orderNumber")
+	if orderNumber == "" {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "Order number required")
+	}
+	sessionID, _ := c.Get("sessionID").(string)
+	result, err := h.getCustomerOrderByLookup.Handle(c.Request().Context(), orderQuery.CustomerOrderByLookup{
+		SessionID:   sessionID,
+		OrderNumber: orderNumber,
+	})
+	if err != nil {
+		if err.Error() == "order not found" {
+			return nil, echo.NewHTTPError(http.StatusNotFound, "Order not found")
+		}
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return result, nil
+}
+
+// CallServer handles POST /order/:orderNumber/call-server. Idempotent — repeated
+// taps within the throttle window are no-ops at the command layer.
+func (h *OrderHandler) CallServer(c echo.Context) error {
+	o, err := h.resolveCustomerOrder(c)
+	if err != nil {
+		return err
+	}
+	if _, cerr := h.requestServer.Handle(c.Request().Context(), orderCmd.RequestServer{OrderID: o.ID}); cerr != nil {
+		return c.String(http.StatusInternalServerError, cerr.Error())
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+// RequestBill handles POST /order/:orderNumber/request-bill.
+func (h *OrderHandler) RequestBill(c echo.Context) error {
+	o, err := h.resolveCustomerOrder(c)
+	if err != nil {
+		return err
+	}
+	if _, cerr := h.requestBill.Handle(c.Request().Context(), orderCmd.RequestBill{OrderID: o.ID}); cerr != nil {
+		return c.String(http.StatusInternalServerError, cerr.Error())
+	}
+	return c.NoContent(http.StatusOK)
 }
 
 // GetLookup renders the lookup/history page (REPLACED functionality)

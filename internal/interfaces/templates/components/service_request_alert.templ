@@ -1,0 +1,27 @@
+package components
+
+// ServiceRequestAlert renders a single front-of-house alert tile for a customer
+// "call server" / "request bill" request. The SSE handler appends it into the
+// server view's #service-requests strip with a unique domID. tone is "server"
+// (amber) or "bill" (sky); the server page's audio script keys off
+// [data-service-alert] to chime and to wire the dismiss button.
+templ ServiceRequestAlert(domID string, heading string, subtext string, tone string) {
+	<div
+		id={ domID }
+		data-service-alert={ tone }
+		class={ "flex items-center justify-between gap-3 rounded-lg border-2 px-4 py-3 shadow-sm",
+			templ.KV("border-amber-400 bg-amber-50 dark:border-amber-500/60 dark:bg-amber-950/40", tone == "server"),
+			templ.KV("border-sky-400 bg-sky-50 dark:border-sky-500/60 dark:bg-sky-950/40", tone == "bill") }
+	>
+		<div class="min-w-0">
+			<p class="font-semibold tracking-tight">{ heading }</p>
+			<p class="text-sm text-muted-foreground truncate">{ subtext }</p>
+		</div>
+		<button
+			type="button"
+			data-dismiss-service-alert
+			aria-label="Dismiss request"
+			class="shrink-0 rounded-md border border-border bg-background/70 px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+		>Done</button>
+	</div>
+}

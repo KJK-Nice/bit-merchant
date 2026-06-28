@@ -30,6 +30,8 @@ type Ordering struct {
 	MarkOrderReady      orderCmd.MarkOrderReadyHandler
 	MarkOrderCompleted  orderCmd.MarkOrderCompletedHandler
 	ToggleOrderItemPrep orderCmd.ToggleOrderItemPrepHandler
+	RequestServer       orderCmd.RequestServerHandler
+	RequestBill         orderCmd.RequestBillHandler
 
 	GetCustomerOrder  orderQuery.CustomerOrderByLookupHandler
 	GetCustomerOrders orderQuery.CustomerOrdersForSessionHandler
@@ -65,6 +67,8 @@ func New(
 	markReadyUC := orderCmd.NewMarkOrderReadyHandler(repos.Order, eventBus, logger.Logger, nil)
 	markCompletedUC := orderCmd.NewMarkOrderCompletedHandler(repos.Order, eventBus, logger.Logger, nil)
 	toggleItemPrepUC := orderCmd.NewToggleOrderItemPrepHandler(repos.Order, eventBus, logger.Logger, nil)
+	requestServerUC := orderCmd.NewRequestServerHandler(repos.Order, eventBus, logger.Logger, nil)
+	requestBillUC := orderCmd.NewRequestBillHandler(repos.Order, eventBus, logger.Logger, nil)
 
 	return Ordering{
 		CartService:         cartService,
@@ -74,6 +78,8 @@ func New(
 		MarkOrderReady:      markReadyUC,
 		MarkOrderCompleted:  markCompletedUC,
 		ToggleOrderItemPrep: toggleItemPrepUC,
+		RequestServer:       requestServerUC,
+		RequestBill:         requestBillUC,
 		GetCustomerOrder:    getCustomerOrderByNumberUC,
 		GetCustomerOrders:   getCustomerOrdersUC,
 		GetKitchenOrders:    getKitchenOrdersUC,
@@ -83,7 +89,7 @@ func New(
 			Endpoint:      cfg.S3Endpoint,
 			PublicBaseURL: cfg.S3PublicBaseURL,
 		}),
-		OrderHandler:   orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, repos.Order, repos.Restaurant, cartService, vapidPublicKey),
+		OrderHandler:   orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderByNumberUC, getCustomerOrdersUC, requestServerUC, requestBillUC, repos.Order, repos.Restaurant, cartService, vapidPublicKey),
 		KitchenHandler: orderinghttp.NewKitchenHandler(getKitchenOrdersUC, markPaidUC, markPreparingUC, markReadyUC, markCompletedUC, toggleItemPrepUC, repos.Restaurant, repos.Membership, vapidPublicKey),
 		ServerHandler:  orderinghttp.NewServerHandler(getUnpaidServerUC, markPaidUC, repos.Restaurant, repos.Membership),
 	}
@@ -97,6 +103,8 @@ func RegisterOrderSSEHandlers(router *message.Router, subscriber message.Subscri
 	orderReadyHandler := ordersse.NewOrderReadyHandler(logger, sseHandler, orderRepo)
 	orderCompletedHandler := ordersse.NewOrderCompletedHandler(logger, sseHandler, orderRepo)
 	orderItemPrepToggledHandler := ordersse.NewOrderItemPrepToggledHandler(logger, sseHandler, orderRepo)
+	serverCalledHandler := ordersse.NewServerCalledHandler(logger, sseHandler, orderRepo)
+	billRequestedHandler := ordersse.NewBillRequestedHandler(logger, sseHandler, orderRepo)
 
 	router.AddConsumerHandler("sse_order_created", common.EventOrderCreated, subscriber, func(msg *message.Message) error {
 		var event orderevent.OrderCreated
@@ -150,5 +158,23 @@ func RegisterOrderSSEHandlers(router *message.Router, subscriber message.Subscri
 			return nil
 		}
 		return orderItemPrepToggledHandler.Handle(msg.Context(), event)
+	})
+
+	router.AddConsumerHandler("sse_server_called", common.EventServerCalled, subscriber, func(msg *message.Message) error {
+		var event orderevent.ServerCalled
+		if err := json.Unmarshal(msg.Payload, &event); err != nil {
+			logger.Warn("Skipping malformed server called event", "error", err)
+			return nil
+		}
+		return serverCalledHandler.Handle(msg.Context(), event)
+	})
+
+	router.AddConsumerHandler("sse_bill_requested", common.EventBillRequested, subscriber, func(msg *message.Message) error {
+		var event orderevent.BillRequested
+		if err := json.Unmarshal(msg.Payload, &event); err != nil {
+			logger.Warn("Skipping malformed bill requested event", "error", err)
+			return nil
+		}
+		return billRequestedHandler.Handle(msg.Context(), event)
 	})
 }

@@ -75,3 +75,29 @@ type OrderItemPrepToggled struct {
 
 func (e OrderItemPrepToggled) EventName() string     { return common.EventOrderItemPrepToggled }
 func (e OrderItemPrepToggled) OccurredAt() time.Time { return e.ToggledAt }
+
+// ServerCalled is published when a customer taps "Call server" on the status screen.
+type ServerCalled struct {
+	OrderID      common.OrderID
+	RestaurantID common.RestaurantID
+	OrderNumber  common.OrderNumber
+	TableLabel   string
+	CustomerName string
+	CalledAt     time.Time
+}
+
+func (e ServerCalled) EventName() string     { return common.EventServerCalled }
+func (e ServerCalled) OccurredAt() time.Time { return e.CalledAt }
+
+// BillRequested is published when a customer taps "Request bill" on the status screen.
+type BillRequested struct {
+	OrderID      common.OrderID
+	RestaurantID common.RestaurantID
+	OrderNumber  common.OrderNumber
+	TableLabel   string
+	CustomerName string
+	RequestedAt  time.Time
+}
+
+func (e BillRequested) EventName() string     { return common.EventBillRequested }
+func (e BillRequested) OccurredAt() time.Time { return e.RequestedAt }
