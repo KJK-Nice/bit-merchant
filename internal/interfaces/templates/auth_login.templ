@@ -20,26 +20,28 @@ templ AuthLogin(csrfToken string) {
 					}
 				}
 				@card.Content() {
-					<form id="passkey-login-form" class="space-y-4" data-csrf={ csrfToken }>
-						@button.Button(button.Props{Type: "submit"}) {
+					<form id="passkey-login-form" class="space-y-2" data-csrf={ csrfToken }>
+						@button.Button(button.Props{Type: "submit", Class: "w-full"}) {
 							Sign in with passkey
 						}
+						<p class="text-xs text-center text-muted-foreground">Fastest and most secure — nothing to remember.</p>
 					</form>
-					<div class="relative my-5">
-						<div class="absolute inset-0 flex items-center"><span class="w-full border-t"></span></div>
-						<div class="relative flex justify-center text-xs uppercase"><span class="bg-background px-2 text-muted-foreground">or</span></div>
-					</div>
-					<form id="password-login-form" class="space-y-4" data-csrf={ csrfToken }>
-						@primitives.Field(primitives.FieldProps{ID: "login-email", Label: "Email", Required: true}) {
-							@input.Input(input.Props{ID: "login-email", Name: "email", Type: "email", Placeholder: "you@example.com", Required: true})
-						}
-						@primitives.Field(primitives.FieldProps{ID: "login-password", Label: "Password", Required: true}) {
-							@input.Input(input.Props{ID: "login-password", Name: "password", Type: "password", Placeholder: "••••••••", Required: true})
-						}
-						@button.Button(button.Props{Type: "submit"}) {
-							Log in with email
-						}
-					</form>
+					<details class="mt-5">
+						<summary class="cursor-pointer list-none text-center text-sm text-muted-foreground hover:text-foreground select-none">
+							Sign in with email instead
+						</summary>
+						<form id="password-login-form" class="space-y-4 mt-4" data-csrf={ csrfToken }>
+							@primitives.Field(primitives.FieldProps{ID: "login-email", Label: "Email", Required: true}) {
+								@input.Input(input.Props{ID: "login-email", Name: "email", Type: "email", Placeholder: "you@example.com", Required: true})
+							}
+							@primitives.Field(primitives.FieldProps{ID: "login-password", Label: "Password", Required: true}) {
+								@input.Input(input.Props{ID: "login-password", Name: "password", Type: "password", Placeholder: "••••••••", Required: true})
+							}
+							@button.Button(button.Props{Type: "submit", Variant: button.VariantOutline, Class: "w-full"}) {
+								Log in with email
+							}
+						</form>
+					</details>
 					<p class="text-sm mt-4">
 						New here?
 						<a class="underline" href="/auth/signup">Create account</a>

@@ -96,7 +96,76 @@ templ Dashboard(menuData *menuQuery.MenuResponse, csrfToken string, activeRestau
 				}
 			</div>
 
-			<p class="text-sm text-muted-foreground">Drag the grip handle on a category or item row to reorder. Changes save automatically.</p>
+			if len(menuData.Categories) == 0 {
+				<div class="rounded-xl border bg-card p-6 shadow-sm space-y-5">
+					<div class="space-y-1">
+						<h3 class="text-lg font-semibold tracking-tight">Welcome — let's get you ready to take orders</h3>
+						<p class="text-sm text-muted-foreground">Two quick steps and customers can scan, browse, and order.</p>
+					</div>
+					<ol class="space-y-4">
+						<li class="flex items-start gap-3">
+							<span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white text-sm font-bold">✓</span>
+							<div>
+								<p class="font-medium">Account created</p>
+								<p class="text-sm text-muted-foreground">You're signed in as the owner.</p>
+							</div>
+						</li>
+						<li class="flex items-start gap-3">
+							<span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-foreground text-sm font-bold">1</span>
+							<div class="flex-1 space-y-2">
+								<div>
+									<p class="font-medium">Add your menu</p>
+									<p class="text-sm text-muted-foreground">Create a category, then add items with prices.</p>
+								</div>
+								@dialog.Dialog() {
+									@dialog.Trigger(dialog.TriggerProps{}) {
+										@button.Button(button.Props{}) {
+											@icon.Plus(icon.Props{Class: "mr-2 h-4 w-4"})
+											Add your first category
+										}
+									}
+									@dialog.Content(dialog.ContentProps{}) {
+										@dialog.Header() {
+											@dialog.Title() { Add Category }
+										}
+										<form action="/admin/category" method="post" class="space-y-4">
+											<input type="hidden" name="csrf" value={ csrfToken }/>
+											<div class="space-y-2">
+												@label.Label(label.Props{For: "onboard-category-name"}) {
+													Name
+												}
+												@input.Input(input.Props{Type: "text", ID: "onboard-category-name", Name: "name", Required: true, Placeholder: "e.g. Appetizers"})
+											</div>
+											<div class="space-y-2">
+												@label.Label(label.Props{For: "onboard-category-display-order"}) {
+													Display Order
+												}
+												@input.Input(input.Props{Type: "number", ID: "onboard-category-display-order", Name: "displayOrder", Value: "1"})
+											</div>
+											@button.Button(button.Props{Type: "submit", Class: "w-full"}) { Add Category }
+										</form>
+									}
+								}
+							</div>
+						</li>
+						<li class="flex items-start gap-3">
+							<span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-foreground text-sm font-bold">2</span>
+							<div class="flex-1 space-y-2">
+								<div>
+									<p class="font-medium">Print your table QR codes</p>
+									<p class="text-sm text-muted-foreground">Each table gets a code that opens your menu — scan to order.</p>
+								</div>
+								@button.Button(button.Props{Href: "/admin/qr", Variant: button.VariantOutline}) {
+									@icon.QrCode(icon.Props{Class: "mr-2 h-4 w-4"})
+									Set up table QR codes
+								}
+							</div>
+						</li>
+					</ol>
+				</div>
+			} else {
+				<p class="text-sm text-muted-foreground">Drag the grip handle on a category or item row to reorder. Changes save automatically.</p>
+			}
 
 			<div id="admin-menu-categories" class="space-y-6">
 				for _, catData := range menuData.Categories {
