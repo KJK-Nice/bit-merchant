@@ -40,6 +40,7 @@ type UpdateMenuItem struct {
 	Badges                   *[]string
 	AllowSpecialInstructions *bool
 	OptionGroups             *[]menu.OptionGroup
+	Translations             *map[string]menu.ItemTranslation
 }
 
 type UpdateMenuItemHandler decorator.CommandHandler[UpdateMenuItem]
@@ -144,7 +145,7 @@ func optionalSetters(cmd UpdateMenuItem) []struct {
 	set func(*menu.MenuItem) error
 } {
 	type step = struct{ set func(*menu.MenuItem) error }
-	steps := []step{{}, {}, {}, {}, {}, {}}
+	steps := []step{{}, {}, {}, {}, {}, {}, {}}
 	if cmd.SpiceLevel != nil {
 		v := *cmd.SpiceLevel
 		steps[0].set = func(m *menu.MenuItem) error { return m.SetSpiceLevel(v) }
@@ -168,6 +169,10 @@ func optionalSetters(cmd UpdateMenuItem) []struct {
 	if cmd.OptionGroups != nil {
 		v := *cmd.OptionGroups
 		steps[5].set = func(m *menu.MenuItem) error { return m.SetOptionGroups(v) }
+	}
+	if cmd.Translations != nil {
+		v := *cmd.Translations
+		steps[6].set = func(m *menu.MenuItem) error { return m.SetTranslations(v) }
 	}
 	return steps
 }

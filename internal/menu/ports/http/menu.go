@@ -2,6 +2,7 @@ package http
 
 import (
 	"bitmerchant/internal/common"
+	commonhttp "bitmerchant/internal/common/http"
 
 	"bitmerchant/internal/interfaces/templates"
 	menuQuery "bitmerchant/internal/menu/app/query"
@@ -14,7 +15,33 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"sort"
 )
+
+// availableMenuLocales returns the base locale plus every locale that at least
+// one item has a translation for (base first, rest sorted). Returns nil when
+// nothing is translated, so the language picker stays hidden.
+func availableMenuLocales(data *menuQuery.MenuResponse) []string {
+	set := map[string]bool{}
+	for _, cat := range data.Categories {
+		for _, it := range cat.Items {
+			for _, l := range it.Locales() {
+				if l != commonhttp.DefaultLocale {
+					set[l] = true
+				}
+			}
+		}
+	}
+	if len(set) == 0 {
+		return nil
+	}
+	rest := make([]string, 0, len(set))
+	for l := range set {
+		rest = append(rest, l)
+	}
+	sort.Strings(rest)
+	return append([]string{commonhttp.DefaultLocale}, rest...)
+}
 
 type MenuHandler struct {
 	getMenu       menuQuery.MenuForCustomerHandler
@@ -70,8 +97,11 @@ func (h *MenuHandler) GetMenu(c echo.Context) error {
 		}
 	}
 
+	locale := commonhttp.ResolveLocale(c)
+	locales := availableMenuLocales(menuData)
+
 	// Prevent caching so back button always fetches fresh state (updated cart)
 	c.Response().Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
 
-	return templates.MenuPage(menuData, cart, tableLabel, etaMinutes).Render(c.Request().Context(), c.Response())
+	return templates.MenuPage(menuData, cart, tableLabel, etaMinutes, locale, locales).Render(c.Request().Context(), c.Response())
 }

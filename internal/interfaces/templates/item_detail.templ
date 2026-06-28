@@ -70,8 +70,10 @@ func hasAnyDietary(item *menu.MenuItem) bool {
 }
 
 // ItemDetailPage renders the full item-detail screen.
-templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken string) {
-	@Layout(item.Name + " · Add to cart") {
+templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken, locale string) {
+	{{ itemName := item.NameFor(locale) }}
+	{{ itemDesc := item.DescriptionFor(locale) }}
+	@Layout(itemName + " · Add to cart") {
 		<div class="container mx-auto max-w-lg pb-32">
 			<!-- sticky header / back -->
 			<div class="sticky top-0 z-10 bg-background/95 backdrop-blur border-b px-4 py-3 flex items-center gap-3">
@@ -83,7 +85,7 @@ templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken st
 				}) {
 					@icon.Icon("chevron-left")(icon.Props{Class: "h-5 w-5"})
 				}
-				<h1 class="text-lg font-semibold truncate">{ item.Name }</h1>
+				<h1 class="text-lg font-semibold truncate">{ itemName }</h1>
 			</div>
 
 			<!-- hero photo -->
@@ -91,7 +93,7 @@ templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken st
 				<div class="relative overflow-hidden" style="height:220px;">
 					<img
 						src={ item.PhotoURL }
-						alt={ item.Name }
+						alt={ itemName }
 						class="h-full w-full object-cover"
 					/>
 				</div>
@@ -117,9 +119,9 @@ templ ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken st
 
 				<!-- name + description + base price -->
 				<div class="space-y-1">
-					<h2 class="text-2xl font-bold leading-snug">{ item.Name }</h2>
-					if item.Description != "" {
-						<p class="text-sm text-muted-foreground">{ item.Description }</p>
+					<h2 class="text-2xl font-bold leading-snug">{ itemName }</h2>
+					if itemDesc != "" {
+						<p class="text-sm text-muted-foreground">{ itemDesc }</p>
 					}
 					<p class="text-xl font-semibold">{ item.Money().Format() }</p>
 				</div>

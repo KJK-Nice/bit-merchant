@@ -2,12 +2,19 @@ package menu
 
 import (
 	"errors"
+	"sort"
 	"strings"
 	"time"
 
 	"bitmerchant/internal/common"
 	"bitmerchant/internal/common/money"
 )
+
+// ItemTranslation holds a localized name/description for a menu item.
+type ItemTranslation struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
 
 // Option is a single selectable choice within an OptionGroup.
 type Option struct {
@@ -83,8 +90,67 @@ type MenuItem struct {
 	Badges                   []string
 	AllowSpecialInstructions bool
 	OptionGroups             []OptionGroup
-	CreatedAt                time.Time
-	UpdatedAt                time.Time
+	// Translations maps a locale code (e.g. "es", "th") to a localized
+	// name/description. The base Name/Description are the default (English)
+	// and the fallback when a locale has no entry.
+	Translations map[string]ItemTranslation
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+// NameFor returns the item name in the given locale, falling back to the base
+// name when there is no (non-empty) translation.
+func (m *MenuItem) NameFor(locale string) string {
+	if t, ok := m.Translations[locale]; ok && t.Name != "" {
+		return t.Name
+	}
+	return m.Name
+}
+
+// DescriptionFor returns the item description in the given locale, falling back
+// to the base description when there is no (non-empty) translation.
+func (m *MenuItem) DescriptionFor(locale string) string {
+	if t, ok := m.Translations[locale]; ok && t.Description != "" {
+		return t.Description
+	}
+	return m.Description
+}
+
+// Locales returns the sorted locale codes that have a translation entry.
+func (m *MenuItem) Locales() []string {
+	if len(m.Translations) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(m.Translations))
+	for code := range m.Translations {
+		out = append(out, code)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// SetTranslations validates and replaces the translation map. Locale codes are
+// trimmed/lowercased; blank codes and fully-empty entries are dropped.
+func (m *MenuItem) SetTranslations(translations map[string]ItemTranslation) error {
+	cleaned := make(map[string]ItemTranslation, len(translations))
+	for code, t := range translations {
+		code = strings.ToLower(strings.TrimSpace(code))
+		if code == "" || len(code) > 8 {
+			continue
+		}
+		t.Name = strings.TrimSpace(t.Name)
+		t.Description = strings.TrimSpace(t.Description)
+		if t.Name == "" && t.Description == "" {
+			continue
+		}
+		cleaned[code] = t
+	}
+	if len(cleaned) == 0 {
+		cleaned = nil
+	}
+	m.Translations = cleaned
+	m.UpdatedAt = time.Now()
+	return nil
 }
 
 // HasOptionGroups reports whether the item has any modifier groups.

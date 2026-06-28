@@ -104,7 +104,8 @@ func (h *CartHandler) GetItemDetail(c echo.Context) error {
 	restaurantID := c.QueryParam("restaurantID")
 	tableLabel := c.QueryParam("table")
 	csrfToken := commonhttp.CSRFToken(c)
-	return templates.ItemDetailPage(display, restaurantID, tableLabel, csrfToken).Render(c.Request().Context(), c.Response())
+	locale := commonhttp.ResolveLocale(c)
+	return templates.ItemDetailPage(display, restaurantID, tableLabel, csrfToken, locale).Render(c.Request().Context(), c.Response())
 }
 
 // AddToCartAndRedirect handles POST /cart/add-redirect — used by the item-detail

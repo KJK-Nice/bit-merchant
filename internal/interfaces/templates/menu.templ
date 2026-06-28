@@ -13,7 +13,7 @@ import (
 	"fmt"
 )
 
-templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string, etaMinutes int) {
+templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string, etaMinutes int, locale string, locales []string) {
 	@Layout(data.Restaurant.Name + " · Menu") {
 		// Initialise the cartItemQty signals map; GET /cart on load populates it.
 		<div
@@ -37,6 +37,18 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string, eta
 								<p class="text-sm font-medium text-foreground/90">Table { tableLabel }</p>
 							}
 						</div>
+						if len(locales) >= 2 {
+							<div class="flex shrink-0 items-center gap-1" aria-label="Choose language">
+								for _, code := range locales {
+									<a
+										href={ templ.SafeURL(fmt.Sprintf("/menu?restaurantID=%s&table=%s&lang=%s", string(data.Restaurant.ID), tableLabel, code)) }
+										class={ "rounded-full border px-2 py-0.5 text-xs font-semibold uppercase transition-colors",
+											templ.KV("border-foreground bg-foreground text-background", code == locale),
+											templ.KV("border-input bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground", code != locale) }
+									>{ code }</a>
+								}
+							</div>
+						}
 					</div>
 					<div class="relative">
 						<input
@@ -136,11 +148,13 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string, eta
 						</div>
 						<div class="-mx-4 flex gap-3 overflow-x-auto snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 							for j, item := range cat.Items {
+								{{ itemName := item.NameFor(locale) }}
+								{{ itemDesc := item.DescriptionFor(locale) }}
 								<div
 									class={ "snap-start shrink-0 md:w-auto md:max-w-none", templ.KV("ms-4 md:ms-0", j == 0) }
 									style="width:min(84vw,24rem);"
-									data-item-name={ item.Name }
-									data-item-desc={ item.Description }
+									data-item-name={ itemName }
+									data-item-desc={ itemDesc }
 									data-item-tags={ item.DietaryTagsString() }
 									data-item-price={ fmt.Sprintf("%.2f", item.Price) }
 								>
@@ -152,17 +166,17 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string, eta
 											},
 										}) {
 											<div data-img-skeleton class="absolute inset-0 animate-pulse bg-muted"></div>
-											<img src={ item.PhotoURL } alt={ item.Name } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="400" height="300" onload="this.previousElementSibling && this.previousElementSibling.remove()" onerror="this.previousElementSibling && this.previousElementSibling.remove()"/>
+											<img src={ item.PhotoURL } alt={ itemName } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="400" height="300" onload="this.previousElementSibling && this.previousElementSibling.remove()" onerror="this.previousElementSibling && this.previousElementSibling.remove()"/>
 											<a
 												href={ templ.SafeURL(fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel)) }
 												class="absolute inset-0 z-10"
-												aria-label={ "View details for " + item.Name }
+												aria-label={ "View details for " + itemName }
 											></a>
 											<div class="p-3" style="position:absolute;left:0;right:0;bottom:0;">
 												<div class="rounded-xl p-3 flex flex-col gap-2 bg-white/70 backdrop-blur-md dark:bg-black/80">
-													<h3 class="text-base font-semibold leading-snug line-clamp-2 text-foreground dark:text-white">{ item.Name }</h3>
-													if item.Description != "" {
-														<p class="text-xs text-foreground/80 dark:text-white/90 line-clamp-2">{ item.Description }</p>
+													<h3 class="text-base font-semibold leading-snug line-clamp-2 text-foreground dark:text-white">{ itemName }</h3>
+													if itemDesc != "" {
+														<p class="text-xs text-foreground/80 dark:text-white/90 line-clamp-2">{ itemDesc }</p>
 													}
 													if item.IsVegetarian || item.IsGlutenFree || item.IsSpicy {
 														<div class="flex flex-wrap gap-1">
@@ -256,14 +270,14 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string, eta
 											<a
 												href={ templ.SafeURL(fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel)) }
 												class="absolute inset-0 z-10"
-												aria-label={ "View details for " + item.Name }
+												aria-label={ "View details for " + itemName }
 											></a>
 											@card.Header(card.HeaderProps{Class: "pb-3"}) {
-												@card.Title(card.TitleProps{Class: "leading-snug line-clamp-2"}) { { item.Name } }
+												@card.Title(card.TitleProps{Class: "leading-snug line-clamp-2"}) { { itemName } }
 											}
 											@card.Content(card.ContentProps{Class: "flex-grow pt-0 space-y-2"}) {
-												if item.Description != "" {
-													<p class="text-sm text-muted-foreground line-clamp-2">{ item.Description }</p>
+												if itemDesc != "" {
+													<p class="text-sm text-muted-foreground line-clamp-2">{ itemDesc }</p>
 												}
 												if item.IsVegetarian || item.IsGlutenFree || item.IsSpicy {
 													<div class="flex flex-wrap gap-1">
