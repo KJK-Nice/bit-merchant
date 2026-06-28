@@ -5,6 +5,7 @@ import (
 	"bitmerchant/internal/restaurant/domain/restaurant"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
@@ -48,6 +49,43 @@ func TestValidateTableCount(t *testing.T) {
 	assert.NoError(t, restaurant.ValidateTableCount(200))
 	assert.Error(t, restaurant.ValidateTableCount(0))
 	assert.Error(t, restaurant.ValidateTableCount(201))
+}
+
+func TestNewRestaurant_DefaultKitchenThresholds(t *testing.T) {
+	r, err := restaurant.NewRestaurant("id", "Diner")
+	assert.NoError(t, err)
+	assert.Equal(t, restaurant.DefaultKitchenWarningMinutes, r.KitchenWarningMinutes)
+	assert.Equal(t, restaurant.DefaultKitchenOverdueMinutes, r.KitchenOverdueMinutes)
+}
+
+func TestValidateKitchenThresholds(t *testing.T) {
+	assert.NoError(t, restaurant.ValidateKitchenThresholds(8, 12))
+	assert.NoError(t, restaurant.ValidateKitchenThresholds(1, 120))
+	// warning must be < overdue
+	assert.ErrorIs(t, restaurant.ValidateKitchenThresholds(12, 12), restaurant.ErrInvalidKitchenThresholds)
+	assert.ErrorIs(t, restaurant.ValidateKitchenThresholds(15, 10), restaurant.ErrInvalidKitchenThresholds)
+	// out of range
+	assert.ErrorIs(t, restaurant.ValidateKitchenThresholds(0, 10), restaurant.ErrInvalidKitchenThresholds)
+	assert.ErrorIs(t, restaurant.ValidateKitchenThresholds(5, 121), restaurant.ErrInvalidKitchenThresholds)
+}
+
+func TestSetKitchenThresholds(t *testing.T) {
+	r, _ := restaurant.NewRestaurant("id", "Diner")
+	require.NoError(t, r.SetKitchenThresholds(6, 14))
+	assert.Equal(t, 6, r.KitchenWarningMinutes)
+	assert.Equal(t, 14, r.KitchenOverdueMinutes)
+
+	// invalid input leaves the values unchanged
+	err := r.SetKitchenThresholds(20, 10)
+	assert.ErrorIs(t, err, restaurant.ErrInvalidKitchenThresholds)
+	assert.Equal(t, 6, r.KitchenWarningMinutes)
+	assert.Equal(t, 14, r.KitchenOverdueMinutes)
+}
+
+func TestEffectiveKitchenThresholds_FallBackForLegacyZero(t *testing.T) {
+	r := &restaurant.Restaurant{} // legacy row: zero thresholds
+	assert.Equal(t, restaurant.DefaultKitchenWarningMinutes, r.EffectiveKitchenWarningMinutes())
+	assert.Equal(t, restaurant.DefaultKitchenOverdueMinutes, r.EffectiveKitchenOverdueMinutes())
 }
 
 func TestRestaurant_UpdateStatus(t *testing.T) {

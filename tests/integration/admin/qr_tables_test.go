@@ -45,6 +45,7 @@ func TestAdminQR_TableCountAndPrint(t *testing.T) {
 	reorderCatUC := menuCmd.NewReorderMenuCategoriesHandler(repoCat, nil, nil)
 	reorderItemUC := menuCmd.NewReorderMenuItemsHandler(repoItem, repoCat, nil, nil)
 	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountHandler(repoRest, nil, nil)
+	updateKitchenUC := restaurantCmd.NewUpdateKitchenThresholdsHandler(repoRest, nil, nil)
 	generateQRUC := restaurantQuery.NewRestaurantTableQRImageHandler(qr.NewQRCodeService(), "http://localhost", repoRest, nil, nil)
 
 	adminHandler := restauranthttp.NewAdminHandler(
@@ -53,7 +54,7 @@ func TestAdminQR_TableCountAndPrint(t *testing.T) {
 		reorderCatUC, reorderItemUC,
 		repoItem,
 		nil, menuQuery.PhotoSignerConfig{},
-		updateTableUC, generateQRUC, membershipRepo, repoRest,
+		updateTableUC, updateKitchenUC, generateQRUC, membershipRepo, repoRest,
 	)
 
 	require.NoError(t, updateTableUC.Handle(context.Background(), restaurantCmd.UpdateRestaurantTableCount{

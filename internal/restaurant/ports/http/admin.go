@@ -22,13 +22,16 @@ import (
 
 const adminMenuDashboardPath = "/admin/dashboard"
 const adminQRPath = "/admin/qr"
+const adminKitchenPath = "/admin/kitchen"
 
 const (
-	adminFlashMenuActionFailed  = "menu_action_failed"
-	adminFlashMenuItemNotFound  = "menu_item_not_found"
-	adminFlashMenuImageRequired = "menu_image_required"
-	adminFlashQRActionFailed    = "qr_action_failed"
-	adminFlashQRSettingsSaved   = "qr_settings_saved"
+	adminFlashMenuActionFailed     = "menu_action_failed"
+	adminFlashMenuItemNotFound     = "menu_item_not_found"
+	adminFlashMenuImageRequired    = "menu_image_required"
+	adminFlashQRActionFailed       = "qr_action_failed"
+	adminFlashQRSettingsSaved      = "qr_settings_saved"
+	adminFlashKitchenSettingsSaved = "kitchen_settings_saved"
+	adminFlashKitchenInvalid       = "kitchen_settings_invalid"
 )
 
 func adminMenuRedirect(flashCode string) string {
@@ -69,6 +72,24 @@ func adminQRFlashState(flashCode string) (qrError string, saved bool) {
 	}
 }
 
+func adminKitchenRedirect(flashCode string) string {
+	if flashCode == "" {
+		return adminKitchenPath
+	}
+	return adminKitchenPath + "?flash=" + url.QueryEscape(flashCode)
+}
+
+func adminKitchenFlashState(flashCode string) (kitchenError string, saved bool) {
+	switch flashCode {
+	case adminFlashKitchenSettingsSaved:
+		return "", true
+	case adminFlashKitchenInvalid:
+		return "Thresholds must satisfy 1 ≤ warning < overdue ≤ 120 minutes.", false
+	default:
+		return "", false
+	}
+}
+
 func (h *AdminHandler) restaurantID(c echo.Context) (common.RestaurantID, error) {
 	return commonhttp.RestaurantIDFromContext(c)
 }
@@ -102,6 +123,7 @@ type AdminHandler struct {
 	photos              menu.PhotoStorage
 	photoSignerCfg      menuQuery.PhotoSignerConfig
 	updateTableCountUC  restaurantCmd.UpdateRestaurantTableCountHandler
+	updateKitchenUC     restaurantCmd.UpdateKitchenThresholdsHandler
 	generateQRUC        restaurantQuery.RestaurantTableQRImageHandler
 	membershipRepo      membership.Repository
 	restaurantRepo      restaurant.Repository
@@ -123,6 +145,7 @@ func NewAdminHandler(
 	photos menu.PhotoStorage,
 	photoSignerCfg menuQuery.PhotoSignerConfig,
 	updateTableCountUC restaurantCmd.UpdateRestaurantTableCountHandler,
+	updateKitchenUC restaurantCmd.UpdateKitchenThresholdsHandler,
 	generateQRUC restaurantQuery.RestaurantTableQRImageHandler,
 	membershipRepo membership.Repository,
 	restaurantRepo restaurant.Repository,
@@ -142,6 +165,7 @@ func NewAdminHandler(
 		photos:              photos,
 		photoSignerCfg:      photoSignerCfg,
 		updateTableCountUC:  updateTableCountUC,
+		updateKitchenUC:     updateKitchenUC,
 		generateQRUC:        generateQRUC,
 		membershipRepo:      membershipRepo,
 		restaurantRepo:      restaurantRepo,
@@ -462,6 +486,47 @@ func (h *AdminHandler) PostQRSettings(c echo.Context) error {
 		return c.Redirect(http.StatusFound, adminQRRedirect(adminFlashQRActionFailed))
 	}
 	return c.Redirect(http.StatusFound, adminQRRedirect(adminFlashQRSettingsSaved))
+}
+
+// GetKitchenSettings handles GET /admin/kitchen
+func (h *AdminHandler) GetKitchenSettings(c echo.Context) error {
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
+	rest, err := h.restaurantRepo.FindByID(restaurantID)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load restaurant")
+	}
+	dn, st, ini := commonhttp.LayoutUserStringsFromContext(c)
+	label := commonhttp.ActiveRestaurantLabel(c.Request().Context(), restaurantID, h.restaurantRepo)
+	switchOpts, activeRole, canCreate, sErr := commonhttp.RestaurantSwitcherData(c, h.membershipRepo, h.restaurantRepo)
+	if sErr != nil {
+		return c.String(http.StatusInternalServerError, "Failed to load navigation")
+	}
+	kitchenError, saved := adminKitchenFlashState(c.QueryParam("flash"))
+	return admin.KitchenSettingsPage(
+		commonhttp.CSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate,
+		rest.EffectiveKitchenWarningMinutes(), rest.EffectiveKitchenOverdueMinutes(), kitchenError, saved,
+	).Render(c.Request().Context(), c.Response())
+}
+
+// PostKitchenSettings handles POST /admin/kitchen/settings
+func (h *AdminHandler) PostKitchenSettings(c echo.Context) error {
+	restaurantID, err := h.restaurantID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
+	warning, _ := strconv.Atoi(c.FormValue("warningMinutes"))
+	overdue, _ := strconv.Atoi(c.FormValue("overdueMinutes"))
+	if err := h.updateKitchenUC.Handle(c.Request().Context(), restaurantCmd.UpdateKitchenThresholds{
+		RestaurantID:   restaurantID,
+		WarningMinutes: warning,
+		OverdueMinutes: overdue,
+	}); err != nil {
+		return c.Redirect(http.StatusFound, adminKitchenRedirect(adminFlashKitchenInvalid))
+	}
+	return c.Redirect(http.StatusFound, adminKitchenRedirect(adminFlashKitchenSettingsSaved))
 }
 
 // GetQRTablePNG handles GET /admin/qr/table/:table

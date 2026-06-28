@@ -66,7 +66,15 @@ func (h *KitchenHandler) GetKitchen(c echo.Context) error {
 	if sErr != nil {
 		return c.String(http.StatusInternalServerError, "Failed to load navigation")
 	}
-	return templates.KitchenPage(orders, commonhttp.CSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate, h.vapidPublicKey).Render(c.Request().Context(), c.Response())
+	warningMinutes := restaurant.DefaultKitchenWarningMinutes
+	overdueMinutes := restaurant.DefaultKitchenOverdueMinutes
+	if h.restaurantRepo != nil {
+		if rest, rErr := h.restaurantRepo.FindByID(restaurantID); rErr == nil {
+			warningMinutes = rest.EffectiveKitchenWarningMinutes()
+			overdueMinutes = rest.EffectiveKitchenOverdueMinutes()
+		}
+	}
+	return templates.KitchenPage(orders, commonhttp.CSRFToken(c), label, dn, st, ini, switchOpts, activeRole, canCreate, h.vapidPublicKey, warningMinutes, overdueMinutes).Render(c.Request().Context(), c.Response())
 }
 
 func (h *KitchenHandler) MarkPreparing(c echo.Context) error {

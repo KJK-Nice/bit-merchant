@@ -2,16 +2,11 @@ package templates
 
 import (
 	"bitmerchant/internal/common"
-	"bitmerchant/internal/ordering/app/query"
 	"bitmerchant/internal/ordering/domain/order"
 	"bitmerchant/internal/interfaces/templates/components"
 	"bitmerchant/internal/interfaces/templates/layouts"
 	"fmt"
 )
-
-func kitchenOverdueMinutes() int {
-	return int(query.OverdueThreshold().Minutes())
-}
 
 func kitchenStatusForSummary(order *order.Order) string {
 	if order == nil {
@@ -61,12 +56,13 @@ templ kitchenLaneColumn(key string, title string, subtitle string, emptyText str
 	</section>
 }
 
-templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, vapidPublicKey string) {
+templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, vapidPublicKey string, warningMinutes int, overdueMinutes int) {
 	@layouts.Dashboard("Kitchen Display", "/kitchen", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		<div
 			id="kitchen-display"
 			data-init="@get('/kitchen/stream')"
-			data-overdue-minutes={ fmt.Sprintf("%d", kitchenOverdueMinutes()) }
+			data-warning-minutes={ fmt.Sprintf("%d", warningMinutes) }
+			data-overdue-minutes={ fmt.Sprintf("%d", overdueMinutes) }
 			class="space-y-6 mt-4 pb-6"
 		>
 			<section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-muted/50 p-5">
@@ -346,6 +342,57 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 					return `${Math.floor(hours / 24)}d`;
 				}
 
+				const warningMinutes = parseInt(root.dataset.warningMinutes || "8", 10) || 8;
+				const overdueMinutes = parseInt(root.dataset.overdueMinutes || "12", 10) || 12;
+
+				// Tier classes for the card ring, the age timer, and the primary CTA.
+				const CARD_WARNING = ["ring-2", "ring-amber-400/70", "ring-offset-1"];
+				const CARD_OVERDUE = ["ring-2", "ring-red-500/80", "ring-offset-1", "shadow-[0_0_18px_rgba(239,68,68,0.55)]"];
+				const TIMER_WARNING = ["text-amber-600", "dark:text-amber-300", "font-bold"];
+				const TIMER_OVERDUE = ["text-red-600", "dark:text-red-400", "font-bold"];
+				const CTA_WARNING = ["ring-1", "ring-amber-400/70"];
+				const CTA_OVERDUE = ["ring-2", "ring-red-500/80"];
+
+				function tierOf(minutes) {
+					if (minutes >= overdueMinutes) return "overdue";
+					if (minutes >= warningMinutes) return "warning";
+					return "nominal";
+				}
+
+				function applyTier(card, tier) {
+					card.classList.remove(...CARD_WARNING, ...CARD_OVERDUE);
+					if (tier === "warning") card.classList.add(...CARD_WARNING);
+					else if (tier === "overdue") card.classList.add(...CARD_OVERDUE);
+
+					const ageNode = card.querySelector("[data-order-age]");
+					if (ageNode) {
+						ageNode.classList.remove(...TIMER_WARNING, ...TIMER_OVERDUE);
+						if (tier === "warning") ageNode.classList.add(...TIMER_WARNING);
+						else if (tier === "overdue") ageNode.classList.add(...TIMER_OVERDUE);
+					}
+
+					// Primary CTA (Start Preparing / Mark Ready / Close Ticket): tint it and,
+					// when overdue, append the "· OVERDUE" suffix the audit calls for.
+					const cta = card.querySelector("[data-kitchen-action]");
+					if (cta) {
+						cta.classList.remove(...CTA_WARNING, ...CTA_OVERDUE);
+						if (tier === "warning") cta.classList.add(...CTA_WARNING);
+						else if (tier === "overdue") cta.classList.add(...CTA_OVERDUE);
+						let badge = cta.querySelector("[data-overdue-suffix]");
+						if (tier === "overdue") {
+							if (!badge) {
+								badge = document.createElement("span");
+								badge.setAttribute("data-overdue-suffix", "");
+								badge.className = "ml-1 font-bold uppercase tracking-wide";
+								badge.textContent = " · OVERDUE";
+								cta.appendChild(badge);
+							}
+						} else if (badge) {
+							badge.remove();
+						}
+					}
+				}
+
 				function updateAges() {
 					const nowUnix = Math.floor(Date.now() / 1000);
 					allCards().forEach((card) => {
@@ -358,9 +405,7 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 						}
 						const minutes = Math.max(0, Math.floor((nowUnix - createdAt) / 60));
 						ageNode.textContent = ageLabel(minutes);
-						card.classList.toggle("ring-2", minutes >= 15);
-						card.classList.toggle("ring-amber-400/60", minutes >= 15);
-						card.classList.toggle("ring-offset-1", minutes >= 15);
+						applyTier(card, tierOf(minutes));
 					});
 				}
 

@@ -48,6 +48,7 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 	reorderCatUC := menuCmd.NewReorderMenuCategoriesHandler(repoCat, nil, nil)
 	reorderItemUC := menuCmd.NewReorderMenuItemsHandler(repoItem, repoCat, nil, nil)
 	updateTableUC := restaurantCmd.NewUpdateRestaurantTableCountHandler(repoRest, nil, nil)
+	updateKitchenUC := restaurantCmd.NewUpdateKitchenThresholdsHandler(repoRest, nil, nil)
 	generateQRUC := restaurantQuery.NewRestaurantTableQRImageHandler(qr.NewQRCodeService(), "http://localhost", repoRest, nil, nil)
 
 	adminHandler := restauranthttp.NewAdminHandler(
@@ -65,6 +66,7 @@ func TestAdminMenuDashboard_ShowsUnavailableItemsAndEmptyCategory(t *testing.T) 
 		nil, // photoStorage
 		menuQuery.PhotoSignerConfig{},
 		updateTableUC,
+		updateKitchenUC,
 		generateQRUC,
 		membershipRepo,
 		repoRest,

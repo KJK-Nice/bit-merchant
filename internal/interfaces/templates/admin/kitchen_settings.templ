@@ -1,0 +1,119 @@
+package admin
+
+import (
+	"bitmerchant/internal/interfaces/templates/components/ui/button"
+	"bitmerchant/internal/interfaces/templates/components/ui/card"
+	"bitmerchant/internal/interfaces/templates/components/ui/input"
+	"bitmerchant/internal/interfaces/templates/components/ui/toast"
+	"bitmerchant/internal/interfaces/templates/layouts"
+	"bitmerchant/internal/restaurant/domain/restaurant"
+	"strconv"
+)
+
+templ KitchenSettingsPage(csrfToken string, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool, warningMinutes int, overdueMinutes int, kitchenError string, saved bool) {
+	@layouts.Dashboard("Kitchen timing", "/admin/kitchen", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, csrfToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
+		@AdminContent() {
+			if saved {
+				@toast.Toast(toast.Props{
+					Title:         "Kitchen timing saved",
+					Description:   "Escalation thresholds have been updated.",
+					Variant:       toast.VariantSuccess,
+					Position:      toast.PositionTopRight,
+					Duration:      3200,
+					Dismissible:   true,
+					Icon:          true,
+					ShowIndicator: true,
+				})
+			}
+			if kitchenError != "" {
+				@toast.Toast(toast.Props{
+					Title:         "Could not save kitchen timing",
+					Description:   kitchenError,
+					Variant:       toast.VariantError,
+					Position:      toast.PositionTopRight,
+					Duration:      4200,
+					Dismissible:   true,
+					Icon:          true,
+					ShowIndicator: true,
+				})
+			}
+			<div class="flex flex-col gap-4">
+				<div>
+					<h1 class="text-2xl font-bold tracking-tight">Kitchen timing</h1>
+					<p class="text-muted-foreground text-sm mt-1">
+						Control when a ticket on the kitchen board turns amber (warning) and red (overdue).
+					</p>
+				</div>
+				@card.Card() {
+					@card.Header() {
+						@card.Title() {
+							Escalation thresholds
+						}
+						@card.Description() {
+							Minutes since an order was placed. Warning must be less than overdue (range { strconv.Itoa(restaurant.MinKitchenThresholdMinutes) }–{ strconv.Itoa(restaurant.MaxKitchenThresholdMinutes) }).
+						}
+					}
+					@card.Content() {
+						<form method="POST" action="/admin/kitchen/settings" class="space-y-4 max-w-xs">
+							<input type="hidden" name="csrf" value={ csrfToken }/>
+							<div>
+								<label for="warning-minutes" class="block text-sm font-medium mb-2">Warning after (minutes)</label>
+								@input.Input(input.Props{
+									ID:       "warning-minutes",
+									Name:     "warningMinutes",
+									Type:     input.TypeNumber,
+									Required: true,
+									Value:    strconv.Itoa(warningMinutes),
+									Attributes: templ.Attributes{
+										"min": strconv.Itoa(restaurant.MinKitchenThresholdMinutes),
+										"max": strconv.Itoa(restaurant.MaxKitchenThresholdMinutes),
+									},
+								})
+							</div>
+							<div>
+								<label for="overdue-minutes" class="block text-sm font-medium mb-2">Overdue after (minutes)</label>
+								@input.Input(input.Props{
+									ID:       "overdue-minutes",
+									Name:     "overdueMinutes",
+									Type:     input.TypeNumber,
+									Required: true,
+									Value:    strconv.Itoa(overdueMinutes),
+									Attributes: templ.Attributes{
+										"min": strconv.Itoa(restaurant.MinKitchenThresholdMinutes),
+										"max": strconv.Itoa(restaurant.MaxKitchenThresholdMinutes),
+									},
+								})
+							</div>
+							@button.Button(button.Props{Type: button.TypeSubmit}) {
+								Save
+							}
+						</form>
+					}
+				}
+				@card.Card() {
+					@card.Header() {
+						@card.Title() {
+							How tickets escalate
+						}
+					}
+					@card.Content() {
+						<ul class="space-y-2 text-sm">
+							<li class="flex items-center gap-3">
+								<span class="inline-block h-3 w-3 rounded-full border border-border bg-background"></span>
+								<span><span class="font-medium">Nominal</span> — under { strconv.Itoa(warningMinutes) } min: default card.</span>
+							</li>
+							<li class="flex items-center gap-3">
+								<span class="inline-block h-3 w-3 rounded-full bg-amber-400"></span>
+								<span><span class="font-medium">Warning</span> — { strconv.Itoa(warningMinutes) }–{ strconv.Itoa(overdueMinutes) } min: amber border + amber timer.</span>
+							</li>
+							<li class="flex items-center gap-3">
+								<span class="inline-block h-3 w-3 rounded-full bg-red-500"></span>
+								<span><span class="font-medium">Overdue</span> — over { strconv.Itoa(overdueMinutes) } min: red border + glow, "Mark Ready · OVERDUE".</span>
+							</li>
+						</ul>
+					}
+				}
+			</div>
+		}
+	}
+}

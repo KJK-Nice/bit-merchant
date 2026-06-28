@@ -13,13 +13,14 @@ import (
 
 // Restaurant bundles restaurant lifecycle commands, QR query, and merchant HTTP ports (admin/owner).
 type Restaurant struct {
-	CreateRestaurant     restaurantCmd.CreateRestaurantHandler
-	ToggleRestaurantOpen restaurantCmd.ToggleRestaurantOpenHandler
-	PauseRestaurant      restaurantCmd.PauseRestaurantHandler
-	UpdateTableCount     restaurantCmd.UpdateRestaurantTableCountHandler
-	GenerateRestaurantQR restaurantQuery.RestaurantTableQRImageHandler
-	Admin                *restauranthttp.AdminHandler
-	Owner                *restauranthttp.OwnerHandler
+	CreateRestaurant        restaurantCmd.CreateRestaurantHandler
+	ToggleRestaurantOpen    restaurantCmd.ToggleRestaurantOpenHandler
+	PauseRestaurant         restaurantCmd.PauseRestaurantHandler
+	UpdateTableCount        restaurantCmd.UpdateRestaurantTableCountHandler
+	UpdateKitchenThresholds restaurantCmd.UpdateKitchenThresholdsHandler
+	GenerateRestaurantQR    restaurantQuery.RestaurantTableQRImageHandler
+	Admin                   *restauranthttp.AdminHandler
+	Owner                   *restauranthttp.OwnerHandler
 }
 
 // New wires restaurant bounded-context handlers and admin/owner HTTP adapters.
@@ -34,6 +35,7 @@ func New(
 	toggleOpenUC := restaurantCmd.NewToggleRestaurantOpenHandler(repos.Restaurant, nil, nil)
 	pauseRestUC := restaurantCmd.NewPauseRestaurantHandler(repos.Restaurant, nil, nil)
 	updateTableCountUC := restaurantCmd.NewUpdateRestaurantTableCountHandler(repos.Restaurant, nil, nil)
+	updateKitchenThresholdsUC := restaurantCmd.NewUpdateKitchenThresholdsHandler(repos.Restaurant, nil, nil)
 	generateQRUC := restaurantQuery.NewRestaurantTableQRImageHandler(qrService, cfg.CustomerBaseURL, repos.Restaurant, nil, nil)
 
 	adminHandler := restauranthttp.NewAdminHandler(
@@ -55,6 +57,7 @@ func New(
 			PublicBaseURL: cfg.S3PublicBaseURL,
 		},
 		updateTableCountUC,
+		updateKitchenThresholdsUC,
 		generateQRUC,
 		repos.Membership,
 		repos.Restaurant,
@@ -62,12 +65,13 @@ func New(
 	ownerHandler := restauranthttp.NewOwnerHandler(createRestUC)
 
 	return Restaurant{
-		CreateRestaurant:     createRestUC,
-		ToggleRestaurantOpen: toggleOpenUC,
-		PauseRestaurant:      pauseRestUC,
-		UpdateTableCount:     updateTableCountUC,
-		GenerateRestaurantQR: generateQRUC,
-		Admin:                adminHandler,
-		Owner:                ownerHandler,
+		CreateRestaurant:        createRestUC,
+		ToggleRestaurantOpen:    toggleOpenUC,
+		PauseRestaurant:         pauseRestUC,
+		UpdateTableCount:        updateTableCountUC,
+		UpdateKitchenThresholds: updateKitchenThresholdsUC,
+		GenerateRestaurantQR:    generateQRUC,
+		Admin:                   adminHandler,
+		Owner:                   ownerHandler,
 	}
 }
