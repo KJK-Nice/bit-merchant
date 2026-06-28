@@ -65,6 +65,30 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 			data-overdue-minutes={ fmt.Sprintf("%d", overdueMinutes) }
 			class="space-y-6 mt-4 pb-6"
 		>
+			<div
+				id="kitchen-stream-banner"
+				hidden
+				role="alert"
+				class="flex items-center justify-between gap-3 rounded-lg border-2 border-amber-400 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-500/60 dark:bg-amber-950/40 dark:text-amber-200"
+			>
+				<div class="flex items-center gap-2 min-w-0">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M12 20h.01" />
+						<path d="M8.5 16.429a5 5 0 0 1 7 0" />
+						<path d="M5 12.859a10 10 0 0 1 5.17-2.69" />
+						<path d="M19 12.859a10 10 0 0 0-2.007-1.523" />
+						<path d="M2 8.82a15 15 0 0 1 4.177-2.643" />
+						<path d="M22 8.82a15 15 0 0 0-11.288-3.764" />
+						<path d="m2 2 20 20" />
+					</svg>
+					<p id="kitchen-stream-banner-text" class="text-sm font-medium">Live updates offline — new orders may not appear.</p>
+				</div>
+				<button
+					id="kitchen-banner-reconnect"
+					type="button"
+					class="shrink-0 rounded-md border border-amber-500/50 bg-background/70 px-3 py-1.5 text-sm font-semibold hover:bg-amber-100 dark:hover:bg-amber-900/40"
+				>Reconnect</button>
+			</div>
 			<section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-muted/50 p-5">
 				<div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.12),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(16,185,129,0.1),transparent_45%)]"></div>
 				<div class="relative space-y-2">
@@ -268,6 +292,9 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 				const streamDot = document.getElementById("kitchen-stream-dot");
 				const streamLabel = document.getElementById("kitchen-stream-label");
 				const streamReconnectButton = document.getElementById("kitchen-stream-reconnect");
+				const streamBanner = document.getElementById("kitchen-stream-banner");
+				const streamBannerText = document.getElementById("kitchen-stream-banner-text");
+				const bannerReconnectButton = document.getElementById("kitchen-banner-reconnect");
 				const refetchButton = document.getElementById("kitchen-refetch");
 
 				const summaryCountElements = {
@@ -438,6 +465,9 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 				function setStreamStatus(status) {
 					if (!streamDot || !streamLabel) return;
 					let state = "unsupported";
+					// The banner only appears for genuine problems (offline / unsupported)
+					// so a normal connecting→connected load doesn't flash a warning.
+					let bannerText = "";
 					switch (status) {
 					case "connected":
 						state = "connected";
@@ -450,13 +480,23 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 					case "disconnected":
 						state = "disconnected";
 						streamLabel.textContent = "Live updates offline";
+						bannerText = "Live updates offline — new orders may not appear. Reconnect to catch up.";
 						break;
 					default:
 						state = "unsupported";
 						streamLabel.textContent = "Live updates unavailable";
+						bannerText = "Live updates aren't supported in this browser. Refresh to see new orders.";
 						break;
 					}
 					streamDot.setAttribute("data-state", state);
+					if (streamBanner) {
+						if (bannerText) {
+							if (streamBannerText) streamBannerText.textContent = bannerText;
+							streamBanner.hidden = false;
+						} else {
+							streamBanner.hidden = true;
+						}
+					}
 				}
 
 				function connectStreamProbe() {
@@ -481,6 +521,11 @@ templ KitchenPage(orders []*order.Order, csrfToken string, activeRestaurantLabel
 
 				if (streamReconnectButton instanceof HTMLButtonElement) {
 					streamReconnectButton.addEventListener("click", () => {
+						connectStreamProbe();
+					});
+				}
+				if (bannerReconnectButton instanceof HTMLButtonElement) {
+					bannerReconnectButton.addEventListener("click", () => {
 						connectStreamProbe();
 					});
 				}
