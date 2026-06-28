@@ -140,6 +140,12 @@ templ OrderStatus(view *query.OrderStatusView) {
 		@statusTimeline(view)
 		@orderSummaryCard(view)
 		@orderServiceActions(view)
+		<a
+			href={ templ.SafeURL(fmt.Sprintf("/order/%s/receipt", view.Order.OrderNumber)) }
+			target="_blank"
+			rel="noopener"
+			class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+		>📲 Save receipt</a>
 	</div>
 }
 

@@ -97,6 +97,28 @@ func TestIssue77_KitchenCardFallsBackToOrderNumber(t *testing.T) {
 	}
 }
 
+// #72 — a standalone, saveable receipt page renders the order's key details.
+func TestIssue72_ReceiptRenders(t *testing.T) {
+	var sb strings.Builder
+	if err := OrderReceiptPage(sampleOrder(), "Bao & Brew").Render(context.Background(), &sb); err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	html := sb.String()
+	for _, want := range []string{"Brew", "A29F", "Bao Bun", "Total", "Save as PDF / Print", "Subtotal"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("receipt missing %q", want)
+		}
+	}
+}
+
+// #72 — the order-status page links to the saveable receipt.
+func TestIssue72_StatusLinksToReceipt(t *testing.T) {
+	html := renderStatus(t, &query.OrderStatusView{Order: sampleOrder()})
+	if !strings.Contains(html, "/order/A29F/receipt") {
+		t.Errorf("status page missing receipt link")
+	}
+}
+
 // #66 — status screen shows the itemised breakdown, not just a total.
 func TestIssue66_StatusScreenShowsBreakdown(t *testing.T) {
 	html := renderStatus(t, &query.OrderStatusView{Order: sampleOrder()})
