@@ -34,7 +34,7 @@ func TestMenuThenMyPlacesListsRestaurant(t *testing.T) {
 	getMenuUC := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
 	cartSvc := cart.NewCartService()
 	recordUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
-	menuH := menuhttp.NewMenuHandler(getMenuUC, cartSvc, recordUC)
+	menuH := menuhttp.NewMenuHandler(getMenuUC, cartSvc, recordUC, nil)
 	listUC := placesQuery.NewSessionVisitedPlacesHandler(visitRepo, restRepo, orderRepo, nil, nil)
 	placesH := placeshttp.NewPlacesHandler(listUC)
 

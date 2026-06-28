@@ -60,6 +60,6 @@ func New(
 		UploadMenuPhoto:        uploadPhotoUC,
 		ReorderMenuCategories:  reorderCategoriesUC,
 		ReorderMenuItems:       reorderItemsUC,
-		HTTP:                   menuhttp.NewMenuHandler(getMenuUC, cartService, recordMenuVisitUC),
+		HTTP:                   menuhttp.NewMenuHandler(getMenuUC, cartService, recordMenuVisitUC, repos.Order),
 	}
 }

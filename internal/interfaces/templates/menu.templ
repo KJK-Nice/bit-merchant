@@ -13,7 +13,7 @@ import (
 	"fmt"
 )
 
-templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
+templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string, etaMinutes int) {
 	@Layout(data.Restaurant.Name + " · Menu") {
 		// Initialise the cartItemQty signals map; GET /cart on load populates it.
 		<div
@@ -25,7 +25,14 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 					<div class="flex justify-between items-start gap-4">
 						<div class="space-y-1 min-w-0">
 							<h1 class="text-2xl font-bold tracking-tight truncate">{ data.Restaurant.Name }</h1>
-							<p class="text-muted-foreground text-sm">You're ordering here</p>
+							if data.Restaurant.IsOpen && etaMinutes > 0 {
+								<span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+									<span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+									{ fmt.Sprintf("Open · ~%d min", etaMinutes) }
+								</span>
+							} else {
+								<p class="text-muted-foreground text-sm">You're ordering here</p>
+							}
 							if tableLabel != "" {
 								<p class="text-sm font-medium text-foreground/90">Table { tableLabel }</p>
 							}
@@ -144,7 +151,8 @@ templ MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) {
 												"style": "height:22rem;",
 											},
 										}) {
-											<img src={ item.PhotoURL } alt={ item.Name } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="400" height="300"/>
+											<div data-img-skeleton class="absolute inset-0 animate-pulse bg-muted"></div>
+											<img src={ item.PhotoURL } alt={ item.Name } class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="400" height="300" onload="this.previousElementSibling && this.previousElementSibling.remove()" onerror="this.previousElementSibling && this.previousElementSibling.remove()"/>
 											<a
 												href={ templ.SafeURL(fmt.Sprintf("/menu/item/%s?restaurantID=%s&table=%s", item.ID, string(data.Restaurant.ID), tableLabel)) }
 												class="absolute inset-0 z-10"

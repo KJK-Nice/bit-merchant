@@ -85,7 +85,7 @@ func TestKitchenWorkflow(t *testing.T) {
 	orderHandler := orderinghttp.NewOrderHandler(createOrderUC, getCustomerOrderUC, getCustomerOrdersUC, requestServerUC, requestBillUC, orderRepo, restRepo, cartService, "")
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
-	_ = menuhttp.NewMenuHandler(getMenuUC, cartService, recordVisitUC)
+	_ = menuhttp.NewMenuHandler(getMenuUC, cartService, recordVisitUC, orderRepo)
 
 	// Event Handlers
 	orderCreatedHandler := ordersse.NewOrderCreatedHandler(logger, sseHandler, orderRepo)

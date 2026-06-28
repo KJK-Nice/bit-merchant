@@ -6,6 +6,8 @@ import (
 	"bitmerchant/internal/interfaces/templates"
 	menuQuery "bitmerchant/internal/menu/app/query"
 	"bitmerchant/internal/ordering/app/cart"
+	orderQuery "bitmerchant/internal/ordering/app/query"
+	"bitmerchant/internal/ordering/domain/order"
 	placesCmd "bitmerchant/internal/places/app/command"
 
 	"github.com/labstack/echo/v4"
@@ -18,13 +20,15 @@ type MenuHandler struct {
 	getMenu       menuQuery.MenuForCustomerHandler
 	cartService   *cart.CartService
 	recordVisitUC placesCmd.RecordMenuVisitHandler
+	orderRepo     order.Repository
 }
 
-func NewMenuHandler(getMenu menuQuery.MenuForCustomerHandler, cartService *cart.CartService, recordVisitUC placesCmd.RecordMenuVisitHandler) *MenuHandler {
+func NewMenuHandler(getMenu menuQuery.MenuForCustomerHandler, cartService *cart.CartService, recordVisitUC placesCmd.RecordMenuVisitHandler, orderRepo order.Repository) *MenuHandler {
 	return &MenuHandler{
 		getMenu:       getMenu,
 		cartService:   cartService,
 		recordVisitUC: recordVisitUC,
+		orderRepo:     orderRepo,
 	}
 }
 
@@ -58,8 +62,16 @@ func (h *MenuHandler) GetMenu(c echo.Context) error {
 
 	tableLabel := c.QueryParam("table")
 
+	// Estimate the live wait from the current kitchen queue (only when open).
+	etaMinutes := 0
+	if menuData.Restaurant != nil && menuData.Restaurant.IsOpen && h.orderRepo != nil {
+		if active, aerr := h.orderRepo.FindActiveByRestaurantID(common.RestaurantID(restaurantID)); aerr == nil {
+			etaMinutes = orderQuery.EstimatedMenuWaitMinutes(active, orderQuery.DefaultPrepTarget)
+		}
+	}
+
 	// Prevent caching so back button always fetches fresh state (updated cart)
 	c.Response().Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
 
-	return templates.MenuPage(menuData, cart, tableLabel).Render(c.Request().Context(), c.Response())
+	return templates.MenuPage(menuData, cart, tableLabel, etaMinutes).Render(c.Request().Context(), c.Response())
 }
