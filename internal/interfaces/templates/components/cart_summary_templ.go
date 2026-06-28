@@ -249,7 +249,7 @@ func CartSummary(cart *cart.Cart, showCheckout bool) templ.Component {
 						templ_7745c5c3_Err = button.Button(button.Props{
 							Variant: button.VariantOutline,
 							Size:    button.SizeIcon,
-							Class:   "h-8 w-8 rounded-full",
+							Class:   "h-8 w-8 rounded-full min-h-11 min-w-11",
 							Attributes: templ.Attributes{
 								"data-on:click": fmt.Sprintf("@post('/cart/decrement?itemID=%s')", item.ItemID),
 								"aria-label":    "Decrease quantity",
@@ -296,7 +296,7 @@ func CartSummary(cart *cart.Cart, showCheckout bool) templ.Component {
 						templ_7745c5c3_Err = button.Button(button.Props{
 							Variant: button.VariantOutline,
 							Size:    button.SizeIcon,
-							Class:   "h-8 w-8 rounded-full",
+							Class:   "h-8 w-8 rounded-full min-h-11 min-w-11",
 							Attributes: templ.Attributes{
 								"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ItemID),
 								"aria-label":    "Increase quantity",

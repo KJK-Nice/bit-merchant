@@ -474,7 +474,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\"></a><div class=\"p-3\" style=\"position:absolute;left:0;right:0;bottom:0;\"><div class=\"rounded-xl p-3 flex flex-col gap-2 bg-white/60 backdrop-blur-md dark:bg-black/65 dark:backdrop-blur-none\"><h3 class=\"text-base font-semibold leading-snug line-clamp-2 text-foreground dark:text-white\">")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\"></a><div class=\"p-3\" style=\"position:absolute;left:0;right:0;bottom:0;\"><div class=\"rounded-xl p-3 flex flex-col gap-2 bg-white/70 backdrop-blur-md dark:bg-black/80\"><h3 class=\"text-base font-semibold leading-snug line-clamp-2 text-foreground dark:text-white\">")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -492,7 +492,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 								return templ_7745c5c3_Err
 							}
 							if item.Description != "" {
-								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<p class=\"text-xs text-foreground/75 dark:text-white/75 line-clamp-2\">")
+								templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<p class=\"text-xs text-foreground/80 dark:text-white/90 line-clamp-2\">")
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}
@@ -534,7 +534,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										}
 										return nil
 									})
-									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var29), templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-black/55 dark:text-white"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var29), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
@@ -558,7 +558,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										}
 										return nil
 									})
-									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-black/55 dark:text-white"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
@@ -582,7 +582,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										}
 										return nil
 									})
-									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-white/20"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var31), templ_7745c5c3_Buffer)
+									templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "text-[10px] px-1.5 py-0 leading-4 bg-white/70 dark:bg-black/55 dark:text-white"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var31), templ_7745c5c3_Buffer)
 									if templ_7745c5c3_Err != nil {
 										return templ_7745c5c3_Err
 									}
@@ -721,7 +721,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 									templ_7745c5c3_Err = button.Button(button.Props{
 										Variant: button.VariantOutline,
 										Size:    button.SizeIcon,
-										Class:   "rounded-full dark:border-white/70 dark:text-white dark:bg-white/10 dark:hover:bg-white/25",
+										Class:   "rounded-full min-h-11 min-w-11 dark:border-white/70 dark:text-white dark:bg-white/10 dark:hover:bg-white/25",
 										Attributes: templ.Attributes{
 											"data-on:click": fmt.Sprintf("@post('/cart/decrement?itemID=%s')", item.ID),
 											"aria-label":    "Decrease quantity",
@@ -768,7 +768,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 									templ_7745c5c3_Err = button.Button(button.Props{
 										Variant: button.VariantDefault,
 										Size:    button.SizeIcon,
-										Class:   "rounded-full",
+										Class:   "rounded-full min-h-11 min-w-11",
 										Attributes: templ.Attributes{
 											"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
 											"aria-label":    "Increase quantity",
@@ -1202,7 +1202,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										templ_7745c5c3_Err = button.Button(button.Props{
 											Variant: button.VariantOutline,
 											Size:    button.SizeIcon,
-											Class:   "h-9 w-9 rounded-full",
+											Class:   "h-9 w-9 rounded-full min-h-11 min-w-11",
 											Attributes: templ.Attributes{
 												"data-on:click": fmt.Sprintf("@post('/cart/decrement?itemID=%s')", item.ID),
 												"aria-label":    "Decrease quantity",
@@ -1249,7 +1249,7 @@ func MenuPage(data *query.MenuResponse, cart *cart.Cart, tableLabel string) temp
 										templ_7745c5c3_Err = button.Button(button.Props{
 											Variant: button.VariantDefault,
 											Size:    button.SizeIcon,
-											Class:   "h-9 w-9 rounded-full",
+											Class:   "h-9 w-9 rounded-full min-h-11 min-w-11",
 											Attributes: templ.Attributes{
 												"data-on:click": fmt.Sprintf("@post('/cart/add?itemID=%s&quantity=1')", item.ID),
 												"aria-label":    "Increase quantity",
