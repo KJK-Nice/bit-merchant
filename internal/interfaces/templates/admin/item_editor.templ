@@ -54,6 +54,19 @@ func optionGroupsJSON(groups []dto.OptionGroupDTO) string {
 // badgesCSV joins badges into the CSV string the form expects.
 func badgesCSV(badges []string) string { return strings.Join(badges, ", ") }
 
+// translationsJSON pretty-prints the item's locale translations for the editor
+// textarea. Returns "" when there are none so the placeholder shows.
+func translationsJSON(t map[string]menu.ItemTranslation) string {
+	if len(t) == 0 {
+		return ""
+	}
+	data, err := json.MarshalIndent(t, "", "  ")
+	if err != nil {
+		return ""
+	}
+	return string(data)
+}
+
 templ ItemEditorPage(data ItemEditorData, activeRestaurantLabel string, userDisplayName string, userSubtitle string, userInitials string, switcherOptions []layouts.RestaurantSwitchOption, activeRestaurantRole string, canCreateRestaurant bool) {
 	@layouts.Dashboard("Edit "+data.Item.Name, "/admin/dashboard", activeRestaurantLabel, userDisplayName, userSubtitle, userInitials, data.CSRFToken, switcherOptions, activeRestaurantRole, canCreateRestaurant) {
 		if data.FlashMessage != "" {
@@ -110,6 +123,9 @@ templ ItemEditorPage(data ItemEditorData, activeRestaurantLabel string, userDisp
 							}
 							@primitives.Field(primitives.FieldProps{ID: "ie-description", Label: "Description", Description: "1–2 sentences · max 500 char"}) {
 								@textarea.Textarea(textarea.Props{ID: "ie-description", Name: "description", Rows: 3, Value: data.Item.Description})
+							}
+							@primitives.Field(primitives.FieldProps{ID: "ie-translations", Label: "Translations (optional)", Description: `Per-locale name/description as JSON, e.g. {"es":{"name":"…","description":"…"}}. English above is the fallback.`}) {
+								@textarea.Textarea(textarea.Props{ID: "ie-translations", Name: "translations_json", Rows: 4, Placeholder: `{"es": {"name": "...", "description": "..."}}`, Value: translationsJSON(data.Item.Translations)})
 							}
 							<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 								@primitives.Field(primitives.FieldProps{ID: "ie-price", Label: "Price"}) {

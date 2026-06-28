@@ -126,6 +126,10 @@ func (h *AdminHandler) PostItemEditor(c echo.Context) error {
 	if err != nil {
 		return c.Redirect(http.StatusFound, editorItemPath(itemID, adminFlashItemSaveFailed))
 	}
+	translations, err := parseTranslations(form.Get("translations_json"))
+	if err != nil {
+		return c.Redirect(http.StatusFound, editorItemPath(itemID, adminFlashItemSaveFailed))
+	}
 
 	spice := strings.ToUpper(strings.TrimSpace(form.Get("spice_level")))
 	schedule := strings.ToUpper(strings.TrimSpace(form.Get("schedule")))
@@ -163,6 +167,7 @@ func (h *AdminHandler) PostItemEditor(c echo.Context) error {
 	cmd.Badges = &badges
 	cmd.AllowSpecialInstructions = &allow
 	cmd.OptionGroups = &groups
+	cmd.Translations = &translations
 
 	if err := h.updateItemUC.Handle(c.Request().Context(), cmd); err != nil {
 		return c.Redirect(http.StatusFound, editorItemPath(itemID, adminFlashItemSaveFailed))
@@ -214,4 +219,18 @@ func parseOptionGroups(raw string) ([]menu.OptionGroup, error) {
 		return nil, err
 	}
 	return dto.ToDomain(dtos), nil
+}
+
+// parseTranslations decodes the editor's translations JSON textarea into a
+// locale→{name,description} map. Empty input clears translations.
+func parseTranslations(raw string) (map[string]menu.ItemTranslation, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || raw == "{}" {
+		return nil, nil
+	}
+	var t map[string]menu.ItemTranslation
+	if err := json.Unmarshal([]byte(raw), &t); err != nil {
+		return nil, err
+	}
+	return t, nil
 }

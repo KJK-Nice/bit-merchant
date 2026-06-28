@@ -19,11 +19,15 @@ func NewPostgresItemRepository(db *sql.DB) *PostgresItemRepository {
 	return &PostgresItemRepository{db: db}
 }
 
-const itemSelectCols = `id, category_id, restaurant_id, name, description, price, COALESCE(currency, 'USD'), COALESCE(price_minor, 0), photo_url, photo_original_url, is_available, display_order, created_at, updated_at, COALESCE(is_vegetarian, false), COALESCE(is_gluten_free, false), COALESCE(is_spicy, false), COALESCE(option_groups, '[]'::jsonb), COALESCE(spice_level, ''), COALESCE(sku, ''), COALESCE(schedule, 'ALL_DAY'), COALESCE(is_vegan, false), COALESCE(is_dairy_free, false), COALESCE(is_halal, false), COALESCE(is_nut_free, false), COALESCE(allergens, '[]'::jsonb), COALESCE(badges, '[]'::jsonb), COALESCE(allow_special_instructions, true)`
+const itemSelectCols = `id, category_id, restaurant_id, name, description, price, COALESCE(currency, 'USD'), COALESCE(price_minor, 0), photo_url, photo_original_url, is_available, display_order, created_at, updated_at, COALESCE(is_vegetarian, false), COALESCE(is_gluten_free, false), COALESCE(is_spicy, false), COALESCE(option_groups, '[]'::jsonb), COALESCE(spice_level, ''), COALESCE(sku, ''), COALESCE(schedule, 'ALL_DAY'), COALESCE(is_vegan, false), COALESCE(is_dairy_free, false), COALESCE(is_halal, false), COALESCE(is_nut_free, false), COALESCE(allergens, '[]'::jsonb), COALESCE(badges, '[]'::jsonb), COALESCE(allow_special_instructions, true), COALESCE(translations, '{}'::jsonb)`
 
 func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
 	currency, priceMinor := itemCurrencyAndMinor(item)
 	optionGroupsJSON, err := marshalOptionGroups(item.OptionGroups)
+	if err != nil {
+		return err
+	}
+	translationsJSON, err := marshalTranslations(item.Translations)
 	if err != nil {
 		return err
 	}
@@ -40,8 +44,8 @@ func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
 		schedule = menu.ScheduleAllDay
 	}
 	_, err = r.db.Exec(
-		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, currency, price_minor, photo_url, photo_original_url, is_available, display_order, created_at, updated_at, is_vegetarian, is_gluten_free, is_spicy, option_groups, spice_level, sku, schedule, is_vegan, is_dairy_free, is_halal, is_nut_free, allergens, badges, allow_special_instructions)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NULLIF($19, ''), $20, $21, $22, $23, $24, $25, $26, $27, $28)
+		`INSERT INTO menu_items (id, category_id, restaurant_id, name, description, price, currency, price_minor, photo_url, photo_original_url, is_available, display_order, created_at, updated_at, is_vegetarian, is_gluten_free, is_spicy, option_groups, spice_level, sku, schedule, is_vegan, is_dairy_free, is_halal, is_nut_free, allergens, badges, allow_special_instructions, translations)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NULLIF($19, ''), $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
 		 ON CONFLICT (id) DO UPDATE
 		 SET category_id = EXCLUDED.category_id, name = EXCLUDED.name,
 		     description = EXCLUDED.description, price = EXCLUDED.price,
@@ -55,6 +59,7 @@ func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
 		     is_halal = EXCLUDED.is_halal, is_nut_free = EXCLUDED.is_nut_free,
 		     allergens = EXCLUDED.allergens, badges = EXCLUDED.badges,
 		     allow_special_instructions = EXCLUDED.allow_special_instructions,
+		     translations = EXCLUDED.translations,
 		     updated_at = EXCLUDED.updated_at`,
 		string(item.ID), string(item.CategoryID), string(item.RestaurantID),
 		item.Name, item.Description, item.Price,
@@ -64,7 +69,7 @@ func (r *PostgresItemRepository) Save(item *menu.MenuItem) error {
 		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy, optionGroupsJSON,
 		item.SpiceLevel, item.SKU, schedule,
 		item.IsVegan, item.IsDairyFree, item.IsHalal, item.IsNutFree,
-		allergensJSON, badgesJSON, item.AllowSpecialInstructions)
+		allergensJSON, badgesJSON, item.AllowSpecialInstructions, translationsJSON)
 	return err
 }
 
@@ -93,6 +98,10 @@ func (r *PostgresItemRepository) Update(item *menu.MenuItem) error {
 	if err != nil {
 		return err
 	}
+	translationsJSON, err := marshalTranslations(item.Translations)
+	if err != nil {
+		return err
+	}
 	allergensJSON, err := marshalStringList(item.Allergens)
 	if err != nil {
 		return err
@@ -109,7 +118,7 @@ func (r *PostgresItemRepository) Update(item *menu.MenuItem) error {
 		`UPDATE menu_items SET category_id=$2, name=$3, description=$4, price=$5, currency=$6, price_minor=$7, photo_url=$8, photo_original_url=$9, is_available=$10, display_order=$11, is_vegetarian=$12, is_gluten_free=$13, is_spicy=$14, option_groups=$15, updated_at=$16,
 		     spice_level=NULLIF($17, ''), sku=$18, schedule=$19,
 		     is_vegan=$20, is_dairy_free=$21, is_halal=$22, is_nut_free=$23,
-		     allergens=$24, badges=$25, allow_special_instructions=$26
+		     allergens=$24, badges=$25, allow_special_instructions=$26, translations=$27
 		 WHERE id=$1`,
 		string(item.ID), string(item.CategoryID), item.Name, item.Description, item.Price,
 		currency.Code, priceMinor,
@@ -117,7 +126,7 @@ func (r *PostgresItemRepository) Update(item *menu.MenuItem) error {
 		item.IsVegetarian, item.IsGlutenFree, item.IsSpicy, optionGroupsJSON, item.UpdatedAt,
 		item.SpiceLevel, item.SKU, schedule,
 		item.IsVegan, item.IsDairyFree, item.IsHalal, item.IsNutFree,
-		allergensJSON, badgesJSON, item.AllowSpecialInstructions)
+		allergensJSON, badgesJSON, item.AllowSpecialInstructions, translationsJSON)
 	if err != nil {
 		return err
 	}
@@ -266,6 +275,7 @@ type itemRowFields struct {
 	allergensJSON            []byte
 	badgesJSON               []byte
 	allowSpecialInstructions bool
+	translationsJSON         []byte
 }
 
 func (f *itemRowFields) toMenuItem() *menu.MenuItem {
@@ -276,6 +286,7 @@ func (f *itemRowFields) toMenuItem() *menu.MenuItem {
 	groups := unmarshalOptionGroups(f.optionGroupsJSON)
 	allergens := unmarshalStringList(f.allergensJSON)
 	badges := unmarshalStringList(f.badgesJSON)
+	translations := unmarshalTranslations(f.translationsJSON)
 	return &menu.MenuItem{
 		ID: common.ItemID(f.id), CategoryID: common.CategoryID(f.catID),
 		RestaurantID: common.RestaurantID(f.restID), Name: f.name,
@@ -288,6 +299,7 @@ func (f *itemRowFields) toMenuItem() *menu.MenuItem {
 		Allergens: allergens, Badges: badges,
 		AllowSpecialInstructions: f.allowSpecialInstructions,
 		OptionGroups:             groups,
+		Translations:             translations,
 		CreatedAt:                f.createdAt, UpdatedAt: f.updatedAt,
 	}
 }
@@ -299,7 +311,7 @@ func (f *itemRowFields) scanTargets() []any {
 		&f.isVegetarian, &f.isGlutenFree, &f.isSpicy, &f.optionGroupsJSON,
 		&f.spiceLevel, &f.sku, &f.schedule,
 		&f.isVegan, &f.isDairyFree, &f.isHalal, &f.isNutFree,
-		&f.allergensJSON, &f.badgesJSON, &f.allowSpecialInstructions,
+		&f.allergensJSON, &f.badgesJSON, &f.allowSpecialInstructions, &f.translationsJSON,
 	}
 }
 
@@ -360,6 +372,27 @@ func marshalOptionGroups(groups []menu.OptionGroup) ([]byte, error) {
 		}
 	}
 	return json.Marshal(jgs)
+}
+
+func marshalTranslations(t map[string]menu.ItemTranslation) ([]byte, error) {
+	if len(t) == 0 {
+		return []byte("{}"), nil
+	}
+	return json.Marshal(t)
+}
+
+func unmarshalTranslations(data []byte) map[string]menu.ItemTranslation {
+	if len(data) == 0 {
+		return nil
+	}
+	var t map[string]menu.ItemTranslation
+	if err := json.Unmarshal(data, &t); err != nil {
+		return nil
+	}
+	if len(t) == 0 {
+		return nil
+	}
+	return t
 }
 
 func unmarshalOptionGroups(data []byte) []menu.OptionGroup {

@@ -78,7 +78,7 @@ func hasAnyDietary(item *menu.MenuItem) bool {
 }
 
 // ItemDetailPage renders the full item-detail screen.
-func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken string) templ.Component {
+func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken, locale string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -99,6 +99,8 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
+		itemName := item.NameFor(locale)
+		itemDesc := item.DescriptionFor(locale)
 		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -147,9 +149,9 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(itemName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 86, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 88, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -167,7 +169,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(item.PhotoURL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 93, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 95, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -178,9 +180,9 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var6 string
-				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(itemName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 94, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 96, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -216,7 +218,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 						var templ_7745c5c3_Var8 string
 						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(b)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 105, Col: 69}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 107, Col: 69}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 						if templ_7745c5c3_Err != nil {
@@ -245,7 +247,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 						var templ_7745c5c3_Var10 string
 						templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(allergensLine(item.Allergens))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 108, Col: 99}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 110, Col: 99}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 						if templ_7745c5c3_Err != nil {
@@ -274,7 +276,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 						var templ_7745c5c3_Var12 string
 						templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(spiceLevelGlyph(item.SpiceLevel))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 112, Col: 42}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 114, Col: 42}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 						if templ_7745c5c3_Err != nil {
@@ -287,7 +289,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 						var templ_7745c5c3_Var13 string
 						templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(spiceLevelLabel(item.SpiceLevel))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 112, Col: 79}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 114, Col: 79}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 						if templ_7745c5c3_Err != nil {
@@ -310,9 +312,9 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(itemName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 120, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 122, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -322,15 +324,15 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if item.Description != "" {
+			if itemDesc != "" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<p class=\"text-sm text-muted-foreground\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(itemDesc)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 122, Col: 65}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 124, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -348,7 +350,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(item.Money().Format())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 124, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 126, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -519,7 +521,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 153, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 155, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -532,7 +534,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(string(item.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 154, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 156, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -545,7 +547,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(restaurantID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 155, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 157, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -558,7 +560,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(tableLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 156, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 158, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -576,7 +578,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("group-%s", group.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 161, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 163, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -589,7 +591,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%v", group.Required))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 163, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 165, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -602,7 +604,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(group.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 164, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 166, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -615,7 +617,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(group.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 167, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 169, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -633,7 +635,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 					var templ_7745c5c3_Var31 string
 					templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("group-%s-err", group.ID))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 169, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 171, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 					if templ_7745c5c3_Err != nil {
@@ -700,7 +702,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 						var templ_7745c5c3_Var33 string
 						templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(opt.Name)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 200, Col: 22}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 202, Col: 22}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 						if templ_7745c5c3_Err != nil {
@@ -724,7 +726,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 						var templ_7745c5c3_Var34 string
 						templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(item.Currency.Code)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 205, Col: 33}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 207, Col: 33}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 						if templ_7745c5c3_Err != nil {
@@ -737,7 +739,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 						var templ_7745c5c3_Var35 string
 						templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", opt.PriceDelta))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 205, Col: 73}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 207, Col: 73}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 						if templ_7745c5c3_Err != nil {
@@ -853,7 +855,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(item.Money().Format())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 264, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 266, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 				if templ_7745c5c3_Err != nil {
@@ -884,7 +886,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(templ.GetNonce(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 268, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/interfaces/templates/item_detail.templ`, Line: 270, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 			if templ_7745c5c3_Err != nil {
@@ -896,7 +898,7 @@ func ItemDetailPage(item *menu.MenuItem, restaurantID, tableLabel, csrfToken str
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Layout(item.Name+" · Add to cart").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Layout(itemName+" · Add to cart").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -304,3 +304,31 @@ func TestMenuItem_DietaryTagsString_IncludesExpandedSet(t *testing.T) {
 	assert.Contains(t, tags, "dairy_free")
 	assert.Contains(t, tags, "nut_free")
 }
+
+func TestMenuItem_Translations(t *testing.T) {
+	item, err := menu.NewMenuItem("i1", "c1", "r1", "Pork Bao", 6.50)
+	require.NoError(t, err)
+	item.Description = "Steamed bun with pork"
+
+	// No translations → fall back to base name/description.
+	assert.Equal(t, "Pork Bao", item.NameFor("es"))
+	assert.Equal(t, "Steamed bun with pork", item.DescriptionFor("es"))
+	assert.Nil(t, item.Locales())
+
+	require.NoError(t, item.SetTranslations(map[string]menu.ItemTranslation{
+		"ES": {Name: "Bao de cerdo", Description: "Bollo al vapor con cerdo"},
+		"th": {Name: "ซาลาเปาหมู"},
+		"  ": {Name: "ignored blank locale"},
+		"fr": {Name: "", Description: ""}, // fully empty → dropped
+	}))
+
+	// Locale codes are lowercased; blank/empty entries dropped.
+	assert.Equal(t, []string{"es", "th"}, item.Locales())
+	assert.Equal(t, "Bao de cerdo", item.NameFor("es"))
+	assert.Equal(t, "Bollo al vapor con cerdo", item.DescriptionFor("es"))
+	// th has a name but no description → description falls back to base.
+	assert.Equal(t, "ซาลาเปาหมู", item.NameFor("th"))
+	assert.Equal(t, "Steamed bun with pork", item.DescriptionFor("th"))
+	// Unknown locale → base.
+	assert.Equal(t, "Pork Bao", item.NameFor("de"))
+}
