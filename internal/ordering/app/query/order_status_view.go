@@ -75,6 +75,33 @@ func BuildOrderStatusView(repo order.Repository, o *order.Order, prepTarget time
 	return view, nil
 }
 
+// EstimatedMenuWaitMinutes projects the wait a customer faces before ordering,
+// from the live queue depth and the per-order prep target. Only orders still in
+// the kitchen pipeline (paid / preparing) count toward the queue. The kitchen
+// works several tickets in parallel, so every ~3 queued orders adds one prep
+// cycle. Capped so a busy rush never shows an absurd number.
+func EstimatedMenuWaitMinutes(active []*order.Order, prepTarget time.Duration) int {
+	base := int(prepTarget.Minutes())
+	if base < 1 {
+		base = int(DefaultPrepTarget.Minutes())
+	}
+	queue := 0
+	for _, o := range active {
+		if o == nil {
+			continue
+		}
+		switch o.FulfillmentStatus {
+		case common.FulfillmentStatusPaid, common.FulfillmentStatusPreparing:
+			queue++
+		}
+	}
+	minutes := base * (1 + queue/3)
+	if minutes > 90 {
+		minutes = 90
+	}
+	return minutes
+}
+
 func countAhead(active []*order.Order, target *order.Order) int {
 	ahead := 0
 	for _, a := range active {

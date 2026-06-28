@@ -35,7 +35,7 @@ func TestGetMenu(t *testing.T) {
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
 	uc := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
-	h := menuhttp.NewMenuHandler(uc, cartService, recordVisitUC)
+	h := menuhttp.NewMenuHandler(uc, cartService, recordVisitUC, nil)
 
 	// Setup Echo
 	e := echo.New()
@@ -65,7 +65,7 @@ func TestGetMenu_MissingRestaurantIDRedirectsToEntry(t *testing.T) {
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
 	uc := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
-	h := menuhttp.NewMenuHandler(uc, cartService, recordVisitUC)
+	h := menuhttp.NewMenuHandler(uc, cartService, recordVisitUC, nil)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/menu", nil)
@@ -89,7 +89,7 @@ func TestGetMenu_UnknownRestaurantIDRedirectsToEntry(t *testing.T) {
 	visitRepo := memory.NewMemorySessionRestaurantVisitRepository()
 	recordVisitUC := placesCmd.NewRecordMenuVisitHandler(restRepo, visitRepo, nil, nil)
 	uc := menuQuery.NewMenuForCustomerHandler(catRepo, itemRepo, restRepo, nil, menuQuery.PhotoSignerConfig{}, nil, nil)
-	h := menuhttp.NewMenuHandler(uc, cartService, recordVisitUC)
+	h := menuhttp.NewMenuHandler(uc, cartService, recordVisitUC, nil)
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/menu?restaurantID=unknown", nil)

@@ -97,3 +97,26 @@ func TestBuildOrderStatusView_NilRepoLeavesQueueZero(t *testing.T) {
 	assert.Equal(t, 0, view.QueueAhead)
 	assert.Equal(t, 1, view.PositionLabel())
 }
+
+func TestEstimatedMenuWaitMinutes(t *testing.T) {
+	prep := query.DefaultPrepTarget // 10m
+	mk := func(s common.FulfillmentStatus) *order.Order { return &order.Order{FulfillmentStatus: s} }
+
+	// Empty queue → base prep target.
+	assert.Equal(t, 10, query.EstimatedMenuWaitMinutes(nil, prep))
+
+	// 3 queued (paid/preparing) → one extra prep cycle (10*(1+1)).
+	assert.Equal(t, 20, query.EstimatedMenuWaitMinutes(
+		[]*order.Order{mk(common.FulfillmentStatusPaid), mk(common.FulfillmentStatusPreparing), mk(common.FulfillmentStatusPaid)}, prep))
+
+	// Ready/completed orders are out of the pipeline and don't count.
+	assert.Equal(t, 10, query.EstimatedMenuWaitMinutes(
+		[]*order.Order{mk(common.FulfillmentStatusReady), mk(common.FulfillmentStatusCompleted), mk(common.FulfillmentStatusPaid)}, prep))
+
+	// Busy rush is capped at 90 minutes.
+	big := make([]*order.Order, 60)
+	for i := range big {
+		big[i] = mk(common.FulfillmentStatusPreparing)
+	}
+	assert.Equal(t, 90, query.EstimatedMenuWaitMinutes(big, prep))
+}
