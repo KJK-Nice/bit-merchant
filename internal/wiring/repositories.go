@@ -6,6 +6,7 @@ import (
 
 	"bitmerchant/internal/auth/domain/invitation"
 	"bitmerchant/internal/auth/domain/membership"
+	"bitmerchant/internal/auth/domain/passwordreset"
 	"bitmerchant/internal/auth/domain/session"
 	"bitmerchant/internal/auth/domain/user"
 	"bitmerchant/internal/common"
@@ -35,6 +36,7 @@ type Repositories struct {
 	Invitation              invitation.Repository
 	Session                 session.Repository
 	SessionRestaurantVisits visit.Repository
+	PasswordResetToken      passwordreset.Repository
 }
 
 // NewMemoryRepositories wires in-memory repositories (tests and local dev without Postgres).
@@ -50,6 +52,7 @@ func NewMemoryRepositories() Repositories {
 		Invitation:              authAdapters.NewMemoryInvitationRepository(),
 		Session:                 authAdapters.NewMemorySessionRepository(),
 		SessionRestaurantVisits: placesAdapters.NewMemoryVisitRepository(),
+		PasswordResetToken:      authAdapters.NewMemoryPasswordResetTokenRepository(),
 	}
 }
 
@@ -66,6 +69,7 @@ func NewPostgresRepositories(db *sql.DB) Repositories {
 		Invitation:              authAdapters.NewPostgresInvitationRepository(db),
 		Session:                 authAdapters.NewPostgresSessionRepository(db),
 		SessionRestaurantVisits: placesAdapters.NewPostgresVisitRepository(db),
+		PasswordResetToken:      authAdapters.NewPostgresPasswordResetTokenRepository(db),
 	}
 }
 

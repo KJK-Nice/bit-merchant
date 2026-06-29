@@ -41,7 +41,7 @@ func newTestAuthHandler(
 	if createUC == nil {
 		createUC = restaurantCmd.NewCreateRestaurantHandler(restaurantRepo, nil, nil)
 	}
-	app := authapp.NewApplication(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, createUC, nil, nil, nil)
+	app := authapp.NewApplication(userRepo, membershipRepo, invitationRepo, sessionRepo, restaurantRepo, nil, nil, "", createUC, nil, nil, nil)
 	return authhttp.NewAuthHandler(nil, app, nil, sessionOpts)
 }
 

@@ -37,6 +37,9 @@ templ AuthLogin(csrfToken string) {
 							@primitives.Field(primitives.FieldProps{ID: "login-password", Label: "Password", Required: true}) {
 								@input.Input(input.Props{ID: "login-password", Name: "password", Type: "password", Placeholder: "••••••••", Required: true})
 							}
+							<div class="flex justify-end -mt-2">
+								<a class="text-xs text-muted-foreground underline hover:text-foreground" href="/auth/forgot-password">Forgot password?</a>
+							</div>
 							@button.Button(button.Props{Type: "submit", Variant: button.VariantOutline, Class: "w-full"}) {
 								Log in with email
 							}
