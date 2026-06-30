@@ -105,7 +105,6 @@ self.addEventListener('fetch', event => {
 
   if (request.mode === 'navigate') {
     // Cache /menu pages for offline browsing (network-first, cache fallback).
-    // All other navigates pass through — canonical-host 302 redirects must not be wrapped.
     if (url.pathname === '/menu') {
       event.respondWith(
         caches.open(RUNTIME_CACHE).then(cache =>
@@ -117,7 +116,21 @@ self.addEventListener('fetch', event => {
             .catch(() => cache.match(request))
         )
       );
+      return;
     }
+    // Every other navigation is network-only, but falls back to the offline
+    // page when the network is unreachable, so installed PWAs (customer and
+    // merchant) never surface the raw browser error page.
+    //
+    // redirect:'manual' is load-bearing: it hands canonical-host 3xx
+    // responses (e.g. a wrong-surface request the server redirects to the
+    // correct host) back to the browser as an opaqueredirect, so the browser
+    // performs the redirect natively and the address bar updates. Wrapping
+    // with the default redirect:'follow' would swallow the redirect and leave
+    // the URL pointing at the wrong host.
+    event.respondWith(
+      fetch(request, { redirect: 'manual' }).catch(() => caches.match('/offline'))
+    );
     return;
   }
 

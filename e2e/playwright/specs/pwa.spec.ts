@@ -210,3 +210,63 @@ test.describe("Authenticated surface cache isolation", () => {
     await context.close();
   });
 });
+
+// ─── offline navigation fallback ─────────────────────────────────────────────
+
+test.describe("Offline navigation fallback", () => {
+  test("non-menu navigation serves the offline page when offline", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // Register + activate the SW on the customer surface.
+    await page.goto(customerURL("/menu?restaurantID=restaurant_1"));
+    await page.waitForLoadState("networkidle");
+    await waitForSW(page);
+
+    // Prime a non-/menu navigation while online so the SW controls it.
+    await page.goto(customerURL("/"));
+    await page.waitForLoadState("networkidle");
+
+    await context.setOffline(true);
+
+    // Reload the non-/menu page — the SW navigate branch should fall back to
+    // the precached offline page instead of the browser's network-error page.
+    await page
+      .goto(customerURL("/"), { waitUntil: "domcontentloaded" })
+      .catch(() => null);
+
+    await expect(page.getByText("You're offline")).toBeVisible();
+
+    await context.close();
+  });
+});
+
+// ─── redirect-safety of the offline-fallback branch ──────────────────────────
+
+test.describe("Offline fallback redirect safety", () => {
+  test("non-menu cross-surface navigation still redirects with SW active", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // Register the SW on the customer surface.
+    await page.goto(customerURL("/menu?restaurantID=restaurant_1"));
+    await page.waitForLoadState("networkidle");
+    await waitForSW(page);
+
+    // A merchant-only path requested on the customer host is 302'd to the
+    // merchant host by the routing middleware. This navigation hits the new
+    // offline-fallback branch (not the /menu branch), so it proves
+    // redirect:'manual' lets the browser follow canonical-host redirects.
+    const finalURL = await page
+      .goto(customerURL("/dashboard"), { waitUntil: "networkidle" })
+      .then((r) => r?.url() ?? "");
+
+    expect(finalURL).toContain(surfaces.merchant.replace("http://", ""));
+
+    await context.close();
+  });
+});
