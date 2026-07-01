@@ -34,7 +34,7 @@ func TestRestaurantDashboardStatsHandler(t *testing.T) {
 	o1.CreatedAt = startOfToday
 	_ = orderRepo.Save(o1)
 
-	// Order 2: 2 days ago, Paid, $20 (in week and month)
+	// Order 2: 2 days ago, Paid, $20 (in week; in month only if still same month)
 	o2, _ := order.NewOrder("o2", "1002", restaurantID, "session_1", items, 2000, common.PaymentMethodTypeCash)
 	o2.FiatAmount = 20.0
 	o2.PaymentStatus = common.PaymentStatusPaid
@@ -93,8 +93,12 @@ func TestRestaurantDashboardStatsHandler(t *testing.T) {
 		})
 		assert.NoError(t, err)
 
-		expectedCount := 2 // o1 + o2
-		expectedSales := 30.0
+		expectedCount := 1 // o1
+		expectedSales := 10.0
+		if !o2.CreatedAt.Before(startOfMonth) {
+			expectedCount++
+			expectedSales += 20.0
+		}
 		if !o3.CreatedAt.Before(startOfMonth) {
 			expectedCount++
 			expectedSales += 50.0
